@@ -3,7 +3,7 @@ const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('./BancoDeDados/database');
 const Message = require('./BancoDeDados/models/message');
 const Contato = require('./BancoDeDados/models/contato');
-const { title } = require('process');
+const { gerarCertificado, enviarEmail } = require('./Certificados/certificados.js');
 
 // Conectar ao banco e sincronizar models
 (async () => {
@@ -121,7 +121,7 @@ async function start(client) {
                     },
                 ],
             });
-            return; // Evita que outras verificações aconteçam após esta resposta
+            return;
         }
 
         else if (text === 'começar agora!! 😎 🔥🔥🔥') {
@@ -133,7 +133,6 @@ async function start(client) {
                 message: `✅ Modulo 1️ - 📚 *Conceitos Fundamentais*
                     \n\n1️⃣ Segurança e Saúde no Trabalho (SST)
                     \nConjunto de medidas para previnir doenças e acidentes no trabalho.
-
                     \n\n2️⃣ Premissas básicas de SST
                     \n • Segurança é responsabilidade de todos
                     \n • A consciência previne acidentes
@@ -204,16 +203,62 @@ async function start(client) {
             }
 
             // Se a resposta for válida, faz o próximo passo ou encerra a interação
-            
             await sendMessage(sender, 'send-message', {
                 message: `🎉 Parabéns, você completou o Módulo 1!`,
             });
             await sendMessage(sender, 'send-sticker-gif', {
-                path: './media/palmas.gif', // caminho relativo à pasta onde o script está
+                path: './media/palmas.gif',
                 filename: 'palmas',
                 caption: ''
             });
 
+            // Solicitar nome completo
+            await sendMessage(sender, 'send-message', {
+                message: '🎓 Parabéns pela conclusão do curso! Agora, por favor, me envie seu nome completo para emissão do certificado.',
+            });
+
+            // Atualiza o status do treinamento para 'concluído'
+            await Contato.update({ statusTreinamento: 'concluído' }, { where: { telefone: sender } });
+            return;
+        }
+
+        // Coleta nome completo
+        if (contato.statusTreinamento === 'concluído' && !contato.nomeCompleto) {
+            contato.nomeCompleto = text;
+            await contato.save();
+
+            await sendMessage(sender, 'send-message', {
+                message: '👍 Nome completo recebido. Agora, me envie seu e-mail para que eu possa enviar o seu certificado.',
+            });
+            return;
+        }
+
+        // Coleta e-mail e valida
+        if (contato.nomeCompleto && !contato.email) {
+            const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+            if (!emailRegex.test(text)) {
+                await sendMessage(sender, 'send-message', {
+                    message: '⚠️ E-mail inválido! Por favor, insira um e-mail válido.',
+                });
+                return;
+            }
+
+            contato.email = text;
+            await contato.save();
+
+            // Gerar e enviar certificado
+            const certificadoPath = await gerarCertificado(contato.nomeCompleto);
+            await enviarEmail(contato.email, certificadoPath);
+            
+            // Enviar no WhatsApp
+            await sendMessage(sender, 'send-message', {
+                message: `🎉 Seu certificado foi gerado! Ele está sendo enviado por e-mail e também está disponível aqui:`,
+            });
+            await sendMessage(sender, 'send-file', {
+                path: certificadoPath,
+                filename: 'certificado.pdf',
+                caption: '',
+            });
             return;
         }
 
@@ -232,4 +277,4 @@ async function start(client) {
         // Verifica se a resposta do usuário é uma das opções esperadas, caso contrário, manda "Ops"
         await verificarRespostaEsperada(sender, text, respostasEsperadas);
     });
-}
+} 
