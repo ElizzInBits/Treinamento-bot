@@ -274,7 +274,7 @@ async function start(client) {
             'd'
         ];
 
-        // Verifica se a resposta do usuário é uma das opções esperadas, caso contrário, manda "Ops"
+        // Verifica se a resposta do usuário é uma das opções esperadas
         await verificarRespostaEsperada(sender, text, respostasEsperadas);
     });
 } 
