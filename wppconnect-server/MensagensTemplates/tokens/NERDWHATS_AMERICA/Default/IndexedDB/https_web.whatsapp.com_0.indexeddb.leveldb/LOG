@@ -1,21 +1,42 @@
-2025/07/04-13:04:44.530 34c0 Reusing MANIFEST C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/04-13:04:44.531 34c0 Recovering log #834
-2025/07/04-13:04:44.570 34c0 Reusing old log C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000834.log 
-2025/07/04-13:04:45.581 34c0 Level-0 table #843: started
-2025/07/04-13:04:45.620 34c0 Level-0 table #843: 1140571 bytes OK
-2025/07/04-13:04:45.623 34c0 Delete type=0 #834
-2025/07/04-13:04:45.625 34c0 Manual compaction at level-0 from '\x00\xba\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\xbb\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/04-13:04:46.903 17d0 Compacting 1@1 + 5@2 files
-2025/07/04-13:04:46.991 17d0 Generated table #844@1: 84486 keys, 2233100 bytes
-2025/07/04-13:04:47.086 17d0 Generated table #845@1: 99530 keys, 2252808 bytes
-2025/07/04-13:04:47.133 17d0 Generated table #846@1: 32616 keys, 2203697 bytes
-2025/07/04-13:04:47.202 17d0 Generated table #847@1: 34618 keys, 2186713 bytes
-2025/07/04-13:04:47.225 17d0 Generated table #848@1: 48287 keys, 902740 bytes
-2025/07/04-13:04:47.226 17d0 Compacted 1@1 + 5@2 files => 9779058 bytes
-2025/07/04-13:04:47.227 17d0 compacted to: files[ 0 0 5 0 0 0 0 ]
-2025/07/04-13:04:47.227 17d0 Delete type=2 #836
-2025/07/04-13:04:47.227 17d0 Delete type=2 #837
-2025/07/04-13:04:47.227 17d0 Delete type=2 #838
-2025/07/04-13:04:47.227 17d0 Delete type=2 #839
-2025/07/04-13:04:47.227 17d0 Delete type=2 #840
-2025/07/04-13:04:47.227 17d0 Delete type=2 #843
+2025/07/04-14:11:41.805 5708 Reusing MANIFEST C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/04-14:11:41.806 5708 Recovering log #942
+2025/07/04-14:11:41.865 5708 Reusing old log C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000942.log 
+2025/07/04-14:11:42.850 5708 Level-0 table #953: started
+2025/07/04-14:11:42.873 5708 Level-0 table #953: 1172234 bytes OK
+2025/07/04-14:11:42.874 5708 Delete type=0 #942
+2025/07/04-14:11:42.876 5708 Manual compaction at level-0 from '\x00\xc6\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\xc7\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/04-14:11:44.016 5708 Compacting 1@1 + 6@2 files
+2025/07/04-14:11:44.101 5708 Generated table #954@1: 84586 keys, 2234390 bytes
+2025/07/04-14:11:44.184 5708 Generated table #955@1: 98396 keys, 2250399 bytes
+2025/07/04-14:11:44.229 5708 Generated table #956@1: 64181 keys, 2248793 bytes
+2025/07/04-14:11:44.267 5708 Generated table #957@1: 17167 keys, 2170994 bytes
+2025/07/04-14:11:44.311 5708 Generated table #958@1: 72531 keys, 2213997 bytes
+2025/07/04-14:11:44.317 5708 Generated table #959@1: 11811 keys, 222353 bytes
+2025/07/04-14:11:44.317 5708 Compacted 1@1 + 6@2 files => 11340926 bytes
+2025/07/04-14:11:44.318 5708 compacted to: files[ 0 0 6 0 0 0 0 ]
+2025/07/04-14:11:44.318 5708 Delete type=2 #945
+2025/07/04-14:11:44.318 5708 Delete type=2 #946
+2025/07/04-14:11:44.318 5708 Delete type=2 #947
+2025/07/04-14:11:44.318 5708 Delete type=2 #948
+2025/07/04-14:11:44.318 5708 Delete type=2 #949
+2025/07/04-14:11:44.318 5708 Delete type=2 #950
+2025/07/04-14:11:44.318 5708 Delete type=2 #953
+2025/07/04-14:17:22.403 50a4 Level-0 table #961: started
+2025/07/04-14:17:22.432 50a4 Level-0 table #961: 1386491 bytes OK
+2025/07/04-14:17:22.434 50a4 Delete type=0 #952
+2025/07/04-14:18:52.168 50a4 Compacting 1@1 + 6@2 files
+2025/07/04-14:18:52.212 50a4 Generated table #962@1: 84590 keys, 2234443 bytes
+2025/07/04-14:18:52.249 50a4 Generated table #963@1: 98267 keys, 2249429 bytes
+2025/07/04-14:18:52.285 50a4 Generated table #964@1: 67031 keys, 2253536 bytes
+2025/07/04-14:18:52.309 50a4 Generated table #965@1: 16075 keys, 2169770 bytes
+2025/07/04-14:18:52.343 50a4 Generated table #966@1: 66847 keys, 2208553 bytes
+2025/07/04-14:18:52.354 50a4 Generated table #967@1: 21227 keys, 398844 bytes
+2025/07/04-14:18:52.354 50a4 Compacted 1@1 + 6@2 files => 11514575 bytes
+2025/07/04-14:18:52.355 50a4 compacted to: files[ 0 0 6 0 0 0 0 ]
+2025/07/04-14:18:52.355 50a4 Delete type=2 #954
+2025/07/04-14:18:52.356 50a4 Delete type=2 #955
+2025/07/04-14:18:52.356 50a4 Delete type=2 #956
+2025/07/04-14:18:52.356 50a4 Delete type=2 #957
+2025/07/04-14:18:52.356 50a4 Delete type=2 #958
+2025/07/04-14:18:52.356 50a4 Delete type=2 #959
+2025/07/04-14:18:52.356 50a4 Delete type=2 #961

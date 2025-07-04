@@ -1,21 +1,32 @@
-2025/07/04-13:01:15.109 168c Reusing MANIFEST C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/04-13:01:15.110 168c Recovering log #826
-2025/07/04-13:01:15.137 168c Reusing old log C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000826.log 
-2025/07/04-13:01:16.015 3e18 Level-0 table #835: started
-2025/07/04-13:01:16.030 3e18 Level-0 table #835: 1152065 bytes OK
-2025/07/04-13:01:16.032 3e18 Delete type=0 #826
-2025/07/04-13:01:16.033 3e18 Manual compaction at level-0 from '\x00\xb9\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\xba\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/04-13:01:17.049 3e18 Compacting 1@1 + 5@2 files
-2025/07/04-13:01:17.103 3e18 Generated table #836@1: 84462 keys, 2233313 bytes
-2025/07/04-13:01:17.150 3e18 Generated table #837@1: 99535 keys, 2251016 bytes
-2025/07/04-13:01:17.199 3e18 Generated table #838@1: 30192 keys, 2202962 bytes
-2025/07/04-13:01:17.257 3e18 Generated table #839@1: 39764 keys, 2192500 bytes
-2025/07/04-13:01:17.306 3e18 Generated table #840@1: 42106 keys, 790279 bytes
-2025/07/04-13:01:17.306 3e18 Compacted 1@1 + 5@2 files => 9670070 bytes
-2025/07/04-13:01:17.308 3e18 compacted to: files[ 0 0 5 0 0 0 0 ]
-2025/07/04-13:01:17.308 3e18 Delete type=2 #828
-2025/07/04-13:01:17.308 3e18 Delete type=2 #829
-2025/07/04-13:01:17.308 3e18 Delete type=2 #830
-2025/07/04-13:01:17.309 3e18 Delete type=2 #831
-2025/07/04-13:01:17.309 3e18 Delete type=2 #832
-2025/07/04-13:01:17.309 3e18 Delete type=2 #835
+2025/07/04-14:10:26.376 65c8 Reusing MANIFEST C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/04-14:10:26.378 65c8 Recovering log #932
+2025/07/04-14:10:26.593 65c8 Reusing old log C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000932.log 
+2025/07/04-14:10:26.956 65c8 Level-0 table #941: started
+2025/07/04-14:10:26.978 65c8 Level-0 table #941: 1379849 bytes OK
+2025/07/04-14:10:26.981 65c8 Delete type=0 #932
+2025/07/04-14:10:27.777 ff8 Level-0 table #943: started
+2025/07/04-14:10:27.782 ff8 Level-0 table #943: 13151 bytes OK
+2025/07/04-14:10:27.786 ff8 Delete type=0 #940
+2025/07/04-14:10:27.790 ff8 Manual compaction at level-0 from '\x00\xc5\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\xc6\x00\x00\x00' @ 0 : 0; will stop at '\x00\xc5\x00\x00\x05' @ 2899278 : 1
+2025/07/04-14:10:27.790 ff8 Compacting 1@0 + 1@1 files
+2025/07/04-14:10:27.823 ff8 Generated table #944@0: 19261 keys, 422962 bytes
+2025/07/04-14:10:27.823 ff8 Compacted 1@0 + 1@1 files => 422962 bytes
+2025/07/04-14:10:27.825 ff8 compacted to: files[ 0 1 5 0 0 0 0 ]
+2025/07/04-14:10:27.825 ff8 Delete type=2 #943
+2025/07/04-14:10:27.826 ff8 Manual compaction at level-0 from '\x00\xc5\x00\x00\x05' @ 2899278 : 1 .. '\x00\xc6\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/04-14:10:29.645 65c8 Compacting 1@1 + 5@2 files
+2025/07/04-14:10:29.778 65c8 Generated table #945@1: 84565 keys, 2234705 bytes
+2025/07/04-14:10:29.897 65c8 Generated table #946@1: 98510 keys, 2251095 bytes
+2025/07/04-14:10:29.989 65c8 Generated table #947@1: 61531 keys, 2246017 bytes
+2025/07/04-14:10:30.064 65c8 Generated table #948@1: 17118 keys, 2171775 bytes
+2025/07/04-14:10:30.169 65c8 Generated table #949@1: 78153 keys, 2222216 bytes
+2025/07/04-14:10:30.179 65c8 Generated table #950@1: 5194 keys, 102654 bytes
+2025/07/04-14:10:30.179 65c8 Compacted 1@1 + 5@2 files => 11228462 bytes
+2025/07/04-14:10:30.186 65c8 compacted to: files[ 0 0 6 0 0 0 0 ]
+2025/07/04-14:10:30.187 65c8 Delete type=2 #934
+2025/07/04-14:10:30.188 65c8 Delete type=2 #935
+2025/07/04-14:10:30.189 65c8 Delete type=2 #936
+2025/07/04-14:10:30.189 65c8 Delete type=2 #937
+2025/07/04-14:10:30.189 65c8 Delete type=2 #938
+2025/07/04-14:10:30.190 65c8 Delete type=2 #941
+2025/07/04-14:10:30.190 65c8 Delete type=2 #944
