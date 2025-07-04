@@ -19,7 +19,7 @@ wppconnect
             console.log(asciiQR);
         },
         statusFind: (status) => {
-            console.log('📶 Status da sessão:', status);
+            console.log('📶 Status da sessão:', status); 
         },
     })
     .then((client) => start(client))
