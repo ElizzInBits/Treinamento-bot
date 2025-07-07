@@ -1,3 +1,15 @@
-2025/07/04-14:11:41.007 5f60 Reusing MANIFEST C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\Local Storage\leveldb/MANIFEST-000001
-2025/07/04-14:11:41.014 5f60 Recovering log #39
-2025/07/04-14:11:41.017 5f60 Reusing old log C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\Local Storage\leveldb/000039.log 
+2025/07/07-09:09:21.438 5d4c Reusing MANIFEST C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\Local Storage\leveldb/MANIFEST-000001
+2025/07/07-09:09:21.446 5d4c Recovering log #42
+2025/07/07-09:09:21.448 5d4c Reusing old log C:\Treinamento-bot\wppconnect-server\MensagensTemplates\tokens\NERDWHATS_AMERICA\Default\Local Storage\leveldb/000042.log 
+2025/07/07-09:10:21.462 5d4c Level-0 table #46: started
+2025/07/07-09:10:21.469 5d4c Level-0 table #46: 17054 bytes OK
+2025/07/07-09:10:21.472 5d4c Delete type=0 #42
+2025/07/07-09:10:21.473 5d4c Compacting 4@0 + 1@1 files
+2025/07/07-09:10:21.479 5d4c Generated table #47@0: 237 keys, 10329 bytes
+2025/07/07-09:10:21.479 5d4c Compacted 4@0 + 1@1 files => 10329 bytes
+2025/07/07-09:10:21.480 5d4c compacted to: files[ 0 1 1 0 0 0 0 ]
+2025/07/07-09:10:21.481 5d4c Delete type=2 #34
+2025/07/07-09:10:21.481 5d4c Delete type=2 #37
+2025/07/07-09:10:21.481 5d4c Delete type=2 #40
+2025/07/07-09:10:21.481 5d4c Delete type=2 #43
+2025/07/07-09:10:21.481 5d4c Delete type=2 #46
