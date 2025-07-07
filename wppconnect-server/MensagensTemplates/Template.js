@@ -19,7 +19,7 @@ wppconnect
             console.log(asciiQR);
         },
         statusFind: (status) => {
-            console.log('📶 Status da sessão:', status); 
+            console.log('📶 Status da sessão:', status);
         },
     })
     .then((client) => start(client))
@@ -246,25 +246,39 @@ async function start(client) {
             contato.email = text;
             await contato.save();
 
-            // Gerar e enviar certificado
-            const certificadoPath = await gerarCertificado(contato.nomeCompleto);
-            await enviarEmail(contato.email, certificadoPath);
-            
-            // Enviar no WhatsApp
+            // Envia a mensagem de aguarde imediatamente
             await sendMessage(sender, 'send-message', {
-                message: `🎉 Seu certificado foi gerado! Ele está sendo enviado por e-mail e também está disponível aqui:`,
+                message: '📧 E-mail recebido com sucesso! Aguarde, estamos gerando seu certificado. Isso pode demorar alguns minutos... 🎓',
             });
-            await sendMessage(sender, 'send-file', {
-                path: certificadoPath,
-                filename: 'certificado.pdf',
-                caption: '',
-            });
+
+            // Dispara o processamento pesado SEM await (fire and forget)
+            (async () => {
+                try {
+                    const certificadoPath = await gerarCertificado(contato.nomeCompleto);
+                    await enviarEmail(contato.email, certificadoPath);
+
+                    await sendMessage(sender, 'send-message', {
+                        message: `🎉 Seu certificado foi gerado! Ele está sendo enviado por e-mail e também está disponível aqui:`,
+                    });
+
+                    await sendMessage(sender, 'send-file', {
+                        path: certificadoPath,
+                        filename: 'certificado.pdf',
+                        caption: '',
+                    });
+                } catch (err) {
+                    await sendMessage(sender, 'send-message', {
+                        message: '❌ Ocorreu um erro ao gerar ou enviar seu certificado. Por favor, tente novamente mais tarde.',
+                    });
+                }
+            })();
+
             return;
         }
 
         // Verificação de respostas inesperadas (apenas nos pontos onde esperamos algo específico)
         const respostasEsperadas = [
-            'começar agora!! 😎 🔥🔥🔥', 
+            'começar agora!! 😎 🔥🔥🔥',
             'não, começo assim que possível 👀 😅',
             'pronto',
             '1',
