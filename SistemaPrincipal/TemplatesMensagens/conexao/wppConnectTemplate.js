@@ -7,7 +7,7 @@ const FormData = require('form-data');
 
 const BASE_URL = 'http://localhost:21465';
 const SESSION = 'NERDWHATS_AMERICA';
-const TOKEN = '$2b$10$riR7ylOmDm3qnBgHikvN2e7CEoEj6s4SlgHCBLNF487E5hng8YDx2'; 
+const TOKEN = '$2b$10$IxcL0s1z3_Mi18lU1s7Kt.P1.KfN.455DjmTTXfCeELbFFhyMlpm6'; 
 
 async function sendMessage(phone, endpoint, body = {}) {
   try {

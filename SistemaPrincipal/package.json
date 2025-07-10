@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "description": "Sistema de Cadastro de Contatos para Treinamento SSMA - LCM",
   "main": "server-front.js",
-"scripts": {
-  "start": "node server-front.js",
-  "dev": "nodemon server-front.js",
-  "migrate": "npx sequelize-cli db:migrate",
-  "seed": "npx sequelize-cli db:seed:all",
-  "test": "echo \"Error: no test specified\" && exit 1"
-}
-,
+  "scripts": {
+    "start": "node server-front.js",
+    "dev": "nodemon server-front.js",
+    "migrate": "npx sequelize-cli db:migrate",
+    "seed": "npx sequelize-cli db:seed:all",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [
     "whatsapp",
     "cadastro",
@@ -28,7 +27,8 @@
     "mysql2": "^3.6.0",
     "nodemailer": "^6.9.4",
     "path": "^0.12.7",
-    "puppeteer": "^21.0.3",
+    "pdfkit": "^0.17.1",
+    "puppeteer": "^21.11.0",
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
