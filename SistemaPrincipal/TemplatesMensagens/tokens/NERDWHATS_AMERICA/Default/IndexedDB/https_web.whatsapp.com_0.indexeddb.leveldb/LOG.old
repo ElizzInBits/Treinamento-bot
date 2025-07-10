@@ -1,15 +1,36 @@
-2025/07/09-08:44:13.073 5c38 Reusing MANIFEST C:\Treinamento-bot\wppconnect-server\SistemaPrincipal\TemplatesMensagens\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/09-08:44:13.073 5c38 Recovering log #96
-2025/07/09-08:44:13.099 5c38 Reusing old log C:\Treinamento-bot\wppconnect-server\SistemaPrincipal\TemplatesMensagens\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000096.log 
-2025/07/09-08:44:14.346 44f0 Level-0 table #102: started
-2025/07/09-08:44:14.372 44f0 Level-0 table #102: 839623 bytes OK
-2025/07/09-08:44:14.373 44f0 Delete type=0 #96
-2025/07/09-08:44:14.374 10ec Manual compaction at level-0 from '\x00#\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00$\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/09-08:44:15.721 5c38 Compacting 1@1 + 2@2 files
-2025/07/09-08:44:15.791 5c38 Generated table #103@1: 40352 keys, 2187021 bytes
-2025/07/09-08:44:15.924 5c38 Generated table #104@1: 58709 keys, 1646170 bytes
-2025/07/09-08:44:15.924 5c38 Compacted 1@1 + 2@2 files => 3833191 bytes
-2025/07/09-08:44:15.926 5c38 compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/07/09-08:44:15.928 5c38 Delete type=2 #98
-2025/07/09-08:44:15.929 5c38 Delete type=2 #99
-2025/07/09-08:44:15.930 5c38 Delete type=2 #102
+2025/07/10-13:52:58.660 5a3c Reusing MANIFEST C:\Treinamento-bot\SistemaPrincipal\TemplatesMensagens\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/10-13:52:58.660 5a3c Recovering log #39
+2025/07/10-13:52:58.693 5a3c Reusing old log C:\Treinamento-bot\SistemaPrincipal\TemplatesMensagens\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000039.log 
+2025/07/10-13:52:58.693 5a3c Delete type=2 #38
+2025/07/10-13:52:58.693 5a3c Delete type=2 #40
+2025/07/10-13:52:59.722 5a3c Level-0 table #44: started
+2025/07/10-13:52:59.766 5a3c Level-0 table #44: 1104932 bytes OK
+2025/07/10-13:52:59.768 5a3c Delete type=0 #39
+2025/07/10-13:52:59.769 5a3c Manual compaction at level-0 from '\x00\x18\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x19\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/10-13:52:59.771 5a3c Level-0 table #46: started
+2025/07/10-13:52:59.775 5a3c Level-0 table #46: 248 bytes OK
+2025/07/10-13:52:59.777 5a3c Delete type=0 #43
+2025/07/10-13:52:59.777 5a3c Manual compaction at level-0 from '\x00\x19\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x1a\x00\x00\x00' @ 0 : 0; will stop at '\x00\x19\x00\x00\x05' @ 105848 : 0
+2025/07/10-13:52:59.777 5a3c Compacting 1@0 + 1@1 files
+2025/07/10-13:52:59.797 5a3c Generated table #47@0: 27111 keys, 664311 bytes
+2025/07/10-13:52:59.797 5a3c Compacted 1@0 + 1@1 files => 664311 bytes
+2025/07/10-13:52:59.798 5a3c compacted to: files[ 0 1 1 0 0 0 0 ]
+2025/07/10-13:52:59.798 5a3c Delete type=2 #46
+2025/07/10-13:52:59.798 5a3c Manual compaction at level-0 from '\x00\x19\x00\x00\x05' @ 105848 : 0 .. '\x00\x1a\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/10-13:53:00.883 2674 Compacting 1@1 + 1@2 files
+2025/07/10-13:53:00.903 2674 Generated table #48@1: 23899 keys, 979945 bytes
+2025/07/10-13:53:00.903 2674 Compacted 1@1 + 1@2 files => 979945 bytes
+2025/07/10-13:53:00.904 2674 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/07/10-13:53:00.905 2674 Delete type=2 #41
+2025/07/10-13:53:00.905 2674 Delete type=2 #44
+2025/07/10-13:53:00.905 2674 Delete type=2 #47
+2025/07/10-13:53:06.504 4bb0 Level-0 table #50: started
+2025/07/10-13:53:06.509 4bb0 Level-0 table #50: 112323 bytes OK
+2025/07/10-13:53:06.512 4bb0 Delete type=0 #45
+2025/07/10-13:53:06.513 5a3c Manual compaction at level-0 from '\x00\x1b\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x1c\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/10-13:53:07.437 2674 Compacting 1@1 + 1@2 files
+2025/07/10-13:53:07.456 2674 Generated table #51@1: 25204 keys, 1024611 bytes
+2025/07/10-13:53:07.456 2674 Compacted 1@1 + 1@2 files => 1024611 bytes
+2025/07/10-13:53:07.457 2674 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/07/10-13:53:07.458 2674 Delete type=2 #48
+2025/07/10-13:53:07.458 2674 Delete type=2 #50

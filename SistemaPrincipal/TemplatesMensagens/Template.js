@@ -67,22 +67,30 @@ function gerarVariacoes(numeroCompleto) {
     await sequelize.sync();
 })();
 
-wppconnect
-    .create({
-        session: 'NERDWHATS_AMERICA',
-        catchQR: (base64Qr, asciiQR) => {
-            console.log('📱 Escaneie o QR Code abaixo com seu WhatsApp:');
-            console.log(asciiQR);
-        },
-        statusFind: (status) => {
-            console.log('📶 Status da sessão:', status);
-        },
-    })
-    .then((client) => {
-        console.log('🟢 Cliente iniciado, registrando evento onMessage...');
-        start(client);
-    })
-    .catch((err) => console.error('Erro ao iniciar WPPConnect:', err));
+wppconnect.create({
+  session: 'NERDWHATS_AMERICA',
+  headless: 'new',
+  useChrome: true,
+  catchQR: (base64Qr, asciiQR) => {
+    console.clear();
+    console.log('📱 Escaneie o QR Code abaixo com seu WhatsApp:');
+    console.log(asciiQR);
+  },
+  statusFind: (status) => {
+    console.log('📶 Status da sessão:', status);
+  },
+  browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
+})
+.then((client) => {
+  console.log('🟢 Cliente conectado! Iniciando listener de mensagens...');
+  start(client); // <-- ESSENCIAL
+})
+.catch((error) => {
+  console.error('❌ Erro ao iniciar WPPConnect:', error);
+});
+
+
+
 
 async function verificarRespostaEsperada(sender, resposta, opcoesValidas) {
     if (!opcoesValidas.includes(resposta)) {
