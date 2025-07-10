@@ -1,0 +1,40 @@
+{
+  "name": "sistema-cadastro-lcm",
+  "version": "1.0.0",
+  "description": "Sistema de Cadastro de Contatos para Treinamento SSMA - LCM",
+  "main": "server-front.js",
+"scripts": {
+  "start": "node server-front.js",
+  "dev": "nodemon server-front.js",
+  "migrate": "npx sequelize-cli db:migrate",
+  "seed": "npx sequelize-cli db:seed:all",
+  "test": "echo \"Error: no test specified\" && exit 1"
+}
+,
+  "keywords": [
+    "whatsapp",
+    "cadastro",
+    "contatos",
+    "treinamento",
+    "ssma"
+  ],
+  "author": "LCM",
+  "license": "ISC",
+  "dependencies": {
+    "@wppconnect-team/wppconnect": "^1.26.0",
+    "canvas": "^2.11.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mysql2": "^3.6.0",
+    "nodemailer": "^6.9.4",
+    "path": "^0.12.7",
+    "puppeteer": "^21.0.3",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
