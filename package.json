@@ -2,7 +2,7 @@
   "name": "TREINAMENTO-BOT",
   "version": "1.0.0",
   "scripts": {
-    "dev": "npm-run-all --parallel start:sistema1 start:sistema2",
+    "dev": "npx npm-run-all --parallel start:sistema1 start:sistema2",
     "start:sistema1": "cd SistemaPrincipal && npm start",
     "start:sistema2": "cd wppconnect-server && npm run dev"
   },
