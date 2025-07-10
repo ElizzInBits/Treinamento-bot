@@ -35,4 +35,13 @@ const Contato = sequelize.define('contatos', {
   freezeTableName: true,
 });
 
+
+Contato.associate = (models) => {
+    Contato.belongsToMany(models.Treinamento, {
+        through: 'ContatoTreinamentos',
+        foreignKey: 'contatoId',
+        otherKey: 'treinamentoId'
+    });
+};
+
 module.exports = Contato;

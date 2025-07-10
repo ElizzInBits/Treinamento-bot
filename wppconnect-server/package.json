@@ -6,6 +6,7 @@
   "author": "kingaspx",
   "license": "Apache-2.0",
   "scripts": {
+    
     "build:types": "tsc",
     "build:js": "rimraf dist && babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline --copy-files",
     "build": "npm run build:types && npm run build:js",
@@ -26,6 +27,7 @@
     "swagger:fix-url": "sed -i \"s|https://petstore.swagger.io/v2/swagger.json|./swagger.json|g\" ./swagger-docs/index.html",
     "swagger:generate": "yarn swagger:copy-assets && yarn swagger:copy-json && yarn swagger:fix-url",
     "test": "jest"
+    
   },
   "engines": {
     "node": "22.17.0"
@@ -108,6 +110,7 @@
     "redis": "^4.7.1",
     "release-it": "^17.11.0",
     "rimraf": "^5.0.10",
+    "sequelize-cli": "^6.6.3",
     "shx": "^0.4.0",
     "swagger-ui-dist": "^5.25.3",
     "ts-jest": "^29.4.0",

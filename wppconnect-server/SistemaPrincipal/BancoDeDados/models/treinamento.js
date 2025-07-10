@@ -21,4 +21,14 @@ const Treinamento = sequelize.define('Treinamento', {
   underscored: true, // para usar snake_case nos campos (opcional)
 });
 
+
+Treinamento.associate = (models) => {
+    Treinamento.belongsToMany(models.Contato, {
+        through: 'ContatoTreinamentos',
+        foreignKey: 'treinamentoId',
+        otherKey: 'contatoId'
+    });
+};
+
+
 module.exports = Treinamento;

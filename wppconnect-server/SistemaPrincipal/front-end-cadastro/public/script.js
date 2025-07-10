@@ -185,7 +185,7 @@ function renderizarContatos() {
 
     contatosLista.innerHTML = contatosFiltrados.map(contato => {
         return `
-    <div class="contact-item">
+    <div class="contact-item" onclick="abrirDetalhesContato(${contato.id})">
       <div class="contact-info">
         <h3>${contato.nome}</h3>
         <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
@@ -238,6 +238,36 @@ function removerContato(id) {
             mostrarAlerta('Erro ao remover contato no servidor.', 'error');
         });
 }
+
+function abrirDetalhesContato(id) {
+    const contato = contatos.find(c => c.id === id);
+    if (!contato) return;
+
+    const treinamento = treinamentos.find(t => t.id === contato.treinamentoId);
+
+    const detalhesHTML = `
+        <h4>${contato.nome}</h4>
+        <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
+        <p><strong>Treinamento Atual:</strong> ${treinamento ? treinamento.nome : 'Nenhum'}</p>
+        <p><strong>Status:</strong> ${treinamento ? 'Em andamento ou concluído' : 'Sem treinamento'}</p>
+    `;
+
+    document.getElementById('detalhesContatoConteudo').innerHTML = detalhesHTML;
+    document.getElementById('modalDetalhesContato').classList.add('show');
+}
+
+function fecharModalDetalhesContato() {
+    document.getElementById('modalDetalhesContato').classList.remove('show');
+}
+
+// Fechar modal ao clicar fora dele
+document.getElementById('modalDetalhesContato').addEventListener('click', function (e) {
+    if (e.target === this) {
+        fecharModalDetalhesContato();
+    }
+});
+
+
 
 
 function atualizarEstatisticas() {
