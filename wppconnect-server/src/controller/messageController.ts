@@ -19,13 +19,20 @@ import { Request, Response } from 'express';
 import { unlinkAsync } from '../util/functions';
 
 function returnError(req: Request, res: Response, error: any) {
-  req.logger.error(error);
-  res.status(500).json({
+  req.logger?.error?.(error);
+
+  // Evita tentar enviar resposta duas vezes
+  if (res.headersSent) {
+    return;
+  }
+
+  return res.status(500).json({
     status: 'Error',
     message: 'Erro ao enviar a mensagem.',
-    error: error,
+    error: error?.message || error,
   });
 }
+
 
 async function returnSucess(res: any, data: any) {
   res.status(201).json({ status: 'success', response: data, mapper: 'return' });
@@ -103,17 +110,18 @@ export async function sendMessage(req: Request, res: Response) {
     const results: any = [];
 
     for (const contato of phones) {
-      results.push(await req.client.sendText(contato, message, options));
+      const result = await req.client.sendText(contato, message, options);
+      results.push(result);
     }
 
     if (results.length === 0) {
-      return res.status(400).json('Error sending message');
+      return res.status(400).json({ error: 'Nenhuma mensagem foi enviada.' });
     }
 
     req.io.emit('mensagem-enviada', results);
-    return returnSucess(res, results);
+    return returnSucess(res, results); // <-- garantir que `return` seja usado
   } catch (error) {
-    return returnError(req, res, error);
+    return returnError(req, res, error); // <-- garantir que `return` seja usado
   }
 }
 
