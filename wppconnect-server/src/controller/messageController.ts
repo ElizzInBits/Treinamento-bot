@@ -104,7 +104,7 @@ export async function sendMessage(req: Request, res: Response) {
       results.push(await req.client.sendText(contato, message, options));
     }
 
-    if (results.length === 0) res.status(400).json('Error sending message');
+    if (results.length === 0) return res.status(400).json('Error sending message');
     req.io.emit('mensagem-enviada', results);
     returnSucess(res, results);
   } catch (error) {
@@ -224,7 +224,7 @@ export async function sendFile(req: Request, res: Response) {
   }
 
   if (!path && !req.file && !base64)
-    res.status(401).send({
+    return res.status(401).send({
       message: 'Sending the file is mandatory',
     });
 
@@ -244,7 +244,7 @@ export async function sendFile(req: Request, res: Response) {
       );
     }
 
-    if (results.length === 0) res.status(400).json('Error sending message');
+    if (results.length === 0) return res.status(400).json('Error sending message');
     if (req.file) await unlinkAsync(pathFile);
     returnSucess(res, results);
   } catch (error) {
@@ -303,10 +303,6 @@ export async function sendVoice(req: Request, res: Response) {
 
   // Força phone para virar array
   const phones = Array.isArray(phone) ? phone : [phone];
-
-  if (!req.client) {
-    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
-  }
 
   try {
     const results: any = [];
@@ -386,7 +382,7 @@ export async function sendVoice64(req: Request, res: Response) {
       );
     }
 
-    if (results.length === 0) res.status(400).json('Error sending message');
+    if (results.length === 0) return res.status(400).json('Error sending message');
     returnSucess(res, results);
   } catch (error) {
     returnError(req, res, error);
@@ -444,7 +440,7 @@ export async function sendLinkPreview(req: Request, res: Response) {
       );
     }
 
-    if (results.length === 0) res.status(400).json('Error sending message');
+    if (results.length === 0) return res.status(400).json('Error sending message');
     returnSucess(res, results);
   } catch (error) {
     returnError(req, res, error);
@@ -512,7 +508,7 @@ export async function sendLocation(req: Request, res: Response) {
       );
     }
 
-    if (results.length === 0) res.status(400).json('Error sending message');
+    if (results.length === 0) return res.status(400).json('Error sending message');
     returnSucess(res, results);
   } catch (error) {
     returnError(req, res, error);
@@ -739,7 +735,7 @@ export async function sendOrderMessage(req: Request, res: Response) {
     }
 
     if (results.length === 0)
-      res.status(400).json('Error sending order message');
+      return res.status(400).json('Error sending order message');
     req.io.emit('mensagem-enviada', results);
     returnSucess(res, results);
   } catch (error) {
@@ -860,7 +856,7 @@ export async function sendStatusText(req: Request, res: Response) {
     const results: any = [];
     results.push(await req.client.sendText('status@broadcast', message));
 
-    if (results.length === 0) res.status(400).json('Error sending message');
+    if (results.length === 0) return res.status(400).json('Error sending message');
     returnSucess(res, results);
   } catch (error) {
     returnError(req, res, error);
@@ -916,7 +912,7 @@ export async function replyMessage(req: Request, res: Response) {
       results.push(await req.client.reply(contato, message, messageId));
     }
 
-    if (results.length === 0) res.status(400).json('Error sending message');
+    if (results.length === 0) return res.status(400).json('Error sending message');
     req.io.emit('mensagem-enviada', { message: message, to: phone });
     returnSucess(res, results);
   } catch (error) {
@@ -1031,7 +1027,7 @@ export async function sendImageAsSticker(req: Request, res: Response) {
   }
 
   if (!path && !req.file)
-    res.status(401).send({
+    return res.status(401).send({
       message: 'Sending the file is mandatory',
     });
 
@@ -1043,13 +1039,15 @@ export async function sendImageAsSticker(req: Request, res: Response) {
       results.push(await req.client.sendImageAsSticker(contato, pathFile));
     }
 
-    if (results.length === 0) res.status(400).json('Error sending message');
+    if (results.length === 0) return res.status(400).json('Error sending message');
     if (req.file) await unlinkAsync(pathFile);
+
     returnSucess(res, results);
   } catch (error) {
     returnError(req, res, error);
   }
 }
+
 export async function sendImageAsStickerGif(req: Request, res: Response) {
   /**
    * #swagger.tags = ["Messages"]
@@ -1062,28 +1060,28 @@ export async function sendImageAsStickerGif(req: Request, res: Response) {
      }
      #swagger.requestBody = {
       required: true,
-      content: {
-        'application/json': {
+      "@content": {
+        "application/json": {
           schema: {
-            type: 'object',
+            type: "object",
             properties: {
-              phone: { type: 'string' },
-              isGroup: { type: 'boolean' },
-              path: { type: 'string' },
+              "phone": { type: "string" },
+              "isGroup": { type: "boolean" },
+              "path": { type: "string" }
             },
-            required: ['phone', 'path'],
+            required: ["phone", "path"]
           },
           examples: {
-            'Default': {
+            "Default": {
               value: {
-                phone: '5521999999999',
-                isGroup: true,
-                path: '<path_file>',
-              },
-            },
-          },
-        },
-      },
+                "phone": "5521999999999",
+                "isGroup": true,
+                "path": "<path_file>"
+              }
+            }
+          }
+        }
+      }
     }
    */
   const { phone, path } = req.body;
@@ -1093,7 +1091,7 @@ export async function sendImageAsStickerGif(req: Request, res: Response) {
   }
 
   if (!path && !req.file)
-    res.status(401).send({
+    return res.status(401).send({
       message: 'Sending the file is mandatory',
     });
 
@@ -1105,7 +1103,7 @@ export async function sendImageAsStickerGif(req: Request, res: Response) {
       results.push(await req.client.sendImageAsStickerGif(contato, pathFile));
     }
 
-    if (results.length === 0) res.status(400).json('Error sending message');
+    if (results.length === 0) return res.status(400).json('Error sending message');
     if (req.file) await unlinkAsync(pathFile);
     returnSucess(res, results);
   } catch (error) {
