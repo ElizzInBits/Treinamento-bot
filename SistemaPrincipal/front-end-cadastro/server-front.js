@@ -46,8 +46,8 @@ async function iniciarServidor() {
 
         app.listen(PORT, () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);
-            console.log(`📱 Acesse: http://localhost:${PORT}`);
-            console.log(`🔗 API: http://localhost:${PORT}/api/contatos`);
+            console.log(`📱 Acesse: http://92.112.178.26/:${PORT}`);
+            console.log(`🔗 API: http://92.112.178.26/:${PORT}/api/contatos`);
         });
 
     } catch (error) {
