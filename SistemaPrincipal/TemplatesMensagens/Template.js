@@ -170,7 +170,7 @@ async function start(client) {
                     message: '👷 Objetivos do treinamento:\n\n• Respeitar normas de SSMA\n• Evitar acidentes\n• Cuidar da sua segurança e a dos colegas\n• Nunca realizar tarefas sem capacitação',
                 });
                 await sendMessage(sender, 'send-file', {
-                    path: './media/SSMA.webp',
+                    path: '../media/SSMA.webp',
                     filename: 'SSMA',
                     caption: '',
                 });
@@ -274,7 +274,7 @@ async function start(client) {
 
                 await sendMessage(sender, 'send-message', { message: '🎉 Parabéns, você completou o Módulo 1!' });
                 await sendMessage(sender, 'send-sticker-gif', {
-                    path: './media/palmas.gif',
+                    path: '../media/palmas.gif',
                     filename: 'palmas',
                 });
                 await sendMessage(sender, 'send-message', {

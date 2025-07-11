@@ -94,6 +94,10 @@ export async function sendMessage(req: Request, res: Response) {
 
   const options = req.body.options || {};
 
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
+
   try {
     const results: any = [];
     for (const contato of phone) {
@@ -145,6 +149,11 @@ export async function editMessage(req: Request, res: Response) {
   const { id, newText } = req.body;
 
   const options = req.body.options || {};
+
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
+
   try {
     const edited = await (req.client as any).editMessage(id, newText, options);
 
@@ -209,6 +218,10 @@ export async function sendFile(req: Request, res: Response) {
   } = req.body;
 
   const options = req.body.options || {};
+
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
 
   if (!path && !req.file && !base64)
     res.status(401).send({
@@ -276,7 +289,7 @@ export async function sendVoice(req: Request, res: Response) {
         }
     }
    */
-const {
+  const {
     phone,
     path,
     filename = 'Voice Audio',
@@ -290,6 +303,10 @@ const {
 
   // Força phone para virar array
   const phones = Array.isArray(phone) ? phone : [phone];
+
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
 
   try {
     const results: any = [];
@@ -351,6 +368,10 @@ export async function sendVoice64(req: Request, res: Response) {
    */
   const { phone, base64Ptt, quotedMessageId } = req.body;
 
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
+
   try {
     const results: any = [];
     for (const contato of phone) {
@@ -411,6 +432,10 @@ export async function sendLinkPreview(req: Request, res: Response) {
    */
   const { phone, url, caption } = req.body;
 
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
+
   try {
     const results: any = [];
     for (const contato of phone) {
@@ -469,6 +494,11 @@ export async function sendLocation(req: Request, res: Response) {
    */
   const { phone, lat, lng, title, address } = req.body;
 
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
+
+
   try {
     const results: any = [];
     for (const contato of phone) {
@@ -502,6 +532,10 @@ export async function sendButtons(req: Request, res: Response) {
      #swagger.deprecated=true
    */
   const { phone, message, options } = req.body;
+
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
 
   try {
     const results: any = [];
@@ -580,6 +614,10 @@ export async function sendListMessage(req: Request, res: Response) {
     sections,
     buttonText = 'SELECIONE UMA OPÇÃO',
   } = req.body;
+
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
 
   try {
     const results: any = [];
@@ -689,6 +727,11 @@ export async function sendOrderMessage(req: Request, res: Response) {
 
   const options = req.body.options || {};
 
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
+
+
   try {
     const results: any = [];
     for (const contato of phone) {
@@ -746,6 +789,10 @@ export async function sendPollMessage(req: Request, res: Response) {
     }
    */
   const { phone, name, choices, options } = req.body;
+
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
 
   try {
     const results: any = [];
@@ -805,6 +852,10 @@ export async function sendStatusText(req: Request, res: Response) {
    */
   const { message } = req.body;
 
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
+
   try {
     const results: any = [];
     results.push(await req.client.sendText('status@broadcast', message));
@@ -854,6 +905,10 @@ export async function replyMessage(req: Request, res: Response) {
     }
    */
   const { phone, message, messageId } = req.body;
+
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
 
   try {
     const results: any = [];
@@ -908,6 +963,10 @@ export async function sendMentioned(req: Request, res: Response) {
 }
    */
   const { phone, message, mentioned } = req.body;
+
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
 
   try {
     let response;
@@ -967,6 +1026,10 @@ export async function sendImageAsSticker(req: Request, res: Response) {
    */
   const { phone, path } = req.body;
 
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
+
   if (!path && !req.file)
     res.status(401).send({
       message: 'Sending the file is mandatory',
@@ -1024,6 +1087,10 @@ export async function sendImageAsStickerGif(req: Request, res: Response) {
     }
    */
   const { phone, path } = req.body;
+
+  if (!req.client) {
+    return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
+  }
 
   if (!path && !req.file)
     res.status(401).send({
