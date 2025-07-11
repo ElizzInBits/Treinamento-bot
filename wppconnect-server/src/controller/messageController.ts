@@ -90,25 +90,30 @@ export async function sendMessage(req: Request, res: Response) {
       }
      }
    */
-  const { phone, message } = req.body;
-
+   const { phone, message } = req.body;
   const options = req.body.options || {};
 
   if (!req.client) {
     return res.status(500).json({ error: 'Cliente WPPConnect não está disponível' });
   }
 
+  const phones = Array.isArray(phone) ? phone : [phone];
+
   try {
     const results: any = [];
-    for (const contato of phone) {
+
+    for (const contato of phones) {
       results.push(await req.client.sendText(contato, message, options));
     }
 
-    if (results.length === 0) return res.status(400).json('Error sending message');
+    if (results.length === 0) {
+      return res.status(400).json('Error sending message');
+    }
+
     req.io.emit('mensagem-enviada', results);
-    returnSucess(res, results);
+    return returnSucess(res, results);
   } catch (error) {
-    returnError(req, res, error);
+    return returnError(req, res, error);
   }
 }
 
