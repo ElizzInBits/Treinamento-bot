@@ -3,7 +3,7 @@ const { Sequelize } = require('sequelize');
 
 // Altere os dados abaixo para o seu banco:
 const sequelize = new Sequelize('listadecontatos', 'root', 'admin!?', {
-  host: 'localhost', // ou IP do servidor MySQL
+  host: '127.0.0.1', // ou IP do servidor MySQL
   dialect: 'mysql',
   logging: false, // opcional: desativa logs no console
 });

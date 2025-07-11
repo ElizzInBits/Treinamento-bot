@@ -70,7 +70,7 @@ function gerarVariacoes(numeroCompleto) {
 wppconnect.create({
   session: 'NERDWHATS_AMERICA',
   headless: 'new',
-  useChrome: true,
+  executablePath: '/snap/bin/chromium',
   catchQR: (base64Qr, asciiQR) => {
     console.clear();
     console.log('📱 Escaneie o QR Code abaixo com seu WhatsApp:');
@@ -81,6 +81,7 @@ wppconnect.create({
   },
   browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
 })
+
 .then((client) => {
   console.log('🟢 Cliente conectado! Iniciando listener de mensagens...');
   start(client); // <-- ESSENCIAL
