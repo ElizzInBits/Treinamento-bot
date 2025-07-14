@@ -2,7 +2,7 @@ import { ServerOptions } from './types/ServerOptions';
 
 export default {
   secretKey: 'THISISMYSECURETOKEN',
-  host: 'http://localhost',
+  host: 'http://92.112.178.26/',
   port: '21465',
   deviceName: 'WppConnect',
   poweredBy: 'WPPConnect-Server',     
@@ -92,7 +92,7 @@ export default {
     mongoIsRemote: true,
     mongoURLRemote: '',
     mongodbPort: 27017,
-    redisHost: 'localhost',
+    redisHost: '92.112.178.26',
     redisPort: 6379,
     redisPassword: '',
     redisDb: 0,
