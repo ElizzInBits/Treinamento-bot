@@ -1,0 +1,10 @@
+{
+  "name": "treinamento-bot-root",
+  "version": "1.0.0",
+  "scripts": {
+    "start:wppconnect": "cd wppconnect-server && npm run dev",
+    "start:front": "cd SistemaPrincipal/front-end-cadastro && npm start",
+    "start:template": "cd SistemaPrincipal/TemplatesMensagens && node Template.js",
+    "start:all": "npm run start:wppconnect && npm run start:front && npm run start:template"
+  }
+}
