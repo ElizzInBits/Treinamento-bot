@@ -7,7 +7,7 @@ const FormData = require('form-data');
 
 const BASE_URL = 'http://92.112.178.26:21465';
 const SESSION = 'NERDWHATS_AMERICA';
-const TOKEN = '$2b$10$IxcL0s1z3_Mi18lU1s7Kt.P1.KfN.455DjmTTXfCeELbFFhyMlpm6'; 
+const TOKEN = '$2b$10$RH.nxhsrH3Abrb30YskW2uHuFUMZGv5OKulj17hxLTCvLAF05qIhG'; 
 
 async function sendMessage(phone, endpoint, body = {}) {
   try {
