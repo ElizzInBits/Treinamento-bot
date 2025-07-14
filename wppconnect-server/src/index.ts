@@ -57,7 +57,8 @@ export function initServer(serverOptions: Partial<ServerOptions>): {
   setMaxListners(serverOptions as ServerOptions);
 
   const app = express();
-  const PORT = process.env.PORT || serverOptions.port;
+  // Correção: sempre converte para número
+  const PORT = Number(process.env.PORT || serverOptions.port);
 
   app.use(cors());
   app.use(express.json({ limit: '50mb' }));
@@ -70,7 +71,15 @@ export function initServer(serverOptions: Partial<ServerOptions>): {
     process.env['AWS_SECRET_ACCESS_KEY'] = config.aws_s3.secret_key;
   }
 
-  // Add request options
+  createFolders();
+  const http = createServer(app);
+  const io = new Socket(http, {
+    cors: {
+      origin: '*',
+    },
+  });
+
+  // Agora o io está definido, pode ser usado no middleware
   app.use((req: any, res: any, next: NextFunction) => {
     req.serverOptions = serverOptions;
     req.logger = logger;
@@ -100,14 +109,6 @@ export function initServer(serverOptions: Partial<ServerOptions>): {
 
   app.use(routes);
 
-  createFolders();
-  const http = createServer(app);
-  const io = new Socket(http, {
-    cors: {
-      origin: '*',
-    },
-  });
-
   io.on('connection', (sock) => {
     logger.info(`ID: ${sock.id} entrou`);
 
@@ -116,7 +117,7 @@ export function initServer(serverOptions: Partial<ServerOptions>): {
     });
   });
 
-  http.listen(PORT, () => {
+  http.listen(PORT, '0.0.0.0', () => {
     logger.info(`Server is running on port: ${PORT}`);
     logger.info(
       `\x1b[31m Visit ${serverOptions.host}:${PORT}/api-docs for Swagger docs`
