@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const FormData = require('form-data');
 
-const BASE_URL = 'http://localhost:21465';
+const BASE_URL = 'http://92.112.178.26:21465';
 const SESSION = 'NERDWHATS_AMERICA';
 const TOKEN = '$2b$10$.Ju_UkS.sNiPS4Cm77VFuuFTwe7x3ByR5G4s5BIfkcOX.8gnyphVi'; 
 
