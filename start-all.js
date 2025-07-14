@@ -15,7 +15,7 @@ function run(name, command, args, cwd) {
   return proc;
 }
 
-const proc1 = run('SistemaPrincipal', 'npm', ['start'], 'SistemaPrincipal');
+const proc1 = run('SistemaCadastro', 'npm', ['start'], 'front-end-cadastro');
 const proc2 = run('wppconnect-server', 'npm', ['run', 'dev'], 'wppconnect-server');
 
 process.on('SIGINT', () => {
