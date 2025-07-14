@@ -3,8 +3,8 @@ const path = require('path');
 const express = require('express');
 const { connectDB, sequelize } = require('../BancoDeDados/database.js');
 
-const contatosRoutes = require('../routes/contatos.js');
-const treinamentosRoutes = require('../routes/treinamentos.js');
+const contatosRoutes = require('./routes/contatos.js');
+const treinamentosRoutes = require('./routes/treinamentos.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
