@@ -2,21 +2,21 @@ module.exports = {
   apps: [
     {
       name: "wppconnect-server",
-      cwd: "./Treinamento-bot/wppconnect-server",
+      cwd: "./wppconnect-server",
       script: "npm",
       args: "run dev",
       interpreter: "none"
     },
     {
       name: "front-end-cadastro",
-      cwd: "./Treinamento-bot/SistemaPrincipal/front-end-cadastro",
+      cwd: ".SistemaPrincipal/front-end-cadastro",
       script: "npm",
       args: "start",
       interpreter: "none"
     },
     {
       name: "template-mensagens",
-      cwd: "./Treinamento-bot/SistemaPrincipal/TemplatesMensagens",
+      cwd: "./SistemaPrincipal/TemplatesMensagens",
       script: "Template.js",
       interpreter: "node"
     }
