@@ -22,7 +22,7 @@ app.use(express.static(path.join(__dirname, 'front-end-cadastro', 'public')));
 
 // Página principal
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname,'front-end-cadastro','public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'front-end-cadastro', 'public', 'index.html'));
 });
 
 // Middleware de erro
@@ -44,11 +44,12 @@ async function iniciarServidor() {
         await sequelize.sync();
         console.log('✅ Banco de dados conectado e sincronizado!');
 
-        app.listen(PORT, () => {
+        app.listen(PORT, '0.0.0.0', () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);
-            console.log(`📱 Acesse: http://localhost:${PORT}`);
-            console.log(`🔗 API: http://localhost:${PORT}/api/contatos`);
+            console.log(`📱 Acesse: http://92.112.178.26:${PORT}`);
+            console.log(`🔗 API: http://92.112.178.26:${PORT}/api/contatos`);
         });
+
 
     } catch (error) {
         console.error('❌ Erro ao iniciar servidor:', error);
