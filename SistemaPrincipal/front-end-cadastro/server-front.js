@@ -17,13 +17,12 @@ app.use(cors());
 app.use('/api/contatos', contatosRoutes);
 app.use('/api/treinamentos', treinamentosRoutes);
 
-// Servir arquivos estáticos
-app.use(express.static(path.join(__dirname, 'front-end-cadastro', 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Página principal
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'front-end-cadastro', 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+;
 
 // Middleware de erro
 app.use((err, req, res, next) => {
