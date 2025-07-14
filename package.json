@@ -3,7 +3,7 @@
   "version": "1.0.0",
 "scripts": {
   "dev": "node start-all.js",
-  "start:sistema1": "cd SistemaPrincipal/front-end-cadastro && npm start",
+  "start:sistema1": "cd SistemaPrincipal && npm start",
   "start:sistema2": "cd wppconnect-server && npm run dev"
 }
 ,
