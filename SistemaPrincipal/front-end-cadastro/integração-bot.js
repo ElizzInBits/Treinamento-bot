@@ -252,36 +252,3 @@ module.exports = {
     webhookAtualizacoes
 };
 
-// Exemplo de uso no seu bot principal:
-/*
-// No início do seu arquivo principal do bot
-const {
-    atualizarStatusTreinamento,
-    salvarDadosCompletos,
-    gerarRelatorioContatos
-} = require('./integracao-bot');
-
-// Quando o contato inicia treinamento
-if (contato.statusTreinamento === 'não iniciado') {
-    await atualizarStatusTreinamento(sender, 'em andamento');
-    // ... resto do código
-}
-
-// Quando o contato conclui treinamento
-if (text === 'b' && contato.statusTreinamento === 'em andamento') {
-    await atualizarStatusTreinamento(sender, 'concluído');
-    // ... resto do código
-}
-
-// Quando recebe nome completo
-if (contato.statusTreinamento === 'concluído' && !contato.nomeCompleto) {
-    await salvarDadosCompletos(sender, rawText.trim(), null);
-    // ... resto do código
-}
-
-// Quando recebe email
-if (contato.nomeCompleto && !contato.email) {
-    await salvarDadosCompletos(sender, null, text);
-    // ... resto do código
-}
-*/
