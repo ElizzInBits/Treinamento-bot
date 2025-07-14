@@ -11,7 +11,7 @@ export default {
   maxListeners: 15,
   customUserDataDir: './userDataDir/',
   webhook: {                                 
-    url: null,
+    url: 'http://92.112.178.26:21465/api/webhook',               
     autoDownload: true,
     uploadS3: false,
     readMessage: true,
