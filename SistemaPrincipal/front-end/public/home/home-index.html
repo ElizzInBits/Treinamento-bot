@@ -1,34 +1,10 @@
-
-
-<!DOCTYPE html> <html lang="pt-BR"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>Sistema de Cadastro</title> <link rel="stylesheet" href="css/home-style.css" /> </head> <body> <div class="container"
-
-pasted
-
-
-/* ===== Auto Cadastro - Página Isolada ===== */ body { background: linear-gradient( 120deg, rgba(0, 170, 170, 0.25) 0%, rgba(0, 170, 170, 0.25) 35%, rgba(254, 178, 0, 0.25) 65%, rgba(254, 178, 0, 0.25) 100% ); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans
-
-pasted
-
-deixe o home-index.html e o home-stule.css com uma cara mais profissional mantendo o padrão de cores, ps me mostre os arquivo htm e o arquivo css separados
-
-Vou criar versões mais profissionais dos arquivos HTML e CSS, mantendo o padrão de cores teal/azul-escuro e amarelo, mas com um design mais clean e corporativo.
-
-
-home-index.html - Versão Profissional
-Artefato interativo 
-
-home-style.css - Versão Profissional
-Código 
-
-
-
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistema de Cadastro Profissional</title>
-    <link rel="stylesheet" href="css/home-style.css" />
+    <title>Sistema de Cadastro</title>
+    <link rel="stylesheet" href="css/home-style.css">
   </head>
   <body>
     <div class="main-container">
@@ -36,24 +12,11 @@ Código
       <header class="main-header">
         <div class="header-content">
           <div class="logo-section">
-            <div class="logo-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <rect width="40" height="40" rx="8" fill="#0f4c5c"/>
-                <path d="M20 8L30 20L20 32L10 20L20 8Z" fill="#6ec6ca"/>
-              </svg>
-            </div>
-            <div class="logo-text">
-              <h1>Sistema de Cadastro</h1>
-              <p>Gestão Profissional de Contatos</p>
-            </div>
+            <h1>Sistema de Cadastro</h1>
+            <p>Gestão Profissional de Contatos</p>
           </div>
           <div class="header-actions">
-            <button class="btn-secondary" onclick="exportarDados()">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 0L5.5 2.5H7v5h2v-5h1.5L8 0zM1 10v4h14v-4H1z"/>
-              </svg>
-              Exportar
-            </button>
+            <button class="btn-secondary" onclick="exportarDados()">Exportar</button>
           </div>
         </div>
       </header>
@@ -62,22 +25,13 @@ Código
       <nav class="tab-navigation">
         <div class="nav-container">
           <button class="nav-tab active" onclick="showTab('cadastro')" data-tab="cadastro">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z"/>
-            </svg>
-            <span>Cadastrar</span>
+            Cadastrar
           </button>
           <button class="nav-tab" onclick="showTab('listar')" data-tab="listar">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span>Contatos</span>
+            Contatos
           </button>
           <button class="nav-tab" onclick="showTab('treinamentos')" data-tab="treinamentos">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.84L7.25 9.035l1.394.597a1 1 0 00.788 0l7-3a1 1 0 000-1.84l-7-3z"/>
-            </svg>
-            <span>Treinamentos</span>
+            Treinamentos
           </button>
         </div>
       </nav>
@@ -130,9 +84,6 @@ Código
               </div>
               <div class="form-actions">
                 <button type="submit" class="btn-primary">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 2a6 6 0 100 12A6 6 0 008 2zM7 7V5a1 1 0 112 0v2h2a1 1 0 110 2H9v2a1 1 0 11-2 0V9H5a1 1 0 110-2h2z"/>
-                  </svg>
                   Cadastrar Contato
                 </button>
               </div>
@@ -167,9 +118,6 @@ Código
             <!-- Barra de Pesquisa -->
             <div class="search-section">
               <div class="search-input-wrapper">
-                <svg class="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"/>
-                </svg>
                 <input
                   type="text"
                   id="searchInput"
@@ -230,9 +178,6 @@ Código
                 </div>
                 <div class="form-actions">
                   <button type="submit" class="btn-primary">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M8 2a6 6 0 100 12A6 6 0 008 2zM7 7V5a1 1 0 112 0v2h2a1 1 0 110 2H9v2a1 1 0 11-2 0V9H5a1 1 0 110-2h2z"/>
-                    </svg>
                     Criar Treinamento
                   </button>
                 </div>
@@ -257,11 +202,7 @@ Código
       <div class="modal-container">
         <div class="modal-header">
           <h3 id="modalTitulo">Contatos do Treinamento</h3>
-          <button class="modal-close" onclick="fecharModal()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
-          </button>
+          <button class="modal-close" onclick="fecharModal()">X</button>
         </div>
         <div class="modal-content" id="modalConteudo"></div>
       </div>
@@ -272,11 +213,7 @@ Código
       <div class="modal-container">
         <div class="modal-header">
           <h3>Editar Contato</h3>
-          <button class="modal-close" onclick="fecharModalEditarContato()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
-          </button>
+          <button class="modal-close" onclick="fecharModalEditarContato()">X</button>
         </div>
         <div class="modal-content">
           <form id="editarContatoForm" class="professional-form">
@@ -314,16 +251,11 @@ Código
       <div class="modal-container">
         <div class="modal-header">
           <h3>Detalhes do Contato</h3>
-          <button class="modal-close" onclick="fecharModalDetalhesContato()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
-          </button>
+          <button class="modal-close" onclick="fecharModalDetalhesContato()">X</button>
         </div>
         <div class="modal-content" id="detalhesContatoConteudo"></div>
       </div>
     </div>
-
     <script src="js/home-script.js"></script>
   </body>
 </html>
