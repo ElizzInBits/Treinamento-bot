@@ -11,7 +11,7 @@ module.exports = {
       name: "front-end-cadastro",
       cwd: ".SistemaPrincipal/front-end-cadastro",
       script: "npm",
-      args: "start",
+      args: " run start",
       interpreter: "none"
     },
     {
