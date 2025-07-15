@@ -138,20 +138,68 @@ body {
   }
 }
 
+/* Responsividade */
 @media (max-width: 768px) {
   .container {
     padding: 25px;
+    max-width: 100%;
   }
 
   .header h1 {
     font-size: 2rem;
   }
 
+  .header p {
+    font-size: 1rem;
+  }
+
   .form-section h2 {
     font-size: 1.4rem;
   }
 
+  .form-group input {
+    font-size: 15px;
+    padding: 12px 14px;
+  }
+
   .btn-primary {
     font-size: 14px;
+    padding: 14px;
   }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .header h1 {
+    font-size: 1.6rem;
+  }
+
+  .form-section h2 {
+    font-size: 1.2rem;
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+
+  .form-group input {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .btn-primary {
+    font-size: 13px;
+    padding: 12px;
+  }
+}
+
+/* Evita zoom no iOS ao tocar em inputs */
+input[type="text"],
+input[type="email"] {
+  font-size: 16px;
 }
