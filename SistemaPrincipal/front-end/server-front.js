@@ -20,7 +20,7 @@ app.use('/api/treinamentos', treinamentosRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/painel1', 'index.html'));
+    res.sendFile(path.join(__dirname, 'painel1', 'index.html'));
 });
 
 // Middleware de erro
@@ -34,8 +34,8 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Rota não encontrada' });
 });
 
-app.get('/autocadastro', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/painel2', 'index.html'));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'painel2', 'index.html'));
 });
 
 
