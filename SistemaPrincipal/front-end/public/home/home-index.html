@@ -1,206 +1,326 @@
+
+
+<!DOCTYPE html> <html lang="pt-BR"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>Sistema de Cadastro</title> <link rel="stylesheet" href="css/home-style.css" /> </head> <body> <div class="container"
+
+pasted
+
+
+/* ===== Auto Cadastro - Página Isolada ===== */ body { background: linear-gradient( 120deg, rgba(0, 170, 170, 0.25) 0%, rgba(0, 170, 170, 0.25) 35%, rgba(254, 178, 0, 0.25) 65%, rgba(254, 178, 0, 0.25) 100% ); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans
+
+pasted
+
+deixe o home-index.html e o home-stule.css com uma cara mais profissional mantendo o padrão de cores, ps me mostre os arquivo htm e o arquivo css separados
+
+Vou criar versões mais profissionais dos arquivos HTML e CSS, mantendo o padrão de cores teal/azul-escuro e amarelo, mas com um design mais clean e corporativo.
+
+
+home-index.html - Versão Profissional
+Artefato interativo 
+
+home-style.css - Versão Profissional
+Código 
+
+
+
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistema de Cadastro</title>
+    <title>Sistema de Cadastro Profissional</title>
     <link rel="stylesheet" href="css/home-style.css" />
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <h1>Sistema de Cadastro</h1>
-        <p>Gerenciamento de Contatos e Treinamentos</p>
-      </div>
-
-      <div class="tabs">
-        <button class="tab active" onclick="showTab('cadastro')">
-          <span>📝</span> Cadastrar
-        </button>
-        <button class="tab" onclick="showTab('listar')">
-          <span>👥</span> Contatos
-        </button>
-        <button class="tab" onclick="showTab('treinamentos')">
-          <span>🎓</span> Treinamentos
-        </button>
-      </div>
-
-      <div id="alerts"></div>
-
-      <!-- Aba Cadastro -->
-      <div id="cadastro" class="tab-content active">
-        <div class="form-section">
-          <h2><span>📝</span> Cadastrar Novo Contato</h2>
-          <form id="cadastroForm">
-            <div class="form-group">
-              <label for="nome">Nome Completo *</label>
-              <input
-                type="text"
-                id="nome"
-                name="nome"
-                required
-                placeholder="Digite o nome completo do contato"
-              />
+    <div class="main-container">
+      <!-- Header Principal -->
+      <header class="main-header">
+        <div class="header-content">
+          <div class="logo-section">
+            <div class="logo-icon">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <rect width="40" height="40" rx="8" fill="#0f4c5c"/>
+                <path d="M20 8L30 20L20 32L10 20L20 8Z" fill="#6ec6ca"/>
+              </svg>
             </div>
-            <div class="form-group">
-              <label for="telefone">Telefone *</label>
-              <input
-                type="text"
-                id="telefone"
-                name="telefone"
-                required
-                placeholder="Ex: 5531999990000"
-              />
-              <small
-                >Formato: DDI + DDD + Número. Ex: 5531999990000 (13 dígitos) ou
-                553199990000 (12 dígitos)</small
-              >
+            <div class="logo-text">
+              <h1>Sistema de Cadastro</h1>
+              <p>Gestão Profissional de Contatos</p>
             </div>
-            <div class="form-group">
-              <label for="treinamento">Treinamento</label>
-              <select id="treinamento" name="treinamento">
-                <option value="">Selecione um treinamento (opcional)</option>
-              </select>
-            </div>
-            <button type="submit" class="btn-primary">
-              <span>💾</span> Cadastrar Contato
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="exportarDados()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0L5.5 2.5H7v5h2v-5h1.5L8 0zM1 10v4h14v-4H1z"/>
+              </svg>
+              Exportar
             </button>
-          </form>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <!-- Aba Listar -->
-      <div id="listar" class="tab-content">
-        <div class="form-section">
-          <h2><span>👥</span> Contatos Cadastrados</h2>
-
-          <div class="stats-grid">
-            <div class="stat-card">
-              <h3 id="totalContatos">0</h3>
-              <p>Total de Contatos</p>
-            </div>
-            <div class="stat-card">
-              <h3 id="contatosComTreinamento">0</h3>
-              <p>Com Treinamento</p>
-            </div>
-            <div class="stat-card">
-              <h3 id="contatosSemTreinamento">0</h3>
-              <p>Sem Treinamento</p>
-            </div>
-          </div>
-
-          <div class="search-box">
-            <input
-              type="text"
-              id="searchInput"
-              placeholder="Pesquisar contatos por nome ou telefone..."
-              onkeyup="filtrarContatos()"
-            />
-          </div>
-
-          <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Carregando contatos...</p>
-          </div>
-
-          <div id="contatosLista" class="contacts-list"></div>
+      <!-- Navegação por Tabs -->
+      <nav class="tab-navigation">
+        <div class="nav-container">
+          <button class="nav-tab active" onclick="showTab('cadastro')" data-tab="cadastro">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z"/>
+            </svg>
+            <span>Cadastrar</span>
+          </button>
+          <button class="nav-tab" onclick="showTab('listar')" data-tab="listar">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>Contatos</span>
+          </button>
+          <button class="nav-tab" onclick="showTab('treinamentos')" data-tab="treinamentos">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.84L7.25 9.035l1.394.597a1 1 0 00.788 0l7-3a1 1 0 000-1.84l-7-3z"/>
+            </svg>
+            <span>Treinamentos</span>
+          </button>
         </div>
-      </div>
+      </nav>
 
-      <!-- Aba Treinamentos -->
-      <div id="treinamentos" class="tab-content">
-        <div class="form-section">
-          <h2><span>🎓</span> Gerenciar Treinamentos</h2>
+      <!-- Container Principal -->
+      <main class="content-container">
+        <!-- Alerts -->
+        <div id="alerts" class="alerts-container"></div>
 
-          <div class="training-management">
-            <h3><span>➕</span> Criar Novo Treinamento</h3>
-            <form id="treinamentoForm">
-              <div class="training-form">
+        <!-- Aba Cadastro -->
+        <section id="cadastro" class="tab-content active">
+          <div class="content-card">
+            <div class="card-header">
+              <h2>Cadastrar Novo Contato</h2>
+              <p>Preencha os campos abaixo para adicionar um novo contato ao sistema</p>
+            </div>
+            <form id="cadastroForm" class="professional-form">
+              <div class="form-row">
                 <div class="form-group">
-                  <label for="novoTreinamento">Nome do Treinamento *</label>
+                  <label for="nome">Nome Completo <span class="required">*</span></label>
                   <input
                     type="text"
-                    id="novoTreinamento"
-                    name="novoTreinamento"
+                    id="nome"
+                    name="nome"
                     required
-                    placeholder="Digite o nome do treinamento"
-                    maxlength="100"
+                    placeholder="Digite o nome completo"
+                    class="form-control"
                   />
                 </div>
+              </div>
+              <div class="form-row">
                 <div class="form-group">
-                  <label for="descricaoTreinamento">Descrição</label>
+                  <label for="telefone">Telefone <span class="required">*</span></label>
                   <input
                     type="text"
-                    id="descricaoTreinamento"
-                    name="descricaoTreinamento"
-                    placeholder="Breve descrição do treinamento"
-                    maxlength="200"
+                    id="telefone"
+                    name="telefone"
+                    required
+                    placeholder="Ex: 5531999990000"
+                    class="form-control"
                   />
+                  <small class="form-hint">Formato: DDI + DDD + Número (12 ou 13 dígitos)</small>
                 </div>
-                <button type="submit"><span>✨</span> Criar</button>
+                <div class="form-group">
+                  <label for="treinamento">Treinamento</label>
+                  <select id="treinamento" name="treinamento" class="form-control">
+                    <option value="">Selecione um treinamento</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 2a6 6 0 100 12A6 6 0 008 2zM7 7V5a1 1 0 112 0v2h2a1 1 0 110 2H9v2a1 1 0 11-2 0V9H5a1 1 0 110-2h2z"/>
+                  </svg>
+                  Cadastrar Contato
+                </button>
               </div>
             </form>
           </div>
+        </section>
 
-          <div class="loading" id="loadingTreinamentos">
-            <div class="spinner"></div>
-            <p>Carregando treinamentos...</p>
+        <!-- Aba Listar -->
+        <section id="listar" class="tab-content">
+          <div class="content-card">
+            <div class="card-header">
+              <h2>Contatos Cadastrados</h2>
+              <p>Visualize e gerencie todos os contatos do sistema</p>
+            </div>
+            
+            <!-- Dashboard de Estatísticas -->
+            <div class="dashboard-stats">
+              <div class="stat-item">
+                <div class="stat-value" id="totalContatos">0</div>
+                <div class="stat-label">Total de Contatos</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="contatosComTreinamento">0</div>
+                <div class="stat-label">Com Treinamento</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="contatosSemTreinamento">0</div>
+                <div class="stat-label">Sem Treinamento</div>
+              </div>
+            </div>
+
+            <!-- Barra de Pesquisa -->
+            <div class="search-section">
+              <div class="search-input-wrapper">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"/>
+                </svg>
+                <input
+                  type="text"
+                  id="searchInput"
+                  placeholder="Pesquisar por nome ou telefone..."
+                  class="search-input"
+                  onkeyup="filtrarContatos()"
+                />
+              </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading-container" id="loading">
+              <div class="loading-spinner"></div>
+              <p>Carregando contatos...</p>
+            </div>
+
+            <!-- Lista de Contatos -->
+            <div id="contatosLista" class="contacts-table"></div>
           </div>
+        </section>
 
-          <div id="treinamentosGrid" class="training-grid"></div>
-        </div>
-      </div>
+        <!-- Aba Treinamentos -->
+        <section id="treinamentos" class="tab-content">
+          <div class="content-card">
+            <div class="card-header">
+              <h2>Gerenciar Treinamentos</h2>
+              <p>Crie e gerencie treinamentos disponíveis no sistema</p>
+            </div>
+
+            <!-- Formulário de Novo Treinamento -->
+            <div class="training-form-section">
+              <h3>Criar Novo Treinamento</h3>
+              <form id="treinamentoForm" class="professional-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="novoTreinamento">Nome do Treinamento <span class="required">*</span></label>
+                    <input
+                      type="text"
+                      id="novoTreinamento"
+                      name="novoTreinamento"
+                      required
+                      placeholder="Digite o nome do treinamento"
+                      maxlength="100"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="descricaoTreinamento">Descrição</label>
+                    <input
+                      type="text"
+                      id="descricaoTreinamento"
+                      name="descricaoTreinamento"
+                      placeholder="Breve descrição do treinamento"
+                      maxlength="200"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M8 2a6 6 0 100 12A6 6 0 008 2zM7 7V5a1 1 0 112 0v2h2a1 1 0 110 2H9v2a1 1 0 11-2 0V9H5a1 1 0 110-2h2z"/>
+                    </svg>
+                    Criar Treinamento
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Loading Treinamentos -->
+            <div class="loading-container" id="loadingTreinamentos">
+              <div class="loading-spinner"></div>
+              <p>Carregando treinamentos...</p>
+            </div>
+
+            <!-- Grid de Treinamentos -->
+            <div id="treinamentosGrid" class="training-cards"></div>
+          </div>
+        </section>
+      </main>
     </div>
 
     <!-- Modal para visualizar contatos do treinamento -->
-    <div id="modalContatos" class="modal">
-      <div class="modal-content">
+    <div id="modalContatos" class="modal-overlay">
+      <div class="modal-container">
         <div class="modal-header">
           <h3 id="modalTitulo">Contatos do Treinamento</h3>
-          <button class="close" onclick="fecharModal()">&times;</button>
+          <button class="modal-close" onclick="fecharModal()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
         </div>
-        <div id="modalConteudo"></div>
+        <div class="modal-content" id="modalConteudo"></div>
       </div>
     </div>
 
     <!-- Modal para editar contato -->
-    <div id="modalEditarContato" class="modal">
-      <div class="modal-content">
+    <div id="modalEditarContato" class="modal-overlay">
+      <div class="modal-container">
         <div class="modal-header">
           <h3>Editar Contato</h3>
-          <button class="close" onclick="fecharModalEditarContato()">
-            &times;
+          <button class="modal-close" onclick="fecharModalEditarContato()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
           </button>
         </div>
-        <form id="editarContatoForm">
-          <input type="hidden" id="editarContatoId" />
-          <label for="editarNome">Nome *</label>
-          <input type="text" id="editarNome" required />
-          <label for="editarTelefone">Telefone *</label>
-          <input
-            type="text"
-            id="editarTelefone"
-            required
-            placeholder="Ex: 5531999990000"
-          />
-          <label for="editarTreinamento">Treinamento</label>
-          <select id="editarTreinamento">
-            <option value="">Sem treinamento</option>
-          </select>
-          <button type="submit" class="btn-save">Salvar Alterações</button>
-        </form>
+        <div class="modal-content">
+          <form id="editarContatoForm" class="professional-form">
+            <input type="hidden" id="editarContatoId" />
+            <div class="form-group">
+              <label for="editarNome">Nome <span class="required">*</span></label>
+              <input type="text" id="editarNome" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label for="editarTelefone">Telefone <span class="required">*</span></label>
+              <input
+                type="text"
+                id="editarTelefone"
+                class="form-control"
+                required
+                placeholder="Ex: 5531999990000"
+              />
+            </div>
+            <div class="form-group">
+              <label for="editarTreinamento">Treinamento</label>
+              <select id="editarTreinamento" class="form-control">
+                <option value="">Sem treinamento</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Salvar Alterações</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
-    <div id="modalDetalhesContato" class="modal">
-      <div class="modal-content">
+    <!-- Modal para detalhes do contato -->
+    <div id="modalDetalhesContato" class="modal-overlay">
+      <div class="modal-container">
         <div class="modal-header">
           <h3>Detalhes do Contato</h3>
-          <button class="close" onclick="fecharModalDetalhesContato()">
-            &times;
+          <button class="modal-close" onclick="fecharModalDetalhesContato()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
           </button>
         </div>
-        <div id="detalhesContatoConteudo"></div>
+        <div class="modal-content" id="detalhesContatoConteudo"></div>
       </div>
     </div>
 
