@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auto Cadastro</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Auto Cadastro</h1>
+        <p>Preencha seus dados abaixo para se cadastrar</p>
+      </div>
+
+      <div class="form-section">
+        <h2><span>📝</span> Formulário de Cadastro</h2>
+        <form id="autoCadastroForm">
+          <div class="form-group">
+            <label for="nomeCompleto">Nome Completo *</label>
+            <input
+              type="text"
+              id="nomeCompleto"
+              name="nomeCompleto"
+              required
+              placeholder="Digite seu nome completo"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="cpf">CPF *</label>
+            <input
+              type="text"
+              id="cpf"
+              name="cpf"
+              required
+              placeholder="Ex: 123.456.789-00"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="email">E-mail *</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              placeholder="Digite seu e-mail"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="telefone">Telefone *</label>
+            <input
+              type="text"
+              id="telefone"
+              name="telefone"
+              required
+              placeholder="Ex: 5531999990000"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="empresa">Empresa *</label>
+            <input
+              type="text"
+              id="empresa"
+              name="empresa"
+              required
+              placeholder="Nome da empresa onde trabalha"
+            />
+          </div>
+
+          <button type="submit" class="btn-primary">
+            <span>💾</span> Cadastrar
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
