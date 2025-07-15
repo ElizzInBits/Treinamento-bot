@@ -34,6 +34,11 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Rota não encontrada' });
 });
 
+app.get('/autocadastro', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'autocadastro.html'));
+});
+
+
 // Inicializar servidor
 async function iniciarServidor() {
     try {
