@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Empresa = require('../../BancoDeDados/models/empresas');
 
-// Listar todas as empresas
+// 🔹 Listar todas as empresas
 router.get('/', async (req, res) => {
     try {
-        const empresas = await Empresa.findAll({ order: [['nome', 'ASC']] });
+        const empresas = await Empresa.findAll({
+            order: [['razao_social', 'ASC']] // ✅ Corrigido: estava 'nome'
+        });
         res.json(empresas);
     } catch (error) {
         console.error('Erro ao listar empresas:', error);
@@ -13,7 +15,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Buscar empresa por ID
+// 🔹 Buscar empresa por ID
 router.get('/:id', async (req, res) => {
     try {
         const empresa = await Empresa.findByPk(req.params.id);
@@ -27,22 +29,20 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Criar nova empresa
+// 🔹 Criar nova empresa
 router.post('/', async (req, res) => {
     try {
-        const { nome, cnpj, telefone, endereco } = req.body;
+        const { razao_social, cnpj, telefone, endereco } = req.body;
 
-        if (!nome || !cnpj) {
-            return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
+        if (!razao_social || !cnpj) {
+            return res.status(400).json({ error: 'Razão social e CNPJ são obrigatórios' });
         }
 
-        // Aqui você pode adicionar validações específicas para CNPJ, telefone, etc
-
         const novaEmpresa = await Empresa.create({
-            nome: nome.trim(),
+            razao_social: razao_social.trim(),
             cnpj: cnpj.replace(/\D/g, ''),
             telefone: telefone ? telefone.trim() : null,
-            endereco: endereco ? endereco.trim() : null,
+            endereco: endereco ? endereco.trim() : null
         });
 
         res.status(201).json({
@@ -55,10 +55,10 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Atualizar empresa
+// 🔹 Atualizar empresa
 router.put('/:id', async (req, res) => {
     try {
-        const { nome, cnpj, telefone, endereco } = req.body;
+        const { razao_social, cnpj, telefone, endereco } = req.body;
         const empresa = await Empresa.findByPk(req.params.id);
 
         if (!empresa) {
@@ -66,7 +66,7 @@ router.put('/:id', async (req, res) => {
         }
 
         const camposParaAtualizar = {};
-        if (nome) camposParaAtualizar.nome = nome.trim();
+        if (razao_social) camposParaAtualizar.razao_social = razao_social.trim();
         if (cnpj) camposParaAtualizar.cnpj = cnpj.replace(/\D/g, '');
         if (telefone !== undefined) camposParaAtualizar.telefone = telefone ? telefone.trim() : null;
         if (endereco !== undefined) camposParaAtualizar.endereco = endereco ? endereco.trim() : null;
@@ -83,7 +83,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Deletar empresa
+// 🔹 Deletar empresa
 router.delete('/:id', async (req, res) => {
     try {
         const empresa = await Empresa.findByPk(req.params.id);
