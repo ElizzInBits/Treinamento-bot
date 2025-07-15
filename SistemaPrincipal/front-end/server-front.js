@@ -20,7 +20,6 @@ app.use('/api/treinamentos', treinamentosRoutes);
 // Serve arquivos estáticos de /public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rotas para os painéis separados
 app.get('/painel1', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'painel1', 'index.html'));
 });
@@ -28,6 +27,7 @@ app.get('/painel1', (req, res) => {
 app.get('/painel2', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'painel2', 'index.html'));
 });
+
 
 // Middleware de erro
 app.use((err, req, res, next) => {
