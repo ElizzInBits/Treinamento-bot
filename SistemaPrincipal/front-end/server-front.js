@@ -98,7 +98,7 @@ app.get('/test', (req, res) => {
 });
 
 // ✅ 8. Rotas para painéis
-const painel1Path = path.join(__dirname, 'public', 'painel1', 'index.html');
+const painel1Path = path.join(__dirname, 'public', 'painel1', 'home-index.html');
 const painel2Path = path.join(__dirname, 'public', 'painel2', 'cadastro-index.html');
 
 app.get('/', (req, res) => {
