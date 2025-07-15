@@ -38,6 +38,15 @@ function validarTelefone(telefone) {
     return true;
 }
 
+// Função para validar CPF simples (apenas dígitos e tamanho)
+function validarCPF(cpf) {
+    if (!cpf) return true; // cpf opcional
+    
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    if (cpfLimpo.length !== 11) return false;
+    return true;
+}
+
 // Função para gerar variações (atualizada para trabalhar com DDI+DDD)
 function gerarVariacoes(numeroCompleto) {
     const limpo = limparNumero(numeroCompleto);
@@ -65,19 +74,6 @@ function gerarVariacoes(numeroCompleto) {
     
     return [var1, var2];
 }
-
-
-// POST /api/contatos
-router.post('/', async (req, res) => {
-  try {
-    const { nome, telefone, treinamentoId } = req.body;
-    const novoContato = await Contato.create({ nome, telefone, treinamentoId });
-    res.status(201).json(novoContato);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: 'Erro ao criar contato.' });
-  }
-});
 
 // Listar todos os contatos
 router.get('/', async (req, res) => {
@@ -109,12 +105,19 @@ router.get('/:id', async (req, res) => {
 // Cadastrar novo contato
 router.post('/', async (req, res) => {
     try {
-        const { nome, telefone } = req.body;
+        const { nome, telefone, cpf, empresa } = req.body;  // <-- adicionados cpf e empresa
 
         // Validação básica
         if (!nome || !telefone) {
             return res.status(400).json({ 
                 error: 'Nome e telefone são obrigatórios' 
+            });
+        }
+
+        // Validar CPF simples
+        if (!validarCPF(cpf)) {
+            return res.status(400).json({
+                error: 'CPF inválido. Deve conter 11 dígitos numéricos.'
             });
         }
 
@@ -147,6 +150,8 @@ router.post('/', async (req, res) => {
         const novoContato = await Contato.create({
             nome: nome.trim(),
             telefone: telefoneLimpo,
+            cpf: cpf ? cpf.replace(/\D/g, '') : null,   // <-- salva cpf limpo ou null
+            empresa: empresa ? empresa.trim() : null,   // <-- salva empresa ou null
             statusTreinamento: 'não iniciado'
         });
 
@@ -164,7 +169,7 @@ router.post('/', async (req, res) => {
 // Atualizar contato
 router.put('/:id', async (req, res) => {
     try {
-        const { nome, telefone, nomeCompleto, email, statusTreinamento } = req.body;
+        const { nome, telefone, nomeCompleto, email, statusTreinamento, cpf, empresa } = req.body;  // <-- adicionados cpf e empresa
         
         const contato = await Contato.findByPk(req.params.id);
         if (!contato) {
@@ -200,6 +205,15 @@ router.put('/:id', async (req, res) => {
             }
         }
 
+        // Validar CPF se fornecido
+        if (cpf !== undefined) {
+            if (!validarCPF(cpf)) {
+                return res.status(400).json({
+                    error: 'CPF inválido. Deve conter 11 dígitos numéricos.'
+                });
+            }
+        }
+
         // Atualizar campos
         const camposParaAtualizar = {};
         if (nome) camposParaAtualizar.nome = nome.trim();
@@ -207,6 +221,8 @@ router.put('/:id', async (req, res) => {
         if (nomeCompleto !== undefined) camposParaAtualizar.nomeCompleto = nomeCompleto;
         if (email !== undefined) camposParaAtualizar.email = email;
         if (statusTreinamento) camposParaAtualizar.statusTreinamento = statusTreinamento;
+        if (cpf !== undefined) camposParaAtualizar.cpf = cpf ? cpf.replace(/\D/g, '') : null;
+        if (empresa !== undefined) camposParaAtualizar.empresa = empresa ? empresa.trim() : null;
 
         await contato.update(camposParaAtualizar);
 
