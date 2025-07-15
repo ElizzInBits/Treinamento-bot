@@ -17,10 +17,16 @@ app.use(cors());
 app.use('/api/contatos', contatosRoutes);
 app.use('/api/treinamentos', treinamentosRoutes);
 
+// Serve arquivos estáticos de /public
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname,'public', 'painel1', 'index.html'));
+// Rotas para os painéis separados
+app.get('/painel1', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'painel1', 'index.html'));
+});
+
+app.get('/painel2', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'painel2', 'index.html'));
 });
 
 // Middleware de erro
@@ -34,9 +40,7 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Rota não encontrada' });
 });
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname,'public', 'painel2', 'index.html'));
-});
+
 
 
 // Inicializar servidor
