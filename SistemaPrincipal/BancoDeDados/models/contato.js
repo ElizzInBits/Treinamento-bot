@@ -13,19 +13,26 @@ const Contato = sequelize.define('contatos', {
     unique: true,
   },
   nomeCompleto: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-
-  statusTreinamento: { // Adicionado o campo de status de treinamento
     type: DataTypes.STRING,
-    defaultValue: 'não iniciado', // O valor padrão é 'não iniciado'
+    allowNull: true,
   },
-
+  email: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  cpf: {
+    type: DataTypes.CHAR(11), 
+    allowNull: true,
+    unique: true,
+  },
+  empresa: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  statusTreinamento: { 
+    type: DataTypes.STRING,
+    defaultValue: 'não iniciado',
+  },
   treinamentoId: {
     type: DataTypes.INTEGER,
     allowNull: true,
@@ -35,13 +42,12 @@ const Contato = sequelize.define('contatos', {
   freezeTableName: true,
 });
 
-
 Contato.associate = (models) => {
-    Contato.belongsToMany(models.Treinamento, {
-        through: 'ContatoTreinamentos',
-        foreignKey: 'contatoId',
-        otherKey: 'treinamentoId'
-    });
+  Contato.belongsToMany(models.Treinamento, {
+    through: 'ContatoTreinamentos',
+    foreignKey: 'contatoId',
+    otherKey: 'treinamentoId'
+  });
 };
 
 module.exports = Contato;
