@@ -20,11 +20,11 @@ app.use('/api/treinamentos', treinamentosRoutes);
 // Serve arquivos estáticos de /public
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/painel1', (req, res) => {
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'painel1', 'index.html'));
 });
 
-app.get('/painel2', (req, res) => {
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'painel2', 'index.html'));
 });
 
