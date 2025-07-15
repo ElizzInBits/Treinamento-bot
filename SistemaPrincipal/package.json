@@ -20,7 +20,7 @@
   "author": "LCM",
   "license": "ISC",
   "dependencies": {
-    "@wppconnect-team/wppconnect": "^1.26.0",
+    "@wppconnect-team/wppconnect": "^1.37.3",
     "canvas": "^2.11.2",
     "cors": "^2.8.5",
     "express": "^4.21.2",
