@@ -15,14 +15,13 @@ document.getElementById('autoCadastroForm').addEventListener('submit', function 
   }
 
   // Montar objeto para enviar
-  const novoUsuario = {
-    nomeCompleto,
-    cpf,
-    email,
-    telefone,
-    empresa
-  };
-
+ const novoUsuario = {
+  nome: nomeCompleto,  
+  cpf,
+  email,
+  telefone,
+  empresa
+};
   // Enviar para API
   fetch('http://92.112.178.26:3000/api/contatos', {
     method: 'POST',
