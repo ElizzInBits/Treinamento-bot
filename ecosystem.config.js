@@ -9,7 +9,7 @@ module.exports = {
     },
     {
       name: "front-end-cadastro",
-      cwd: "./SistemaPrincipal/front-end-cadastro",
+      cwd: "./SistemaPrincipal/front-end",
       script: "npm",
       args: " run start",
       interpreter: "none"
