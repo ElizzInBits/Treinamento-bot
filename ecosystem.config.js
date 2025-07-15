@@ -8,7 +8,7 @@ module.exports = {
       interpreter: "none"
     },
     {
-      name: "front-end-cadastro",
+      name: "front-end",
       cwd: "./SistemaPrincipal/front-end",
       script: "npm",
       args: " run start",
