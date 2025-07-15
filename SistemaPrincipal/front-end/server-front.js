@@ -98,30 +98,30 @@ app.get('/test', (req, res) => {
 });
 
 // ✅ 8. Rotas para painéis
-const painel1Path = path.join(__dirname, 'public', 'painel1', 'home-index.html');
-const painel2Path = path.join(__dirname, 'public', 'painel2', 'cadastro-index.html');
+const homePath = path.join(__dirname, 'public', 'home', 'home-index.html');
+const autoCadastroPath = path.join(__dirname, 'public', 'autoCadastro', 'cadastro-index.html');
 
 app.get('/', (req, res) => {
-    if (fs.existsSync(painel1Path)) {
-        res.sendFile(painel1Path);
+    if (fs.existsSync(homePath)) {
+        res.sendFile(homePath);
     } else {
-        res.json({ error: 'Painel 1 não encontrado', path: painel1Path });
+        res.json({ error: 'Painel 1 não encontrado', path: homePath });
     }
 });
 
-app.get('/painel1', (req, res) => {
-    if (fs.existsSync(painel1Path)) {
-        res.sendFile(painel1Path);
+app.get('/home', (req, res) => {
+    if (fs.existsSync(homePath)) {
+        res.sendFile(homePath);
     } else {
-        res.json({ error: 'Painel 1 não encontrado', path: painel1Path });
+        res.json({ error: 'Painel 1 não encontrado', path: homePath });
     }
 });
 
-app.get('/painel2', (req, res) => {
-    if (fs.existsSync(painel2Path)) {
-        res.sendFile(painel2Path);
+app.get('/autoCadastro', (req, res) => {
+    if (fs.existsSync(autoCadastroPath)) {
+        res.sendFile(autoCadastroPath);
     } else {
-        res.json({ error: 'Painel 2 não encontrado', path: painel2Path });
+        res.json({ error: 'Painel 2 não encontrado', path: autoCadastroPath });
     }
 });
 
@@ -154,8 +154,8 @@ async function iniciarServidor() {
         const server = app.listen(PORT, () => {
             console.log(`✅ Servidor rodando na porta ${PORT}`);
             console.log(`🔗 Teste: http://92.112.178.26:${PORT}/test`);
-            console.log(`📱 Painel 1: http://92.112.178.26:${PORT}/painel1`);
-            console.log(`📱 Painel 2: http://92.112.178.26:${PORT}/painel2`);
+            console.log(`📱 Painel 1: http://92.112.178.26:${PORT}/home`);
+            console.log(`📱 Painel 2: http://92.112.178.26:${PORT}/autoCadastro`);
             console.log(`🔗 API Contatos: http://92.112.178.26:${PORT}/api/contatos`);
             console.log(`🔗 API Treinamentos: http://92.112.178.26:${PORT}/api/treinamentos`);
         });
