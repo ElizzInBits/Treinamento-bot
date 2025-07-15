@@ -10,9 +10,8 @@ module.exports = {
     {
       name: "front-end",
       cwd: "./SistemaPrincipal/front-end",
-      script: "npm",
-      args: " run start",
-      interpreter: "none"
+      script: "server-front.js",
+      interpreter: "node"
     },
     {
       name: "template-mensagens",
