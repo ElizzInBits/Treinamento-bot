@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Contato = require('../../BancoDeDados/models/contato');
-const { Op } = require('sequelize');  
+const { Op } = require('sequelize');
 const { sequelize } = require('../../BancoDeDados/database');
 
 // Função para limpar número (mesma do seu código)
@@ -12,37 +12,37 @@ function limparNumero(numero) {
 // Função para validar telefone - Apenas DDI+DDD (igual ao frontend)
 function validarTelefone(telefone) {
     const cleaned = limparNumero(telefone);
-    
+
     // Aceitar apenas números com 12 ou 13 dígitos (DDI+DDD+número)
     if (cleaned.length !== 12 && cleaned.length !== 13) {
         return false;
     }
-    
+
     // Validar se os primeiros 2 dígitos são um DDI válido (10-99)
     const ddi = cleaned.slice(0, 2);
     if (parseInt(ddi) < 10 || parseInt(ddi) > 99) {
         return false;
     }
-    
+
     // Validar se os próximos 2 dígitos são um DDD válido (11-99)
     const ddd = cleaned.slice(2, 4);
     if (parseInt(ddd) < 11 || parseInt(ddd) > 99) {
         return false;
     }
-    
+
     // Validar se o número tem o tamanho correto após DDI+DDD
     const numero = cleaned.slice(4);
     if (numero.length !== 8 && numero.length !== 9) {
         return false;
     }
-    
+
     return true;
 }
 
 // Função para validar CPF simples (apenas dígitos e tamanho)
 function validarCPF(cpf) {
     if (!cpf) return true; // cpf opcional
-    
+
     const cpfLimpo = cpf.replace(/\D/g, '');
     if (cpfLimpo.length !== 11) return false;
     return true;
@@ -51,19 +51,19 @@ function validarCPF(cpf) {
 // Função para gerar variações (atualizada para trabalhar com DDI+DDD)
 function gerarVariacoes(numeroCompleto) {
     const limpo = limparNumero(numeroCompleto);
-    
+
     // Se não tem pelo menos 12 dígitos, retorna apenas o número limpo
     if (limpo.length < 12) return [limpo];
-    
+
     // Verifica se começa com DDI 55 (Brasil)
     if (!limpo.startsWith('55')) return [limpo];
-    
+
     const ddd = limpo.slice(2, 4);
     const base = limpo.slice(4);
-    
+
     let var1 = limpo;
     let var2 = limpo;
-    
+
     // Gera variações com e sem o 9 no celular
     if (base.length === 9 && base[0] === '9') {
         // Remove o 9 do celular
@@ -72,7 +72,7 @@ function gerarVariacoes(numeroCompleto) {
         // Adiciona o 9 no celular
         var2 = '55' + ddd + '9' + base;
     }
-    
+
     return [var1, var2];
 }
 
@@ -110,8 +110,8 @@ router.post('/', async (req, res) => {
 
         // Validação básica
         if (!nome || !telefone || !email) {
-            return res.status(400).json({ 
-                error: 'Nome, telefone e email são obrigatórios' 
+            return res.status(400).json({
+                error: 'Nome, telefone e email são obrigatórios'
             });
         }
 
@@ -133,8 +133,8 @@ router.post('/', async (req, res) => {
         // Limpar e validar telefone
         const telefoneLimpo = limparNumero(telefone);
         if (!validarTelefone(telefoneLimpo)) {
-            return res.status(400).json({ 
-                error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)' 
+            return res.status(400).json({
+                error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)'
             });
         }
 
@@ -148,8 +148,8 @@ router.post('/', async (req, res) => {
         });
 
         if (jaExiste) {
-            return res.status(400).json({ 
-                error: 'Já existe um contato com este telefone' 
+            return res.status(400).json({
+                error: 'Já existe um contato com este telefone'
             });
         }
 
@@ -158,7 +158,7 @@ router.post('/', async (req, res) => {
             nome: nome.trim(),
             telefone: telefoneLimpo,
             cpf: cpf ? cpf.replace(/\D/g, '') : null,
-            empresa: empresa ? empresa.trim() : null,
+            empresa: (typeof empresa === 'string' && empresa.trim()) || null,
             email: email.trim(),
             statusTreinamento: 'não iniciado'
         });
@@ -178,7 +178,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { nome, telefone, nomeCompleto, email, statusTreinamento, cpf, empresa } = req.body;
-        
+
         const contato = await Contato.findByPk(req.params.id);
         if (!contato) {
             return res.status(404).json({ error: 'Contato não encontrado' });
@@ -187,10 +187,10 @@ router.put('/:id', async (req, res) => {
         // Validar telefone se fornecido
         if (telefone) {
             const telefoneLimpo = limparNumero(telefone);
-            
+
             if (!validarTelefone(telefoneLimpo)) {
-                return res.status(400).json({ 
-                    error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)' 
+                return res.status(400).json({
+                    error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)'
                 });
             }
 
@@ -199,15 +199,15 @@ router.put('/:id', async (req, res) => {
             const contatosExistentes = await Contato.findAll({
                 where: { id: { [Op.ne]: req.params.id } }
             });
-            
+
             const jaExiste = contatosExistentes.some(outroContato => {
                 const variacoesContato = gerarVariacoes(outroContato.telefone);
                 return variacoesTelefone.some(num => variacoesContato.includes(num));
             });
 
             if (jaExiste) {
-                return res.status(400).json({ 
-                    error: 'Já existe outro contato com este telefone' 
+                return res.status(400).json({
+                    error: 'Já existe outro contato com este telefone'
                 });
             }
         }
@@ -239,7 +239,8 @@ router.put('/:id', async (req, res) => {
         if (email !== undefined) camposParaAtualizar.email = email.trim();
         if (statusTreinamento) camposParaAtualizar.statusTreinamento = statusTreinamento;
         if (cpf !== undefined) camposParaAtualizar.cpf = cpf ? cpf.replace(/\D/g, '') : null;
-        if (empresa !== undefined) camposParaAtualizar.empresa = empresa ? empresa.trim() : null;
+        if (empresa !== undefined) camposParaAtualizar.empresa = (typeof empresa === 'string' && empresa.trim()) || null;
+
 
         await contato.update(camposParaAtualizar);
 
