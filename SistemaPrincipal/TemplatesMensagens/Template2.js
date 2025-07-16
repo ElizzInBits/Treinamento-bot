@@ -115,7 +115,7 @@ async function start(client) {
 
             // ✅ Saudação inicial
             await sendMessage(sender, 'send-message', {
-                message: '👋 Olá! Eu sou um bot que ajuda no seu treinamento de SSMA.',
+                message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
             });
 
             // ✅ Verificação de cadastro
