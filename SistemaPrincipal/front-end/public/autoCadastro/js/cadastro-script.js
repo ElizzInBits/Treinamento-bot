@@ -59,7 +59,7 @@ const novoUsuario = {
       return res.json();
     })
     .then(data => {
-      alert(`Usuário ${data.nome} cadastrado com sucesso!`);
+      alert(`Cadastro feito com sucesso! ID: ${data.id}`);
       document.getElementById('autoCadastroForm').reset();
     })
     .catch(error => {

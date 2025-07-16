@@ -37,7 +37,7 @@ document.getElementById('cadastroEmpresaForm').addEventListener('submit', functi
     return res.json();
   })
   .then(data => {
-    alert(`Empresa "${data.razao_social}" cadastrada com sucesso!`);
+    alert(`Cadastro feito com sucesso! ID: ${data.id}`);
     document.getElementById('cadastroEmpresaForm').reset();
   })
   .catch(error => {
