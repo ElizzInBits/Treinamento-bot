@@ -4,20 +4,19 @@ const fs = require('fs');
 const path = require('path');
 const Treinamento = require('../BancoDeDados/models/treinamento'); // ajuste o caminho se necessário
 
-// Função para normalizar nome do arquivo (remove caracteres especiais)
+// Função auxiliar para normalizar nome de arquivo (usada em várias rotas)
 function normalizarNomeArquivo(nome) {
   return nome
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
     .replace(/[^a-zA-Z0-9\s]/g, '') // remove caracteres especiais
-    .replace(/\s+/g, '_') // substitui espaços por underscore
+    .replace(/\s+/g, '_') // espaços para _
     .toLowerCase();
 }
 
 // Função para criar arquivo de template
 function criarArquivoTemplate(nomeArquivo, nomeTreinamento) {
   const caminhoArquivo = path.join(__dirname, '..', 'SistemaPrincipal', 'TemplatesMensagens', 'Treinamentos', `${nomeArquivo}.js`);
-  
+
   // Cria o diretório se não existir
   const diretorio = path.dirname(caminhoArquivo);
   if (!fs.existsSync(diretorio)) {
@@ -101,7 +100,7 @@ module.exports = {
 // Função para excluir arquivo de template
 function excluirArquivoTemplate(nomeArquivo) {
   const caminhoArquivo = path.join(__dirname, '..', 'SistemaPrincipal', 'TemplatesMensagens', 'Treinamentos', `${nomeArquivo}.js`);
-  
+
   if (fs.existsSync(caminhoArquivo)) {
     fs.unlinkSync(caminhoArquivo);
     return true;
@@ -129,37 +128,30 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Nome do treinamento é obrigatório' });
     }
 
-    // Verifica se já existe treinamento com o mesmo nome
-    const existente = await Treinamento.findOne({ where: { nome: nome.trim() } });
+    const nomeLimpo = nome.trim();
+
+    // Verifica se já existe um treinamento com o mesmo nome
+    const existente = await Treinamento.findOne({ where: { nome: nomeLimpo } });
     if (existente) {
       return res.status(400).json({ error: 'Já existe um treinamento com este nome' });
     }
 
+    // Cria o novo treinamento no banco
     const novo = await Treinamento.create({
-      nome: nome.trim(),
+      nome: nomeLimpo,
       descricao: descricao || ''
     });
 
-    // Criar arquivo de template
-    try {
-      const nomeArquivo = normalizarNomeArquivo(nome.trim());
-      const caminhoArquivo = criarArquivoTemplate(nomeArquivo, nome.trim());
-      
-      console.log(`✅ Arquivo de template criado: ${caminhoArquivo}`);
-      
-      res.status(201).json({ 
-        treinamento: novo,
-        templateArquivo: caminhoArquivo,
-        message: 'Treinamento e template criados com sucesso!'
-      });
-    } catch (fileErr) {
-      console.error('Erro ao criar arquivo de template:', fileErr);
-      // Treinamento já foi criado, apenas avisa sobre o erro do arquivo
-      res.status(201).json({ 
-        treinamento: novo,
-        warning: 'Treinamento criado, mas houve erro ao criar o arquivo de template'
-      });
-    }
+    // Cria o arquivo de template com base no nome do treinamento
+    const nomeArquivo = normalizarNomeArquivo(nomeLimpo);
+    const caminhoArquivo = criarArquivoTemplate(nomeArquivo, nomeLimpo);
+
+    res.status(201).json({
+      sucesso: true,
+      treinamento: novo,
+      arquivoTemplate: caminhoArquivo,
+      message: 'Treinamento e template criados com sucesso!'
+    });
 
   } catch (err) {
     console.error('Erro ao criar treinamento:', err);
@@ -192,24 +184,26 @@ router.put('/:id', async (req, res) => {
       try {
         const nomeArquivoAntigo = normalizarNomeArquivo(nomeAntigo);
         const nomeArquivoNovo = normalizarNomeArquivo(nome.trim());
-        
+
         const caminhoAntigo = path.join(__dirname, '..', 'SistemaPrincipal', 'TemplatesMensagens', 'Treinamentos', `${nomeArquivoAntigo}.js`);
         const caminhoNovo = path.join(__dirname, '..', 'SistemaPrincipal', 'TemplatesMensagens', 'Treinamentos', `${nomeArquivoNovo}.js`);
-        
+
         if (fs.existsSync(caminhoAntigo)) {
           // Lê o conteúdo do arquivo antigo
           let conteudo = fs.readFileSync(caminhoAntigo, 'utf8');
-          
+
           // Atualiza as referências no conteúdo
-          conteudo = conteudo.replace(new RegExp(nomeAntigo, 'g'), nome.trim());
-          conteudo = conteudo.replace(new RegExp(nomeArquivoAntigo, 'g'), nomeArquivoNovo);
-          
+          const regexNomeAntigo = new RegExp(nomeAntigo, 'g');
+          const regexNomeArquivoAntigo = new RegExp(nomeArquivoAntigo, 'g');
+          conteudo = conteudo.replace(regexNomeAntigo, nome.trim());
+          conteudo = conteudo.replace(regexNomeArquivoAntigo, nomeArquivoNovo);
+
           // Escreve o novo arquivo
           fs.writeFileSync(caminhoNovo, conteudo, 'utf8');
-          
+
           // Remove o arquivo antigo
           fs.unlinkSync(caminhoAntigo);
-          
+
           arquivoRenomeado = true;
           console.log(`✅ Arquivo de template renomeado: ${caminhoAntigo} → ${caminhoNovo}`);
         }
@@ -226,7 +220,7 @@ router.put('/:id', async (req, res) => {
 
     await treinamento.save();
 
-    res.json({ 
+    res.json({
       treinamento,
       arquivoRenomeado,
       message: 'Treinamento atualizado com sucesso!'
@@ -266,7 +260,7 @@ router.delete('/:id', async (req, res) => {
       console.error('Erro ao excluir arquivo de template:', fileErr);
     }
 
-    res.json({ 
+    res.json({
       message: 'Treinamento removido com sucesso',
       treinamento: nomeTreinamento,
       templateExcluido: true
