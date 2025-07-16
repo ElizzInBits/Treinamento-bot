@@ -17,7 +17,7 @@ const Contato = sequelize.define('contatos', {
     allowNull: true,
   },
   email: {
-    type: Sequelize.STRING,
+    type: DataTypes.STRING,
     allowNull: true,
     validate: {
       isEmail: true

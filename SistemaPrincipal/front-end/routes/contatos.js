@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Contato = require('../../BancoDeDados/models/contato');
-const { Op } = require('sequelize');
+const { Op } = require('sequelize');  
+const { sequelize } = require('../../BancoDeDados/database');
 
 // Função para limpar número (mesma do seu código)
 function limparNumero(numero) {
