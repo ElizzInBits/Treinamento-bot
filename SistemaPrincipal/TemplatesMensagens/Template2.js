@@ -128,7 +128,7 @@ async function start(client) {
 
             if (!contato) {
                 await sendMessage(sender, 'send-message', {
-                    message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 http://92.112.178.26:3000/autoCadastro/`,
+                    message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 bit.ly/44xw45W`,
                 });
                 emProcessamento.delete(sender);
                 return;
