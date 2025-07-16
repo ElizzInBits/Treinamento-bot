@@ -1,7 +1,7 @@
-// routes/contatos.js
 const express = require('express');
 const router = express.Router();
 const Contato = require('../../BancoDeDados/models/contato');
+const { Op } = require('sequelize');
 
 // Função para limpar número (mesma do seu código)
 function limparNumero(numero) {
@@ -102,15 +102,23 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Cadastrar novo contato
+// Cadastrar novo contato com validação de email
 router.post('/', async (req, res) => {
     try {
-        const { nome, telefone, cpf, empresa } = req.body;  // <-- adicionados cpf e empresa
+        const { nome, telefone, cpf, empresa, email } = req.body;
 
         // Validação básica
-        if (!nome || !telefone) {
+        if (!nome || !telefone || !email) {
             return res.status(400).json({ 
-                error: 'Nome e telefone são obrigatórios' 
+                error: 'Nome, telefone e email são obrigatórios' 
+            });
+        }
+
+        // Validar email básico
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                error: 'Email inválido'
             });
         }
 
@@ -123,8 +131,6 @@ router.post('/', async (req, res) => {
 
         // Limpar e validar telefone
         const telefoneLimpo = limparNumero(telefone);
-        
-        // Validar usando a mesma função do frontend
         if (!validarTelefone(telefoneLimpo)) {
             return res.status(400).json({ 
                 error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)' 
@@ -134,7 +140,7 @@ router.post('/', async (req, res) => {
         // Verificar se já existe contato com este telefone
         const variacoesTelefone = gerarVariacoes(telefoneLimpo);
         const contatosExistentes = await Contato.findAll();
-        
+
         const jaExiste = contatosExistentes.some(contato => {
             const variacoesContato = gerarVariacoes(contato.telefone);
             return variacoesTelefone.some(num => variacoesContato.includes(num));
@@ -146,12 +152,13 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // Criar novo contato
+        // Criar novo contato incluindo email
         const novoContato = await Contato.create({
             nome: nome.trim(),
             telefone: telefoneLimpo,
-            cpf: cpf ? cpf.replace(/\D/g, '') : null,   // <-- salva cpf limpo ou null
-            empresa: empresa ? empresa.trim() : null,   // <-- salva empresa ou null
+            cpf: cpf ? cpf.replace(/\D/g, '') : null,
+            empresa: empresa ? empresa.trim() : null,
+            email: email.trim(),
             statusTreinamento: 'não iniciado'
         });
 
@@ -169,7 +176,7 @@ router.post('/', async (req, res) => {
 // Atualizar contato
 router.put('/:id', async (req, res) => {
     try {
-        const { nome, telefone, nomeCompleto, email, statusTreinamento, cpf, empresa } = req.body;  // <-- adicionados cpf e empresa
+        const { nome, telefone, nomeCompleto, email, statusTreinamento, cpf, empresa } = req.body;
         
         const contato = await Contato.findByPk(req.params.id);
         if (!contato) {
@@ -180,7 +187,6 @@ router.put('/:id', async (req, res) => {
         if (telefone) {
             const telefoneLimpo = limparNumero(telefone);
             
-            // Validar usando a mesma função do frontend
             if (!validarTelefone(telefoneLimpo)) {
                 return res.status(400).json({ 
                     error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)' 
@@ -190,7 +196,7 @@ router.put('/:id', async (req, res) => {
             // Verificar se já existe outro contato com este telefone
             const variacoesTelefone = gerarVariacoes(telefoneLimpo);
             const contatosExistentes = await Contato.findAll({
-                where: { id: { [require('sequelize').Op.ne]: req.params.id } }
+                where: { id: { [Op.ne]: req.params.id } }
             });
             
             const jaExiste = contatosExistentes.some(outroContato => {
@@ -201,6 +207,16 @@ router.put('/:id', async (req, res) => {
             if (jaExiste) {
                 return res.status(400).json({ 
                     error: 'Já existe outro contato com este telefone' 
+                });
+            }
+        }
+
+        // Validar email se fornecido
+        if (email !== undefined) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({
+                    error: 'Email inválido'
                 });
             }
         }
@@ -219,7 +235,7 @@ router.put('/:id', async (req, res) => {
         if (nome) camposParaAtualizar.nome = nome.trim();
         if (telefone) camposParaAtualizar.telefone = limparNumero(telefone);
         if (nomeCompleto !== undefined) camposParaAtualizar.nomeCompleto = nomeCompleto;
-        if (email !== undefined) camposParaAtualizar.email = email;
+        if (email !== undefined) camposParaAtualizar.email = email.trim();
         if (statusTreinamento) camposParaAtualizar.statusTreinamento = statusTreinamento;
         if (cpf !== undefined) camposParaAtualizar.cpf = cpf ? cpf.replace(/\D/g, '') : null;
         if (empresa !== undefined) camposParaAtualizar.empresa = empresa ? empresa.trim() : null;
@@ -250,57 +266,6 @@ router.delete('/:id', async (req, res) => {
 
     } catch (error) {
         console.error('Erro ao deletar contato:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Buscar contatos por status de treinamento
-router.get('/status/:status', async (req, res) => {
-    try {
-        const { status } = req.params;
-        const statusValidos = ['não iniciado', 'em andamento', 'concluído'];
-        
-        if (!statusValidos.includes(status)) {
-            return res.status(400).json({ 
-                error: 'Status inválido. Use: não iniciado, em andamento ou concluído' 
-            });
-        }
-
-        const contatos = await Contato.findAll({
-            where: { statusTreinamento: status },
-            order: [['nome', 'ASC']]
-        });
-
-        res.json(contatos);
-
-    } catch (error) {
-        console.error('Erro ao buscar contatos por status:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Buscar contatos por nome (pesquisa)
-router.get('/search/:termo', async (req, res) => {
-    try {
-        const { termo } = req.params;
-        const { Op } = require('sequelize');
-
-        const contatos = await Contato.findAll({
-            where: {
-                [Op.or]: [
-                    { nome: { [Op.like]: `%${termo}%` } },
-                    { telefone: { [Op.like]: `%${termo}%` } },
-                    { nomeCompleto: { [Op.like]: `%${termo}%` } },
-                    { email: { [Op.like]: `%${termo}%` } }
-                ]
-            },
-            order: [['nome', 'ASC']]
-        });
-
-        res.json(contatos);
-
-    } catch (error) {
-        console.error('Erro ao pesquisar contatos:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
