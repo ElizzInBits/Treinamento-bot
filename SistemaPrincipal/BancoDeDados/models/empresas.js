@@ -1,3 +1,6 @@
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../database'); 
+
 const Empresa = sequelize.define('empresas', {
   id: {
     type: DataTypes.INTEGER,
@@ -45,3 +48,5 @@ const Empresa = sequelize.define('empresas', {
   timestamps: false,
   freezeTableName: true
 });
+
+module.exports = Empresa;
