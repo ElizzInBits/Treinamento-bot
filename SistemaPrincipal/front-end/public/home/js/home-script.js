@@ -5,9 +5,10 @@ let treinamentoIdCounter = 1;
 
 // Inicializar sistema
 document.addEventListener('DOMContentLoaded', function () {
-  atualizarSelectTreinamento();
-  carregarContatos();
-  carregarTreinamentos();
+  carregarTreinamentos().then(() => {
+    atualizarSelectTreinamento();
+    carregarContatos();
+  });
 });
 
 // Funções de navegação
@@ -87,9 +88,8 @@ document.getElementById('cadastroForm').addEventListener('submit', function (e) 
   }
 
   const novoContato = {
-    id: contatoIdCounter++,
-    nome: nome,
-    telefone: telefone,
+    nome,
+    telefone,
     treinamentoId: treinamentoId ? parseInt(treinamentoId) : null
   };
 
@@ -98,20 +98,21 @@ document.getElementById('cadastroForm').addEventListener('submit', function (e) 
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(novoContato)
   })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
     .then(data => {
       mostrarAlerta(`Contato ${data.nome} cadastrado com sucesso!`);
       document.getElementById('cadastroForm').reset();
       carregarContatos(); // recarrega do banco
+
+      if (document.getElementById('listar').classList.contains('active')) {
+        renderizarContatos();
+        atualizarEstatisticas();
+      }
     })
     .catch(() => mostrarAlerta('Erro ao salvar contato.', 'error'));
-
-  document.getElementById('cadastroForm').reset();
-
-  if (document.getElementById('listar').classList.contains('active')) {
-    renderizarContatos();
-    atualizarEstatisticas();
-  }
 });
 
 // Atualizar select de treinamentos
@@ -155,7 +156,6 @@ function carregarContatos() {
       if (loading) loading.style.display = 'none';
     });
 }
-
 
 // Renderizar contatos
 function renderizarContatos() {
@@ -287,7 +287,7 @@ function carregarTreinamentos() {
   const loading = document.getElementById('loadingTreinamentos');
   if (loading) loading.style.display = 'block';
 
-  fetch('http://92.112.178.26:3000/api/treinamentos')
+  return fetch('http://92.112.178.26:3000/api/treinamentos')
     .then(res => res.json())
     .then(data => {
       treinamentos = data;
@@ -299,7 +299,6 @@ function carregarTreinamentos() {
       if (loading) loading.style.display = 'none';
     });
 }
-
 
 // Renderizar treinamentos
 function renderizarTreinamentos() {
@@ -372,7 +371,6 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
       carregarTreinamentos();
     })
     .catch(() => mostrarAlerta('Erro ao criar treinamento.', 'error'));
-
 
   // Limpar formulário
   document.getElementById('treinamentoForm').reset();
@@ -448,10 +446,8 @@ function editarTreinamento(treinamentoId) {
     })
     .catch(() => mostrarAlerta('Erro ao atualizar treinamento.', 'error'));
 
-
   renderizarTreinamentos();
   atualizarSelectTreinamento();
-  mostrarAlerta('Treinamento atualizado com sucesso!');
 }
 
 // Remover treinamento
@@ -484,7 +480,6 @@ function removerTreinamento(treinamentoId) {
   }
 }
 
-
 // Remover contato do treinamento (no modal)
 function removerContatoDoTreinamento(contatoId) {
   if (confirm('Tem certeza que deseja remover este contato do treinamento?')) {
@@ -507,7 +502,6 @@ function removerContatoDoTreinamento(contatoId) {
       .catch(() => mostrarAlerta('Erro ao remover contato do treinamento.', 'error'));
   }
 }
-
 
 // Fechar modal
 function fecharModal() {
@@ -548,7 +542,7 @@ window.onclick = function (event) {
   ];
 
   modals.forEach(modal => {
-    if (event.target === modal) {
+    if (modal && event.target === modal) {
       modal.style.display = 'none';
     }
   });
