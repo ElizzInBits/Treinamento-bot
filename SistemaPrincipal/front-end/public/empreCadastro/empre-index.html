@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Empresas</title>
+    <link rel="stylesheet" href="css/empre-style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Cadastro de Empresa</h1>
+        <p>Preencha os dados da empresa abaixo</p>
+      </div>
+
+      <div class="form-section">
+        <h2><span>🏢</span> Formulário de Cadastro</h2>
+        <form id="cadastroEmpresaForm">
+          <div class="form-group">
+            <label for="razaoSocial">Razão Social *</label>
+            <input
+              type="text"
+              id="razaoSocial"
+              name="razaoSocial"
+              required
+              placeholder="Digite a razão social da empresa"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="cnpj">CNPJ *</label>
+            <input
+              type="text"
+              id="cnpj"
+              name="cnpj"
+              required
+              placeholder="Ex: 12.345.678/0001-90"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="porte">Porte da Empresa *</label>
+            <select id="porte" name="porte" required>
+              <option value="">Selecione o porte</option>
+              <option value="micro">Microempresa</option>
+              <option value="pequeno">Pequeno Porte</option>
+              <option value="medio">Médio Porte</option>
+              <option value="grande">Grande Porte</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="endereco">Endereço *</label>
+            <input
+              type="text"
+              id="endereco"
+              name="endereco"
+              required
+              placeholder="Rua, número e complemento"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="cep">CEP *</label>
+            <input
+              type="text"
+              id="cep"
+              name="cep"
+              required
+              placeholder="Ex: 12345-678"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="contato">Número de Contato *</label>
+            <input
+              type="text"
+              id="contato"
+              name="contato"
+              required
+              placeholder="Ex: 11999990000"
+            />
+          </div>
+
+          <button type="submit" class="btn-primary">
+            <span>💾</span> Cadastrar Empresa
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script src="js/empre-script.js"></script>
+  </body>
+</html>
