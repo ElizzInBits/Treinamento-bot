@@ -110,6 +110,7 @@ app.get('/test', (req, res) => {
 // ✅ 8. Painéis HTML
 const homePath = path.join(__dirname, 'public', 'home', 'home-index.html');
 const autoCadastroPath = path.join(__dirname, 'public', 'autoCadastro', 'cadastro-index.html');
+const emprePath = path.join(__dirname, 'public', 'empreCadastro', 'empre-index.html');
 
 app.get('/', (req, res) => {
     fs.existsSync(homePath) ? res.sendFile(homePath) : res.json({ error: 'Painel 1 não encontrado', path: homePath });
@@ -121,6 +122,10 @@ app.get('/home', (req, res) => {
 
 app.get('/autoCadastro', (req, res) => {
     fs.existsSync(autoCadastroPath) ? res.sendFile(autoCadastroPath) : res.json({ error: 'Painel 2 não encontrado', path: autoCadastroPath });
+});
+
+app.get('/empre', (req, res) => {
+    fs.existsSync(emprePath) ? res.sendFile(emprePath) : res.json({ error: 'Painel 3 não encontrado', path: emprePath });
 });
 
 // ✅ 9. Middleware de erro
@@ -154,6 +159,7 @@ async function iniciarServidor() {
             console.log(`🔗 Teste: http://92.112.178.26:${PORT}/test`);
             console.log(`📱 Painel 1: http://92.112.178.26:${PORT}/home`);
             console.log(`📱 Painel 2: http://92.112.178.26:${PORT}/autoCadastro`);
+            console.log(`📱 Painel 3: http://92.112.178.26:${PORT}/empre`);
             console.log(`🔗 API Contatos: http://92.112.178.26:${PORT}/api/contatos`);
             console.log(`🔗 API Treinamentos: http://92.112.178.26:${PORT}/api/treinamentos`);
             console.log(`🔗 API Empresas: http://92.112.178.26:${PORT}/api/empresas`);
