@@ -4,6 +4,9 @@ const express = require('express');
 const router = express.Router();
 const Empresa = require('../../BancoDeDados/models/empresas');
 
+function limparCNPJ(cnpj) {
+  return cnpj.replace(/\D/g, '');
+}
 // 🔹 Listar todas as empresas
 router.get('/', async (req, res) => {
     try {
