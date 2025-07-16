@@ -33,6 +33,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+
 // 🔹 Criar nova empresa
 router.post('/', async (req, res) => {
   try {
@@ -146,5 +147,20 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
+
+// Rota para retornar empresas para o select do front-end
+router.get('/select/options', async (req, res) => {
+  try {
+    const empresas = await Empresa.findAll({
+      attributes: ['id', 'razao_social'],
+      order: [['razao_social', 'ASC']]
+    });
+    res.json(empresas);
+  } catch (error) {
+    console.error('Erro ao buscar empresas:', error);
+    res.status(500).json({ error: 'Erro ao carregar empresas' });
+  }
+});
+
 
 module.exports = router;
