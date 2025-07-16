@@ -17,11 +17,14 @@ const Contato = sequelize.define('contatos', {
     allowNull: true,
   },
   email: {
-    type: DataTypes.STRING,
+    type: Sequelize.STRING,
     allowNull: true,
+    validate: {
+      isEmail: true
+    }
   },
   cpf: {
-    type: DataTypes.CHAR(11), 
+    type: DataTypes.CHAR(11),
     allowNull: true,
     unique: true,
   },
@@ -29,7 +32,7 @@ const Contato = sequelize.define('contatos', {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  statusTreinamento: { 
+  statusTreinamento: {
     type: DataTypes.STRING,
     defaultValue: 'não iniciado',
   },

@@ -34,13 +34,14 @@ document.getElementById('autoCadastroForm').addEventListener('submit', function 
   }
 
   // Objeto para envio
-  const novoUsuario = {
-    nome: nomeCompleto,
-    cpf,
-    email,
-    telefone,
-    empresaId
-  };
+const novoUsuario = {
+  nome: nomeCompleto,
+  cpf,
+  email,
+  telefone,
+  empresa
+};
+
 
   // Enviar dados via POST
   fetch('http://92.112.178.26:3000/api/contatos', {
