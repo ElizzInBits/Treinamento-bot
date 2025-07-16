@@ -1,28 +1,48 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const empresaSelect = document.getElementById('empresa');
+
+  // 🔽 Carregar empresas do backend e popular o <select>
+  fetch('/api/empresas/select/options')
+    .then(res => res.json())
+    .then(empresas => {
+      empresas.forEach(emp => {
+        const option = document.createElement('option');
+        option.value = emp.id;
+        option.textContent = emp.razao_social;
+        empresaSelect.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.error('Erro ao carregar empresas:', error);
+    });
+});
+
 document.getElementById('autoCadastroForm').addEventListener('submit', function (e) {
   e.preventDefault();
 
-  // Capturar os dados do formulário
+  // Captura dos dados
   const nomeCompleto = document.getElementById('nomeCompleto').value.trim();
   const cpf = document.getElementById('cpf').value.trim();
   const email = document.getElementById('email').value.trim();
   const telefone = document.getElementById('telefone').value.trim();
-  const empresa = document.getElementById('empresa').value.trim();
+  const empresaId = document.getElementById('empresa').value;
 
-  // Validação básica (pode melhorar depois)
-  if (!nomeCompleto || !cpf || !email || !telefone || !empresa) {
+  // Validação simples
+  if (!nomeCompleto || !cpf || !email || !telefone || !empresaId) {
     alert('Por favor, preencha todos os campos obrigatórios.');
     return;
   }
 
-  // Montar objeto para enviar
- const novoUsuario = {
-  nome: nomeCompleto,  
-  cpf,
-  email,
-  telefone,
-  empresa
-};
-  // Enviar para API
+  // Objeto para envio
+  const novoUsuario = {
+    nome: nomeCompleto,
+    cpf,
+    email,
+    telefone,
+    empresaId
+  };
+
+  // Enviar dados via POST
   fetch('http://92.112.178.26:3000/api/contatos', {
     method: 'POST',
     headers: {
@@ -38,7 +58,7 @@ document.getElementById('autoCadastroForm').addEventListener('submit', function 
       return res.json();
     })
     .then(data => {
-      alert(`Usuário ${data.nomeCompleto} cadastrado com sucesso!`);
+      alert(`Usuário ${data.nome} cadastrado com sucesso!`);
       document.getElementById('autoCadastroForm').reset();
     })
     .catch(error => {
