@@ -1,3 +1,5 @@
+const Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 const express = require('express');
 const router = express.Router();
 const Empresa = require('../../BancoDeDados/models/empresas');
@@ -87,7 +89,7 @@ router.put('/:id', async (req, res) => {
       const existeOutro = await Empresa.findOne({
         where: {
           cnpj: cnpjLimpo,
-          id: { [require('sequelize').Op.ne]: req.params.id }
+          id: { [Op.ne]: req.params.id }
         }
       });
       if (existeOutro) {
@@ -100,7 +102,7 @@ router.put('/:id', async (req, res) => {
       const emailExiste = await Empresa.findOne({
         where: {
           email,
-          id: { [require('sequelize').Op.ne]: req.params.id }
+          id: { [Op.ne]: req.params.id }
         }
       });
       if (emailExiste) {
@@ -123,6 +125,7 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor.' });
   }
 });
+
 
 
 // 🔹 Deletar empresa
