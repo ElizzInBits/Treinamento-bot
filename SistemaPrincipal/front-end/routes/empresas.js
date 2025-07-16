@@ -1,4 +1,5 @@
-const Sequelize = require('sequelize');
+
+const { Sequelize } = require('../../BancoDeDados/database');
 const Op = Sequelize.Op;
 const express = require('express');
 const router = express.Router();
