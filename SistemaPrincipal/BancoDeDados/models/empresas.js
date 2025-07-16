@@ -1,6 +1,3 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../database');
-
 const Empresa = sequelize.define('empresas', {
   id: {
     type: DataTypes.INTEGER,
@@ -32,13 +29,19 @@ const Empresa = sequelize.define('empresas', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  email: {                     
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+    validate: {
+      isEmail: true
+    }
+  },
   criado_em: {
     type: DataTypes.DATE,
     allowNull: true
   }
 }, {
-  timestamps: false,           
-  freezeTableName: true        
+  timestamps: false,
+  freezeTableName: true
 });
-
-module.exports = Empresa;

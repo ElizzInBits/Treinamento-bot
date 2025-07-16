@@ -31,57 +31,99 @@ router.get('/:id', async (req, res) => {
 
 // 🔹 Criar nova empresa
 router.post('/', async (req, res) => {
-    try {
-        const { razao_social, cnpj, telefone, endereco } = req.body;
+  try {
+    const { razaoSocial, cnpj, porte, endereco, cep, contato, email } = req.body;
 
-        if (!razao_social || !cnpj) {
-            return res.status(400).json({ error: 'Razão social e CNPJ são obrigatórios' });
-        }
-
-        const novaEmpresa = await Empresa.create({
-            razao_social: razao_social.trim(),
-            cnpj: cnpj.replace(/\D/g, ''),
-            telefone: telefone ? telefone.trim() : null,
-            endereco: endereco ? endereco.trim() : null
-        });
-
-        res.status(201).json({
-            message: 'Empresa criada com sucesso',
-            empresa: novaEmpresa
-        });
-    } catch (error) {
-        console.error('Erro ao criar empresa:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
+    // Ajuste a validação conforme quiser tornar o email obrigatório ou não
+    if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !contato || !email) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
     }
+
+    const cnpjLimpo = limparCNPJ(cnpj);
+
+    // Verificar se já existe empresa com mesmo CNPJ
+    const jaExiste = await Empresa.findOne({ where: { cnpj: cnpjLimpo } });
+    if (jaExiste) {
+      return res.status(400).json({ error: 'CNPJ já cadastrado.' });
+    }
+
+    // Verificar se email já cadastrado (opcional)
+    const emailExiste = await Empresa.findOne({ where: { email } });
+    if (emailExiste) {
+      return res.status(400).json({ error: 'Email já cadastrado.' });
+    }
+
+    const novaEmpresa = await Empresa.create({
+      razao_social: razaoSocial.trim(),
+      cnpj: cnpjLimpo,
+      porte_empresa: porte,
+      endereco,
+      cep,
+      contato,
+      email,
+      criado_em: new Date()
+    });
+
+    res.status(201).json(novaEmpresa);
+  } catch (error) {
+    console.error('Erro ao criar empresa:', error);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
 });
+
 
 // 🔹 Atualizar empresa
 router.put('/:id', async (req, res) => {
-    try {
-        const { razao_social, cnpj, telefone, endereco } = req.body;
-        const empresa = await Empresa.findByPk(req.params.id);
-
-        if (!empresa) {
-            return res.status(404).json({ error: 'Empresa não encontrada' });
-        }
-
-        const camposParaAtualizar = {};
-        if (razao_social) camposParaAtualizar.razao_social = razao_social.trim();
-        if (cnpj) camposParaAtualizar.cnpj = cnpj.replace(/\D/g, '');
-        if (telefone !== undefined) camposParaAtualizar.telefone = telefone ? telefone.trim() : null;
-        if (endereco !== undefined) camposParaAtualizar.endereco = endereco ? endereco.trim() : null;
-
-        await empresa.update(camposParaAtualizar);
-
-        res.json({
-            message: 'Empresa atualizada com sucesso',
-            empresa: empresa
-        });
-    } catch (error) {
-        console.error('Erro ao atualizar empresa:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
+  try {
+    const empresa = await Empresa.findByPk(req.params.id);
+    if (!empresa) {
+      return res.status(404).json({ error: 'Empresa não encontrada.' });
     }
+
+    const { razaoSocial, cnpj, porte, endereco, cep, contato, email } = req.body;
+
+    if (cnpj) {
+      const cnpjLimpo = limparCNPJ(cnpj);
+      const existeOutro = await Empresa.findOne({
+        where: {
+          cnpj: cnpjLimpo,
+          id: { [require('sequelize').Op.ne]: req.params.id }
+        }
+      });
+      if (existeOutro) {
+        return res.status(400).json({ error: 'CNPJ já cadastrado por outra empresa.' });
+      }
+      empresa.cnpj = cnpjLimpo;
+    }
+
+    if (email) {
+      const emailExiste = await Empresa.findOne({
+        where: {
+          email,
+          id: { [require('sequelize').Op.ne]: req.params.id }
+        }
+      });
+      if (emailExiste) {
+        return res.status(400).json({ error: 'Email já cadastrado por outra empresa.' });
+      }
+      empresa.email = email;
+    }
+
+    if (razaoSocial) empresa.razao_social = razaoSocial.trim();
+    if (porte) empresa.porte_empresa = porte;
+    if (endereco) empresa.endereco = endereco;
+    if (cep) empresa.cep = cep;
+    if (contato) empresa.contato = contato;
+
+    await empresa.save();
+
+    res.json({ message: 'Empresa atualizada com sucesso.', empresa });
+  } catch (error) {
+    console.error('Erro ao atualizar empresa:', error);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
 });
+
 
 // 🔹 Deletar empresa
 router.delete('/:id', async (req, res) => {
