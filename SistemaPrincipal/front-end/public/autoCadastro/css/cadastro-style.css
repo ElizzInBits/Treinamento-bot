@@ -124,6 +124,33 @@ body {
   border-color: var(--secondary-color);
   box-shadow: 0 0 0 3px rgba(110, 198, 202, 0.1);
   background: var(--white);
+  color: var(--gray-900);
+}
+
+/* Estilo para o select */
+.form-group select {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--gray-50);
+  color: var(--gray-800);
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3csvg width='10' height='7' viewBox='0 0 10 7' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1 1L5 5L9 1' stroke='%23647A8B' stroke-width='2'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 10px 7px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(110, 198, 202, 0.1);
+  background: var(--white);
+  color: var(--gray-900);
 }
 
 .form-group input::placeholder {
