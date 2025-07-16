@@ -8,10 +8,18 @@ document.getElementById('cadastroEmpresaForm').addEventListener('submit', functi
   const endereco = document.getElementById('endereco').value.trim();
   const cep = document.getElementById('cep').value.trim();
   const contato = document.getElementById('contato').value.trim();
+  const email = document.getElementById('email').value.trim();
 
   // Validação básica
-  if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !contato) {
+  if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !contato || !email) {
     alert('Por favor, preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  // Validação simples do email (formato básico)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    alert('Por favor, informe um email válido.');
     return;
   }
 
@@ -22,7 +30,8 @@ document.getElementById('cadastroEmpresaForm').addEventListener('submit', functi
     porte,
     endereco,
     cep,
-    contato
+    contato,
+    email
   };
 
   // Enviar para a API
