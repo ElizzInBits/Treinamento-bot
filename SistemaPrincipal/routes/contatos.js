@@ -69,53 +69,72 @@ function gerarVariacoes(numeroCompleto) {
 
 // POST /api/contatos
 router.post('/', async (req, res) => {
-router.post('/', async (req, res) => {
   try {
-    const { nome, cpf, email, telefone, empresaId } = req.body;
+    const { nome, telefone, empresaId, treinamentoId } = req.body;
 
+    // Validação simples dos campos obrigatórios
     if (!nome || !telefone || !empresaId) {
-      return res.status(400).json({ error: 'Nome, telefone e empresaId são obrigatórios' });
+      return res.status(400).json({
+        error: 'Nome, telefone e empresaId são obrigatórios'
+      });
     }
 
+    // Limpar telefone
     const telefoneLimpo = limparNumero(telefone);
 
+    // Validar telefone
     if (!validarTelefone(telefoneLimpo)) {
-      return res.status(400).json({ error: 'Telefone inválido' });
+      return res.status(400).json({
+        error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)'
+      });
     }
 
-    // Verificar duplicados CPF e telefone
-    const contatoExistente = await Contato.findOne({
-      where: {
-        [require('sequelize').Op.or]: [
-          { telefone: telefoneLimpo },
-          { cpf: cpf }
-        ]
-      }
+    // Verificar se já existe contato com este telefone
+    const variacoesTelefone = gerarVariacoes(telefoneLimpo);
+    const contatosExistentes = await Contato.findAll();
+
+    const jaExiste = contatosExistentes.some(contato => {
+      const variacoesContato = gerarVariacoes(contato.telefone);
+      return variacoesTelefone.some(num => variacoesContato.includes(num));
     });
 
-    if (contatoExistente) {
-      return res.status(400).json({ error: 'Contato com telefone ou CPF já cadastrado' });
+    if (jaExiste) {
+      return res.status(400).json({
+        error: 'Já existe um contato com este telefone'
+      });
     }
 
+    // Criar novo contato com empresaId incluído
     const novoContato = await Contato.create({
       nome: nome.trim(),
-      cpf,
-      email,
       telefone: telefoneLimpo,
-      empresaId,
-      statusTreinamento: 'não iniciado'
+      empresaId: empresaId,
+      statusTreinamento: 'não iniciado',
+      treinamentoId
     });
 
     res.status(201).json({
       message: 'Contato cadastrado com sucesso',
-      id: novoContato.id
+      contato: novoContato
     });
-  } catch (error) {
-    console.error('Erro ao cadastrar contato:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+  } catch (err) {
+    console.error('Erro ao criar contato:', err);
+    res.status(400).json({ error: 'Erro ao criar contato.' });
   }
 });
 
+// Listar todos os contatos
+router.get('/', async (req, res) => {
+    try {
+        const contatos = await Contato.findAll({
+            order: [['nome', 'ASC']]
+        });
+        res.json(contatos);
+    } catch (error) {
+        console.error('Erro ao listar contatos:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
 
 // Buscar contato por ID
 router.get('/:id', async (req, res) => {
