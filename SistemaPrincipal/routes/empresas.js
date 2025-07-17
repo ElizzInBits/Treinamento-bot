@@ -41,13 +41,17 @@ router.post('/', async (req, res) => {
 });
 
 // GET - Listar todas as empresas
-router.get('/', async (req, res) => {
+router.get('/select/options', async (req, res) => {
   try {
-    const empresas = await Empresa.findAll({ order: [['razao_social', 'ASC']] });
+    const empresas = await Empresa.findAll({
+      attributes: ['id', 'razao_social'],
+      order: [['razao_social', 'ASC']]
+    });
+
     res.json(empresas);
   } catch (error) {
-    console.error('Erro ao listar empresas:', error);
-    res.status(500).json({ error: 'Erro interno do servidor.' });
+    console.error('Erro ao buscar opções de empresas:', error);
+    res.status(500).json({ error: 'Erro ao carregar opções de empresas.' });
   }
 });
 
