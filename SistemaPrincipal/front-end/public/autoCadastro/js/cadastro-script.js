@@ -61,8 +61,18 @@ document.getElementById('autoCadastroForm').addEventListener('submit', function 
       // Em vez de alert, redireciona para a página de sucesso
       console.log(`Cadastro feito com sucesso! ID: ${data.id}`);
       
+      // Limpa o formulário
+      document.getElementById('autoCadastroForm').reset();
+      
       // Redireciona para a página voltarWhats-index.html
-      window.location.href = 'voltarWhats-index.html';
+      // Tenta diferentes formas de redirecionamento
+      try {
+        window.location.href = './voltarWhats-index.html';
+      } catch (error) {
+        console.error('Erro no redirecionamento:', error);
+        // Fallback: abre em nova aba
+        window.open('./voltarWhats-index.html', '_blank');
+      }
     })
     .catch(error => {
       alert('Erro: ' + error.message);
