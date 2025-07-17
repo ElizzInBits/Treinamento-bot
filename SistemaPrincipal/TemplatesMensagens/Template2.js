@@ -8,6 +8,7 @@ const { gerarCertificado, enviarEmail } = require('./Certificados/certificados.j
 const timeouts = {};
 const ultimasInteracoes = {};
 const emProcessamento = new Set();
+const saudacoesEnviadas = new Set(); // <- Adicionado aqui
 
 function agendarLembrete(sender, mensagemLista, tempoMs = 0.3 * 60 * 1000) {
     if (timeouts[sender]) clearTimeout(timeouts[sender]);
@@ -113,10 +114,13 @@ async function start(client) {
 
             if (timeouts[sender]) clearTimeout(timeouts[sender]);
 
-            // ✅ Saudação inicial
-            await sendMessage(sender, 'send-message', {
-                message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
-            });
+            // ✅ Saudação inicial apenas uma vez
+            if (!saudacoesEnviadas.has(sender)) {
+                await sendMessage(sender, 'send-message', {
+                    message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
+                });
+                saudacoesEnviadas.add(sender);
+            }
 
             // ✅ Verificação de cadastro
             const senderVariacoes = gerarVariacoes(sender);
@@ -339,14 +343,13 @@ async function start(client) {
                 }
             }
 
-
             const respostasEsperadas = ['começar agora!! 😎 🔥🔥🔥', 'não, começo assim que possível 👀 😅', 'pronto', '1', 'a', 'b', 'c', 'd'];
-        await verificarRespostaEsperada(sender, text, respostasEsperadas);
+            await verificarRespostaEsperada(sender, text, respostasEsperadas);
 
-    } catch (error) {
-        console.error(`❌ Erro no processamento da mensagem de ${sender}:`, error);
-    } finally {
-        emProcessamento.delete(sender);
-    }
-});
+        } catch (error) {
+            console.error(`❌ Erro no processamento da mensagem de ${sender}:`, error);
+        } finally {
+            emProcessamento.delete(sender);
+        }
+    });
 }
