@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const express = require('express');
 const router = express.Router();
-const { Empresa } = require('../../BancoDeDados/models'); // <- IMPORTAÇÃO CORRETA
+const { Empresa } = require('../../BancoDeDados/models/empresas');
 
 function limparCNPJ(cnpj) {
   return cnpj.replace(/\D/g, '');
