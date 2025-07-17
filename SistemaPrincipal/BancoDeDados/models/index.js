@@ -1,17 +1,18 @@
-// 📁 BancoDeDados/models/index.js
-const sequelize = require('../database'); // sua conexão com Sequelize
-const EmpresaModel = require('./empresas');
-const ContatoModel = require('./contatos');
+const sequelize = require('../database'); // sua conexão Sequelize
 
-// Inicializa os modelos passando a instância do Sequelize
+// Importação dos modelos
+const EmpresaModel = require('./empresas');
+const ContatoModel = require('./contato'); // atenção: arquivo é contato.js, singular
+
+// Inicializa os modelos com a instância do Sequelize
 const Empresa = EmpresaModel(sequelize);
 const Contato = ContatoModel(sequelize);
 
-// Associações (se houverem)
+// Faz as associações se existirem
 if (Empresa.associate) Empresa.associate({ Contato });
 if (Contato.associate) Contato.associate({ Empresa });
 
-// Exporta tudo pronto para uso
+// Exporta os modelos prontos
 module.exports = {
   sequelize,
   Empresa,
