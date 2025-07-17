@@ -53,9 +53,13 @@ module.exports = (sequelize) => {
     freezeTableName: true,
   });
 
-  Contato.associate = (models) => {
-    Contato.belongsTo(models.Empresa, { foreignKey: 'empresaId' });
-  };
+Contato.associate = (models) => {
+  Contato.belongsTo(models.Empresa, {
+    foreignKey: 'empresaId',
+    as: 'empresaRef' // ✅ evita conflito com campo 'empresa'
+  });
+};
+
 
   return Contato;
 };
