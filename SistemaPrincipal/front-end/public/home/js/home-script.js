@@ -1,11 +1,18 @@
 let contatos = [];
 let treinamentos = [];
+let empresas = [];
 let contatoIdCounter = 1;
 let treinamentoIdCounter = 1;
+let empresaIdCounter = 1;
+let empresaSelecionada = null;
+let contatosEmpresaSelecionada = [];
 
 // Inicializar sistema
 document.addEventListener('DOMContentLoaded', function () {
-  carregarTreinamentos().then(() => {
+  carregarEmpresas().then(() => {
+    atualizarSelectEmpresa();
+    return carregarTreinamentos();
+  }).then(() => {
     atualizarSelectTreinamento();
     carregarContatos();
   });
@@ -22,9 +29,9 @@ function showTab(tabName) {
   document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
   document.getElementById(tabName).classList.add('active');
 
-  if (tabName === 'listar') {
-    renderizarContatos();
-    atualizarEstatisticas();
+  if (tabName === 'empresas') {
+    renderizarEmpresas();
+    atualizarEstatisticasEmpresas();
   } else if (tabName === 'treinamentos') {
     renderizarTreinamentos();
   }
@@ -69,9 +76,10 @@ document.getElementById('cadastroForm').addEventListener('submit', function (e) 
 
   const nome = document.getElementById('nome').value.trim();
   const telefone = document.getElementById('telefone').value.trim();
+  const empresaId = document.getElementById('empresa').value;
   const treinamentoId = document.getElementById('treinamento').value;
 
-  if (!nome || !telefone) {
+  if (!nome || !telefone || !empresaId) {
     mostrarAlerta('Por favor, preencha todos os campos obrigatórios.', 'error');
     return;
   }
@@ -90,6 +98,7 @@ document.getElementById('cadastroForm').addEventListener('submit', function (e) 
   const novoContato = {
     nome,
     telefone,
+    empresaId: parseInt(empresaId),
     treinamentoId: treinamentoId ? parseInt(treinamentoId) : null
   };
 
@@ -105,15 +114,39 @@ document.getElementById('cadastroForm').addEventListener('submit', function (e) 
     .then(data => {
       mostrarAlerta(`Contato ${data.nome} cadastrado com sucesso!`);
       document.getElementById('cadastroForm').reset();
-      carregarContatos(); // recarrega do banco
+      carregarContatos();
 
-      if (document.getElementById('listar').classList.contains('active')) {
-        renderizarContatos();
-        atualizarEstatisticas();
+      if (document.getElementById('empresas').classList.contains('active')) {
+        renderizarEmpresas();
+        atualizarEstatisticasEmpresas();
       }
     })
     .catch(() => mostrarAlerta('Erro ao salvar contato.', 'error'));
 });
+
+// Atualizar select de empresas
+function atualizarSelectEmpresa() {
+  const selects = [
+    document.getElementById('empresa'),
+    document.getElementById('editarEmpresa')
+  ];
+
+  selects.forEach(select => {
+    if (select) {
+      const currentValue = select.value;
+      select.innerHTML = '<option value="">Selecione uma empresa</option>';
+
+      empresas.forEach(empresa => {
+        const option = document.createElement('option');
+        option.value = empresa.id;
+        option.textContent = empresa.nome;
+        select.appendChild(option);
+      });
+
+      if (currentValue) select.value = currentValue;
+    }
+  });
+}
 
 // Atualizar select de treinamentos
 function atualizarSelectTreinamento() {
@@ -139,114 +172,247 @@ function atualizarSelectTreinamento() {
   });
 }
 
-// Carregar contatos
-function carregarContatos() {
-  const loading = document.getElementById('loading');
+// Carregar empresas
+function carregarEmpresas() {
+  const loading = document.getElementById('loadingEmpresas');
   if (loading) loading.style.display = 'block';
 
-  fetch('http://92.112.178.26:3000/api/contatos')
+  return fetch('http://92.112.178.26:3000/api/empresas')
     .then(res => res.json())
     .then(data => {
-      contatos = data;
-      renderizarContatos();
-      atualizarEstatisticas();
+      empresas = data;
+      renderizarEmpresas();
+      atualizarEstatisticasEmpresas();
     })
-    .catch(() => mostrarAlerta('Erro ao carregar contatos.', 'error'))
+    .catch(() => mostrarAlerta('Erro ao carregar empresas.', 'error'))
     .finally(() => {
       if (loading) loading.style.display = 'none';
     });
 }
 
-// Renderizar contatos
-function renderizarContatos() {
-  const contatosLista = document.getElementById('contatosLista');
-  const searchInput = document.getElementById('searchInput');
+// Carregar contatos
+function carregarContatos() {
+  return fetch('http://92.112.178.26:3000/api/contatos')
+    .then(res => res.json())
+    .then(data => {
+      contatos = data;
+      atualizarEstatisticasEmpresas();
+    })
+    .catch(() => mostrarAlerta('Erro ao carregar contatos.', 'error'));
+}
+
+// Renderizar empresas
+function renderizarEmpresas() {
+  const empresasGrid = document.getElementById('empresasGrid');
+
+  if (empresas.length === 0) {
+    empresasGrid.innerHTML = `
+      <div class="empty-state">
+        <h3>Nenhuma empresa cadastrada</h3>
+        <p>Não há empresas cadastradas no sistema.</p>
+      </div>
+    `;
+    return;
+  }
+
+  empresasGrid.innerHTML = empresas.map(empresa => {
+    const contatosEmpresa = contatos.filter(c => c.empresaId === empresa.id);
+    const contatosComTreinamento = contatosEmpresa.filter(c => c.treinamentoId);
+    
+    return `
+      <div class="company-card">
+        <div class="company-header">
+          <h3>${empresa.nome}</h3>
+          <span class="company-type">${empresa.tipo || 'Empresa'}</span>
+        </div>
+        <div class="company-info">
+          <p><strong>CNPJ:</strong> ${empresa.cnpj || 'N/A'}</p>
+          <p><strong>Email:</strong> ${empresa.email || 'N/A'}</p>
+          <p><strong>Telefone:</strong> ${empresa.telefone ? formatarTelefone(empresa.telefone) : 'N/A'}</p>
+        </div>
+        <div class="company-stats">
+          <div class="stat">
+            <span class="stat-number">${contatosEmpresa.length}</span>
+            <span class="stat-label">Contatos</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">${contatosComTreinamento.length}</span>
+            <span class="stat-label">Com Treinamento</span>
+          </div>
+        </div>
+        <div class="company-actions">
+          <button class="btn-primary" onclick="visualizarContatosEmpresa(${empresa.id})">
+            Ver Contatos
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Visualizar contatos da empresa
+function visualizarContatosEmpresa(empresaId) {
+  const empresa = empresas.find(e => e.id === empresaId);
+  const contatosEmpresa = contatos.filter(c => c.empresaId === empresaId);
+  
+  empresaSelecionada = empresa;
+  contatosEmpresaSelecionada = contatosEmpresa;
+
+  document.getElementById('modalTituloEmpresa').textContent = `Contatos - ${empresa.nome}`;
+  document.getElementById('searchInputModal').value = '';
+
+  renderizarContatosEmpresa();
+  document.getElementById('modalContatosEmpresa').style.display = 'block';
+}
+
+// Renderizar contatos da empresa no modal
+function renderizarContatosEmpresa() {
+  const modalConteudo = document.getElementById('modalConteudoEmpresa');
+  const searchInput = document.getElementById('searchInputModal');
   const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
 
-  const contatosFiltrados = contatos.filter(contato =>
+  const contatosFiltrados = contatosEmpresaSelecionada.filter(contato =>
     contato.nome.toLowerCase().includes(searchTerm) ||
     contato.telefone.includes(searchTerm)
   );
 
   if (contatosFiltrados.length === 0) {
-    contatosLista.innerHTML = `
-            <div class="empty-state">
-              <h3>Nenhum contato encontrado</h3>
-              <p>Não há contatos cadastrados ou que correspondam à sua pesquisa.</p>
-            </div>
-          `;
+    modalConteudo.innerHTML = `
+      <div class="empty-state">
+        <h3>Nenhum contato encontrado</h3>
+        <p>${searchTerm ? 'Nenhum contato corresponde à sua pesquisa.' : 'Esta empresa ainda não possui contatos cadastrados.'}</p>
+      </div>
+    `;
     return;
   }
 
-  contatosLista.innerHTML = contatosFiltrados.map(contato => {
-    const treinamento = treinamentos.find(t => t.id === contato.treinamentoId);
-    return `
-            <div class="contact-item">
-              <div class="contact-info">
-                <h3>${contato.nome}</h3>
-                <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
-                <p><strong>Treinamento:</strong> ${treinamento ? treinamento.nome : 'Sem treinamento'}</p>
-              </div>
-              <div class="contact-actions">
-                <button onclick="abrirDetalhesContato(${contato.id})">Ver Detalhes</button>
-                <button onclick="atualizarTreinamentoContato(${contato.id})">Alterar Treinamento</button>
-                <button onclick="removerContato(${contato.id})">Remover</button>
-              </div>
+  modalConteudo.innerHTML = `
+    <div class="contacts-list">
+      ${contatosFiltrados.map(contato => {
+        const treinamento = treinamentos.find(t => t.id === contato.treinamentoId);
+        return `
+          <div class="contact-item">
+            <div class="contact-info">
+              <h4>${contato.nome}</h4>
+              <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
+              <p><strong>Treinamento:</strong> ${treinamento ? treinamento.nome : 'Sem treinamento'}</p>
             </div>
-          `;
-  }).join('');
+            <div class="contact-actions">
+              <button onclick="abrirDetalhesContato(${contato.id})">Detalhes</button>
+              <button onclick="abrirEditarContato(${contato.id})">Editar</button>
+              <button onclick="removerContato(${contato.id})">Remover</button>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
 }
 
-// Filtrar contatos
-function filtrarContatos() {
-  renderizarContatos();
+// Filtrar contatos no modal
+function filtrarContatosModal() {
+  renderizarContatosEmpresa();
 }
 
-// Atualizar treinamento do contato
-function atualizarTreinamentoContato(contatoId) {
+// Abrir modal de editar contato
+function abrirEditarContato(contatoId) {
   const contato = contatos.find(c => c.id === contatoId);
   if (!contato) return;
 
-  const novoTreinamentoId = prompt('Selecione o ID do treinamento (ou deixe vazio para remover):');
-  if (novoTreinamentoId === null) return;
+  document.getElementById('editarContatoId').value = contato.id;
+  document.getElementById('editarNome').value = contato.nome;
+  document.getElementById('editarTelefone').value = contato.telefone;
+  document.getElementById('editarEmpresa').value = contato.empresaId;
+  document.getElementById('editarTreinamento').value = contato.treinamentoId || '';
 
-  const treinamentoIdInt = novoTreinamentoId.trim() ? parseInt(novoTreinamentoId.trim()) : null;
+  document.getElementById('modalEditarContato').style.display = 'block';
+}
 
-  if (treinamentoIdInt && !treinamentos.find(t => t.id === treinamentoIdInt)) {
-    mostrarAlerta('Treinamento não encontrado.', 'error');
+// Editar contato
+document.getElementById('editarContatoForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const contatoId = document.getElementById('editarContatoId').value;
+  const nome = document.getElementById('editarNome').value.trim();
+  const telefone = document.getElementById('editarTelefone').value.trim();
+  const empresaId = document.getElementById('editarEmpresa').value;
+  const treinamentoId = document.getElementById('editarTreinamento').value;
+
+  if (!nome || !telefone || !empresaId) {
+    mostrarAlerta('Por favor, preencha todos os campos obrigatórios.', 'error');
     return;
   }
+
+  if (!validarTelefone(telefone)) {
+    mostrarAlerta('Formato de telefone inválido. Use 12 ou 13 dígitos.', 'error');
+    return;
+  }
+
+  // Verificar se já existe outro contato com este telefone
+  if (contatos.some(c => c.telefone === telefone && c.id !== parseInt(contatoId))) {
+    mostrarAlerta('Já existe outro contato com este telefone.', 'error');
+    return;
+  }
+
+  const dadosAtualizados = {
+    nome,
+    telefone,
+    empresaId: parseInt(empresaId),
+    treinamentoId: treinamentoId ? parseInt(treinamentoId) : null
+  };
 
   fetch(`http://92.112.178.26:3000/api/contatos/${contatoId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ treinamentoId: novoTreinamentoId })
+    body: JSON.stringify(dadosAtualizados)
   })
-    .then(() => {
-      mostrarAlerta('Treinamento atualizado com sucesso!');
-      carregarContatos();
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
     })
-    .catch(() => mostrarAlerta('Erro ao atualizar.', 'error'));
-
-  atualizarEstatisticas();
-}
+    .then(() => {
+      mostrarAlerta('Contato atualizado com sucesso!');
+      fecharModalEditarContato();
+      carregarContatos().then(() => {
+        // Atualizar a lista de contatos da empresa no modal se estiver aberto
+        if (empresaSelecionada) {
+          contatosEmpresaSelecionada = contatos.filter(c => c.empresaId === empresaSelecionada.id);
+          renderizarContatosEmpresa();
+        }
+        
+        if (document.getElementById('empresas').classList.contains('active')) {
+          renderizarEmpresas();
+          atualizarEstatisticasEmpresas();
+        }
+      });
+    })
+    .catch(() => mostrarAlerta('Erro ao atualizar contato.', 'error'));
+});
 
 // Remover contato
 function removerContato(id) {
   if (!confirm('Tem certeza que deseja remover este contato?')) return;
 
-  const index = contatos.findIndex(c => c.id === id);
-  if (index !== -1) {
-    fetch(`http://92.112.178.26:3000/api/contatos/${id}`, {
-      method: 'DELETE'
+  fetch(`http://92.112.178.26:3000/api/contatos/${id}`, {
+    method: 'DELETE'
+  })
+    .then(res => {
+      if (!res.ok) throw new Error();
+      mostrarAlerta('Contato removido com sucesso!');
+      carregarContatos().then(() => {
+        // Atualizar a lista de contatos da empresa no modal se estiver aberto
+        if (empresaSelecionada) {
+          contatosEmpresaSelecionada = contatos.filter(c => c.empresaId === empresaSelecionada.id);
+          renderizarContatosEmpresa();
+        }
+        
+        if (document.getElementById('empresas').classList.contains('active')) {
+          renderizarEmpresas();
+          atualizarEstatisticasEmpresas();
+        }
+      });
     })
-      .then(() => {
-        mostrarAlerta('Contato removido com sucesso!');
-        carregarContatos();
-      })
-      .catch(() => mostrarAlerta('Erro ao remover contato.', 'error'));
-
-  }
+    .catch(() => mostrarAlerta('Erro ao remover contato.', 'error'));
 }
 
 // Detalhes do contato
@@ -254,32 +420,47 @@ function abrirDetalhesContato(id) {
   const contato = contatos.find(c => c.id === id);
   if (!contato) return;
 
+  const empresa = empresas.find(e => e.id === contato.empresaId);
   const treinamento = treinamentos.find(t => t.id === contato.treinamentoId);
 
   const detalhesHTML = `
-              <h4>${contato.nome}</h4>
-              <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
-              <p><strong>Treinamento Atual:</strong> ${treinamento ? treinamento.nome : 'Nenhum'}</p>
-              <p><strong>Status:</strong> ${treinamento ? 'Com treinamento' : 'Sem treinamento'}</p>
-          `;
+    <h4>${contato.nome}</h4>
+    <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
+    <p><strong>Empresa:</strong> ${empresa ? empresa.nome : 'Empresa não encontrada'}</p>
+    <p><strong>Treinamento Atual:</strong> ${treinamento ? treinamento.nome : 'Nenhum'}</p>
+    <p><strong>Status:</strong> ${treinamento ? 'Com treinamento' : 'Sem treinamento'}</p>
+  `;
 
   document.getElementById('detalhesContatoConteudo').innerHTML = detalhesHTML;
   document.getElementById('modalDetalhesContato').style.display = 'block';
 }
 
-function fecharModalDetalhesContato() {
-  document.getElementById('modalDetalhesContato').style.display = 'none';
-}
-
-// Atualizar estatísticas
-function atualizarEstatisticas() {
+// Atualizar estatísticas da aba empresas
+function atualizarEstatisticasEmpresas() {
+  const totalEmpresas = empresas.length;
   const totalContatos = contatos.length;
   const contatosComTreinamento = contatos.filter(c => c.treinamentoId).length;
-  const contatosSemTreinamento = totalContatos - contatosComTreinamento;
 
+  document.getElementById('totalEmpresas').textContent = totalEmpresas;
   document.getElementById('totalContatos').textContent = totalContatos;
   document.getElementById('contatosComTreinamento').textContent = contatosComTreinamento;
-  document.getElementById('contatosSemTreinamento').textContent = contatosSemTreinamento;
+}
+
+// Fechar modal de contatos da empresa
+function fecharModalContatosEmpresa() {
+  document.getElementById('modalContatosEmpresa').style.display = 'none';
+  empresaSelecionada = null;
+  contatosEmpresaSelecionada = [];
+}
+
+// Fechar modal de editar contato
+function fecharModalEditarContato() {
+  document.getElementById('modalEditarContato').style.display = 'none';
+}
+
+// Fechar modal de detalhes do contato
+function fecharModalDetalhesContato() {
+  document.getElementById('modalDetalhesContato').style.display = 'none';
 }
 
 // Carregar treinamentos
@@ -292,7 +473,6 @@ function carregarTreinamentos() {
     .then(data => {
       treinamentos = data;
       renderizarTreinamentos();
-      atualizarSelectTreinamento();
     })
     .catch(() => mostrarAlerta('Erro ao carregar treinamentos.', 'error'))
     .finally(() => {
@@ -306,36 +486,43 @@ function renderizarTreinamentos() {
 
   if (treinamentos.length === 0) {
     treinamentosGrid.innerHTML = `
-            <div class="empty-state">
-              <h3>Nenhum treinamento cadastrado</h3>
-              <p>Crie seu primeiro treinamento usando o formulário acima.</p>
-            </div>
-          `;
+      <div class="empty-state">
+        <h3>Nenhum treinamento cadastrado</h3>
+        <p>Crie o primeiro treinamento usando o formulário acima.</p>
+      </div>
+    `;
     return;
   }
 
   treinamentosGrid.innerHTML = treinamentos.map(treinamento => {
-    const contatosDoTreinamento = contatos.filter(c => c.treinamentoId === treinamento.id);
+    const contatosComTreinamento = contatos.filter(c => c.treinamentoId === treinamento.id);
+    
     return `
-            <div class="training-card">
-              <h4>${treinamento.nome}</h4>
-              <div class="description">
-                ${treinamento.descricao || 'Sem descrição disponível'}
-              </div>
-              <div class="contact-count">
-                👥 ${contatosDoTreinamento.length} contato(s)
-              </div>
-              <div class="actions">
-                <button onclick="visualizarContatos(${treinamento.id})">Ver Contatos</button>
-                <button onclick="editarTreinamento(${treinamento.id})">Editar</button>
-                <button onclick="removerTreinamento(${treinamento.id})">Remover</button>
-              </div>
-            </div>
-          `;
+      <div class="training-card">
+        <div class="training-header">
+          <h4>${treinamento.nome}</h4>
+          <span class="training-count">${contatosComTreinamento.length} contatos</span>
+        </div>
+        <div class="training-content">
+          <p class="training-description">${treinamento.descricao || 'Sem descrição'}</p>
+          <div class="training-stats">
+            <span class="stat-label">Participantes: ${contatosComTreinamento.length}</span>
+          </div>
+        </div>
+        <div class="training-actions">
+          <button class="btn-primary" onclick="visualizarContatosTreinamento(${treinamento.id})">
+            Ver Contatos
+          </button>
+          <button class="btn-secondary" onclick="removerTreinamento(${treinamento.id})">
+            Remover
+          </button>
+        </div>
+      </div>
+    `;
   }).join('');
 }
 
-// Criar treinamento
+// Cadastrar novo treinamento
 document.getElementById('treinamentoForm').addEventListener('submit', function (e) {
   e.preventDefault();
 
@@ -343,207 +530,162 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   const descricao = document.getElementById('descricaoTreinamento').value.trim();
 
   if (!nome) {
-    mostrarAlerta('Por favor, informe o nome do treinamento.', 'error');
-    return;
-  }
-
-  // Verificar se já existe treinamento com este nome
-  if (treinamentos.some(t => t.nome.toLowerCase() === nome.toLowerCase())) {
-    mostrarAlerta('Já existe um treinamento com este nome.', 'error');
+    mostrarAlerta('Por favor, preencha o nome do treinamento.', 'error');
     return;
   }
 
   const novoTreinamento = {
-    id: treinamentoIdCounter++,
-    nome: nome,
-    descricao: descricao
+    nome,
+    descricao
   };
 
   fetch('http://92.112.178.26:3000/api/treinamentos', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nome, descricao })
+    body: JSON.stringify(novoTreinamento)
   })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
     .then(data => {
       mostrarAlerta(`Treinamento "${data.nome}" criado com sucesso!`);
       document.getElementById('treinamentoForm').reset();
-      carregarTreinamentos();
+      carregarTreinamentos().then(() => {
+        atualizarSelectTreinamento();
+      });
     })
     .catch(() => mostrarAlerta('Erro ao criar treinamento.', 'error'));
-
-  // Limpar formulário
-  document.getElementById('treinamentoForm').reset();
-
-  // Atualizar displays
-  renderizarTreinamentos();
-  atualizarSelectTreinamento();
 });
 
 // Visualizar contatos do treinamento
-function visualizarContatos(treinamentoId) {
+function visualizarContatosTreinamento(treinamentoId) {
   const treinamento = treinamentos.find(t => t.id === treinamentoId);
-  const contatosDoTreinamento = contatos.filter(c => c.treinamentoId === treinamentoId);
+  const contatosComTreinamento = contatos.filter(c => c.treinamentoId === treinamentoId);
 
   document.getElementById('modalTitulo').textContent = `Contatos - ${treinamento.nome}`;
 
-  const modalConteudo = document.getElementById('modalConteudo');
-
-  if (contatosDoTreinamento.length === 0) {
-    modalConteudo.innerHTML = `
-            <div class="empty-state">
-              <h3>Nenhum contato inscrito</h3>
-              <p>Este treinamento ainda não possui contatos inscritos.</p>
-            </div>
-          `;
+  if (contatosComTreinamento.length === 0) {
+    document.getElementById('modalConteudo').innerHTML = `
+      <div class="empty-state">
+        <h3>Nenhum contato neste treinamento</h3>
+        <p>Ainda não há contatos cadastrados para este treinamento.</p>
+      </div>
+    `;
   } else {
-    modalConteudo.innerHTML = `
-            <div class="contacts-list">
-              ${contatosDoTreinamento.map(contato => `
-                <div class="contact-item">
-                  <div class="contact-info">
-                    <h3>${contato.nome}</h3>
-                    <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
-                  </div>
-                  <div class="contact-actions">
-                    <button onclick="removerContatoDoTreinamento(${contato.id})">Remover</button>
-                  </div>
-                </div>
-              `).join('')}
+    document.getElementById('modalConteudo').innerHTML = `
+      <div class="contacts-list">
+        ${contatosComTreinamento.map(contato => {
+          const empresa = empresas.find(e => e.id === contato.empresaId);
+          return `
+            <div class="contact-item">
+              <div class="contact-info">
+                <h4>${contato.nome}</h4>
+                <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
+                <p><strong>Empresa:</strong> ${empresa ? empresa.nome : 'Empresa não encontrada'}</p>
+              </div>
+              <div class="contact-actions">
+                <button onclick="abrirDetalhesContato(${contato.id})">Detalhes</button>
+                <button onclick="abrirEditarContato(${contato.id})">Editar</button>
+                <button onclick="removerContato(${contato.id})">Remover</button>
+              </div>
             </div>
           `;
+        }).join('')}
+      </div>
+    `;
   }
 
   document.getElementById('modalContatos').style.display = 'block';
 }
 
-// Editar treinamento
-function editarTreinamento(treinamentoId) {
-  const treinamento = treinamentos.find(t => t.id === treinamentoId);
-
-  const novoNome = prompt('Novo nome do treinamento:', treinamento.nome);
-  if (novoNome === null) return;
-
-  if (!novoNome.trim()) {
-    mostrarAlerta('Nome do treinamento não pode estar vazio.', 'error');
-    return;
-  }
-
-  const novaDescricao = prompt('Nova descrição do treinamento:', treinamento.descricao || '');
-  if (novaDescricao === null) return;
-
-  fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamento.id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      nome: novoNome.trim(),
-      descricao: novaDescricao.trim()
-    })
-  })
-    .then(() => {
-      mostrarAlerta('Treinamento atualizado com sucesso!');
-      carregarTreinamentos();
-    })
-    .catch(() => mostrarAlerta('Erro ao atualizar treinamento.', 'error'));
-
-  renderizarTreinamentos();
-  atualizarSelectTreinamento();
-}
-
-// Remover treinamento
-function removerTreinamento(treinamentoId) {
-  const treinamento = treinamentos.find(t => t.id === treinamentoId);
-  const contatosDoTreinamento = contatos.filter(c => c.treinamentoId === treinamentoId);
-
-  let confirmMessage = `Tem certeza que deseja remover o treinamento "${treinamento.nome}"?`;
-  if (contatosDoTreinamento.length > 0) {
-    confirmMessage += `\n\nEste treinamento possui ${contatosDoTreinamento.length} contato(s) vinculado(s). Eles serão desvinculados do treinamento.`;
-  }
-
-  if (confirm(confirmMessage)) {
-    // ✅ Agora usando API para remover o treinamento do banco de dados
-    fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
-      method: 'DELETE'
-    })
-      .then(() => {
-        mostrarAlerta('Treinamento removido com sucesso!');
-        carregarTreinamentos(); // recarrega do banco de dados
-        carregarContatos();     // atualiza os contatos desvinculados
-
-        // Se o usuário estiver na aba "listar", atualiza a exibição
-        if (document.getElementById('listar').classList.contains('active')) {
-          renderizarContatos();
-          atualizarEstatisticas();
-        }
-      })
-      .catch(() => mostrarAlerta('Erro ao remover treinamento.', 'error'));
-  }
-}
-
-// Remover contato do treinamento (no modal)
-function removerContatoDoTreinamento(contatoId) {
-  if (confirm('Tem certeza que deseja remover este contato do treinamento?')) {
-    fetch(`http://92.112.178.26:3000/api/contatos/${contatoId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ treinamentoId: null })
-    })
-      .then(() => {
-        mostrarAlerta('Contato removido do treinamento com sucesso!');
-        carregarContatos();
-        renderizarTreinamentos();
-        fecharModal();
-
-        if (document.getElementById('listar').classList.contains('active')) {
-          renderizarContatos();
-          atualizarEstatisticas();
-        }
-      })
-      .catch(() => mostrarAlerta('Erro ao remover contato do treinamento.', 'error'));
-  }
-}
-
-// Fechar modal
+// Fechar modal de contatos do treinamento
 function fecharModal() {
   document.getElementById('modalContatos').style.display = 'none';
 }
 
-// Fechar modal de editar contato
-function fecharModalEditarContato() {
-  document.getElementById('modalEditarContato').style.display = 'none';
+// Remover treinamento
+function removerTreinamento(id) {
+  const contatosComTreinamento = contatos.filter(c => c.treinamentoId === id);
+  
+  if (contatosComTreinamento.length > 0) {
+    if (!confirm(`Este treinamento possui ${contatosComTreinamento.length} contatos. Ao removê-lo, os contatos perderão a associação com o treinamento. Deseja continuar?`)) {
+      return;
+    }
+  } else {
+    if (!confirm('Tem certeza que deseja remover este treinamento?')) {
+      return;
+    }
+  }
+
+  fetch(`http://92.112.178.26:3000/api/treinamentos/${id}`, {
+    method: 'DELETE'
+  })
+    .then(res => {
+      if (!res.ok) throw new Error();
+      mostrarAlerta('Treinamento removido com sucesso!');
+      carregarTreinamentos().then(() => {
+        atualizarSelectTreinamento();
+        // Recarregar contatos para atualizar as estatísticas
+        carregarContatos();
+      });
+    })
+    .catch(() => mostrarAlerta('Erro ao remover treinamento.', 'error'));
 }
 
-// Função de exportar dados (placeholder)
+// Exportar dados
 function exportarDados() {
   const dados = {
+    empresas: empresas,
     contatos: contatos,
-    treinamentos: treinamentos
+    treinamentos: treinamentos,
+    timestamp: new Date().toISOString()
   };
 
-  const dataStr = JSON.stringify(dados, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'dados_sistema.json';
+  a.download = `cadastro-dados-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
   a.click();
-
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  
   mostrarAlerta('Dados exportados com sucesso!');
 }
 
-// Fechar modais clicando fora
-window.onclick = function (event) {
+// Fechar modais ao clicar fora
+document.addEventListener('click', function(e) {
   const modals = [
-    document.getElementById('modalContatos'),
-    document.getElementById('modalEditarContato'),
-    document.getElementById('modalDetalhesContato')
+    'modalContatosEmpresa',
+    'modalContatos',
+    'modalEditarContato',
+    'modalDetalhesContato'
   ];
 
-  modals.forEach(modal => {
-    if (modal && event.target === modal) {
+  modals.forEach(modalId => {
+    const modal = document.getElementById(modalId);
+    if (e.target === modal) {
       modal.style.display = 'none';
+      if (modalId === 'modalContatosEmpresa') {
+        empresaSelecionada = null;
+        contatosEmpresaSelecionada = [];
+      }
     }
   });
-}
+});
+
+// Fechar modais com tecla ESC
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const modalsAbertos = document.querySelectorAll('.modal-overlay[style*="block"]');
+    modalsAbertos.forEach(modal => {
+      modal.style.display = 'none';
+      if (modal.id === 'modalContatosEmpresa') {
+        empresaSelecionada = null;
+        contatosEmpresaSelecionada = [];
+      }
+    });
+  }
+});
