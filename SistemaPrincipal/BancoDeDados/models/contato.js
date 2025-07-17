@@ -1,13 +1,7 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../database');
-const Empresa = require('./Empresa'); 
 
 const Contato = sequelize.define('contatos', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
   nome: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -33,12 +27,9 @@ const Contato = sequelize.define('contatos', {
     allowNull: true,
     unique: true,
   },
-  empresaId: { 
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'empresas',
-    }
+  empresa: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   statusTreinamento: {
     type: DataTypes.STRING,
@@ -48,17 +39,17 @@ const Contato = sequelize.define('contatos', {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  empresaId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'empresas',
+      key: 'id'
+    }
+  }
 }, {
   timestamps: false,
   freezeTableName: true,
 });
-
-// Relações
-Contato.associate = (models) => {
-  Contato.belongsTo(models.Empresa, {
-    foreignKey: 'empresaId',
-    as: 'empresa'
-  });
-};
 
 module.exports = Contato;
