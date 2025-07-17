@@ -228,7 +228,7 @@ function renderizarEmpresas() {
         <div class="company-info">
           <p><strong>CNPJ:</strong> ${empresa.cnpj || 'N/A'}</p>
           <p><strong>Email:</strong> ${empresa.email || 'N/A'}</p>
-          <p><strong>Telefone:</strong> ${empresa.telefone && empresa.telefone.trim() ? formatarTelefone(empresa.telefone) : 'N/A'}</p>
+          <p><strong>Telefone:</strong> ${empresa.contato && empresa.contato.trim() ? formatarTelefone(mpresa.contato) : 'N/A'}</p>
         </div>
         <div class="company-stats">
           <div class="stat">
