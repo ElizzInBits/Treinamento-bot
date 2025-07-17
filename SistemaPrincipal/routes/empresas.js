@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const Empresa = require('../BancoDeDados/models/empresas');
+const Empresa = require('../../BancoDeDados/models');
 const { Op } = require('sequelize');
 
 const { cnpj: cnpjValidator } = require('cpf-cnpj-validator');
