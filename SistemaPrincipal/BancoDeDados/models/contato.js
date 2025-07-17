@@ -41,7 +41,7 @@ const Contato = sequelize.define('contatos', {
   },
   empresaId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: 'empresas',
       key: 'id'
