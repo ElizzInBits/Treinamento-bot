@@ -107,6 +107,7 @@ app.get('/test', (req, res) => {
     });
 });
 
+
 // ✅ 8. Painéis HTML
 const homePath = path.join(__dirname, 'public', 'home', 'home-index.html');
 const autoCadastroPath = path.join(__dirname, 'public', 'autoCadastro', 'cadastro-index.html');
