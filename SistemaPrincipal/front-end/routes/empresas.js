@@ -8,29 +8,29 @@ function limparCNPJ(cnpj) {
 }
 // 🔹 Listar todas as empresas
 router.get('/', async (req, res) => {
-    try {
-        const empresas = await Empresa.findAll({
-            order: [['razao_social', 'ASC']] // ✅ Corrigido: estava 'nome'
-        });
-        res.json(empresas);
-    } catch (error) {
-        console.error('Erro ao listar empresas:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
+  try {
+    const empresas = await Empresa.findAll({
+      order: [['razao_social', 'ASC']] // ✅ Corrigido: estava 'nome'
+    });
+    res.json(empresas);
+  } catch (error) {
+    console.error('Erro ao listar empresas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 // 🔹 Buscar empresa por ID
 router.get('/:id', async (req, res) => {
-    try {
-        const empresa = await Empresa.findByPk(req.params.id);
-        if (!empresa) {
-            return res.status(404).json({ error: 'Empresa não encontrada' });
-        }
-        res.json(empresa);
-    } catch (error) {
-        console.error('Erro ao buscar empresa:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
+  try {
+    const empresa = await Empresa.findByPk(req.params.id);
+    if (!empresa) {
+      return res.status(404).json({ error: 'Empresa não encontrada' });
     }
+    res.json(empresa);
+  } catch (error) {
+    console.error('Erro ao buscar empresa:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 
@@ -40,9 +40,10 @@ router.post('/', async (req, res) => {
     const { razaoSocial, cnpj, porte, endereco, cep, contato, email } = req.body;
 
     // Ajuste a validação conforme quiser tornar o email obrigatório ou não
-    if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !contato || !email) {
-      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+    if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !email) {
+      return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos.' });
     }
+
 
     const cnpjLimpo = limparCNPJ(cnpj);
 
@@ -118,7 +119,8 @@ router.put('/:id', async (req, res) => {
     if (porte) empresa.porte_empresa = porte;
     if (endereco) empresa.endereco = endereco;
     if (cep) empresa.cep = cep;
-    if (contato) empresa.contato = contato;
+    if (contato !== undefined) empresa.contato = contato;
+
 
     await empresa.save();
 
@@ -133,19 +135,19 @@ router.put('/:id', async (req, res) => {
 
 // 🔹 Deletar empresa
 router.delete('/:id', async (req, res) => {
-    try {
-        const empresa = await Empresa.findByPk(req.params.id);
+  try {
+    const empresa = await Empresa.findByPk(req.params.id);
 
-        if (!empresa) {
-            return res.status(404).json({ error: 'Empresa não encontrada' });
-        }
-
-        await empresa.destroy();
-        res.json({ message: 'Empresa deletada com sucesso' });
-    } catch (error) {
-        console.error('Erro ao deletar empresa:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
+    if (!empresa) {
+      return res.status(404).json({ error: 'Empresa não encontrada' });
     }
+
+    await empresa.destroy();
+    res.json({ message: 'Empresa deletada com sucesso' });
+  } catch (error) {
+    console.error('Erro ao deletar empresa:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 // Rota para retornar empresas para o select do front-end
