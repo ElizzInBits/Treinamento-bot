@@ -165,6 +165,8 @@ router.post('/', async (req, res) => {
     // Só adicionar empresaId se foi fornecido
     if (empresaId) {
       dadosParaCriacao.empresaId = parseInt(empresaId, 10);
+      console.log('   - Dados prontos para criação (JSON):', JSON.stringify(dadosParaCriacao, null, 2));
+
     }
 
     console.log('9. Dados preparados para criação:', dadosParaCriacao);

@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../database');
-
+const Empresa = require('./empresas')
 const Contato = sequelize.define('contatos', {
   nome: {
     type: DataTypes.STRING,
@@ -52,4 +52,7 @@ const Contato = sequelize.define('contatos', {
   freezeTableName: true,
 });
 
+Contato.belongsTo(Empresa, { foreignKey: 'empresaId' });
 module.exports = Contato;
+
+
