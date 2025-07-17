@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Empresa = require('../BancoDeDados/models/empresas');
+const { Op } = require('sequelize');
+
+const { cnpj: cnpjValidator } = require('cpf-cnpj-validator');
+
 
 // Limpar CNPJ (remove qualquer caractere não numérico)
 function limparCNPJ(cnpj) {
@@ -17,6 +21,12 @@ router.post('/', async (req, res) => {
     }
 
     const cnpjLimpo = limparCNPJ(cnpj);
+
+    if (!cnpjValidator.isValid(cnpjLimpo)) {
+      return res.status(400).json({ error: 'CNPJ inválido.' });
+    }
+
+
     const jaExiste = await Empresa.findOne({ where: { cnpj: cnpjLimpo } });
 
     if (jaExiste) {
