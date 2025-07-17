@@ -1,16 +1,17 @@
 const { Op } = require('sequelize');
 const express = require('express');
 const router = express.Router();
-const Empresa = require('../../BancoDeDados/models/empresas');
+const { Empresa } = require('../../BancoDeDados/models'); // <- IMPORTAÇÃO CORRETA
 
 function limparCNPJ(cnpj) {
   return cnpj.replace(/\D/g, '');
 }
-// 🔹 Listar todas as empresas
+
+// Listar todas as empresas
 router.get('/', async (req, res) => {
   try {
     const empresas = await Empresa.findAll({
-      order: [['razao_social', 'ASC']] // ✅ Corrigido: estava 'nome'
+      order: [['razao_social', 'ASC']]
     });
     res.json(empresas);
   } catch (error) {
@@ -19,7 +20,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 🔹 Buscar empresa por ID
+// Buscar empresa por ID
 router.get('/:id', async (req, res) => {
   try {
     const empresa = await Empresa.findByPk(req.params.id);
@@ -33,27 +34,22 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-
-// 🔹 Criar nova empresa
+// Criar nova empresa
 router.post('/', async (req, res) => {
   try {
     const { razaoSocial, cnpj, porte, endereco, cep, contato, email } = req.body;
 
-    // Ajuste a validação conforme quiser tornar o email obrigatório ou não
     if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !email) {
       return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos.' });
     }
 
-
     const cnpjLimpo = limparCNPJ(cnpj);
 
-    // Verificar se já existe empresa com mesmo CNPJ
     const jaExiste = await Empresa.findOne({ where: { cnpj: cnpjLimpo } });
     if (jaExiste) {
       return res.status(400).json({ error: 'CNPJ já cadastrado.' });
     }
 
-    // Verificar se email já cadastrado (opcional)
     const emailExiste = await Empresa.findOne({ where: { email } });
     if (emailExiste) {
       return res.status(400).json({ error: 'Email já cadastrado.' });
@@ -77,8 +73,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-
-// 🔹 Atualizar empresa
+// Atualizar empresa
 router.put('/:id', async (req, res) => {
   try {
     const empresa = await Empresa.findByPk(req.params.id);
@@ -121,7 +116,6 @@ router.put('/:id', async (req, res) => {
     if (cep) empresa.cep = cep;
     if (contato !== undefined) empresa.contato = contato;
 
-
     await empresa.save();
 
     res.json({ message: 'Empresa atualizada com sucesso.', empresa });
@@ -131,9 +125,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-
-
-// 🔹 Deletar empresa
+// Deletar empresa
 router.delete('/:id', async (req, res) => {
   try {
     const empresa = await Empresa.findByPk(req.params.id);
@@ -150,7 +142,7 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Rota para retornar empresas para o select do front-end
+// Opções para select no front-end
 router.get('/select/options', async (req, res) => {
   try {
     const empresas = await Empresa.findAll({
@@ -163,6 +155,5 @@ router.get('/select/options', async (req, res) => {
     res.status(500).json({ error: 'Erro ao carregar empresas' });
   }
 });
-
 
 module.exports = router;
