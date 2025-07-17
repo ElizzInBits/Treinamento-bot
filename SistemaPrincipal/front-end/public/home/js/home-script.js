@@ -139,7 +139,7 @@ function atualizarSelectEmpresa() {
       empresas.forEach(empresa => {
         const option = document.createElement('option');
         option.value = empresa.id;
-        option.textContent = empresa.nome;
+        option.textContent = empresa.razao_social;
         select.appendChild(option);
       });
 
@@ -222,7 +222,7 @@ function renderizarEmpresas() {
     return `
       <div class="company-card">
         <div class="company-header">
-          <h3>${empresa.nome}</h3>
+          <h3>${empresa.razao_social}</h3>
           <span class="company-type">${empresa.tipo || 'Empresa'}</span>
         </div>
         <div class="company-info">
@@ -258,7 +258,7 @@ function visualizarContatosEmpresa(empresaId) {
   empresaSelecionada = empresa;
   contatosEmpresaSelecionada = contatosEmpresa;
 
-  document.getElementById('modalTituloEmpresa').textContent = `Contatos - ${empresa.nome}`;
+  document.getElementById('modalTituloEmpresa').textContent = `Contatos - ${empresa.razao_social}`;
   document.getElementById('searchInputModal').value = '';
 
   renderizarContatosEmpresa();
@@ -426,7 +426,7 @@ function abrirDetalhesContato(id) {
   const detalhesHTML = `
     <h4>${contato.nome}</h4>
     <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
-    <p><strong>Empresa:</strong> ${empresa ? empresa.nome : 'Empresa não encontrada'}</p>
+    <p><strong>Empresa:</strong> ${empresa ? empresa.razao_social : 'Empresa não encontrada'}</p>
     <p><strong>Treinamento Atual:</strong> ${treinamento ? treinamento.nome : 'Nenhum'}</p>
     <p><strong>Status:</strong> ${treinamento ? 'Com treinamento' : 'Sem treinamento'}</p>
   `;
@@ -582,7 +582,7 @@ function visualizarContatosTreinamento(treinamentoId) {
               <div class="contact-info">
                 <h4>${contato.nome}</h4>
                 <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
-                <p><strong>Empresa:</strong> ${empresa ? empresa.nome : 'Empresa não encontrada'}</p>
+                <p><strong>Empresa:</strong> ${empresa ? empresa.razao_social : 'Empresa não encontrada'}</p>
               </div>
               <div class="contact-actions">
                 <button onclick="abrirDetalhesContato(${contato.id})">Detalhes</button>
