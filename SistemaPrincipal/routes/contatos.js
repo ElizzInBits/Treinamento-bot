@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Contato = require('../BancoDeDados/models/contato');
+const { sequelize } = require('../BancoDeDados/database');
 
 // Função para limpar número (mesma do seu código)
 function limparNumero(numero) {
@@ -66,31 +67,76 @@ function gerarVariacoes(numeroCompleto) {
     return [var1, var2];
 }
 
-// POST /api/contatos - ÚNICA ROTA POST (corrigida)
+// POST /api/contatos - VERSÃO DEBUG AJUSTADA
 router.post('/', async (req, res) => {
   try {
+    console.log('=== INÍCIO DEBUG POST /api/contatos ===');
+    console.log('1. Dados recebidos no req.body:', req.body);
+    
     const { nome, telefone, empresaId, treinamentoId, cpf, email } = req.body;
+    
+    console.log('2. Dados extraídos:');
+    console.log('   - nome:', nome);
+    console.log('   - telefone:', telefone);
+    console.log('   - empresaId:', empresaId, '(tipo:', typeof empresaId, ')');
+    console.log('   - treinamentoId:', treinamentoId);
+    console.log('   - cpf:', cpf);
+    console.log('   - email:', email);
 
     // Validação simples dos campos obrigatórios
-    if (!nome || !telefone || !empresaId) {
+    if (!nome || !telefone) {
+      console.log('3. ERRO: Campos obrigatórios faltando');
       return res.status(400).json({
-        error: 'Nome, telefone e empresaId são obrigatórios'
+        error: 'Nome e telefone são obrigatórios'
       });
     }
 
+    console.log('3. Validação inicial: OK');
+
     // Limpar telefone
     const telefoneLimpo = limparNumero(telefone);
+    console.log('4. Telefone limpo:', telefoneLimpo);
 
     // Validar telefone
     if (!validarTelefone(telefoneLimpo)) {
+      console.log('5. ERRO: Telefone inválido');
       return res.status(400).json({
         error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)'
       });
     }
 
+    console.log('5. Validação telefone: OK');
+
+    // Verificar se empresaId existe (se fornecido)
+    if (empresaId) {
+      console.log('6. Verificando se empresaId existe...');
+      const empresaExiste = await sequelize.query(
+        'SELECT id FROM empresas WHERE id = ?',
+        { 
+          replacements: [empresaId],
+          type: sequelize.QueryTypes.SELECT
+        }
+      );
+      
+      console.log('   - Resultado da busca empresa:', empresaExiste);
+      
+      if (empresaExiste.length === 0) {
+        console.log('7. ERRO: EmpresaId não encontrado');
+        return res.status(400).json({
+          error: `Empresa com ID ${empresaId} não encontrada`
+        });
+      }
+    }
+
+    console.log('6. Verificação empresa: OK');
+
     // Verificar se já existe contato com este telefone
+    console.log('7. Verificando contatos existentes...');
     const variacoesTelefone = gerarVariacoes(telefoneLimpo);
+    console.log('   - Variações do telefone:', variacoesTelefone);
+    
     const contatosExistentes = await Contato.findAll();
+    console.log('   - Total de contatos existentes:', contatosExistentes.length);
 
     const jaExiste = contatosExistentes.some(contato => {
       const variacoesContato = gerarVariacoes(contato.telefone);
@@ -98,32 +144,65 @@ router.post('/', async (req, res) => {
     });
 
     if (jaExiste) {
+      console.log('8. ERRO: Telefone já existe');
       return res.status(400).json({
         error: 'Já existe um contato com este telefone'
       });
     }
 
-    // Criar novo contato com TODOS os campos incluídos
-    const novoContato = await Contato.create({
+    console.log('8. Verificação duplicata: OK');
+
+    // Preparar dados para criação
+    const dadosParaCriacao = {
       nome: nome.trim(),
       telefone: telefoneLimpo,
-      empresaId: empresaId,
       statusTreinamento: 'não iniciado',
-      treinamentoId: treinamentoId || null,
+      treinamentoId: treinamentoId ? parseInt(treinamentoId, 10) : null,
       cpf: cpf || null,
       email: email || null
-    });
+    };
+
+    // Só adicionar empresaId se foi fornecido
+    if (empresaId) {
+      dadosParaCriacao.empresaId = parseInt(empresaId, 10);
+    }
+
+    console.log('9. Dados preparados para criação:', dadosParaCriacao);
+
+    // Criar novo contato
+    console.log('10. Criando contato no banco...');
+    const novoContato = await Contato.create(dadosParaCriacao);
+    console.log('11. Contato criado com sucesso:', novoContato.toJSON());
 
     res.status(201).json({
       message: 'Contato cadastrado com sucesso',
       contato: novoContato,
       id: novoContato.id
     });
+
+    console.log('=== FIM DEBUG POST /api/contatos - SUCESSO ===');
+
   } catch (err) {
-    console.error('Erro ao criar contato:', err);
+    console.error('=== ERRO NO POST /api/contatos ===');
+    console.error('Erro completo:', err);
+    console.error('Message:', err.message);
+    console.error('Stack:', err.stack);
+    
+    // Se for erro do Sequelize, mostrar detalhes específicos
+    if (err.name === 'SequelizeValidationError') {
+      console.error('Erros de validação:', err.errors);
+    }
+    if (err.name === 'SequelizeUniqueConstraintError') {
+      console.error('Erro de constraint única:', err.errors);
+    }
+    if (err.name === 'SequelizeForeignKeyConstraintError') {
+      console.error('Erro de foreign key:', err.parent);
+    }
+    
     res.status(500).json({ 
       error: 'Erro interno do servidor',
-      message: err.message
+      message: err.message,
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
   }
 });
