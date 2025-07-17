@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const Empresa = require('../BancoDeDados/models/empresas');
 const { Op } = require('sequelize');
 
