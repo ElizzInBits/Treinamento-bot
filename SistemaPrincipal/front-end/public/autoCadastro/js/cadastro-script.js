@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const empresaSelect = document.getElementById('empresa');
-
-  // 🔽 Carregar empresas do backend e popular o <select>
+  
+  // 🔽 Carregar empresas do backend e popular o select
   fetch('/api/empresas/select/options')
     .then(res => res.json())
     .then(empresas => {
@@ -19,30 +19,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.getElementById('autoCadastroForm').addEventListener('submit', function (e) {
   e.preventDefault();
-
+  
   // Captura dos dados
   const nomeCompleto = document.getElementById('nomeCompleto').value.trim();
   const cpf = document.getElementById('cpf').value.trim();
   const email = document.getElementById('email').value.trim();
   const telefone = document.getElementById('telefone').value.trim();
   const empresaId = document.getElementById('empresa').value;
-
+  
   // Validação simples
   if (!nomeCompleto || !cpf || !email || !telefone || !empresaId) {
     alert('Por favor, preencha todos os campos obrigatórios.');
     return;
   }
-
+  
   // Objeto para envio
-const novoUsuario = {
-  nome: nomeCompleto,
-  cpf,
-  email,
-  telefone,
-  empresa
-};
-
-
+  const novoUsuario = {
+    nome: nomeCompleto,
+    cpf,
+    email,
+    telefone,
+    empresa: empresaId
+  };
+  
   // Enviar dados via POST
   fetch('http://92.112.178.26:3000/api/contatos', {
     method: 'POST',
@@ -59,8 +58,11 @@ const novoUsuario = {
       return res.json();
     })
     .then(data => {
-      alert(`Cadastro feito com sucesso! ID: ${data.id}`);
-      document.getElementById('autoCadastroForm').reset();
+      // Em vez de alert, redireciona para a página de sucesso
+      console.log(`Cadastro feito com sucesso! ID: ${data.id}`);
+      
+      // Redireciona para a página voltarWhats-index.html
+      window.location.href = 'voltarWhats-index.html';
     })
     .catch(error => {
       alert('Erro: ' + error.message);
