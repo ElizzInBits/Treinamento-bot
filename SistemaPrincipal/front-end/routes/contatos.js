@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Contato = require('../../BancoDeDados/models');
+const { Contato } = require('../../BancoDeDados/models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../../BancoDeDados/database');
 

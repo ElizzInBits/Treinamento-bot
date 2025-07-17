@@ -1,4 +1,4 @@
-const sequelize = require('../database'); // sua conexão Sequelize
+const { sequelize } = require('../database'); // sua conexão Sequelize
 
 // Importação dos modelos
 const EmpresaModel = require('./empresas');
