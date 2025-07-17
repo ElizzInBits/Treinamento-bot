@@ -2,7 +2,7 @@ const wppconnect = require('@wppconnect-team/wppconnect');
 const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const Message = require('../BancoDeDados/models/message');
-const Contato = require('../BancoDeDados/models/contato');
+const { Contato } = require('../BancoDeDados/models'); 
 const { gerarCertificado, enviarEmail } = require('./Certificados/certificados.js');
 
 const timeouts = {};
