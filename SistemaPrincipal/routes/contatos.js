@@ -66,11 +66,10 @@ function gerarVariacoes(numeroCompleto) {
     return [var1, var2];
 }
 
-
-// POST /api/contatos
+// POST /api/contatos - ÚNICA ROTA POST (corrigida)
 router.post('/', async (req, res) => {
   try {
-    const { nome, telefone, empresaId, treinamentoId } = req.body;
+    const { nome, telefone, empresaId, treinamentoId, cpf, email } = req.body;
 
     // Validação simples dos campos obrigatórios
     if (!nome || !telefone || !empresaId) {
@@ -104,22 +103,28 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Criar novo contato com empresaId incluído
+    // Criar novo contato com TODOS os campos incluídos
     const novoContato = await Contato.create({
       nome: nome.trim(),
       telefone: telefoneLimpo,
       empresaId: empresaId,
       statusTreinamento: 'não iniciado',
-      treinamentoId
+      treinamentoId: treinamentoId || null,
+      cpf: cpf || null,
+      email: email || null
     });
 
     res.status(201).json({
       message: 'Contato cadastrado com sucesso',
-      contato: novoContato
+      contato: novoContato,
+      id: novoContato.id
     });
   } catch (err) {
     console.error('Erro ao criar contato:', err);
-    res.status(400).json({ error: 'Erro ao criar contato.' });
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      message: err.message
+    });
   }
 });
 
@@ -150,65 +155,10 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Cadastrar novo contato
-router.post('/', async (req, res) => {
-    try {
-        const { nome, telefone } = req.body;
-
-        // Validação básica
-        if (!nome || !telefone) {
-            return res.status(400).json({ 
-                error: 'Nome e telefone são obrigatórios' 
-            });
-        }
-
-        // Limpar e validar telefone
-        const telefoneLimpo = limparNumero(telefone);
-        
-        // Validar usando a mesma função do frontend
-        if (!validarTelefone(telefoneLimpo)) {
-            return res.status(400).json({ 
-                error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)' 
-            });
-        }
-
-        // Verificar se já existe contato com este telefone
-        const variacoesTelefone = gerarVariacoes(telefoneLimpo);
-        const contatosExistentes = await Contato.findAll();
-        
-        const jaExiste = contatosExistentes.some(contato => {
-            const variacoesContato = gerarVariacoes(contato.telefone);
-            return variacoesTelefone.some(num => variacoesContato.includes(num));
-        });
-
-        if (jaExiste) {
-            return res.status(400).json({ 
-                error: 'Já existe um contato com este telefone' 
-            });
-        }
-
-        // Criar novo contato
-        const novoContato = await Contato.create({
-            nome: nome.trim(),
-            telefone: telefoneLimpo,
-            statusTreinamento: 'não iniciado'
-        });
-
-        res.status(201).json({
-            message: 'Contato cadastrado com sucesso',
-            contato: novoContato
-        });
-
-    } catch (error) {
-        console.error('Erro ao cadastrar contato:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
 // Atualizar contato
 router.put('/:id', async (req, res) => {
     try {
-        const { nome, telefone, nomeCompleto, email, statusTreinamento } = req.body;
+        const { nome, telefone, nomeCompleto, email, statusTreinamento, cpf } = req.body;
         
         const contato = await Contato.findByPk(req.params.id);
         if (!contato) {
@@ -250,6 +200,7 @@ router.put('/:id', async (req, res) => {
         if (telefone) camposParaAtualizar.telefone = limparNumero(telefone);
         if (nomeCompleto !== undefined) camposParaAtualizar.nomeCompleto = nomeCompleto;
         if (email !== undefined) camposParaAtualizar.email = email;
+        if (cpf !== undefined) camposParaAtualizar.cpf = cpf;
         if (statusTreinamento) camposParaAtualizar.statusTreinamento = statusTreinamento;
 
         await contato.update(camposParaAtualizar);
@@ -319,7 +270,8 @@ router.get('/search/:termo', async (req, res) => {
                     { nome: { [Op.like]: `%${termo}%` } },
                     { telefone: { [Op.like]: `%${termo}%` } },
                     { nomeCompleto: { [Op.like]: `%${termo}%` } },
-                    { email: { [Op.like]: `%${termo}%` } }
+                    { email: { [Op.like]: `%${termo}%` } },
+                    { cpf: { [Op.like]: `%${termo}%` } }
                 ]
             },
             order: [['nome', 'ASC']]
