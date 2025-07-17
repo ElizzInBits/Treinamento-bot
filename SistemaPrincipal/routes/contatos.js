@@ -69,28 +69,53 @@ function gerarVariacoes(numeroCompleto) {
 
 // POST /api/contatos
 router.post('/', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const { nome, telefone, treinamentoId } = req.body;
-    const novoContato = await Contato.create({ nome, telefone, treinamentoId });
-    res.status(201).json(novoContato);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: 'Erro ao criar contato.' });
+    const { nome, cpf, email, telefone, empresaId } = req.body;
+
+    if (!nome || !telefone || !empresaId) {
+      return res.status(400).json({ error: 'Nome, telefone e empresaId são obrigatórios' });
+    }
+
+    const telefoneLimpo = limparNumero(telefone);
+
+    if (!validarTelefone(telefoneLimpo)) {
+      return res.status(400).json({ error: 'Telefone inválido' });
+    }
+
+    // Verificar duplicados CPF e telefone
+    const contatoExistente = await Contato.findOne({
+      where: {
+        [require('sequelize').Op.or]: [
+          { telefone: telefoneLimpo },
+          { cpf: cpf }
+        ]
+      }
+    });
+
+    if (contatoExistente) {
+      return res.status(400).json({ error: 'Contato com telefone ou CPF já cadastrado' });
+    }
+
+    const novoContato = await Contato.create({
+      nome: nome.trim(),
+      cpf,
+      email,
+      telefone: telefoneLimpo,
+      empresaId,
+      statusTreinamento: 'não iniciado'
+    });
+
+    res.status(201).json({
+      message: 'Contato cadastrado com sucesso',
+      id: novoContato.id
+    });
+  } catch (error) {
+    console.error('Erro ao cadastrar contato:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
-// Listar todos os contatos
-router.get('/', async (req, res) => {
-    try {
-        const contatos = await Contato.findAll({
-            order: [['nome', 'ASC']]
-        });
-        res.json(contatos);
-    } catch (error) {
-        console.error('Erro ao listar contatos:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
 
 // Buscar contato por ID
 router.get('/:id', async (req, res) => {
