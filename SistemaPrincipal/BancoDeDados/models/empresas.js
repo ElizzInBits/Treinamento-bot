@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../database'); 
-
+const Contato = require('./contato');
 const Empresa = sequelize.define('empresas', {
   id: {
     type: DataTypes.INTEGER,
@@ -49,4 +49,5 @@ const Empresa = sequelize.define('empresas', {
   freezeTableName: true
 });
 
+Empresa.hasMany(Contato, { foreignKey: 'empresaId' });
 module.exports = Empresa;
