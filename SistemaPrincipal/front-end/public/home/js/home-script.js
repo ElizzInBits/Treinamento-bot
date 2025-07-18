@@ -194,27 +194,6 @@ function atualizarSelectTreinamento() {
   });
 }
 
-// Carregar empresas
-function carregarEmpresas() {
-  return fetch('http://92.112.178.26:3000/api/empresas')
-    .then(res => {
-      if (!res.ok) throw new Error('Erro ao carregar empresas');
-      return res.json();
-    })
-    .then(data => {
-      console.log('Empresas carregadas:', data);
-      empresas = data.map(e => ({ 
-        ...e, 
-        id: parseInt(e.id, 10),
-        razao_social: e.razao_social || e.razaoSocial // Compatibilidade com diferentes formatos
-      }));
-    })
-    .catch(error => {
-      console.error('Erro ao carregar empresas:', error);
-      mostrarAlerta('Erro ao carregar empresas.', 'error');
-    });
-}
-
 // Carregar contatos
 function carregarContatos() {
   return fetch('http://92.112.178.26:3000/api/contatos')
@@ -800,7 +779,7 @@ function carregarContatos() {
     });
 }
 
-// Função melhorada para carregar empresas
+// carregar empresas
 function carregarEmpresas() {
   return fetch('http://92.112.178.26:3000/api/empresas')
     .then(res => {
@@ -808,21 +787,31 @@ function carregarEmpresas() {
       return res.json();
     })
     .then(data => {
-      // Garantir que os IDs são números inteiros
-      empresas = data.map(e => ({ 
-        ...e, 
-        id: parseInt(e.id, 10) 
+      empresas = data.map(e => ({
+        ...e,
+        id: parseInt(e.id, 10)
       }));
-      
+
       console.log('Empresas carregadas:', empresas.length);
+
+      // Esconder loading depois de carregar com sucesso
+      const loading = document.getElementById('loadingEmpresas');
+      if (loading) loading.style.display = 'none';
+
       return empresas;
     })
     .catch(error => {
       console.error('Erro ao carregar empresas:', error);
       mostrarAlerta('Erro ao carregar empresas.', 'error');
+
+      // Esconder loading mesmo em caso de erro
+      const loading = document.getElementById('loadingEmpresas');
+      if (loading) loading.style.display = 'none';
+
       return [];
     });
 }
+
 
 // Função melhorada para carregar treinamentos
 function carregarTreinamentos() {
