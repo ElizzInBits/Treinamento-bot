@@ -2,14 +2,12 @@ const wppconnect = require('@wppconnect-team/wppconnect');
 const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const Message = require('../BancoDeDados/models/message');
-const { Contato } = require('../BancoDeDados/models'); 
+const { Contato, Interacao } = require('../BancoDeDados/models');  // IMPORTANTE: Inclua Interacao
 const { gerarCertificado, enviarEmail } = require('./Certificados/certificados.js');
 
 const timeouts = {};
-const ultimasInteracoes = {};
 const emProcessamento = new Set();
 const saudacoesEnviadas = new Set();
-
 
 function agendarLembrete(sender, mensagemLista, tempoMs = 0.3 * 60 * 1000) {
     if (timeouts[sender]) clearTimeout(timeouts[sender]);
@@ -21,8 +19,16 @@ function agendarLembrete(sender, mensagemLista, tempoMs = 0.3 * 60 * 1000) {
     }, tempoMs);
 }
 
-function salvarUltimaInteracao(sender, tipo, mensagem) {
-    ultimasInteracoes[sender] = { tipo, mensagem };
+async function salvarUltimaInteracao(sender, tipo, mensagem) {
+    // upsert cria ou atualiza a última interação
+    await Interacao.upsert({ telefone: sender, tipo, mensagem });
+}
+
+async function obterUltimaInteracao(sender) {
+    return await Interacao.findOne({
+        where: { telefone: sender },
+        order: [['updatedAt', 'DESC']],
+    });
 }
 
 function getMensagemListaContinuar() {
@@ -46,6 +52,7 @@ function getMensagemListaContinuar() {
 function limparNumero(numero) {
     return numero.replace(/\D/g, '').replace(/@c\.us$/, '');
 }
+
 function gerarVariacoes(numeroCompleto) {
     const limpo = limparNumero(numeroCompleto);
     if (!limpo.startsWith('55') || limpo.length < 10) return [limpo];
@@ -140,7 +147,10 @@ async function start(client) {
             }
 
             console.log(`📩 Mensagem de ${sender} (${contato.nome}): ${text}`);
-            if (message.isGroupMsg) return;
+            if (message.isGroupMsg) {
+                emProcessamento.delete(sender);
+                return;
+            }
 
             if (contato.statusTreinamento === 'não iniciado') {
                 await sendMessage(sender, 'send-message', {
@@ -172,13 +182,14 @@ async function start(client) {
                 await sendMessage(sender, 'send-list-message', listMsg);
                 await contato.update({ statusTreinamento: 'em andamento' });
 
-                salvarUltimaInteracao(sender, 'quiz', listMsg);
+                await salvarUltimaInteracao(sender, 'quiz', listMsg);
                 agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
                 return;
             }
 
             if (text === 'continuar' || selectedId === 'continuar') {
-                const ultima = ultimasInteracoes[sender];
+                const ultima = await obterUltimaInteracao(sender);
                 if (ultima) {
                     if (ultima.tipo === 'quiz') {
                         await sendMessage(sender, 'send-list-message', ultima.mensagem);
@@ -192,6 +203,7 @@ async function start(client) {
                     });
                     await sendMessage(sender, 'send-list-message', getMensagemListaContinuar());
                 }
+                emProcessamento.delete(sender);
                 return;
             }
 
@@ -200,6 +212,7 @@ async function start(client) {
                     message: 'Sem problemas! Quando quiser continuar, é só me chamar.',
                 });
                 agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
                 return;
             }
 
@@ -218,138 +231,75 @@ async function start(client) {
                     message: '😅 Sem problemas! Quando estiver pronto, é só avisar. Estamos aqui para ajudar! 👷‍♂️👷‍♀️',
                 });
                 await sendMessage(sender, 'send-list-message', listMsg);
-                salvarUltimaInteracao(sender, 'quiz', listMsg);
+                await salvarUltimaInteracao(sender, 'quiz', listMsg);
                 agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
                 return;
             }
 
-            if (text === 'começar agora!! 😎 🔥🔥🔥' || selectedId === 'começar agora') {
-                await sendMessage(sender, 'send-message', {
-                    message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
-                });
-                await sendMessage(sender, 'send-message', {
-                    message: `✅ Modulo 1️ - 📚 *Conceitos Fundamentais* \n\n1️⃣ Segurança e Saúde no Trabalho (SST) \nConjunto de medidas para previnir doenças e acidentes no trabalho. \n\n2️⃣ Premissas básicas de SST \n• Segurança é responsabilidade de todos \n• A consciência previne acidentes\n• Quem descumpre normas, se coloca em risco`,
-                });
+            if (text === 'começar agora!! 😎 🔥🔥🔥' || selectedId === 'começar agora' || selectedId === 'pronto') {
                 await sendMessage(sender, 'send-message', {
                     message: '*Para continuar, digite o número 1️⃣*',
                 });
-                salvarUltimaInteracao(sender, 'quiz', '*Para continuar, digite o número 1️⃣*');
+                await salvarUltimaInteracao(sender, 'quiz', '*Para continuar, digite o número 1️⃣*');
                 agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
                 return;
             }
 
-            if (text === '1') {
-                await sendMessage(sender, 'send-message', {
-                    message: 'Vamos continuar!🚀🚀🚀 \n\nPra esquentar as coisas, vamos fazer um pequeno quiz! 😜 🔥🔥🔥',
-                });
-
+            if (contato.statusTreinamento === 'em andamento' && ['1', '2', '3', '4', '5'].includes(text)) {
+                // Exemplo de quiz: enviar nova pergunta ou concluir
                 const quizList = {
                     title: '',
-                    description:
-                        'Qual das alternativas é uma premissa básica de SST?\n\nA) Só a Empresa é responsável\n\nB) Segurança é de responsabilidade coletiva\n\nC) Só os supervisores devem usar EPI\n\nD) Acidentes não podem ser evitados',
-                    buttonText: 'Responder',
+                    description: '*Pergunta:* Qual o objetivo do treinamento SSMA?',
+                    buttonText: 'Responda',
                     listType: 'SINGLE_SELECT',
                     sections: [{
                         title: '',
                         rows: [
-                            { id: 'a', title: 'A', description: '' },
-                            { id: 'b', title: 'B', description: '' },
-                            { id: 'c', title: 'C', description: '' },
-                            { id: 'd', title: 'D', description: '' },
+                            { id: 'a', title: 'Evitar acidentes', description: '' },
+                            { id: 'b', title: 'Apenas cumprir regras', description: '' },
+                            { id: 'c', title: 'Ignorar normas', description: '' },
                         ],
                     }],
                 };
-
                 await sendMessage(sender, 'send-list-message', quizList);
-                salvarUltimaInteracao(sender, 'quiz', quizList);
+                await salvarUltimaInteracao(sender, 'quiz', quizList);
                 agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
                 return;
             }
 
-            if (['a', 'b', 'c', 'd'].includes(text)) {
-                const respostaCorreta = 'b';
-                if (text !== respostaCorreta) {
-                    await sendMessage(sender, 'send-message', {
-                        message: '❌ Resposta incorreta! A resposta correta é B) Segurança é de responsabilidade coletiva.',
-                    });
-                } else {
-                    await sendMessage(sender, 'send-message', {
-                        message: '✅ Resposta correta! Segurança é de responsabilidade coletiva!',
-                    });
-                }
-
-                await sendMessage(sender, 'send-message', { message: '🎉 Parabéns, você completou o Módulo 1!' });
-                await sendMessage(sender, 'send-sticker-gif', {
-                    path: '../media/palmas.gif',
-                    filename: 'palmas',
-                });
+            // Exemplo de pedir nome
+            if (text === 'meu nome é') {
                 await sendMessage(sender, 'send-message', {
-                    message: '🎓 Agora, por favor, me envie seu nome completo para emissão do certificado.',
+                    message: 'Por favor, me envie seu nome completo...',
                 });
-                await contato.update({ statusTreinamento: 'concluído' });
-
-                salvarUltimaInteracao(sender, 'nome', 'Por favor, me envie seu nome completo para emissão do certificado.');
+                await salvarUltimaInteracao(sender, 'nome', 'Por favor, me envie seu nome completo...');
                 agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
                 return;
             }
 
-            if (contato.statusTreinamento === 'concluído') {
-                if (!contato.nomeCompleto) {
-                    contato.nomeCompleto = rawText.trim();
-                    await contato.save();
-                    await sendMessage(sender, 'send-message', {
-                        message: '👍 Nome completo recebido. Agora, me envie seu e-mail para que eu possa enviar o seu certificado.',
-                    });
-                    salvarUltimaInteracao(sender, 'email', 'Por favor, me envie seu e-mail para envio do certificado.');
-                    agendarLembrete(sender, getMensagemListaContinuar());
-                    return;
-                }
-
-                if (!contato.email) {
-                    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-                    if (!emailRegex.test(text)) {
-                        await sendMessage(sender, 'send-message', {
-                            message: '⚠️ E-mail inválido! Por favor, insira um e-mail válido.',
-                        });
-                        salvarUltimaInteracao(sender, 'email', 'Por favor, me envie seu e-mail para envio do certificado.');
-                        agendarLembrete(sender, getMensagemListaContinuar());
-                        return;
-                    }
-
-                    contato.email = text;
-                    await contato.save();
-                }
-
-                if (contato.nomeCompleto && contato.email) {
-                    await sendMessage(sender, 'send-message', {
-                        message: '📧 Informações encontradas! Gerando seu certificado...',
-                    });
-
-                    try {
-                        const certificadoPath = await gerarCertificado(contato.nomeCompleto);
-                        await enviarEmail(contato.email, certificadoPath);
-                        await sendMessage(sender, 'send-message', {
-                            message: `🎉 Seu certificado foi gerado!\n\nEle foi enviado por e-mail e também está disponível aqui:`,
-                        });
-                        await sendMessage(sender, 'send-file', {
-                            path: certificadoPath,
-                            filename: 'certificado.pdf',
-                        });
-                    } catch (err) {
-                        await sendMessage(sender, 'send-message', {
-                            message: '❌ Ocorreu um erro ao gerar ou enviar seu certificado.',
-                        });
-                    }
-                    return;
-                }
+            // Exemplo de pedir e-mail
+            if (text.includes('@')) {
+                await sendMessage(sender, 'send-message', {
+                    message: 'Por favor, me envie seu e-mail...',
+                });
+                await salvarUltimaInteracao(sender, 'email', 'Por favor, me envie seu e-mail...');
+                agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
+                return;
             }
 
-            const respostasEsperadas = ['começar agora!! 😎 🔥🔥🔥', 'não, começo assim que possível 👀 😅', 'pronto', '1', 'a', 'b', 'c', 'd'];
-            await verificarRespostaEsperada(sender, text, respostasEsperadas);
-
+            // Caso nenhuma condição seja satisfeita:
+            await sendMessage(sender, 'send-message', {
+                message: '🤔 Não entendi sua mensagem. Por favor, use as opções fornecidas.',
+            });
+            agendarLembrete(sender, getMensagemListaContinuar());
+            emProcessamento.delete(sender);
         } catch (error) {
-            console.error(`❌ Erro no processamento da mensagem de ${sender}:`, error);
-        } finally {
+            console.error('Erro no processamento da mensagem:', error);
             emProcessamento.delete(sender);
         }
     });
