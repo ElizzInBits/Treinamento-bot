@@ -1,30 +1,28 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
 const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
-const { Contato, Interacao } = require('../BancoDeDados/models');
+const Message = require('../BancoDeDados/models/message');
+const { Contato } = require('../BancoDeDados/models'); 
 const { gerarCertificado, enviarEmail } = require('./Certificados/certificados.js');
 
 const timeouts = {};
+const ultimasInteracoes = {};
 const emProcessamento = new Set();
 const saudacoesEnviadas = new Set();
 
-async function agendarLembrete(sender, mensagemLista, tempoMs = 0.3 * 60 * 1000) {
+
+function agendarLembrete(sender, mensagemLista, tempoMs = 0.3 * 60 * 1000) {
     if (timeouts[sender]) clearTimeout(timeouts[sender]);
     timeouts[sender] = setTimeout(async () => {
-        await sendMessage(sender, 'send-message', { message: '👀 Ah, parece que alguém se esqueceu de mim... Vamos continuar?' });
+        await sendMessage(sender, 'send-message', {
+            message: '👀 Ah, parece que alguém se esqueceu de mim... Vamos continuar?',
+        });
         await sendMessage(sender, 'send-list-message', mensagemLista);
     }, tempoMs);
 }
 
-async function salvarUltimaInteracao(sender, tipo, mensagem) {
-    await Interacao.upsert({ telefone: sender, tipo, mensagem });
-}
-
-async function obterUltimaInteracao(sender) {
-    return await Interacao.findOne({
-        where: { telefone: sender },
-        order: [['updatedAt', 'DESC']],
-    });
+function salvarUltimaInteracao(sender, tipo, mensagem) {
+    ultimasInteracoes[sender] = { tipo, mensagem };
 }
 
 function getMensagemListaContinuar() {
@@ -33,27 +31,33 @@ function getMensagemListaContinuar() {
         description: 'Escolha uma opção:',
         buttonText: 'Continuar',
         listType: 'SINGLE_SELECT',
-        sections: [{
-            title: '', rows: [
-                { id: 'continuar', title: 'Continuar de onde parei', description: '' },
-                { id: 'pausar', title: 'Continuo assim que possível', description: '' },
-            ]
-        }],
+        sections: [
+            {
+                title: '',
+                rows: [
+                    { id: 'continuar', title: 'Continuar de onde parei', description: '' },
+                    { id: 'pausar', title: 'Continuo assim que possível', description: '' },
+                ],
+            },
+        ],
     };
 }
 
 function limparNumero(numero) {
     return numero.replace(/\D/g, '').replace(/@c\.us$/, '');
 }
-
 function gerarVariacoes(numeroCompleto) {
     const limpo = limparNumero(numeroCompleto);
     if (!limpo.startsWith('55') || limpo.length < 10) return [limpo];
     const ddd = limpo.slice(2, 4);
     const base = limpo.slice(4);
-    let var1 = limpo, var2 = limpo;
-    if (base.length === 9 && base[0] === '9') var2 = '55' + ddd + base.slice(1);
-    else if (base.length === 8) var2 = '55' + ddd + '9' + base;
+    let var1 = limpo;
+    let var2 = limpo;
+    if (base.length === 9 && base[0] === '9') {
+        var2 = '55' + ddd + base.slice(1);
+    } else if (base.length === 8) {
+        var2 = '55' + ddd + '9' + base;
+    }
     return [var1, var2];
 }
 
@@ -66,63 +70,71 @@ wppconnect.create({
     session: 'NERDWHATS_AMERICA',
     headless: 'new',
     executablePath: '/snap/bin/chromium',
-    catchQR: (b64, ascii) => { console.clear(); console.log('📱 Escaneie o QR Code abaixo com seu WhatsApp:'); console.log(ascii); },
-    statusFind: status => console.log('📶 Status da sessão:', status),
+    catchQR: (base64Qr, asciiQR) => {
+        console.clear();
+        console.log('📱 Escaneie o QR Code abaixo com seu WhatsApp:');
+        console.log(asciiQR);
+    },
+    statusFind: (status) => {
+        console.log('📶 Status da sessão:', status);
+    },
     browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
 })
-    .then(client => { console.log('🟢 Cliente conectado!'); start(client); })
-    .catch(err => console.error('❌ Erro ao iniciar WPPConnect:', err));
+    .then((client) => {
+        console.log('🟢 Cliente conectado! Iniciando listener de mensagens...');
+        start(client);
+    })
+    .catch((error) => {
+        console.error('❌ Erro ao iniciar WPPConnect:', error);
+    });
 
 async function verificarRespostaEsperada(sender, resposta, opcoesValidas) {
     if (!opcoesValidas.includes(resposta)) {
-        await sendMessage(sender, 'send-message', { message: '⚠️ Ops, não entendi sua resposta. Tente novamente com uma opção válida!' });
+        await sendMessage(sender, 'send-message', {
+            message: '⚠️ Ops, não entendi sua resposta. Tente novamente com uma opção válida!',
+        });
         return false;
     }
     return true;
 }
 
 async function start(client) {
-    client.onMessage(async message => {
+    console.log('✅ Evento onMessage registrado com sucesso.');
+    client.onMessage(async (message) => {
         const sender = message.from.replace('@c.us', '');
-        if (emProcessamento.has(sender)) return;
-        emProcessamento.add(sender);
+        if (emProcessamento.has(sender)) {
+            console.log(`⏳ Ignorando nova mensagem de ${sender}, já está em processamento.`);
+            return;
+        }
 
+        emProcessamento.add(sender);
         try {
             const text = message.body?.toLowerCase() || '';
-            const sel = message.selectedRowId?.toLowerCase() || '';
-            const raw = message.body || '';
+            const selectedId = message.selectedRowId?.toLowerCase() || '';
+            const rawText = message.body || '';
+
             if (timeouts[sender]) clearTimeout(timeouts[sender]);
 
+            // ✅ Saudação inicial apenas uma vez
             if (!saudacoesEnviadas.has(sender)) {
-                await sendMessage(sender, 'send-message', { message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.' });
+                await sendMessage(sender, 'send-message', {
+                    message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
+                });
                 saudacoesEnviadas.add(sender);
             }
 
+            // ✅ Verificação de cadastro
+            const senderVariacoes = gerarVariacoes(sender);
             const contatos = await Contato.findAll();
-            const contato = contatos.find(c => gerarVariacoes(sender)
-                .some(num => gerarVariacoes(c.telefone).includes(num)));
+            const contato = contatos.find((c) => {
+                const variacoesContato = gerarVariacoes(c.telefone);
+                return senderVariacoes.some((num) => variacoesContato.includes(num));
+            });
+
             if (!contato) {
-                await sendMessage(sender, 'send-message', { message: '🤔 Humm, parece que você ainda não fez seu cadastro.\n👉 bit.ly/44xw45W' });
-                emProcessamento.delete(sender);
-                return;
-            }
-
-            console.log(`📩 Mensagem de ${sender} (${contato.nome}): ${text}`);
-            if (message.isGroupMsg) { emProcessamento.delete(sender); return; }
-
-            // Fluxo "continuar de onde parei"
-            if (text === 'continuar' || sel === 'continuar') {
-                const ultima = await obterUltimaInteracao(sender);
-                if (ultima) {
-                    if (ultima.tipo === 'quiz')
-                        await sendMessage(sender, 'send-list-message', ultima.mensagem);
-                    else
-                        await sendMessage(sender, 'send-message', { message: ultima.mensagem });
-                    agendarLembrete(sender, getMensagemListaContinuar());
-                } else {
-                    await sendMessage(sender, 'send-message', { message: '❗️Não encontrei onde você parou. Vamos começar do início?' });
-                    agendarLembrete(sender, getMensagemListaContinuar());
-                }
+                await sendMessage(sender, 'send-message', {
+                    message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 bit.ly/44xw45W`,
+                });
                 emProcessamento.delete(sender);
                 return;
             }
