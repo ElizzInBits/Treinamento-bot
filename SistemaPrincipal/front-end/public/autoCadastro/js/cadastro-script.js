@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const ddiSelect = document.getElementById('ddi');
   const cpfInput = document.getElementById('cpf');
   const cpfError = document.getElementById('cpfError');
-  
+
   // 🔽 Carregar empresas do backend e popular o select
   fetch('/api/empresas/select/options')
     .then(res => res.json())
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ✅ 🔽 Submit do formulário (AGORA DENTRO DO DOMContentLoaded)
+  // 🔽 Submit do formulário
   document.getElementById('autoCadastroForm').addEventListener('submit', function (e) {
     e.preventDefault();
 
@@ -161,7 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const telefoneCompleto = `${ddi} ${telefone}`;
+    // ✅ Salvar telefone com DDI sem "+" e número só com dígitos
+    const telefoneCompleto = `${ddi.replace('+', '')}${telefone.replace(/\D/g, '')}`;
 
     const novoUsuario = {
       nome: nomeCompleto,
@@ -203,5 +204,4 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Erro: ' + error.message);
       });
   });
-
 });
