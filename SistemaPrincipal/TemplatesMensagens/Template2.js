@@ -122,7 +122,15 @@ async function start(client) {
 
             if (timeouts[sender]) clearTimeout(timeouts[sender]);
 
-            // ✅ Funcionalidade "continuar" do paste 1
+            // ✅ Saudação inicial apenas uma vez
+            if (!saudacoesEnviadas.has(sender)) {
+                await sendMessage(sender, 'send-message', {
+                    message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
+                });
+                saudacoesEnviadas.add(sender);
+            }
+
+            // ✅ Funcionalidade "continuar" 
             if (text === 'continuar' || selectedId === 'continuar') {
                 const ultima = await obterUltimaInteracao(sender);
                 if (ultima) {
@@ -160,7 +168,9 @@ async function start(client) {
             });
 
             if (!contato) {
-                console.log(`🚫 Número ${sender} não está autorizado. Ignorando.`);
+                await sendMessage(sender, 'send-message', {
+                    message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 bit.ly/44xw45W`,
+                });
                 emProcessamento.delete(sender);
                 return;
             }
@@ -171,7 +181,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Início do treinamento - do paste 1
+            // ✅ Início do treinamento - COMPLETO do paste 1
             if (contato.statusTreinamento === 'não iniciado') {
                 await sendMessage(sender, 'send-message', {
                     message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) à equipe LCM! 💼\n\nVocê está iniciando seu Treinamento Básico de SSMA...`,
@@ -208,7 +218,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Opção "não começar" do paste 1
+            // ✅ Opção "não começar" - do paste 1
             if (text === 'não, começo assim que possível 👀 😅' || selectedId === 'não começar') {
                 const listMsg = {
                     title: '',
@@ -230,7 +240,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Começar treinamento - do paste 1
+            // ✅ Começar treinamento - COMPLETO do paste 1
             if (text === 'começar agora!! 😎 🔥🔥🔥' || selectedId === 'começar agora' || selectedId === 'pronto') {
                 await sendMessage(sender, 'send-message', {
                     message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
@@ -247,7 +257,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Continuação do treinamento - do paste 1
+            // ✅ Continuação do treinamento - COMPLETO do paste 1
             if (text === '1') {
                 await sendMessage(sender, 'send-message', {
                     message: 'Vamos continuar!🚀🚀🚀 \n\nPra esquentar as coisas, vamos fazer um pequeno quiz! 😜 🔥🔥🔥',
@@ -277,7 +287,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Respostas do quiz - do paste 1
+            // ✅ Respostas do quiz - COMPLETO do paste 1
             if (['a', 'b', 'c', 'd'].includes(text)) {
                 const respostaCorreta = 'b';
                 if (text !== respostaCorreta) {
@@ -306,7 +316,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Receber nome completo - do paste 1
+            // ✅ Receber nome completo - COMPLETO do paste 1
             if (contato.statusTreinamento === 'concluído' && !contato.nomeCompleto) {
                 contato.nomeCompleto = rawText.trim();
                 await contato.save();
@@ -319,7 +329,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Receber e-mail e gerar certificado - do paste 1
+            // ✅ Receber e-mail e gerar certificado - COMPLETO do paste 1
             if (contato.nomeCompleto && !contato.email) {
                 const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
                 if (!emailRegex.test(text)) {
@@ -357,13 +367,64 @@ async function start(client) {
                 return;
             }
 
+            // ✅ MANTENDO funcionalidades do paste 2 que eram exemplos
+            if (contato.statusTreinamento === 'em andamento' && ['2', '3', '4', '5'].includes(text)) {
+                // Exemplo de quiz: enviar nova pergunta ou concluir
+                const quizList = {
+                    title: '',
+                    description: '*Pergunta:* Qual o objetivo do treinamento SSMA?',
+                    buttonText: 'Responda',
+                    listType: 'SINGLE_SELECT',
+                    sections: [{
+                        title: '',
+                        rows: [
+                            { id: 'a', title: 'Evitar acidentes', description: '' },
+                            { id: 'b', title: 'Apenas cumprir regras', description: '' },
+                            { id: 'c', title: 'Ignorar normas', description: '' },
+                        ],
+                    }],
+                };
+                await sendMessage(sender, 'send-list-message', quizList);
+                await salvarUltimaInteracao(sender, 'quiz', quizList);
+                agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
+                return;
+            }
+
+            // ✅ MANTENDO exemplo de pedir nome do paste 2
+            if (text === 'meu nome é') {
+                await sendMessage(sender, 'send-message', {
+                    message: 'Por favor, me envie seu nome completo...',
+                });
+                await salvarUltimaInteracao(sender, 'nome', 'Por favor, me envie seu nome completo...');
+                agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
+                return;
+            }
+
+            // ✅ MANTENDO exemplo de pedir e-mail do paste 2
+            if (text.includes('@')) {
+                await sendMessage(sender, 'send-message', {
+                    message: 'Por favor, me envie seu e-mail...',
+                });
+                await salvarUltimaInteracao(sender, 'email', 'Por favor, me envie seu e-mail...');
+                agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
+                return;
+            }
+
             // ✅ Verificação de respostas esperadas - do paste 1
             const respostasEsperadas = ['começar agora!! 😎 🔥🔥🔥', 'não, começo assim que possível 👀 😅', 'pronto', '1', 'a', 'b', 'c', 'd'];
             await verificarRespostaEsperada(sender, text, respostasEsperadas);
 
+            // ✅ MANTENDO caso nenhuma condição seja satisfeita do paste 2:
+            await sendMessage(sender, 'send-message', {
+                message: '🤔 Não entendi sua mensagem. Por favor, use as opções fornecidas.',
+            });
+            agendarLembrete(sender, getMensagemListaContinuar());
             emProcessamento.delete(sender);
         } catch (error) {
-            console.error(`❌ Erro no processamento da mensagem de ${sender}:`, error);
+            console.error('Erro no processamento da mensagem:', error);
             emProcessamento.delete(sender);
         }
     });
