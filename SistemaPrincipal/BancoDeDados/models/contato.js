@@ -28,10 +28,7 @@ module.exports = (sequelize) => {
       allowNull: true,
       unique: true,
     },
-    empresa: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
+
     statusTreinamento: {
       type: DataTypes.STRING,
       defaultValue: 'não iniciado',
