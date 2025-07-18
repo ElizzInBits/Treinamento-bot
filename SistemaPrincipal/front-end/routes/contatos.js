@@ -106,7 +106,7 @@ router.get('/:id', async (req, res) => {
 // Cadastrar novo contato com validação de email
 router.post('/', async (req, res) => {
     try {
-        const { nome, telefone, cpf, empresa, email } = req.body;
+        const { nome, telefone, cpf, empresaId, email } = req.body;
 
         // Validação básica
         if (!nome || !telefone || !email) {
@@ -158,7 +158,8 @@ router.post('/', async (req, res) => {
             nome: nome.trim(),
             telefone: telefoneLimpo,
             cpf: cpf ? cpf.replace(/\D/g, '') : null,
-            empresa: (typeof empresa === 'string' && empresa.trim()) || null,
+            //empresa: (typeof empresa === 'string' && empresa.trim()) || null,
+            empresaId: empresaId ? parseInt(empresaId, 10) : null,
             email: email.trim(),
             statusTreinamento: 'não iniciado'
         });
@@ -174,86 +175,96 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Atualizar contato
 router.put('/:id', async (req, res) => {
-    try {
-        const { nome, telefone, nomeCompleto, email, statusTreinamento, cpf, empresa } = req.body;
+  try {
+    const {
+      nome,
+      telefone,
+      nomeCompleto,
+      email,
+      statusTreinamento,
+      cpf,
+      empresaId // ✅ usamos empresaId agora
+    } = req.body;
 
-        const contato = await Contato.findByPk(req.params.id);
-        if (!contato) {
-            return res.status(404).json({ error: 'Contato não encontrado' });
-        }
-
-        // Validar telefone se fornecido
-        if (telefone) {
-            const telefoneLimpo = limparNumero(telefone);
-
-            if (!validarTelefone(telefoneLimpo)) {
-                return res.status(400).json({
-                    error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)'
-                });
-            }
-
-            // Verificar se já existe outro contato com este telefone
-            const variacoesTelefone = gerarVariacoes(telefoneLimpo);
-            const contatosExistentes = await Contato.findAll({
-                where: { id: { [Op.ne]: req.params.id } }
-            });
-
-            const jaExiste = contatosExistentes.some(outroContato => {
-                const variacoesContato = gerarVariacoes(outroContato.telefone);
-                return variacoesTelefone.some(num => variacoesContato.includes(num));
-            });
-
-            if (jaExiste) {
-                return res.status(400).json({
-                    error: 'Já existe outro contato com este telefone'
-                });
-            }
-        }
-
-        // Validar email se fornecido
-        if (email !== undefined) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                return res.status(400).json({
-                    error: 'Email inválido'
-                });
-            }
-        }
-
-        // Validar CPF se fornecido
-        if (cpf !== undefined) {
-            if (!validarCPF(cpf)) {
-                return res.status(400).json({
-                    error: 'CPF inválido. Deve conter 11 dígitos numéricos.'
-                });
-            }
-        }
-
-        // Atualizar campos
-        const camposParaAtualizar = {};
-        if (nome) camposParaAtualizar.nome = nome.trim();
-        if (telefone) camposParaAtualizar.telefone = limparNumero(telefone);
-        if (nomeCompleto !== undefined) camposParaAtualizar.nomeCompleto = nomeCompleto;
-        if (email !== undefined) camposParaAtualizar.email = email.trim();
-        if (statusTreinamento) camposParaAtualizar.statusTreinamento = statusTreinamento;
-        if (cpf !== undefined) camposParaAtualizar.cpf = cpf ? cpf.replace(/\D/g, '') : null;
-        if (empresa !== undefined) camposParaAtualizar.empresa = (typeof empresa === 'string' && empresa.trim()) || null;
-
-
-        await contato.update(camposParaAtualizar);
-
-        res.json({
-            message: 'Contato atualizado com sucesso',
-            contato: contato
-        });
-
-    } catch (error) {
-        console.error('Erro ao atualizar contato:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
+    const contato = await Contato.findByPk(req.params.id);
+    if (!contato) {
+      return res.status(404).json({ error: 'Contato não encontrado' });
     }
+
+    // 🔍 Validação do telefone, se enviado
+    if (telefone) {
+      const telefoneLimpo = limparNumero(telefone);
+
+      if (!validarTelefone(telefoneLimpo)) {
+        return res.status(400).json({
+          error: 'Por favor, insira um telefone válido com DDI+DDD+número (12 ou 13 dígitos)'
+        });
+      }
+
+      // Verifica se outro contato já usa esse telefone
+      const variacoesTelefone = gerarVariacoes(telefoneLimpo);
+      const contatosExistentes = await Contato.findAll({
+        where: { id: { [Op.ne]: req.params.id } }
+      });
+
+      const jaExiste = contatosExistentes.some(outro => {
+        const variacoesContato = gerarVariacoes(outro.telefone);
+        return variacoesTelefone.some(num => variacoesContato.includes(num));
+      });
+
+      if (jaExiste) {
+        return res.status(400).json({
+          error: 'Já existe outro contato com este telefone'
+        });
+      }
+    }
+
+    // 🔍 Validação do e-mail, se enviado
+    if (email !== undefined) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Email inválido' });
+      }
+    }
+
+    // 🔍 Validação do CPF, se enviado
+    if (cpf !== undefined) {
+      if (!validarCPF(cpf)) {
+        return res.status(400).json({
+          error: 'CPF inválido. Deve conter 11 dígitos numéricos.'
+        });
+      }
+    }
+
+    // 🔧 Monta objeto com os campos a atualizar
+    const camposParaAtualizar = {};
+    if (nome) camposParaAtualizar.nome = nome.trim();
+    if (telefone) camposParaAtualizar.telefone = limparNumero(telefone);
+    if (nomeCompleto !== undefined) camposParaAtualizar.nomeCompleto = nomeCompleto;
+    if (email !== undefined) camposParaAtualizar.email = email.trim();
+    if (statusTreinamento) camposParaAtualizar.statusTreinamento = statusTreinamento;
+    if (cpf !== undefined) camposParaAtualizar.cpf = cpf ? cpf.replace(/\D/g, '') : null;
+
+    // ✅ Corrigido: atualiza a empresa corretamente via ID (chave estrangeira)
+    if (empresaId !== undefined) {
+      camposParaAtualizar.empresaId = empresaId ? parseInt(empresaId, 10) : null;
+    }
+
+    // ✨ Executa atualização
+    await contato.update(camposParaAtualizar);
+
+    res.json({
+      message: 'Contato atualizado com sucesso',
+      contato: contato
+    });
+
+  } catch (error) {
+    console.error('Erro ao atualizar contato:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
+
 
 // Deletar contato
 router.delete('/:id', async (req, res) => {
