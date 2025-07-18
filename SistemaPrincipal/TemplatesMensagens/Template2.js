@@ -122,12 +122,33 @@ async function start(client) {
 
             if (timeouts[sender]) clearTimeout(timeouts[sender]);
 
-            // ✅ Saudação inicial apenas uma vez
-            if (!saudacoesEnviadas.has(sender)) {
+            // ✅ Funcionalidade "continuar" do paste 1
+            if (text === 'continuar' || selectedId === 'continuar') {
+                const ultima = await obterUltimaInteracao(sender);
+                if (ultima) {
+                    if (ultima.tipo === 'quiz') {
+                        await sendMessage(sender, 'send-list-message', ultima.mensagem);
+                    } else {
+                        await sendMessage(sender, 'send-message', { message: ultima.mensagem });
+                    }
+                    agendarLembrete(sender, getMensagemListaContinuar());
+                } else {
+                    await sendMessage(sender, 'send-message', {
+                        message: '❗️Não encontrei onde você parou. Vamos começar do início?',
+                    });
+                    await sendMessage(sender, 'send-list-message', getMensagemListaContinuar());
+                }
+                emProcessamento.delete(sender);
+                return;
+            }
+
+            if (text === 'pausar' || selectedId === 'pausar') {
                 await sendMessage(sender, 'send-message', {
-                    message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
+                    message: 'Sem problemas! Quando quiser continuar, é só me chamar.',
                 });
-                saudacoesEnviadas.add(sender);
+                agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
+                return;
             }
 
             // ✅ Verificação de cadastro
@@ -139,9 +160,7 @@ async function start(client) {
             });
 
             if (!contato) {
-                await sendMessage(sender, 'send-message', {
-                    message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 bit.ly/44xw45W`,
-                });
+                console.log(`🚫 Número ${sender} não está autorizado. Ignorando.`);
                 emProcessamento.delete(sender);
                 return;
             }
@@ -152,6 +171,7 @@ async function start(client) {
                 return;
             }
 
+            // ✅ Início do treinamento - do paste 1
             if (contato.statusTreinamento === 'não iniciado') {
                 await sendMessage(sender, 'send-message', {
                     message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) à equipe LCM! 💼\n\nVocê está iniciando seu Treinamento Básico de SSMA...`,
@@ -188,34 +208,7 @@ async function start(client) {
                 return;
             }
 
-            if (text === 'continuar' || selectedId === 'continuar') {
-                const ultima = await obterUltimaInteracao(sender);
-                if (ultima) {
-                    if (ultima.tipo === 'quiz') {
-                        await sendMessage(sender, 'send-list-message', ultima.mensagem);
-                    } else {
-                        await sendMessage(sender, 'send-message', { message: ultima.mensagem });
-                    }
-                    agendarLembrete(sender, getMensagemListaContinuar());
-                } else {
-                    await sendMessage(sender, 'send-message', {
-                        message: '❗️Não encontrei onde você parou. Vamos começar do início?',
-                    });
-                    await sendMessage(sender, 'send-list-message', getMensagemListaContinuar());
-                }
-                emProcessamento.delete(sender);
-                return;
-            }
-
-            if (text === 'pausar' || selectedId === 'pausar') {
-                await sendMessage(sender, 'send-message', {
-                    message: 'Sem problemas! Quando quiser continuar, é só me chamar.',
-                });
-                agendarLembrete(sender, getMensagemListaContinuar());
-                emProcessamento.delete(sender);
-                return;
-            }
-
+            // ✅ Opção "não começar" do paste 1
             if (text === 'não, começo assim que possível 👀 😅' || selectedId === 'não começar') {
                 const listMsg = {
                     title: '',
@@ -237,7 +230,14 @@ async function start(client) {
                 return;
             }
 
+            // ✅ Começar treinamento - do paste 1
             if (text === 'começar agora!! 😎 🔥🔥🔥' || selectedId === 'começar agora' || selectedId === 'pronto') {
+                await sendMessage(sender, 'send-message', {
+                    message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
+                });
+                await sendMessage(sender, 'send-message', {
+                    message: `✅ Modulo 1️ - 📚 *Conceitos Fundamentais* \n\n1️⃣ Segurança e Saúde no Trabalho (SST) \nConjunto de medidas para previnir doenças e acidentes no trabalho. \n\n2️⃣ Premissas básicas de SST \n• Segurança é responsabilidade de todos \n• A consciência previne acidentes\n• Quem descumpre normas, se coloca em risco`,
+                });
                 await sendMessage(sender, 'send-message', {
                     message: '*Para continuar, digite o número 1️⃣*',
                 });
@@ -247,22 +247,29 @@ async function start(client) {
                 return;
             }
 
-            if (contato.statusTreinamento === 'em andamento' && ['1', '2', '3', '4', '5'].includes(text)) {
-                // Exemplo de quiz: enviar nova pergunta ou concluir
+            // ✅ Continuação do treinamento - do paste 1
+            if (text === '1') {
+                await sendMessage(sender, 'send-message', {
+                    message: 'Vamos continuar!🚀🚀🚀 \n\nPra esquentar as coisas, vamos fazer um pequeno quiz! 😜 🔥🔥🔥',
+                });
+
                 const quizList = {
                     title: '',
-                    description: '*Pergunta:* Qual o objetivo do treinamento SSMA?',
-                    buttonText: 'Responda',
+                    description:
+                        'Qual das alternativas é uma premissa básica de SST?\n\nA) Só a Empresa é responsável\n\nB) Segurança é de responsabilidade coletiva\n\nC) Só os supervisores devem usar EPI\n\nD) Acidentes não podem ser evitados',
+                    buttonText: 'Responder',
                     listType: 'SINGLE_SELECT',
                     sections: [{
                         title: '',
                         rows: [
-                            { id: 'a', title: 'Evitar acidentes', description: '' },
-                            { id: 'b', title: 'Apenas cumprir regras', description: '' },
-                            { id: 'c', title: 'Ignorar normas', description: '' },
+                            { id: 'a', title: 'A', description: '' },
+                            { id: 'b', title: 'B', description: '' },
+                            { id: 'c', title: 'C', description: '' },
+                            { id: 'd', title: 'D', description: '' },
                         ],
                     }],
                 };
+
                 await sendMessage(sender, 'send-list-message', quizList);
                 await salvarUltimaInteracao(sender, 'quiz', quizList);
                 agendarLembrete(sender, getMensagemListaContinuar());
@@ -270,36 +277,93 @@ async function start(client) {
                 return;
             }
 
-            // Exemplo de pedir nome
-            if (text === 'meu nome é') {
-                await sendMessage(sender, 'send-message', {
-                    message: 'Por favor, me envie seu nome completo...',
+            // ✅ Respostas do quiz - do paste 1
+            if (['a', 'b', 'c', 'd'].includes(text)) {
+                const respostaCorreta = 'b';
+                if (text !== respostaCorreta) {
+                    await sendMessage(sender, 'send-message', {
+                        message: '❌ Resposta incorreta! A resposta correta é B) Segurança é de responsabilidade coletiva.',
+                    });
+                } else {
+                    await sendMessage(sender, 'send-message', {
+                        message: '✅ Resposta correta! Segurança é de responsabilidade coletiva!',
+                    });
+                }
+
+                await sendMessage(sender, 'send-message', { message: '🎉 Parabéns, você completou o Módulo 1!' });
+                await sendMessage(sender, 'send-sticker-gif', {
+                    path: '../media/palmas.gif',
+                    filename: 'palmas',
                 });
-                await salvarUltimaInteracao(sender, 'nome', 'Por favor, me envie seu nome completo...');
+                await sendMessage(sender, 'send-message', {
+                    message: '🎓 Agora, por favor, me envie seu nome completo para emissão do certificado.',
+                });
+                await contato.update({ statusTreinamento: 'concluído' });
+
+                await salvarUltimaInteracao(sender, 'nome', 'Por favor, me envie seu nome completo para emissão do certificado.');
                 agendarLembrete(sender, getMensagemListaContinuar());
                 emProcessamento.delete(sender);
                 return;
             }
 
-            // Exemplo de pedir e-mail
-            if (text.includes('@')) {
+            // ✅ Receber nome completo - do paste 1
+            if (contato.statusTreinamento === 'concluído' && !contato.nomeCompleto) {
+                contato.nomeCompleto = rawText.trim();
+                await contato.save();
                 await sendMessage(sender, 'send-message', {
-                    message: 'Por favor, me envie seu e-mail...',
+                    message: '👍 Nome completo recebido. Agora, me envie seu e-mail para que eu possa enviar o seu certificado.',
                 });
-                await salvarUltimaInteracao(sender, 'email', 'Por favor, me envie seu e-mail...');
+                await salvarUltimaInteracao(sender, 'email', 'Por favor, me envie seu e-mail para envio do certificado.');
                 agendarLembrete(sender, getMensagemListaContinuar());
                 emProcessamento.delete(sender);
                 return;
             }
 
-            // Caso nenhuma condição seja satisfeita:
-            await sendMessage(sender, 'send-message', {
-                message: '🤔 Não entendi sua mensagem. Por favor, use as opções fornecidas.',
-            });
-            agendarLembrete(sender, getMensagemListaContinuar());
+            // ✅ Receber e-mail e gerar certificado - do paste 1
+            if (contato.nomeCompleto && !contato.email) {
+                const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+                if (!emailRegex.test(text)) {
+                    await sendMessage(sender, 'send-message', {
+                        message: '⚠️ E-mail inválido! Por favor, insira um e-mail válido.',
+                    });
+                    await salvarUltimaInteracao(sender, 'email', 'Por favor, me envie seu e-mail para envio do certificado.');
+                    agendarLembrete(sender, getMensagemListaContinuar());
+                    emProcessamento.delete(sender);
+                    return;
+                }
+
+                contato.email = text;
+                await contato.save();
+                await sendMessage(sender, 'send-message', {
+                    message: '📧 E-mail recebido! \nEstamos gerando seu Certificado \n\nIsso podo demorar um pouco....',
+                });
+
+                try {
+                    const certificadoPath = await gerarCertificado(contato.nomeCompleto);
+                    await enviarEmail(contato.email, certificadoPath);
+                    await sendMessage(sender, 'send-message', {
+                        message: `🎉 Seu certificado foi gerado! \n\nEle está sendo enviado por e-mail e também disponível aqui:`,
+                    });
+                    await sendMessage(sender, 'send-file', {
+                        path: certificadoPath,
+                        filename: 'certificado.pdf',
+                    });
+                } catch (err) {
+                    await sendMessage(sender, 'send-message', {
+                        message: '❌ Ocorreu um erro ao gerar ou enviar seu certificado.',
+                    });
+                }
+                emProcessamento.delete(sender);
+                return;
+            }
+
+            // ✅ Verificação de respostas esperadas - do paste 1
+            const respostasEsperadas = ['começar agora!! 😎 🔥🔥🔥', 'não, começo assim que possível 👀 😅', 'pronto', '1', 'a', 'b', 'c', 'd'];
+            await verificarRespostaEsperada(sender, text, respostasEsperadas);
+
             emProcessamento.delete(sender);
         } catch (error) {
-            console.error('Erro no processamento da mensagem:', error);
+            console.error(`❌ Erro no processamento da mensagem de ${sender}:`, error);
             emProcessamento.delete(sender);
         }
     });
