@@ -2,7 +2,7 @@ const wppconnect = require('@wppconnect-team/wppconnect');
 const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const Message = require('../BancoDeDados/models/message');
-const { Contato, Interacao } = require('../BancoDeDados/models');  // IMPORTANTE: Inclua Interacao
+const { Contato, Interacao } = require('../BancoDeDados/models');
 const { gerarCertificado, enviarEmail } = require('./Certificados/certificados.js');
 
 const timeouts = {};
@@ -20,7 +20,6 @@ function agendarLembrete(sender, mensagemLista, tempoMs = 0.3 * 60 * 1000) {
 }
 
 async function salvarUltimaInteracao(sender, tipo, mensagem) {
-    // upsert cria ou atualiza a última interação
     await Interacao.upsert({ telefone: sender, tipo, mensagem });
 }
 
@@ -181,7 +180,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Início do treinamento - COMPLETO do paste 1
+            // ✅ Início do treinamento
             if (contato.statusTreinamento === 'não iniciado') {
                 await sendMessage(sender, 'send-message', {
                     message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) à equipe LCM! 💼\n\nVocê está iniciando seu Treinamento Básico de SSMA...`,
@@ -218,7 +217,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Opção "não começar" - do paste 1
+            // ✅ Opção "não começar"
             if (text === 'não, começo assim que possível 👀 😅' || selectedId === 'não começar') {
                 const listMsg = {
                     title: '',
@@ -240,7 +239,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Começar treinamento - COMPLETO do paste 1
+            // ✅ Começar treinamento
             if (text === 'começar agora!! 😎 🔥🔥🔥' || selectedId === 'começar agora' || selectedId === 'pronto') {
                 await sendMessage(sender, 'send-message', {
                     message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
@@ -257,7 +256,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Continuação do treinamento - COMPLETO do paste 1
+            // ✅ Continuação do treinamento
             if (text === '1') {
                 await sendMessage(sender, 'send-message', {
                     message: 'Vamos continuar!🚀🚀🚀 \n\nPra esquentar as coisas, vamos fazer um pequeno quiz! 😜 🔥🔥🔥',
@@ -287,7 +286,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Respostas do quiz - COMPLETO do paste 1
+            // ✅ Respostas do quiz
             if (['a', 'b', 'c', 'd'].includes(text)) {
                 const respostaCorreta = 'b';
                 if (text !== respostaCorreta) {
@@ -305,32 +304,67 @@ async function start(client) {
                     path: '../media/palmas.gif',
                     filename: 'palmas',
                 });
-                await sendMessage(sender, 'send-message', {
-                    message: '🎓 Agora, por favor, me envie seu nome completo para emissão do certificado.',
-                });
-                await contato.update({ statusTreinamento: 'concluído' });
 
-                await salvarUltimaInteracao(sender, 'nome', 'Por favor, me envie seu nome completo para emissão do certificado.');
-                agendarLembrete(sender, getMensagemListaContinuar());
+                // ✅ CORREÇÃO: Verificar se já tem email cadastrado
+                if (contato.email) {
+                    // Se já tem email, usar o email do cadastro
+                    await sendMessage(sender, 'send-message', {
+                        message: `🎓 Vou usar seu e-mail cadastrado (${contato.email}) para enviar o certificado.`,
+                    });
+                    
+                    // Usar nome completo do cadastro ou pedir se não tiver
+                    if (!contato.nomeCompleto) {
+                        await sendMessage(sender, 'send-message', {
+                            message: '🎓 Por favor, me envie seu nome completo para emissão do certificado.',
+                        });
+                        await salvarUltimaInteracao(sender, 'nome', 'Por favor, me envie seu nome completo para emissão do certificado.');
+                        agendarLembrete(sender, getMensagemListaContinuar());
+                        emProcessamento.delete(sender);
+                        return;
+                    } else {
+                        // Gerar certificado diretamente
+                        await gerarEEnviarCertificado(contato, sender);
+                        emProcessamento.delete(sender);
+                        return;
+                    }
+                } else {
+                    // Se não tem email, pedir nome completo primeiro
+                    await sendMessage(sender, 'send-message', {
+                        message: '🎓 Agora, por favor, me envie seu nome completo para emissão do certificado.',
+                    });
+                    await salvarUltimaInteracao(sender, 'nome', 'Por favor, me envie seu nome completo para emissão do certificado.');
+                    agendarLembrete(sender, getMensagemListaContinuar());
+                }
+
+                await contato.update({ statusTreinamento: 'concluído' });
                 emProcessamento.delete(sender);
                 return;
             }
 
-            // ✅ Receber nome completo - COMPLETO do paste 1
+            // ✅ Receber nome completo (apenas quando necessário)
             if (contato.statusTreinamento === 'concluído' && !contato.nomeCompleto) {
                 contato.nomeCompleto = rawText.trim();
                 await contato.save();
-                await sendMessage(sender, 'send-message', {
-                    message: '👍 Nome completo recebido. Agora, me envie seu e-mail para que eu possa enviar o seu certificado.',
-                });
-                await salvarUltimaInteracao(sender, 'email', 'Por favor, me envie seu e-mail para envio do certificado.');
-                agendarLembrete(sender, getMensagemListaContinuar());
+                
+                // Verificar se já tem email cadastrado
+                if (contato.email) {
+                    await sendMessage(sender, 'send-message', {
+                        message: `👍 Nome completo recebido! Vou usar seu e-mail cadastrado (${contato.email}) para enviar o certificado.`,
+                    });
+                    await gerarEEnviarCertificado(contato, sender);
+                } else {
+                    await sendMessage(sender, 'send-message', {
+                        message: '👍 Nome completo recebido. Agora, me envie seu e-mail para que eu possa enviar o seu certificado.',
+                    });
+                    await salvarUltimaInteracao(sender, 'email', 'Por favor, me envie seu e-mail para envio do certificado.');
+                    agendarLembrete(sender, getMensagemListaContinuar());
+                }
                 emProcessamento.delete(sender);
                 return;
             }
 
-            // ✅ Receber e-mail e gerar certificado - COMPLETO do paste 1
-            if (contato.nomeCompleto && !contato.email) {
+            // ✅ Receber e-mail (apenas quando necessário)
+            if (contato.statusTreinamento === 'concluído' && contato.nomeCompleto && !contato.email) {
                 const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
                 if (!emailRegex.test(text)) {
                     await sendMessage(sender, 'send-message', {
@@ -344,32 +378,13 @@ async function start(client) {
 
                 contato.email = text;
                 await contato.save();
-                await sendMessage(sender, 'send-message', {
-                    message: '📧 E-mail recebido! \nEstamos gerando seu Certificado \n\nIsso podo demorar um pouco....',
-                });
-
-                try {
-                    const certificadoPath = await gerarCertificado(contato.nomeCompleto);
-                    await enviarEmail(contato.email, certificadoPath);
-                    await sendMessage(sender, 'send-message', {
-                        message: `🎉 Seu certificado foi gerado! \n\nEle está sendo enviado por e-mail e também disponível aqui:`,
-                    });
-                    await sendMessage(sender, 'send-file', {
-                        path: certificadoPath,
-                        filename: 'certificado.pdf',
-                    });
-                } catch (err) {
-                    await sendMessage(sender, 'send-message', {
-                        message: '❌ Ocorreu um erro ao gerar ou enviar seu certificado.',
-                    });
-                }
+                await gerarEEnviarCertificado(contato, sender);
                 emProcessamento.delete(sender);
                 return;
             }
 
-            // ✅ MANTENDO funcionalidades do paste 2 que eram exemplos
+            // ✅ Outros casos de treinamento em andamento
             if (contato.statusTreinamento === 'em andamento' && ['2', '3', '4', '5'].includes(text)) {
-                // Exemplo de quiz: enviar nova pergunta ou concluir
                 const quizList = {
                     title: '',
                     description: '*Pergunta:* Qual o objetivo do treinamento SSMA?',
@@ -391,33 +406,11 @@ async function start(client) {
                 return;
             }
 
-            // ✅ MANTENDO exemplo de pedir nome do paste 2
-            if (text === 'meu nome é') {
-                await sendMessage(sender, 'send-message', {
-                    message: 'Por favor, me envie seu nome completo...',
-                });
-                await salvarUltimaInteracao(sender, 'nome', 'Por favor, me envie seu nome completo...');
-                agendarLembrete(sender, getMensagemListaContinuar());
-                emProcessamento.delete(sender);
-                return;
-            }
-
-            // ✅ CORREÇÃO: Exemplo de pedir e-mail do paste 2 - AGORA COM VERIFICAÇÃO
-            if (text.includes('@') && !contato.email) {
-                await sendMessage(sender, 'send-message', {
-                    message: 'Por favor, me envie seu e-mail...',
-                });
-                await salvarUltimaInteracao(sender, 'email', 'Por favor, me envie seu e-mail...');
-                agendarLembrete(sender, getMensagemListaContinuar());
-                emProcessamento.delete(sender);
-                return;
-            }
-
-            // ✅ Verificação de respostas esperadas - do paste 1
+            // ✅ Verificação de respostas esperadas
             const respostasEsperadas = ['começar agora!! 😎 🔥🔥🔥', 'não, começo assim que possível 👀 😅', 'pronto', '1', 'a', 'b', 'c', 'd'];
             await verificarRespostaEsperada(sender, text, respostasEsperadas);
 
-            // ✅ MANTENDO caso nenhuma condição seja satisfeita do paste 2:
+            // ✅ Caso padrão
             await sendMessage(sender, 'send-message', {
                 message: '🤔 Não entendi sua mensagem. Por favor, use as opções fornecidas.',
             });
@@ -428,4 +421,28 @@ async function start(client) {
             emProcessamento.delete(sender);
         }
     });
+}
+
+// ✅ Função auxiliar para gerar e enviar certificado
+async function gerarEEnviarCertificado(contato, sender) {
+    await sendMessage(sender, 'send-message', {
+        message: '📧 Gerando seu certificado...\n\nIsso pode demorar um pouco....',
+    });
+
+    try {
+        const certificadoPath = await gerarCertificado(contato.nomeCompleto);
+        await enviarEmail(contato.email, certificadoPath);
+        await sendMessage(sender, 'send-message', {
+            message: `🎉 Seu certificado foi gerado! \n\nEle está sendo enviado por e-mail e também disponível aqui:`,
+        });
+        await sendMessage(sender, 'send-file', {
+            path: certificadoPath,
+            filename: 'certificado.pdf',
+        });
+    } catch (err) {
+        console.error('Erro ao gerar certificado:', err);
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Ocorreu um erro ao gerar ou enviar seu certificado. Tente novamente mais tarde.',
+        });
+    }
 }
