@@ -287,9 +287,11 @@ async function start(client) {
             }
 
             // ✅ Respostas do quiz
-            if (['a', 'b', 'c', 'd'].includes(text)) {
+            if (['a', 'b', 'c', 'd'].includes(text) || ['a', 'b', 'c', 'd'].includes(selectedId)) {
                 const respostaCorreta = 'b';
-                if (text !== respostaCorreta) {
+                const respostaUsuario = text || selectedId;
+                
+                if (respostaUsuario !== respostaCorreta) {
                     await sendMessage(sender, 'send-message', {
                         message: '❌ Resposta incorreta! A resposta correta é B) Segurança é de responsabilidade coletiva.',
                     });
@@ -381,7 +383,7 @@ async function start(client) {
                 
                 if (ultimaInteracao?.tipo === 'corrigir_email') {
                     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-                    if (!emailRegex.test(text)) {
+                    if (!emailRegex.test(rawText)) {
                         await sendMessage(sender, 'send-message', {
                             message: '⚠️ E-mail inválido! Por favor, insira um e-mail válido.',
                         });
@@ -391,7 +393,7 @@ async function start(client) {
                         return;
                     }
                     
-                    contato.email = text;
+                    contato.email = rawText.trim();
                     await contato.save();
                     await sendMessage(sender, 'send-message', {
                         message: '✅ E-mail atualizado! Gerando seu certificado...',
@@ -425,24 +427,13 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Verificação de respostas esperadas
-            const respostasEsperadas = [
-                'começar agora!! 😎 🔥🔥🔥', 
-                'não, começo assim que possível 👀 😅', 
-                'pronto', 
-                '1', 
-                'a', 'b', 'c', 'd',
-                'dados_corretos',
-                'dados_incorretos'
-            ];
-            await verificarRespostaEsperada(sender, text, respostasEsperadas);
-
-            // ✅ Caso padrão
+            // ✅ Caso padrão - CORRIGIDO: Removida a verificação desnecessária
             await sendMessage(sender, 'send-message', {
                 message: '🤔 Não entendi sua mensagem. Por favor, use as opções fornecidas.',
             });
             agendarLembrete(sender, getMensagemListaContinuar());
             emProcessamento.delete(sender);
+            
         } catch (error) {
             console.error('Erro no processamento da mensagem:', error);
             emProcessamento.delete(sender);
