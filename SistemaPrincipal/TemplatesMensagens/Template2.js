@@ -116,7 +116,7 @@ async function start(client) {
         emProcessamento.add(sender);
         try {
             const text = message.body?.toLowerCase() || '';
-            const selectedId = message.selectedRowId?.toLowerCase() || '';
+            const selectedId = message.selectedRowId || '';
             const rawText = message.body || '';
 
             if (timeouts[sender]) clearTimeout(timeouts[sender]);
@@ -180,12 +180,11 @@ async function start(client) {
                 return;
             }
 
-            // ✅ CORREÇÃO: Verificação de confirmação dos dados DEVE vir ANTES dos outros casos
-            // ✅ Confirmação dos dados para certificado
+            // ✅ CORREÇÃO: Tratamento de confirmação de dados ANTES da verificação de status
             if (selectedId === 'dados_corretos') {
                 const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
                 const emailCadastrado = contato.email || 'E-mail não informado';
-                
+
                 if (nomeCompleto === 'Nome não informado' || emailCadastrado === 'E-mail não informado') {
                     await sendMessage(sender, 'send-message', {
                         message: '⚠️ Dados incompletos no cadastro. Por favor, entre em contato com o suporte.',
@@ -193,7 +192,7 @@ async function start(client) {
                     emProcessamento.delete(sender);
                     return;
                 }
-                
+
                 await sendMessage(sender, 'send-message', {
                     message: '✅ Dados confirmados! Gerando seu certificado...',
                 });
@@ -215,7 +214,7 @@ async function start(client) {
             // ✅ Receber nome completo para correção
             if (contato.statusTreinamento === 'concluído') {
                 const ultimaInteracao = await obterUltimaInteracao(sender);
-                
+
                 if (ultimaInteracao?.tipo === 'corrigir_nome') {
                     contato.nomeCompleto = rawText.trim();
                     await contato.save();
@@ -227,7 +226,7 @@ async function start(client) {
                     emProcessamento.delete(sender);
                     return;
                 }
-                
+
                 if (ultimaInteracao?.tipo === 'corrigir_email') {
                     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
                     if (!emailRegex.test(rawText)) {
@@ -239,7 +238,7 @@ async function start(client) {
                         emProcessamento.delete(sender);
                         return;
                     }
-                    
+
                     contato.email = rawText.trim();
                     await contato.save();
                     await sendMessage(sender, 'send-message', {
@@ -361,7 +360,7 @@ async function start(client) {
             if (['a', 'b', 'c', 'd'].includes(text) || ['a', 'b', 'c', 'd'].includes(selectedId)) {
                 const respostaCorreta = 'b';
                 const respostaUsuario = text || selectedId;
-                
+
                 if (respostaUsuario !== respostaCorreta) {
                     await sendMessage(sender, 'send-message', {
                         message: '❌ Resposta incorreta! A resposta correta é B) Segurança é de responsabilidade coletiva.',
@@ -381,7 +380,7 @@ async function start(client) {
                 // ✅ CORREÇÃO: Usar dados do cadastro e solicitar confirmação
                 const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
                 const emailCadastrado = contato.email || 'E-mail não informado';
-                
+
                 const confirmacaoList = {
                     title: '',
                     description: `🎓 *Confirmação dos dados para o certificado:*\n\n👤 *Nome:* ${nomeCompleto}\n📧 *E-mail:* ${emailCadastrado}\n\nOs dados estão corretos?`,
@@ -434,7 +433,7 @@ async function start(client) {
             });
             agendarLembrete(sender, getMensagemListaContinuar());
             emProcessamento.delete(sender);
-            
+
         } catch (error) {
             console.error('Erro no processamento da mensagem:', error);
             emProcessamento.delete(sender);
