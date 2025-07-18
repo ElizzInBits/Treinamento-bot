@@ -180,6 +180,77 @@ async function start(client) {
                 return;
             }
 
+            // ✅ CORREÇÃO: Verificação de confirmação dos dados DEVE vir ANTES dos outros casos
+            // ✅ Confirmação dos dados para certificado
+            if (selectedId === 'dados_corretos') {
+                const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
+                const emailCadastrado = contato.email || 'E-mail não informado';
+                
+                if (nomeCompleto === 'Nome não informado' || emailCadastrado === 'E-mail não informado') {
+                    await sendMessage(sender, 'send-message', {
+                        message: '⚠️ Dados incompletos no cadastro. Por favor, entre em contato com o suporte.',
+                    });
+                    emProcessamento.delete(sender);
+                    return;
+                }
+                
+                await sendMessage(sender, 'send-message', {
+                    message: '✅ Dados confirmados! Gerando seu certificado...',
+                });
+                await gerarEEnviarCertificado(contato, sender);
+                emProcessamento.delete(sender);
+                return;
+            }
+
+            if (selectedId === 'dados_incorretos') {
+                await sendMessage(sender, 'send-message', {
+                    message: '📝 Para corrigir seus dados, por favor, me envie seu nome completo correto.',
+                });
+                await salvarUltimaInteracao(sender, 'corrigir_nome', 'Por favor, me envie seu nome completo correto.');
+                agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
+                return;
+            }
+
+            // ✅ Receber nome completo para correção
+            if (contato.statusTreinamento === 'concluído') {
+                const ultimaInteracao = await obterUltimaInteracao(sender);
+                
+                if (ultimaInteracao?.tipo === 'corrigir_nome') {
+                    contato.nomeCompleto = rawText.trim();
+                    await contato.save();
+                    await sendMessage(sender, 'send-message', {
+                        message: '👍 Nome atualizado! Agora, me envie seu e-mail correto.',
+                    });
+                    await salvarUltimaInteracao(sender, 'corrigir_email', 'Por favor, me envie seu e-mail correto.');
+                    agendarLembrete(sender, getMensagemListaContinuar());
+                    emProcessamento.delete(sender);
+                    return;
+                }
+                
+                if (ultimaInteracao?.tipo === 'corrigir_email') {
+                    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+                    if (!emailRegex.test(rawText)) {
+                        await sendMessage(sender, 'send-message', {
+                            message: '⚠️ E-mail inválido! Por favor, insira um e-mail válido.',
+                        });
+                        await salvarUltimaInteracao(sender, 'corrigir_email', 'Por favor, me envie seu e-mail correto.');
+                        agendarLembrete(sender, getMensagemListaContinuar());
+                        emProcessamento.delete(sender);
+                        return;
+                    }
+                    
+                    contato.email = rawText.trim();
+                    await contato.save();
+                    await sendMessage(sender, 'send-message', {
+                        message: '✅ E-mail atualizado! Gerando seu certificado...',
+                    });
+                    await gerarEEnviarCertificado(contato, sender);
+                    emProcessamento.delete(sender);
+                    return;
+                }
+            }
+
             // ✅ Início do treinamento
             if (contato.statusTreinamento === 'não iniciado') {
                 await sendMessage(sender, 'send-message', {
@@ -334,76 +405,6 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Confirmação dos dados para certificado
-            if (selectedId === 'dados_corretos') {
-                const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
-                const emailCadastrado = contato.email || 'E-mail não informado';
-                
-                if (nomeCompleto === 'Nome não informado' || emailCadastrado === 'E-mail não informado') {
-                    await sendMessage(sender, 'send-message', {
-                        message: '⚠️ Dados incompletos no cadastro. Por favor, entre em contato com o suporte.',
-                    });
-                    emProcessamento.delete(sender);
-                    return;
-                }
-                
-                await sendMessage(sender, 'send-message', {
-                    message: '✅ Dados confirmados! Gerando seu certificado...',
-                });
-                await gerarEEnviarCertificado(contato, sender);
-                emProcessamento.delete(sender);
-                return;
-            }
-
-            if (selectedId === 'dados_incorretos') {
-                await sendMessage(sender, 'send-message', {
-                    message: '📝 Para corrigir seus dados, por favor, me envie seu nome completo correto.',
-                });
-                await salvarUltimaInteracao(sender, 'corrigir_nome', 'Por favor, me envie seu nome completo correto.');
-                agendarLembrete(sender, getMensagemListaContinuar());
-                emProcessamento.delete(sender);
-                return;
-            }
-
-            // ✅ Receber nome completo para correção
-            if (contato.statusTreinamento === 'concluído') {
-                const ultimaInteracao = await obterUltimaInteracao(sender);
-                
-                if (ultimaInteracao?.tipo === 'corrigir_nome') {
-                    contato.nomeCompleto = rawText.trim();
-                    await contato.save();
-                    await sendMessage(sender, 'send-message', {
-                        message: '👍 Nome atualizado! Agora, me envie seu e-mail correto.',
-                    });
-                    await salvarUltimaInteracao(sender, 'corrigir_email', 'Por favor, me envie seu e-mail correto.');
-                    agendarLembrete(sender, getMensagemListaContinuar());
-                    emProcessamento.delete(sender);
-                    return;
-                }
-                
-                if (ultimaInteracao?.tipo === 'corrigir_email') {
-                    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-                    if (!emailRegex.test(rawText)) {
-                        await sendMessage(sender, 'send-message', {
-                            message: '⚠️ E-mail inválido! Por favor, insira um e-mail válido.',
-                        });
-                        await salvarUltimaInteracao(sender, 'corrigir_email', 'Por favor, me envie seu e-mail correto.');
-                        agendarLembrete(sender, getMensagemListaContinuar());
-                        emProcessamento.delete(sender);
-                        return;
-                    }
-                    
-                    contato.email = rawText.trim();
-                    await contato.save();
-                    await sendMessage(sender, 'send-message', {
-                        message: '✅ E-mail atualizado! Gerando seu certificado...',
-                    });
-                    await gerarEEnviarCertificado(contato, sender);
-                    emProcessamento.delete(sender);
-                    return;
-                }
-            }
-
             // ✅ Outros casos de treinamento em andamento
             if (contato.statusTreinamento === 'em andamento' && ['2', '3', '4', '5'].includes(text)) {
                 const quizList = {
@@ -427,7 +428,7 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Caso padrão - CORRIGIDO: Removida a verificação desnecessária
+            // ✅ Caso padrão
             await sendMessage(sender, 'send-message', {
                 message: '🤔 Não entendi sua mensagem. Por favor, use as opções fornecidas.',
             });
