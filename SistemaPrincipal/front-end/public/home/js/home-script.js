@@ -56,7 +56,7 @@ function showTab(tabName) {
 // Formatação de telefone
 function formatarTelefone(telefone) {
   if (!telefone) return 'N/A';
-  
+
   const cleaned = telefone.replace(/\D/g, '');
   if (cleaned.length === 13) {
     return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
@@ -209,7 +209,7 @@ function carregarContatos() {
         empresaId: parseInt(c.empresaId, 10),
         treinamentoId: c.treinamentoId ? parseInt(c.treinamentoId, 10) : null
       }));
-      
+
       // Debug: mostrar associações
       console.log('Associações contato-empresa:', contatos.map(c => ({
         contatoId: c.id,
@@ -241,9 +241,9 @@ function renderizarEmpresas() {
     // Debug: verificar contatos da empresa
     const contatosEmpresa = contatos.filter(c => c.empresaId === empresa.id);
     console.log(`Empresa ${empresa.razao_social} (ID: ${empresa.id}) tem ${contatosEmpresa.length} contatos:`, contatosEmpresa);
-    
+
     const contatosComTreinamento = contatosEmpresa.filter(c => c.treinamentoId);
-    
+
     return `
       <div class="company-card">
         <div class="company-header">
@@ -279,9 +279,9 @@ function renderizarEmpresas() {
 function visualizarContatosEmpresa(empresaId) {
   const empresa = empresas.find(e => e.id === empresaId);
   const contatosEmpresa = contatos.filter(c => c.empresaId === empresaId);
-  
+
   console.log(`Visualizando contatos da empresa ${empresaId}:`, contatosEmpresa);
-  
+
   empresaSelecionada = empresa;
   contatosEmpresaSelecionada = contatosEmpresa;
 
@@ -316,8 +316,8 @@ function renderizarContatosEmpresa() {
   modalConteudo.innerHTML = `
     <div class="contacts-list">
       ${contatosFiltrados.map(contato => {
-        const treinamento = treinamentos.find(t => t.id === contato.treinamentoId);
-        return `
+    const treinamento = treinamentos.find(t => t.id === contato.treinamentoId);
+    return `
           <div class="contact-item">
             <div class="contact-info">
               <h4>${contato.nome}</h4>
@@ -325,13 +325,14 @@ function renderizarContatosEmpresa() {
               <p><strong>Treinamento:</strong> ${treinamento ? treinamento.nome : 'Sem treinamento'}</p>
             </div>
             <div class="contact-actions">
-              <button onclick="abrirDetalhesContato(${contato.id})">Detalhes</button>
-              <button onclick="abrirEditarContato(${contato.id})">Editar</button>
-              <button onclick="removerContato(${contato.id})">Remover</button>
+              <button class="btn-info" onclick="abrirDetalhesContato(${contato.id})">Detalhes</button>
+              <button class="btn-warning" onclick="abrirEditarContato(${contato.id})">Editar</button>
+              <button class="btn-error" onclick="removerContato(${contato.id})">Remover</button>
             </div>
+
           </div>
         `;
-      }).join('')}
+  }).join('')}
     </div>
   `;
 }
@@ -406,7 +407,7 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
           contatosEmpresaSelecionada = contatos.filter(c => c.empresaId === empresaSelecionada.id);
           renderizarContatosEmpresa();
         }
-        
+
         if (document.getElementById('empresas').classList.contains('active')) {
           renderizarEmpresas();
           atualizarEstatisticasEmpresas();
@@ -432,7 +433,7 @@ function removerContato(id) {
           contatosEmpresaSelecionada = contatos.filter(c => c.empresaId === empresaSelecionada.id);
           renderizarContatosEmpresa();
         }
-        
+
         if (document.getElementById('empresas').classList.contains('active')) {
           renderizarEmpresas();
           atualizarEstatisticasEmpresas();
@@ -529,7 +530,7 @@ function renderizarTreinamentos() {
 
   treinamentosGrid.innerHTML = treinamentos.map(treinamento => {
     const contatosComTreinamento = contatos.filter(c => c.treinamentoId === treinamento.id);
-    
+
     return `
       <div class="training-card">
         <div class="training-header">
@@ -609,8 +610,8 @@ function visualizarContatosTreinamento(treinamentoId) {
     document.getElementById('modalConteudo').innerHTML = `
       <div class="contacts-list">
         ${contatosComTreinamento.map(contato => {
-          const empresa = empresas.find(e => e.id === contato.empresaId);
-          return `
+      const empresa = empresas.find(e => e.id === contato.empresaId);
+      return `
             <div class="contact-item">
               <div class="contact-info">
                 <h4>${contato.nome}</h4>
@@ -624,7 +625,7 @@ function visualizarContatosTreinamento(treinamentoId) {
               </div>
             </div>
           `;
-        }).join('')}
+    }).join('')}
       </div>
     `;
   }
@@ -640,7 +641,7 @@ function fecharModal() {
 // Remover treinamento
 function removerTreinamento(id) {
   const contatosComTreinamento = contatos.filter(c => c.treinamentoId === id);
-  
+
   if (contatosComTreinamento.length > 0) {
     if (!confirm(`Este treinamento possui ${contatosComTreinamento.length} contatos. Ao removê-lo, os contatos perderão a associação com o treinamento. Deseja continuar?`)) {
       return;
@@ -684,12 +685,12 @@ function exportarDados() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  
+
   mostrarAlerta('Dados exportados com sucesso!');
 }
 
 // Fechar modais ao clicar fora
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   const modals = [
     'modalContatosEmpresa',
     'modalContatos',
@@ -711,7 +712,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Fechar modais com tecla ESC
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') {
     const modalsAbertos = document.querySelectorAll('.modal-overlay[style*="block"]');
     modalsAbertos.forEach(modal => {
@@ -733,18 +734,18 @@ function sincronizarDados() {
   ]).then(() => {
     atualizarSelectEmpresa();
     atualizarSelectTreinamento();
-    
+
     // Se estivermos na aba empresas, atualizar a visualização
     if (document.getElementById('empresas').classList.contains('active')) {
       renderizarEmpresas();
       atualizarEstatisticasEmpresas();
     }
-    
+
     // Se estivermos na aba treinamentos, atualizar a visualização
     if (document.getElementById('treinamentos').classList.contains('active')) {
       renderizarTreinamentos();
     }
-    
+
     // Se houver um modal de empresa aberto, atualizar os contatos
     if (empresaSelecionada) {
       contatosEmpresaSelecionada = contatos.filter(c => c.empresaId === empresaSelecionada.id);
@@ -768,7 +769,7 @@ function carregarContatos() {
         empresaId: parseInt(c.empresaId, 10),
         treinamentoId: c.treinamentoId ? parseInt(c.treinamentoId, 10) : null
       }));
-      
+
       console.log('Contatos carregados:', contatos.length);
       return contatos;
     })
@@ -825,11 +826,11 @@ function carregarTreinamentos() {
     })
     .then(data => {
       // Garantir que os IDs são números inteiros
-      treinamentos = data.map(t => ({ 
-        ...t, 
-        id: parseInt(t.id, 10) 
+      treinamentos = data.map(t => ({
+        ...t,
+        id: parseInt(t.id, 10)
       }));
-      
+
       console.log('Treinamentos carregados:', treinamentos.length);
       return treinamentos;
     })
@@ -861,7 +862,7 @@ function atualizarDadosCompletos() {
 // Melhorar a inicialização do sistema
 document.addEventListener('DOMContentLoaded', function () {
   console.log('Iniciando carregamento do sistema...');
-  
+
   // Carregar dados em sequência para evitar problemas de dependência
   carregarEmpresas()
     .then(() => {
@@ -877,12 +878,12 @@ document.addEventListener('DOMContentLoaded', function () {
     .then(() => {
       console.log('Contatos carregados, atualizando estatísticas...');
       atualizarEstatisticasEmpresas();
-      
+
       // Se estivermos na aba empresas por padrão, renderizar
       if (document.getElementById('empresas').classList.contains('active')) {
         renderizarEmpresas();
       }
-      
+
       console.log('Sistema inicializado com sucesso!');
     })
     .catch(error => {
@@ -897,7 +898,7 @@ function debugDados() {
   console.log('Empresas:', empresas);
   console.log('Contatos:', contatos);
   console.log('Treinamentos:', treinamentos);
-  
+
   // Verificar associações
   empresas.forEach(empresa => {
     const contatosEmpresa = contatos.filter(c => c.empresaId === empresa.id);
