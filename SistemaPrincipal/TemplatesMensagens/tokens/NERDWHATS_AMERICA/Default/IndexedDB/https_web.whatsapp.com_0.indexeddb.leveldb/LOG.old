@@ -1,77 +1,18 @@
-2025/07/17-17:18:37.019 3c4f91 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/17-17:18:37.020 3c4f91 Recovering log #1137
-2025/07/17-17:18:37.024 3c4f91 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001137.log 
-2025/07/17-17:18:38.074 3c4f99 Level-0 table #1142: started
-2025/07/17-17:18:38.078 3c4f99 Level-0 table #1142: 132410 bytes OK
-2025/07/17-17:18:38.079 3c4f99 Delete type=0 #1137
-2025/07/17-17:18:38.080 3c4f90 Manual compaction at level-0 from ' \x8d\x01\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x8e\x01\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/17-17:18:39.975 3c4f90 Compacting 1@1 + 1@2 files
-2025/07/17-17:18:40.023 3c4f90 Generated table #1143@1: 49933 keys, 2209050 bytes
-2025/07/17-17:18:40.029 3c4f90 Generated table #1144@1: 1634 keys, 31214 bytes
-2025/07/17-17:18:40.029 3c4f90 Compacted 1@1 + 1@2 files => 2240264 bytes
-2025/07/17-17:18:40.030 3c4f90 compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/07/17-17:18:40.031 3c4f90 Delete type=2 #1142
-2025/07/17-17:18:40.031 3c4f90 Delete type=2 #1139
-2025/07/17-17:21:18.358 3c4f91 Level-0 table #1146: started
-2025/07/17-17:21:18.384 3c4f91 Level-0 table #1146: 1191098 bytes OK
-2025/07/17-17:21:18.391 3c4f91 Delete type=0 #1141
-2025/07/17-17:21:18.950 3c4f91 Compacting 1@1 + 2@2 files
-2025/07/17-17:21:19.000 3c4f91 Generated table #1147@1: 38706 keys, 2196648 bytes
-2025/07/17-17:21:19.019 3c4f91 Generated table #1148@1: 23360 keys, 443327 bytes
-2025/07/17-17:21:19.019 3c4f91 Compacted 1@1 + 2@2 files => 2639975 bytes
-2025/07/17-17:21:19.027 3c4f91 compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/07/17-17:21:19.028 3c4f91 Delete type=2 #1143
-2025/07/17-17:21:19.028 3c4f91 Delete type=2 #1146
-2025/07/17-17:21:19.028 3c4f91 Delete type=2 #1144
-2025/07/17-19:34:53.957 3c4f90 Level-0 table #1150: started
-2025/07/17-19:34:53.990 3c4f90 Level-0 table #1150: 1277438 bytes OK
-2025/07/17-19:34:53.994 3c4f90 Delete type=0 #1145
-2025/07/17-19:36:18.967 3c4f91 Compacting 1@1 + 2@2 files
-2025/07/17-19:36:19.023 3c4f91 Generated table #1151@1: 39335 keys, 2199413 bytes
-2025/07/17-19:36:19.040 3c4f91 Generated table #1152@1: 27177 keys, 548728 bytes
-2025/07/17-19:36:19.040 3c4f91 Compacted 1@1 + 2@2 files => 2748141 bytes
-2025/07/17-19:36:19.042 3c4f91 compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/07/17-19:36:19.042 3c4f91 Delete type=2 #1147
-2025/07/17-19:36:19.043 3c4f91 Delete type=2 #1150
-2025/07/17-19:36:19.043 3c4f91 Delete type=2 #1148
-2025/07/17-22:49:55.904 3c4f91 Level-0 table #1154: started
-2025/07/17-22:49:55.931 3c4f91 Level-0 table #1154: 1219864 bytes OK
-2025/07/17-22:49:55.935 3c4f91 Delete type=0 #1149
-2025/07/17-22:51:20.674 3c4f90 Compacting 1@1 + 1@2 files
-2025/07/17-22:51:20.739 3c4f90 Generated table #1155@1: 42745 keys, 2206407 bytes
-2025/07/17-22:51:20.742 3c4f90 Generated table #1156@1: 219 keys, 68486 bytes
-2025/07/17-22:51:20.742 3c4f90 Compacted 1@1 + 1@2 files => 2274893 bytes
-2025/07/17-22:51:20.744 3c4f90 compacted to: files[ 0 0 3 0 0 0 0 ]
-2025/07/17-22:51:20.744 3c4f90 Delete type=2 #1151
-2025/07/17-22:51:20.744 3c4f90 Delete type=2 #1154
-2025/07/18-01:49:46.289 3c4f92 Level-0 table #1158: started
-2025/07/18-01:49:46.319 3c4f92 Level-0 table #1158: 1188000 bytes OK
-2025/07/18-01:49:46.323 3c4f92 Delete type=0 #1153
-2025/07/18-01:51:06.300 3c4f90 Compacting 1@1 + 1@2 files
-2025/07/18-01:51:06.360 3c4f90 Generated table #1159@1: 46004 keys, 2213576 bytes
-2025/07/18-01:51:06.365 3c4f90 Generated table #1160@1: 220 keys, 71852 bytes
-2025/07/18-01:51:06.365 3c4f90 Compacted 1@1 + 1@2 files => 2285428 bytes
-2025/07/18-01:51:06.368 3c4f90 compacted to: files[ 0 0 4 0 0 0 0 ]
-2025/07/18-01:51:06.369 3c4f90 Delete type=2 #1155
-2025/07/18-01:51:06.369 3c4f90 Delete type=2 #1158
-2025/07/18-05:19:53.181 3c4f91 Level-0 table #1162: started
-2025/07/18-05:19:53.209 3c4f91 Level-0 table #1162: 1201074 bytes OK
-2025/07/18-05:19:53.213 3c4f91 Delete type=0 #1157
-2025/07/18-05:21:08.363 3c4f91 Compacting 1@1 + 1@2 files
-2025/07/18-05:21:08.424 3c4f91 Generated table #1163@1: 48463 keys, 2219146 bytes
-2025/07/18-05:21:08.429 3c4f91 Generated table #1164@1: 1159 keys, 85375 bytes
-2025/07/18-05:21:08.429 3c4f91 Compacted 1@1 + 1@2 files => 2304521 bytes
-2025/07/18-05:21:08.431 3c4f91 compacted to: files[ 0 0 5 0 0 0 0 ]
-2025/07/18-05:21:08.432 3c4f91 Delete type=2 #1162
-2025/07/18-05:21:08.432 3c4f91 Delete type=2 #1159
-2025/07/18-08:50:26.425 3c4f90 Level-0 table #1166: started
-2025/07/18-08:50:26.454 3c4f90 Level-0 table #1166: 1184271 bytes OK
-2025/07/18-08:50:26.458 3c4f90 Delete type=0 #1161
-2025/07/18-08:51:47.260 3c4f91 Compacting 1@1 + 2@2 files
-2025/07/18-08:51:47.320 3c4f91 Generated table #1167@1: 47905 keys, 2220531 bytes
-2025/07/18-08:51:47.327 3c4f91 Generated table #1168@1: 5324 keys, 193365 bytes
-2025/07/18-08:51:47.327 3c4f91 Compacted 1@1 + 2@2 files => 2413896 bytes
-2025/07/18-08:51:47.328 3c4f91 compacted to: files[ 0 0 5 0 0 0 0 ]
-2025/07/18-08:51:47.328 3c4f91 Delete type=2 #1163
-2025/07/18-08:51:47.328 3c4f91 Delete type=2 #1166
-2025/07/18-08:51:47.328 3c4f91 Delete type=2 #1164
+2025/07/18-11:34:33.675 b671f Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/18-11:34:33.676 b671f Recovering log #1165
+2025/07/18-11:34:33.740 b671f Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001165.log 
+2025/07/18-11:34:34.718 b6710 Level-0 table #1171: started
+2025/07/18-11:34:34.741 b6710 Level-0 table #1171: 1030744 bytes OK
+2025/07/18-11:34:34.744 b6710 Delete type=0 #1165
+2025/07/18-11:34:34.745 b6713 Manual compaction at level-0 from ' \x8e\x01\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x8f\x01\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/18-11:34:37.735 b6711 Compacting 1@1 + 5@2 files
+2025/07/18-11:34:37.824 b6711 Generated table #1172@1: 49456 keys, 2219518 bytes
+2025/07/18-11:34:37.848 b6711 Generated table #1173@1: 34318 keys, 973533 bytes
+2025/07/18-11:34:37.848 b6711 Compacted 1@1 + 5@2 files => 3193051 bytes
+2025/07/18-11:34:37.850 b6711 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/07/18-11:34:37.854 b6711 Delete type=2 #1171
+2025/07/18-11:34:37.854 b6711 Delete type=2 #1156
+2025/07/18-11:34:37.854 b6711 Delete type=2 #1152
+2025/07/18-11:34:37.854 b6711 Delete type=2 #1160
+2025/07/18-11:34:37.855 b6711 Delete type=2 #1168
+2025/07/18-11:34:37.855 b6711 Delete type=2 #1167
