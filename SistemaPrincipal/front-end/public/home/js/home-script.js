@@ -9,13 +9,29 @@ let contatosEmpresaSelecionada = [];
 
 // Inicializar sistema
 document.addEventListener('DOMContentLoaded', function () {
-  carregarEmpresas().then(() => {
-    atualizarSelectEmpresa();
-    return carregarTreinamentos();
-  }).then(() => {
-    atualizarSelectTreinamento();
-    carregarContatos();
-  });
+  // Carregar dados em sequência para evitar problemas de timing
+  carregarEmpresas()
+    .then(() => {
+      atualizarSelectEmpresa();
+      return carregarTreinamentos();
+    })
+    .then(() => {
+      atualizarSelectTreinamento();
+      return carregarContatos();
+    })
+    .then(() => {
+      // Aguardar um pouco para garantir que tudo foi carregado
+      setTimeout(() => {
+        atualizarEstatisticasEmpresas();
+        if (document.getElementById('empresas').classList.contains('active')) {
+          renderizarEmpresas();
+        }
+      }, 100);
+    })
+    .catch(error => {
+      console.error('Erro ao inicializar sistema:', error);
+      mostrarAlerta('Erro ao carregar dados do sistema.', 'error');
+    });
 });
 
 // Funções de navegação
@@ -39,11 +55,17 @@ function showTab(tabName) {
 
 // Formatação de telefone
 function formatarTelefone(telefone) {
+  if (!telefone) return 'N/A';
+  
   const cleaned = telefone.replace(/\D/g, '');
   if (cleaned.length === 13) {
     return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
   } else if (cleaned.length === 12) {
     return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 8)}-${cleaned.slice(8)}`;
+  } else if (cleaned.length === 11) {
+    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+  } else if (cleaned.length === 10) {
+    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
   }
   return telefone;
 }
@@ -51,7 +73,7 @@ function formatarTelefone(telefone) {
 // Validar telefone
 function validarTelefone(telefone) {
   const cleaned = telefone.replace(/\D/g, '');
-  return cleaned.length === 12 || cleaned.length === 13;
+  return cleaned.length >= 10 && cleaned.length <= 13;
 }
 
 // Funções de alerta
@@ -85,7 +107,7 @@ document.getElementById('cadastroForm').addEventListener('submit', function (e) 
   }
 
   if (!validarTelefone(telefone)) {
-    mostrarAlerta('Formato de telefone inválido. Use 12 ou 13 dígitos.', 'error');
+    mostrarAlerta('Formato de telefone inválido.', 'error');
     return;
   }
 
@@ -114,12 +136,12 @@ document.getElementById('cadastroForm').addEventListener('submit', function (e) 
     .then(data => {
       mostrarAlerta(`Contato ${data.nome} cadastrado com sucesso!`);
       document.getElementById('cadastroForm').reset();
-      carregarContatos();
-
-      if (document.getElementById('empresas').classList.contains('active')) {
-        renderizarEmpresas();
+      carregarContatos().then(() => {
         atualizarEstatisticasEmpresas();
-      }
+        if (document.getElementById('empresas').classList.contains('active')) {
+          renderizarEmpresas();
+        }
+      });
     })
     .catch(() => mostrarAlerta('Erro ao salvar contato.', 'error'));
 });
@@ -175,27 +197,52 @@ function atualizarSelectTreinamento() {
 // Carregar empresas
 function carregarEmpresas() {
   return fetch('http://92.112.178.26:3000/api/empresas')
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error('Erro ao carregar empresas');
+      return res.json();
+    })
     .then(data => {
-      empresas = data.map(e => ({ ...e, id: parseInt(e.id, 10) }));
-      renderizarEmpresas();
-      atualizarEstatisticasEmpresas();
+      console.log('Empresas carregadas:', data);
+      empresas = data.map(e => ({ 
+        ...e, 
+        id: parseInt(e.id, 10),
+        razao_social: e.razao_social || e.razaoSocial // Compatibilidade com diferentes formatos
+      }));
+    })
+    .catch(error => {
+      console.error('Erro ao carregar empresas:', error);
+      mostrarAlerta('Erro ao carregar empresas.', 'error');
     });
 }
 
+// Carregar contatos
 function carregarContatos() {
   return fetch('http://92.112.178.26:3000/api/contatos')
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error('Erro ao carregar contatos');
+      return res.json();
+    })
     .then(data => {
+      console.log('Contatos carregados:', data);
       contatos = data.map(c => ({
         ...c,
+        id: parseInt(c.id, 10),
         empresaId: parseInt(c.empresaId, 10),
         treinamentoId: c.treinamentoId ? parseInt(c.treinamentoId, 10) : null
       }));
-      atualizarEstatisticasEmpresas();
+      
+      // Debug: mostrar associações
+      console.log('Associações contato-empresa:', contatos.map(c => ({
+        contatoId: c.id,
+        nome: c.nome,
+        empresaId: c.empresaId
+      })));
+    })
+    .catch(error => {
+      console.error('Erro ao carregar contatos:', error);
+      mostrarAlerta('Erro ao carregar contatos.', 'error');
     });
 }
-
 
 // Renderizar empresas
 function renderizarEmpresas() {
@@ -212,19 +259,22 @@ function renderizarEmpresas() {
   }
 
   empresasGrid.innerHTML = empresas.map(empresa => {
+    // Debug: verificar contatos da empresa
     const contatosEmpresa = contatos.filter(c => c.empresaId === empresa.id);
+    console.log(`Empresa ${empresa.razao_social} (ID: ${empresa.id}) tem ${contatosEmpresa.length} contatos:`, contatosEmpresa);
+    
     const contatosComTreinamento = contatosEmpresa.filter(c => c.treinamentoId);
     
     return `
       <div class="company-card">
         <div class="company-header">
           <h3>${empresa.razao_social}</h3>
-          <span class="company-type">${empresa.tipo || 'Empresa'}</span>
+          <span class="company-type">${empresa.tipo || empresa.porte || 'Empresa'}</span>
         </div>
         <div class="company-info">
           <p><strong>CNPJ:</strong> ${empresa.cnpj || 'N/A'}</p>
           <p><strong>Email:</strong> ${empresa.email || 'N/A'}</p>
-          <p><strong>Telefone:</strong> ${empresa.contato && empresa.contato.trim() ? formatarTelefone(empresa.contato) : 'N/A'}</p>
+          <p><strong>Telefone:</strong> ${formatarTelefone(empresa.contato)}</p>
         </div>
         <div class="company-stats">
           <div class="stat">
@@ -250,6 +300,8 @@ function renderizarEmpresas() {
 function visualizarContatosEmpresa(empresaId) {
   const empresa = empresas.find(e => e.id === empresaId);
   const contatosEmpresa = contatos.filter(c => c.empresaId === empresaId);
+  
+  console.log(`Visualizando contatos da empresa ${empresaId}:`, contatosEmpresa);
   
   empresaSelecionada = empresa;
   contatosEmpresaSelecionada = contatosEmpresa;
@@ -340,7 +392,7 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
   }
 
   if (!validarTelefone(telefone)) {
-    mostrarAlerta('Formato de telefone inválido. Use 12 ou 13 dígitos.', 'error');
+    mostrarAlerta('Formato de telefone inválido.', 'error');
     return;
   }
 
@@ -465,12 +517,18 @@ function carregarTreinamentos() {
   if (loading) loading.style.display = 'block';
 
   return fetch('http://92.112.178.26:3000/api/treinamentos')
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error('Erro ao carregar treinamentos');
+      return res.json();
+    })
     .then(data => {
       treinamentos = data;
       renderizarTreinamentos();
     })
-    .catch(() => mostrarAlerta('Erro ao carregar treinamentos.', 'error'))
+    .catch(error => {
+      console.error('Erro ao carregar treinamentos:', error);
+      mostrarAlerta('Erro ao carregar treinamentos.', 'error');
+    })
     .finally(() => {
       if (loading) loading.style.display = 'none';
     });
@@ -664,6 +722,7 @@ document.addEventListener('click', function(e) {
     const modal = document.getElementById(modalId);
     if (e.target === modal) {
       modal.style.display = 'none';
+
       if (modalId === 'modalContatosEmpresa') {
         empresaSelecionada = null;
         contatosEmpresaSelecionada = [];
@@ -685,3 +744,174 @@ document.addEventListener('keydown', function(e) {
     });
   }
 });
+
+// Função para sincronizar dados após operações
+function sincronizarDados() {
+  return Promise.all([
+    carregarEmpresas(),
+    carregarContatos(),
+    carregarTreinamentos()
+  ]).then(() => {
+    atualizarSelectEmpresa();
+    atualizarSelectTreinamento();
+    
+    // Se estivermos na aba empresas, atualizar a visualização
+    if (document.getElementById('empresas').classList.contains('active')) {
+      renderizarEmpresas();
+      atualizarEstatisticasEmpresas();
+    }
+    
+    // Se estivermos na aba treinamentos, atualizar a visualização
+    if (document.getElementById('treinamentos').classList.contains('active')) {
+      renderizarTreinamentos();
+    }
+    
+    // Se houver um modal de empresa aberto, atualizar os contatos
+    if (empresaSelecionada) {
+      contatosEmpresaSelecionada = contatos.filter(c => c.empresaId === empresaSelecionada.id);
+      renderizarContatosEmpresa();
+    }
+  });
+}
+
+// Função melhorada para carregar contatos
+function carregarContatos() {
+  return fetch('http://92.112.178.26:3000/api/contatos')
+    .then(res => {
+      if (!res.ok) throw new Error('Erro ao carregar contatos');
+      return res.json();
+    })
+    .then(data => {
+      // Garantir que os IDs são números inteiros
+      contatos = data.map(c => ({
+        ...c,
+        id: parseInt(c.id, 10),
+        empresaId: parseInt(c.empresaId, 10),
+        treinamentoId: c.treinamentoId ? parseInt(c.treinamentoId, 10) : null
+      }));
+      
+      console.log('Contatos carregados:', contatos.length);
+      return contatos;
+    })
+    .catch(error => {
+      console.error('Erro ao carregar contatos:', error);
+      mostrarAlerta('Erro ao carregar contatos.', 'error');
+      return [];
+    });
+}
+
+// Função melhorada para carregar empresas
+function carregarEmpresas() {
+  return fetch('http://92.112.178.26:3000/api/empresas')
+    .then(res => {
+      if (!res.ok) throw new Error('Erro ao carregar empresas');
+      return res.json();
+    })
+    .then(data => {
+      // Garantir que os IDs são números inteiros
+      empresas = data.map(e => ({ 
+        ...e, 
+        id: parseInt(e.id, 10) 
+      }));
+      
+      console.log('Empresas carregadas:', empresas.length);
+      return empresas;
+    })
+    .catch(error => {
+      console.error('Erro ao carregar empresas:', error);
+      mostrarAlerta('Erro ao carregar empresas.', 'error');
+      return [];
+    });
+}
+
+// Função melhorada para carregar treinamentos
+function carregarTreinamentos() {
+  const loading = document.getElementById('loadingTreinamentos');
+  if (loading) loading.style.display = 'block';
+
+  return fetch('http://92.112.178.26:3000/api/treinamentos')
+    .then(res => {
+      if (!res.ok) throw new Error('Erro ao carregar treinamentos');
+      return res.json();
+    })
+    .then(data => {
+      // Garantir que os IDs são números inteiros
+      treinamentos = data.map(t => ({ 
+        ...t, 
+        id: parseInt(t.id, 10) 
+      }));
+      
+      console.log('Treinamentos carregados:', treinamentos.length);
+      return treinamentos;
+    })
+    .catch(error => {
+      console.error('Erro ao carregar treinamentos:', error);
+      mostrarAlerta('Erro ao carregar treinamentos.', 'error');
+      return [];
+    })
+    .finally(() => {
+      if (loading) loading.style.display = 'none';
+    });
+}
+
+// Função para atualizar dados quando necessário
+function atualizarDadosCompletos() {
+  return sincronizarDados()
+    .then(() => {
+      console.log('Dados sincronizados com sucesso');
+      console.log('Total de empresas:', empresas.length);
+      console.log('Total de contatos:', contatos.length);
+      console.log('Total de treinamentos:', treinamentos.length);
+    })
+    .catch(error => {
+      console.error('Erro na sincronização:', error);
+      mostrarAlerta('Erro ao sincronizar dados.', 'error');
+    });
+}
+
+// Melhorar a inicialização do sistema
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('Iniciando carregamento do sistema...');
+  
+  // Carregar dados em sequência para evitar problemas de dependência
+  carregarEmpresas()
+    .then(() => {
+      console.log('Empresas carregadas, atualizando select...');
+      atualizarSelectEmpresa();
+      return carregarTreinamentos();
+    })
+    .then(() => {
+      console.log('Treinamentos carregados, atualizando select...');
+      atualizarSelectTreinamento();
+      return carregarContatos();
+    })
+    .then(() => {
+      console.log('Contatos carregados, atualizando estatísticas...');
+      atualizarEstatisticasEmpresas();
+      
+      // Se estivermos na aba empresas por padrão, renderizar
+      if (document.getElementById('empresas').classList.contains('active')) {
+        renderizarEmpresas();
+      }
+      
+      console.log('Sistema inicializado com sucesso!');
+    })
+    .catch(error => {
+      console.error('Erro na inicialização:', error);
+      mostrarAlerta('Erro ao inicializar o sistema.', 'error');
+    });
+});
+
+// Adicionar debug para verificar dados
+function debugDados() {
+  console.log('=== DEBUG DOS DADOS ===');
+  console.log('Empresas:', empresas);
+  console.log('Contatos:', contatos);
+  console.log('Treinamentos:', treinamentos);
+  
+  // Verificar associações
+  empresas.forEach(empresa => {
+    const contatosEmpresa = contatos.filter(c => c.empresaId === empresa.id);
+    console.log(`Empresa ${empresa.razao_social} (ID: ${empresa.id}) tem ${contatosEmpresa.length} contatos`);
+  });
+}
