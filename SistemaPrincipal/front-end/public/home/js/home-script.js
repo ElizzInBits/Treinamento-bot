@@ -174,32 +174,28 @@ function atualizarSelectTreinamento() {
 
 // Carregar empresas
 function carregarEmpresas() {
-  const loading = document.getElementById('loadingEmpresas');
-  if (loading) loading.style.display = 'block';
-
   return fetch('http://92.112.178.26:3000/api/empresas')
     .then(res => res.json())
     .then(data => {
-      empresas = data;
+      empresas = data.map(e => ({ ...e, id: parseInt(e.id, 10) }));
       renderizarEmpresas();
       atualizarEstatisticasEmpresas();
-    })
-    .catch(() => mostrarAlerta('Erro ao carregar empresas.', 'error'))
-    .finally(() => {
-      if (loading) loading.style.display = 'none';
     });
 }
 
-// Carregar contatos
 function carregarContatos() {
   return fetch('http://92.112.178.26:3000/api/contatos')
     .then(res => res.json())
     .then(data => {
-      contatos = data;
+      contatos = data.map(c => ({
+        ...c,
+        empresaId: parseInt(c.empresaId, 10),
+        treinamentoId: c.treinamentoId ? parseInt(c.treinamentoId, 10) : null
+      }));
       atualizarEstatisticasEmpresas();
-    })
-    .catch(() => mostrarAlerta('Erro ao carregar contatos.', 'error'));
+    });
 }
+
 
 // Renderizar empresas
 function renderizarEmpresas() {
@@ -549,7 +545,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
       return res.json();
     })
     .then(data => {
-      mostrarAlerta(`Treinamento "${data.nome}" criado com sucesso!`);
+      mostrarAlerta(`Treinamento ${data.nome} criado com sucesso!`);
       document.getElementById('treinamentoForm').reset();
       carregarTreinamentos().then(() => {
         atualizarSelectTreinamento();
