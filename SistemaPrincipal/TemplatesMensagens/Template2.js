@@ -181,7 +181,7 @@ async function start(client) {
             }
 
             // ✅ CORREÇÃO: Tratamento de confirmação de dados ANTES da verificação de status
-            if (selectedId === 'dados_corretos') {
+            if (selectedId === '✅ Sim, os dados estão corretos') {
                 const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
                 const emailCadastrado = contato.email || 'E-mail não informado';
 
