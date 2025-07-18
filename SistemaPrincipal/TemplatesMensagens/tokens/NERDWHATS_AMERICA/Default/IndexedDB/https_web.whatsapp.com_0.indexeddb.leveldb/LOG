@@ -1,15 +1,15 @@
-2025/07/18-12:28:25.439 c3051 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/18-12:28:25.439 c3051 Recovering log #1185
-2025/07/18-12:28:25.446 c3051 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001185.log 
-2025/07/18-12:28:26.479 c3050 Level-0 table #1191: started
-2025/07/18-12:28:26.485 c3050 Level-0 table #1191: 248870 bytes OK
-2025/07/18-12:28:26.488 c3050 Delete type=0 #1185
-2025/07/18-12:28:26.489 c3050 Manual compaction at level-0 from ' \x92\x01\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x93\x01\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/18-12:28:28.469 c3050 Compacting 1@1 + 2@2 files
-2025/07/18-12:28:28.532 c3050 Generated table #1192@1: 50858 keys, 2220010 bytes
-2025/07/18-12:28:28.562 c3050 Generated table #1193@1: 36686 keys, 1106499 bytes
-2025/07/18-12:28:28.562 c3050 Compacted 1@1 + 2@2 files => 3326509 bytes
-2025/07/18-12:28:28.564 c3050 compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/07/18-12:28:28.565 c3050 Delete type=2 #1188
-2025/07/18-12:28:28.565 c3050 Delete type=2 #1191
-2025/07/18-12:28:28.565 c3050 Delete type=2 #1187
+2025/07/18-12:43:38.518 c682f Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/18-12:43:38.518 c682f Recovering log #1190
+2025/07/18-12:43:38.526 c682f Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001190.log 
+2025/07/18-12:43:39.553 c6831 Level-0 table #1196: started
+2025/07/18-12:43:39.560 c6831 Level-0 table #1196: 232601 bytes OK
+2025/07/18-12:43:39.562 c6831 Delete type=0 #1190
+2025/07/18-12:43:39.562 c682f Manual compaction at level-0 from ' \x93\x01\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x94\x01\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/18-12:43:41.471 c6830 Compacting 1@1 + 2@2 files
+2025/07/18-12:43:41.521 c6830 Generated table #1197@1: 51695 keys, 2221458 bytes
+2025/07/18-12:43:41.550 c6830 Generated table #1198@1: 36807 keys, 1141460 bytes
+2025/07/18-12:43:41.550 c6830 Compacted 1@1 + 2@2 files => 3362918 bytes
+2025/07/18-12:43:41.551 c6830 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/07/18-12:43:41.552 c6830 Delete type=2 #1192
+2025/07/18-12:43:41.552 c6830 Delete type=2 #1196
+2025/07/18-12:43:41.552 c6830 Delete type=2 #1193
