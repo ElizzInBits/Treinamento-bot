@@ -34,8 +34,13 @@
               id="cpf"
               name="cpf"
               required
-              placeholder="Ex: 123.456.789-00"
+              placeholder="Ex: 12345678900"
+              maxlength="14"
             />
+            <small style="color: #666; font-size: 12px; margin-top: 3px; display: block;">
+              Digite apenas números, sem pontos ou traços
+            </small>
+            <div id="cpfError" class="error-message" style="color: red; font-size: 12px; margin-top: 5px; display: none;"></div>
           </div>
 
           <div class="form-group">
@@ -51,13 +56,65 @@
 
           <div class="form-group">
             <label for="telefone">Telefone *</label>
-            <input
-              type="text"
-              id="telefone"
-              name="telefone"
-              required
-              placeholder="Ex: 5531999990000"
-            />
+            <div class="telefone-container" style="display: flex; gap: 10px;">
+              <select id="ddi" name="ddi" required style="width: 120px;">
+                <option value="+55">🇧🇷 +55</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+33">🇫🇷 +33</option>
+                <option value="+49">🇩🇪 +49</option>
+                <option value="+39">🇮🇹 +39</option>
+                <option value="+34">🇪🇸 +34</option>
+                <option value="+351">🇵🇹 +351</option>
+                <option value="+54">🇦🇷 +54</option>
+                <option value="+56">🇨🇱 +56</option>
+                <option value="+57">🇨🇴 +57</option>
+                <option value="+51">🇵🇪 +51</option>
+                <option value="+598">🇺🇾 +598</option>
+                <option value="+595">🇵🇾 +595</option>
+                <option value="+591">🇧🇴 +591</option>
+                <option value="+593">🇪🇨 +593</option>
+                <option value="+58">🇻🇪 +58</option>
+                <option value="+52">🇲🇽 +52</option>
+                <option value="+506">🇨🇷 +506</option>
+                <option value="+507">🇵🇦 +507</option>
+                <option value="+503">🇸🇻 +503</option>
+                <option value="+502">🇬🇹 +502</option>
+                <option value="+504">🇭🇳 +504</option>
+                <option value="+505">🇳🇮 +505</option>
+                <option value="+1">🇨🇦 +1</option>
+                <option value="+81">🇯🇵 +81</option>
+                <option value="+86">🇨🇳 +86</option>
+                <option value="+82">🇰🇷 +82</option>
+                <option value="+91">🇮🇳 +91</option>
+                <option value="+61">🇦🇺 +61</option>
+                <option value="+64">🇳🇿 +64</option>
+                <option value="+27">🇿🇦 +27</option>
+                <option value="+20">🇪🇬 +20</option>
+                <option value="+7">🇷🇺 +7</option>
+                <option value="+380">🇺🇦 +380</option>
+                <option value="+48">🇵🇱 +48</option>
+                <option value="+31">🇳🇱 +31</option>
+                <option value="+32">🇧🇪 +32</option>
+                <option value="+41">🇨🇭 +41</option>
+                <option value="+43">🇦🇹 +43</option>
+                <option value="+45">🇩🇰 +45</option>
+                <option value="+46">🇸🇪 +46</option>
+                <option value="+47">🇳🇴 +47</option>
+                <option value="+358">🇫🇮 +358</option>
+              </select>
+              <input
+                type="text"
+                id="telefone"
+                name="telefone"
+                required
+                placeholder="Ex: 31999990000"
+                style="flex: 1;"
+              />
+            </div>
+            <small style="color: #666; font-size: 12px; margin-top: 3px; display: block;">
+              Digite apenas números, sem parênteses, espaços ou traços
+            </small>
           </div>
 
           <div class="form-group">
