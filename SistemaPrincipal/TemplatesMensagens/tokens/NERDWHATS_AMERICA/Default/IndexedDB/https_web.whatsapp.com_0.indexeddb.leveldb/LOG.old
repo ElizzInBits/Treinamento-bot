@@ -1,15 +1,15 @@
-2025/07/18-16:35:53.742 ff0be Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/18-16:35:53.742 ff0be Recovering log #1421
-2025/07/18-16:35:53.775 ff0be Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001421.log 
-2025/07/18-16:35:54.766 ff0c9 Level-0 table #1427: started
-2025/07/18-16:35:54.801 ff0c9 Level-0 table #1427: 1158233 bytes OK
-2025/07/18-16:35:54.804 ff0c9 Delete type=0 #1421
-2025/07/18-16:35:54.806 ff0be Manual compaction at level-0 from ' \xd2\x01\x00\x00\x00' @ 72057594037927935 : 1 .. ' \xd3\x01\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/18-16:35:56.707 ff0bf Compacting 1@1 + 2@2 files
-2025/07/18-16:35:56.790 ff0bf Generated table #1428@1: 41942 keys, 2204898 bytes
-2025/07/18-16:35:56.814 ff0bf Generated table #1429@1: 33395 keys, 899948 bytes
-2025/07/18-16:35:56.814 ff0bf Compacted 1@1 + 2@2 files => 3104846 bytes
-2025/07/18-16:35:56.816 ff0bf compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/07/18-16:35:56.816 ff0bf Delete type=2 #1423
-2025/07/18-16:35:56.816 ff0bf Delete type=2 #1424
-2025/07/18-16:35:56.816 ff0bf Delete type=2 #1427
+2025/07/18-16:41:51.592 10095a Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/18-16:41:51.593 10095a Recovering log #1426
+2025/07/18-16:41:51.629 10095a Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001426.log 
+2025/07/18-16:41:52.618 10095f Level-0 table #1432: started
+2025/07/18-16:41:52.640 10095f Level-0 table #1432: 1070515 bytes OK
+2025/07/18-16:41:52.644 10095f Delete type=0 #1426
+2025/07/18-16:41:52.645 10095f Manual compaction at level-0 from ' \xd3\x01\x00\x00\x00' @ 72057594037927935 : 1 .. ' \xd4\x01\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/18-16:41:54.502 10095b Compacting 1@1 + 2@2 files
+2025/07/18-16:41:54.560 10095b Generated table #1433@1: 41516 keys, 2202768 bytes
+2025/07/18-16:41:54.592 10095b Generated table #1434@1: 39275 keys, 1084630 bytes
+2025/07/18-16:41:54.592 10095b Compacted 1@1 + 2@2 files => 3287398 bytes
+2025/07/18-16:41:54.594 10095b compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/07/18-16:41:54.595 10095b Delete type=2 #1432
+2025/07/18-16:41:54.595 10095b Delete type=2 #1429
+2025/07/18-16:41:54.595 10095b Delete type=2 #1428
