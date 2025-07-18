@@ -402,8 +402,8 @@ async function start(client) {
                 return;
             }
 
-            // ✅ MANTENDO exemplo de pedir e-mail do paste 2
-            if (text.includes('@')) {
+            // ✅ CORREÇÃO: Exemplo de pedir e-mail do paste 2 - AGORA COM VERIFICAÇÃO
+            if (text.includes('@') && !contato.email) {
                 await sendMessage(sender, 'send-message', {
                     message: 'Por favor, me envie seu e-mail...',
                 });
