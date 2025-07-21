@@ -198,7 +198,7 @@ async function start(client) {
                 '❌ não, os dados não são corretos',
                 'dados incorretos',
                 'não estão corretos',
-            
+
             ];
 
             console.log('selectedId:', selectedId);
@@ -234,8 +234,9 @@ async function start(client) {
 
             //////
             if (
-                respostaConfirmacao === 'dados_incorretos' ||
-                respostasNegativas.some((frase) => respostaConfirmacao.toLowerCase().includes(frase))
+                selectedId === 'dados_incorretos' ||
+                text === 'dados_incorretos' ||
+                respostasNegativas.some((frase) => rawText.trim().toLowerCase() === frase.toLowerCase())
             ) {
                 await sendMessage(sender, 'send-message', {
                     message: '📝 Para corrigir seus dados, por favor, me envie seu nome completo correto.',
