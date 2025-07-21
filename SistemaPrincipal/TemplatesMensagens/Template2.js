@@ -186,6 +186,21 @@ function getConfirmacaoDados(nomeCompleto, emailCadastrado) {
     };
 }
 
+function getFinalizarTreinamento() {
+    return {
+        title: '',
+        description: 'Clique na opção abaixo para finalizar seu treinamento:',
+        buttonText: 'Finalizar',
+        listType: 'SINGLE_SELECT',
+        sections: [{
+            title: '',
+            rows: [
+                { id: 'finalizar_treinamento', title: '✅ Treinamento finalizado', description: '' },
+            ],
+        }],
+    };
+}
+
 // ========================================
 // FUNÇÕES DE PROCESSAMENTO DE MENSAGENS
 // ========================================
@@ -416,6 +431,10 @@ async function gerarEEnviarCertificado(contato, sender) {
             path: certificadoPath,
             filename: 'certificado.pdf',
         });
+
+        await sendMessage(sender, 'send-list-message', getFinalizarTreinamento());
+        await salvarUltimaInteracao(sender, 'finalizacao', getFinalizarTreinamento());
+
     } catch (err) {
         console.error('Erro ao gerar certificado:', err);
         await sendMessage(sender, 'send-message', {
@@ -580,6 +599,15 @@ async function processarMensagem(message) {
             agendarLembrete(sender, getMensagemListaContinuar());
             return;
         }
+
+        // Finalizar treinamento
+        if (selectedId === 'finalizar_treinamento' || text === '✅ treinamento finalizado') {
+            await sendMessage(sender, 'send-message', {
+                message: '👏 Muito bem! Ficamos felizes com sua participação. Até a próxima! 🚀',
+            });
+            return;
+        }
+
 
         // Mensagem padrão para entradas não reconhecidas
         await sendMessage(sender, 'send-message', {
