@@ -180,8 +180,6 @@ async function start(client) {
                 return;
             }
 
-            // 🔧 CORREÇÃO: Verificar o selectedId correto e possíveis variações de texto
-            // ✅ VERIFICAÇÃO MELHORADA PARA CONFIRMAÇÃO DE DADOS
             const respostasPositivas = [
                 'sim',
                 'sim, os dados estão corretos',
@@ -192,10 +190,17 @@ async function start(client) {
                 'sim estão corretos'
             ];
 
+            console.log('selectedId:', selectedId);
+            console.log('text:', text);
+            console.log('rawText:', rawText);
+
+
+            // Considera selectedId ou texto normal para resposta de confirmação
+            const respostaConfirmacao = selectedId || text;
+
             if (
-                selectedId === 'dados_corretos' ||
-                respostasPositivas.some((frase) => text.includes(frase)) ||
-                /^✅?\s*sim.*corretos/i.test(rawText.trim())
+                respostaConfirmacao === 'dados_corretos' ||
+                respostasPositivas.some((frase) => respostaConfirmacao.toLowerCase().includes(frase))
             ) {
                 const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
                 const emailCadastrado = contato.email || 'E-mail não informado';
@@ -216,8 +221,7 @@ async function start(client) {
                 return;
             }
 
-
-            if (selectedId === 'dados_incorretos') {
+            if (respostaConfirmacao === 'dados_incorretos') {
                 await sendMessage(sender, 'send-message', {
                     message: '📝 Para corrigir seus dados, por favor, me envie seu nome completo correto.',
                 });
@@ -234,6 +238,7 @@ async function start(client) {
                 if (ultimaInteracao?.tipo === 'corrigir_nome') {
                     contato.nomeCompleto = rawText.trim();
                     await contato.save();
+
                     await sendMessage(sender, 'send-message', {
                         message: '👍 Nome atualizado! Agora, me envie seu e-mail correto.',
                     });
@@ -244,8 +249,8 @@ async function start(client) {
                 }
 
                 if (ultimaInteracao?.tipo === 'corrigir_email') {
-                    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-                    if (!emailRegex.test(rawText)) {
+                    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;  // Ajustado regex para aceitar mais domínios
+                    if (!emailRegex.test(rawText.trim())) {
                         await sendMessage(sender, 'send-message', {
                             message: '⚠️ E-mail inválido! Por favor, insira um e-mail válido.',
                         });
@@ -257,6 +262,7 @@ async function start(client) {
 
                     contato.email = rawText.trim();
                     await contato.save();
+
                     await sendMessage(sender, 'send-message', {
                         message: '✅ E-mail atualizado! Gerando seu certificado...',
                     });
@@ -265,6 +271,7 @@ async function start(client) {
                     return;
                 }
             }
+
 
             if (contato.statusTreinamento === 'não iniciado') {
                 await sendMessage(sender, 'send-message', {
