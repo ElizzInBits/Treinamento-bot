@@ -1,15 +1,3 @@
-2025/07/21-13:13:14.961 81856 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Local Storage/leveldb/MANIFEST-000001
-2025/07/21-13:13:14.967 81856 Recovering log #114
-2025/07/21-13:13:14.968 81856 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Local Storage/leveldb/000114.log 
-2025/07/21-13:14:14.975 81858 Level-0 table #118: started
-2025/07/21-13:14:14.978 81858 Level-0 table #118: 14751 bytes OK
-2025/07/21-13:14:14.982 81858 Delete type=0 #114
-2025/07/21-13:14:14.983 81858 Compacting 4@0 + 1@1 files
-2025/07/21-13:14:14.986 81858 Generated table #119@0: 78 keys, 7306 bytes
-2025/07/21-13:14:14.986 81858 Compacted 4@0 + 1@1 files => 7306 bytes
-2025/07/21-13:14:14.988 81858 compacted to: files[ 0 1 0 0 0 0 0 ]
-2025/07/21-13:14:14.989 81858 Delete type=2 #108
-2025/07/21-13:14:14.989 81858 Delete type=2 #110
-2025/07/21-13:14:14.989 81858 Delete type=2 #112
-2025/07/21-13:14:14.989 81858 Delete type=2 #118
-2025/07/21-13:14:14.989 81858 Delete type=2 #115
+2025/07/21-13:20:38.735 834cc Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Local Storage/leveldb/MANIFEST-000001
+2025/07/21-13:20:38.745 834cc Recovering log #117
+2025/07/21-13:20:38.746 834cc Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Local Storage/leveldb/000117.log 
