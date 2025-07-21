@@ -718,7 +718,8 @@ function exportarDadosXLS() {
       Status_Treinamento: contato.statusTreinamento,
       Treinamento_ID: contato.treinamentoId,
       Empresa_ID: contato.empresaId,
-      Empresa_Razao_Social: empresa.razao_social || "Desconhecida"
+      Empresa_Razao_Social: empresa.razao_social || "Desconhecida",
+      Ultima_Interacao: contato.ultimaInteracao
     };
   });
 
