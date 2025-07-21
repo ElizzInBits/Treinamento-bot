@@ -1,3 +1,6 @@
-2025/07/21-12:16:05.227 73fc8 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Local Storage/leveldb/MANIFEST-000001
-2025/07/21-12:16:05.234 73fc8 Recovering log #111
-2025/07/21-12:16:05.236 73fc8 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Local Storage/leveldb/000111.log 
+2025/07/21-12:17:48.776 7482c Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Local Storage/leveldb/MANIFEST-000001
+2025/07/21-12:17:48.781 7482c Recovering log #111
+2025/07/21-12:17:48.784 7482c Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Local Storage/leveldb/000111.log 
+2025/07/21-12:18:48.790 7482c Level-0 table #115: started
+2025/07/21-12:18:48.796 7482c Level-0 table #115: 18046 bytes OK
+2025/07/21-12:18:48.800 7482c Delete type=0 #111
