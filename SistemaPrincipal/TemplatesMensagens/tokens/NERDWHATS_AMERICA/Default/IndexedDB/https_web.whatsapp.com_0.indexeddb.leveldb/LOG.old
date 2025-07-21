@@ -1,25 +1,15 @@
-2025/07/21-13:51:33.410 8aa52 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/21-13:51:33.411 8aa52 Recovering log #1776
-2025/07/21-13:51:33.453 8aa52 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001776.log 
-2025/07/21-13:51:33.453 8aa52 Delete type=2 #1774
-2025/07/21-13:51:33.453 8aa52 Delete type=2 #1777
-2025/07/21-13:51:34.464 8aa54 Level-0 table #1781: started
-2025/07/21-13:51:34.501 8aa54 Level-0 table #1781: 1219696 bytes OK
-2025/07/21-13:51:34.504 8aa54 Delete type=0 #1776
-2025/07/21-13:51:34.505 8aa54 Manual compaction at level-0 from ' \x12\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x13\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/21-13:51:36.445 8aa53 Compacting 1@1 + 1@2 files
-2025/07/21-13:51:36.518 8aa53 Generated table #1782@1: 66746 keys, 2177809 bytes
-2025/07/21-13:51:36.518 8aa53 Compacted 1@1 + 1@2 files => 2177809 bytes
-2025/07/21-13:51:36.520 8aa53 compacted to: files[ 0 0 1 0 0 0 0 ]
-2025/07/21-13:54:33.474 8aa54 Level-0 table #1784: started
-2025/07/21-13:54:33.519 8aa54 Level-0 table #1784: 1280683 bytes OK
-2025/07/21-13:54:33.524 8aa54 Delete type=0 #1780
-2025/07/21-13:54:33.524 8aa54 Delete type=2 #1778
-2025/07/21-13:54:33.524 8aa54 Delete type=2 #1781
-2025/07/21-13:54:33.917 8aa53 Compacting 1@1 + 1@2 files
-2025/07/21-13:54:33.975 8aa53 Generated table #1785@1: 63788 keys, 2220461 bytes
-2025/07/21-13:54:33.984 8aa53 Generated table #1786@1: 9935 keys, 165693 bytes
-2025/07/21-13:54:33.984 8aa53 Compacted 1@1 + 1@2 files => 2386154 bytes
-2025/07/21-13:54:33.988 8aa53 compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/07/21-13:54:33.988 8aa53 Delete type=2 #1784
-2025/07/21-13:54:33.988 8aa53 Delete type=2 #1782
+2025/07/21-13:58:41.294 8c618 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/21-13:58:41.295 8c618 Recovering log #1783
+2025/07/21-13:58:41.306 8c618 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001783.log 
+2025/07/21-13:58:42.334 8c619 Level-0 table #1789: started
+2025/07/21-13:58:42.344 8c619 Level-0 table #1789: 377997 bytes OK
+2025/07/21-13:58:42.349 8c619 Delete type=0 #1783
+2025/07/21-13:58:42.349 8c619 Manual compaction at level-0 from ' \x13\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x14\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/21-13:58:44.464 8c618 Compacting 1@1 + 2@2 files
+2025/07/21-13:58:44.524 8c618 Generated table #1790@1: 62584 keys, 2220815 bytes
+2025/07/21-13:58:44.535 8c618 Generated table #1791@1: 12850 keys, 214895 bytes
+2025/07/21-13:58:44.535 8c618 Compacted 1@1 + 2@2 files => 2435710 bytes
+2025/07/21-13:58:44.537 8c618 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/07/21-13:58:44.537 8c618 Delete type=2 #1789
+2025/07/21-13:58:44.537 8c618 Delete type=2 #1786
+2025/07/21-13:58:44.537 8c618 Delete type=2 #1785
