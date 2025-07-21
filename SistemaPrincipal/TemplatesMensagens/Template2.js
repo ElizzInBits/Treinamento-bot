@@ -180,8 +180,8 @@ async function start(client) {
                 return;
             }
 
-            // ✅ CORREÇÃO: Tratamento de confirmação de dados ANTES da verificação de status
-            if (selectedId === '✅ Sim, os dados estão corretos') {
+            // 🔧 CORREÇÃO: Verificar o selectedId correto e possíveis variações de texto
+            if (selectedId === 'dados_corretos' || text.includes('sim') || text.includes('corretos') || text.includes('dados estão corretos')) {
                 const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
                 const emailCadastrado = contato.email || 'E-mail não informado';
 
@@ -250,7 +250,6 @@ async function start(client) {
                 }
             }
 
-            // ✅ Início do treinamento
             if (contato.statusTreinamento === 'não iniciado') {
                 await sendMessage(sender, 'send-message', {
                     message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) à equipe LCM! 💼\n\nVocê está iniciando seu Treinamento Básico de SSMA...`,
@@ -287,7 +286,6 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Opção "não começar"
             if (text === 'não, começo assim que possível 👀 😅' || selectedId === 'não começar') {
                 const listMsg = {
                     title: '',
@@ -309,7 +307,6 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Começar treinamento
             if (text === 'começar agora!! 😎 🔥🔥🔥' || selectedId === 'começar agora' || selectedId === 'pronto') {
                 await sendMessage(sender, 'send-message', {
                     message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
@@ -326,7 +323,6 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Continuação do treinamento
             if (text === '1') {
                 await sendMessage(sender, 'send-message', {
                     message: 'Vamos continuar!🚀🚀🚀 \n\nPra esquentar as coisas, vamos fazer um pequeno quiz! 😜 🔥🔥🔥',
@@ -356,7 +352,6 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Respostas do quiz
             if (['a', 'b', 'c', 'd'].includes(text) || ['a', 'b', 'c', 'd'].includes(selectedId)) {
                 const respostaCorreta = 'b';
                 const respostaUsuario = text || selectedId;
@@ -377,7 +372,6 @@ async function start(client) {
                     filename: 'palmas',
                 });
 
-                // ✅ CORREÇÃO: Usar dados do cadastro e solicitar confirmação
                 const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
                 const emailCadastrado = contato.email || 'E-mail não informado';
 
@@ -404,7 +398,6 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Outros casos de treinamento em andamento
             if (contato.statusTreinamento === 'em andamento' && ['2', '3', '4', '5'].includes(text)) {
                 const quizList = {
                     title: '',
@@ -427,7 +420,6 @@ async function start(client) {
                 return;
             }
 
-            // ✅ Caso padrão
             await sendMessage(sender, 'send-message', {
                 message: '🤔 Não entendi sua mensagem. Por favor, use as opções fornecidas.',
             });
@@ -441,7 +433,6 @@ async function start(client) {
     });
 }
 
-// ✅ Função auxiliar para gerar e enviar certificado
 async function gerarEEnviarCertificado(contato, sender) {
     await sendMessage(sender, 'send-message', {
         message: '📧 Gerando seu certificado...\n\nIsso pode demorar um pouco....',
