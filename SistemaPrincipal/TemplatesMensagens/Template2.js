@@ -181,7 +181,22 @@ async function start(client) {
             }
 
             // 🔧 CORREÇÃO: Verificar o selectedId correto e possíveis variações de texto
-            if (selectedId === 'dados_corretos' || text.includes('sim') || text.includes('corretos') || text.includes('dados estão corretos')) {
+            // ✅ VERIFICAÇÃO MELHORADA PARA CONFIRMAÇÃO DE DADOS
+            const respostasPositivas = [
+                'sim',
+                'sim, os dados estão corretos',
+                'os dados estão corretos',
+                '✅ sim, os dados estão corretos',
+                'dados corretos',
+                'confirmar',
+                'sim estão corretos'
+            ];
+
+            if (
+                selectedId === 'dados_corretos' ||
+                respostasPositivas.some((frase) => text.includes(frase)) ||
+                /^✅?\s*sim.*corretos/i.test(rawText.trim())
+            ) {
                 const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
                 const emailCadastrado = contato.email || 'E-mail não informado';
 
@@ -200,6 +215,7 @@ async function start(client) {
                 emProcessamento.delete(sender);
                 return;
             }
+
 
             if (selectedId === 'dados_incorretos') {
                 await sendMessage(sender, 'send-message', {
