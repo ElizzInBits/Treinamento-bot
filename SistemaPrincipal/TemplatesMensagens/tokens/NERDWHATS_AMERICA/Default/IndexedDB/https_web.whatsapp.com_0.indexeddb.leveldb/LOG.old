@@ -1,53 +1,13 @@
-2025/07/21-12:17:49.455 74804 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/21-12:17:49.455 74804 Recovering log #1715
-2025/07/21-12:17:49.458 74804 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001715.log 
-2025/07/21-12:17:50.540 74806 Level-0 table #1720: started
-2025/07/21-12:17:50.544 74806 Level-0 table #1720: 95911 bytes OK
-2025/07/21-12:17:50.546 74806 Delete type=0 #1715
-2025/07/21-12:17:50.546 74806 Manual compaction at level-0 from ' \x01\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x02\x02\x00\x00\x00' @ 0 : 0; will stop at ' \x03\x02\x00\x00\x05' @ 3544492 : 1
-2025/07/21-12:17:50.546 74806 Compacting 1@0 + 1@1 files
-2025/07/21-12:17:50.567 74806 Generated table #1721@0: 34642 keys, 657278 bytes
-2025/07/21-12:17:50.567 74806 Compacted 1@0 + 1@1 files => 657278 bytes
-2025/07/21-12:17:50.569 74806 compacted to: files[ 0 1 1 0 0 0 0 ]
-2025/07/21-12:17:50.570 74806 Delete type=2 #1720
-2025/07/21-12:17:50.570 74804 Manual compaction at level-0 from ' \x03\x02\x00\x00\x05' @ 3544492 : 1 .. ' \x02\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/21-12:17:50.574 74804 Level-0 table #1723: started
-2025/07/21-12:17:50.576 74804 Level-0 table #1723: 462 bytes OK
-2025/07/21-12:17:50.578 74804 Delete type=2 #1717
-2025/07/21-12:17:50.578 74804 Delete type=0 #1719
-2025/07/21-12:17:50.579 74804 Manual compaction at level-0 from ' \x02\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x03\x02\x00\x00\x00' @ 0 : 0; will stop at ' \x02\x02\x00\x00\x05' @ 3544533 : 0
-2025/07/21-12:17:50.579 74804 Compacting 1@0 + 1@1 files
-2025/07/21-12:17:50.598 74804 Generated table #1724@0: 34640 keys, 656839 bytes
-2025/07/21-12:17:50.598 74804 Compacted 1@0 + 1@1 files => 656839 bytes
-2025/07/21-12:17:50.600 74804 compacted to: files[ 0 1 1 0 0 0 0 ]
-2025/07/21-12:17:50.601 74804 Delete type=2 #1723
-2025/07/21-12:17:50.602 74804 Manual compaction at level-0 from ' \x02\x02\x00\x00\x05' @ 3544533 : 0 .. ' \x03\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/21-12:17:50.602 74806 Level-0 table #1726: started
-2025/07/21-12:17:50.605 74806 Level-0 table #1726: 252 bytes OK
-2025/07/21-12:17:50.607 74806 Delete type=2 #1721
-2025/07/21-12:17:50.607 74806 Delete type=0 #1722
-2025/07/21-12:17:50.608 74806 Manual compaction at level-0 from ' \x03\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x04\x02\x00\x00\x00' @ 0 : 0; will stop at ' \x03\x02\x00\x00\x05' @ 3544539 : 0
-2025/07/21-12:17:50.608 74806 Compacting 1@0 + 1@1 files
-2025/07/21-12:17:50.641 74806 Generated table #1727@0: 34638 keys, 656686 bytes
-2025/07/21-12:17:50.641 74806 Compacted 1@0 + 1@1 files => 656686 bytes
-2025/07/21-12:17:50.643 74806 compacted to: files[ 0 1 1 0 0 0 0 ]
-2025/07/21-12:17:50.643 74806 Delete type=2 #1726
-2025/07/21-12:17:50.644 74804 Manual compaction at level-0 from ' \x03\x02\x00\x00\x05' @ 3544539 : 0 .. ' \x04\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/21-12:22:53.943 74804 Level-0 table #1729: started
-2025/07/21-12:22:53.949 74804 Level-0 table #1729: 267446 bytes OK
-2025/07/21-12:22:53.951 74804 Delete type=0 #1725
-2025/07/21-12:22:53.951 74804 Delete type=2 #1724
-2025/07/21-12:22:53.952 74804 Manual compaction at level-0 from ' \x06\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x07\x02\x00\x00\x00' @ 0 : 0; will stop at ' \x06\x02\x00\x00\x05' @ 3557216 : 1
-2025/07/21-12:22:53.952 74804 Compacting 1@0 + 1@1 files
-2025/07/21-12:22:53.981 74804 Generated table #1730@0: 40982 keys, 786874 bytes
-2025/07/21-12:22:53.981 74804 Compacted 1@0 + 1@1 files => 786874 bytes
-2025/07/21-12:22:53.983 74804 compacted to: files[ 0 1 1 0 0 0 0 ]
-2025/07/21-12:22:53.984 74804 Delete type=2 #1729
-2025/07/21-12:22:53.984 74804 Manual compaction at level-0 from ' \x06\x02\x00\x00\x05' @ 3557216 : 1 .. ' \x07\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/21-12:28:30.545 74804 Compacting 1@1 + 1@2 files
-2025/07/21-12:28:30.563 74804 Generated table #1731@1: 16302 keys, 583676 bytes
-2025/07/21-12:28:30.563 74804 Compacted 1@1 + 1@2 files => 583676 bytes
-2025/07/21-12:28:30.565 74804 compacted to: files[ 0 0 1 0 0 0 0 ]
-2025/07/21-12:28:30.565 74804 Delete type=2 #1679
-2025/07/21-12:28:30.565 74804 Delete type=2 #1730
-2025/07/21-12:28:30.566 74804 Delete type=2 #1727
+2025/07/21-12:37:47.242 794f9 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/21-12:37:47.243 794f9 Recovering log #1737
+2025/07/21-12:37:47.246 794f9 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001737.log 
+2025/07/21-12:37:48.296 794f9 Level-0 table #1742: started
+2025/07/21-12:37:48.302 794f9 Level-0 table #1742: 142213 bytes OK
+2025/07/21-12:37:48.305 794f9 Delete type=0 #1737
+2025/07/21-12:37:48.306 794fb Manual compaction at level-0 from ' \x09\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x0a\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/21-12:37:50.385 794fa Compacting 1@1 + 1@2 files
+2025/07/21-12:37:50.420 794fa Generated table #1743@1: 32551 keys, 1171426 bytes
+2025/07/21-12:37:50.420 794fa Compacted 1@1 + 1@2 files => 1171426 bytes
+2025/07/21-12:37:50.425 794fa compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/07/21-12:37:50.426 794fa Delete type=2 #1742
+2025/07/21-12:37:50.426 794fa Delete type=2 #1739
