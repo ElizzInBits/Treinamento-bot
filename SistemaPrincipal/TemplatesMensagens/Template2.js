@@ -492,6 +492,9 @@ async function processarMensagem(message) {
         contato.ultimaInteracao = rawText.trim();
         await contato.save();
 
+        const correuCorrecao = await processarCorrecaoDados(sender, rawText, contato);
+        if (correuCorrecao) return;
+
         console.log(`📩 Mensagem de ${sender} (${contato.nome}): ${text}`);
 
         // Ignorar mensagens de grupo
