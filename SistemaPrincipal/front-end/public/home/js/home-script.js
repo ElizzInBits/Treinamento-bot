@@ -668,7 +668,7 @@ function removerTreinamento(id) {
 }
 
 // Exportar dados
-function exportarDados() {
+/*function exportarDados() {
   const dados = {
     empresas: empresas,
     contatos: contatos,
@@ -687,7 +687,59 @@ function exportarDados() {
   URL.revokeObjectURL(url);
 
   mostrarAlerta('Dados exportados com sucesso!');
+}*/
+
+function exportarDadosXLS() {
+  // Mapeia as empresas pelo id para facilitar o lookup
+  const mapaEmpresas = Object.fromEntries(empresas.map(e => [e.id, e]));
+
+  // Formata os dados das empresas para o XLS
+  const empresasSheet = empresas.map(empresa => ({
+    ID: empresa.id,
+    Razao_Social: empresa.razao_social,
+    CNPJ: empresa.cnpj,
+    Porte: empresa.porte_empresa,
+    Endereco: empresa.endereco,
+    CEP: empresa.cep,
+    Contato: empresa.contato,
+    Email: empresa.email,
+    Criado_Em: empresa.criado_em
+  }));
+
+  // Formata os contatos, adicionando o nome da empresa relacionada
+  const contatosSheet = contatos.map(contato => {
+    const empresa = mapaEmpresas[contato.empresaId] || {};
+    return {
+      ID: contato.id,
+      Nome: contato.nome,
+      Telefone: contato.telefone,
+      Email: contato.email,
+      CPF: contato.cpf,
+      Status_Treinamento: contato.statusTreinamento,
+      Treinamento_ID: contato.treinamentoId,
+      Empresa_ID: contato.empresaId,
+      Empresa_Razao_Social: empresa.razao_social || "Desconhecida"
+    };
+  });
+
+  // Cria um novo workbook (arquivo XLS)
+  const wb = XLSX.utils.book_new();
+
+  // Converte os arrays em abas do XLS
+  const wsEmpresas = XLSX.utils.json_to_sheet(empresasSheet);
+  const wsContatos = XLSX.utils.json_to_sheet(contatosSheet);
+
+  // Adiciona as abas no arquivo
+  XLSX.utils.book_append_sheet(wb, wsEmpresas, "Empresas");
+  XLSX.utils.book_append_sheet(wb, wsContatos, "Contatos");
+
+  // Salva o arquivo XLS com nome baseado na data atual
+  XLSX.writeFile(wb, `cadastro-dados-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+  // Exibe alerta de sucesso (presumo que você já tenha essa função)
+  mostrarAlerta('Dados exportados com sucesso em XLS!');
 }
+
 
 // Fechar modais ao clicar fora
 document.addEventListener('click', function (e) {
