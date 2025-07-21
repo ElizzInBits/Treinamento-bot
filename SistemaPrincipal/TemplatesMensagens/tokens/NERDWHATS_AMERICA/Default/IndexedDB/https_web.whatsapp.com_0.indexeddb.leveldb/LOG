@@ -1,11 +1,25 @@
-2025/07/21-13:45:16.293 891e1 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/21-13:45:16.294 891e1 Recovering log #1772
-2025/07/21-13:45:16.336 891e1 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001772.log 
-2025/07/21-13:45:17.345 891e2 Level-0 table #1777: started
-2025/07/21-13:45:17.371 891e2 Level-0 table #1777: 1222009 bytes OK
-2025/07/21-13:45:17.374 891e2 Delete type=0 #1772
-2025/07/21-13:45:17.375 891e1 Manual compaction at level-0 from ' \x11\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x12\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/21-13:45:19.637 891e1 Compacting 1@1 + 1@2 files
-2025/07/21-13:45:19.701 891e1 Generated table #1778@1: 60989 keys, 2009962 bytes
-2025/07/21-13:45:19.701 891e1 Compacted 1@1 + 1@2 files => 2009962 bytes
-2025/07/21-13:45:19.717 891e1 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/07/21-13:51:33.410 8aa52 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/21-13:51:33.411 8aa52 Recovering log #1776
+2025/07/21-13:51:33.453 8aa52 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001776.log 
+2025/07/21-13:51:33.453 8aa52 Delete type=2 #1774
+2025/07/21-13:51:33.453 8aa52 Delete type=2 #1777
+2025/07/21-13:51:34.464 8aa54 Level-0 table #1781: started
+2025/07/21-13:51:34.501 8aa54 Level-0 table #1781: 1219696 bytes OK
+2025/07/21-13:51:34.504 8aa54 Delete type=0 #1776
+2025/07/21-13:51:34.505 8aa54 Manual compaction at level-0 from ' \x12\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \x13\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/21-13:51:36.445 8aa53 Compacting 1@1 + 1@2 files
+2025/07/21-13:51:36.518 8aa53 Generated table #1782@1: 66746 keys, 2177809 bytes
+2025/07/21-13:51:36.518 8aa53 Compacted 1@1 + 1@2 files => 2177809 bytes
+2025/07/21-13:51:36.520 8aa53 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/07/21-13:54:33.474 8aa54 Level-0 table #1784: started
+2025/07/21-13:54:33.519 8aa54 Level-0 table #1784: 1280683 bytes OK
+2025/07/21-13:54:33.524 8aa54 Delete type=0 #1780
+2025/07/21-13:54:33.524 8aa54 Delete type=2 #1778
+2025/07/21-13:54:33.524 8aa54 Delete type=2 #1781
+2025/07/21-13:54:33.917 8aa53 Compacting 1@1 + 1@2 files
+2025/07/21-13:54:33.975 8aa53 Generated table #1785@1: 63788 keys, 2220461 bytes
+2025/07/21-13:54:33.984 8aa53 Generated table #1786@1: 9935 keys, 165693 bytes
+2025/07/21-13:54:33.984 8aa53 Compacted 1@1 + 1@2 files => 2386154 bytes
+2025/07/21-13:54:33.988 8aa53 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/07/21-13:54:33.988 8aa53 Delete type=2 #1784
+2025/07/21-13:54:33.988 8aa53 Delete type=2 #1782
