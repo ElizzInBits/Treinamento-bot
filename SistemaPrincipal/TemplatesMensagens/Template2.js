@@ -180,38 +180,33 @@ async function start(client) {
                 return;
             }
 
+            // Normaliza texto
+            const textoNormalizado = rawText.trim().toLowerCase();
+            const selectedIdNormalizado = (selectedId || '').trim().toLowerCase();
+
+            // Respostas válidas
             const respostasPositivas = [
                 'sim',
                 'sim, os dados estão corretos',
                 'os dados estão corretos',
-                '✅ sim, os dados estão corretos',
                 'dados corretos',
                 'confirmar',
                 'sim estão corretos'
             ];
 
             const respostasNegativas = [
-                '❌ Não, preciso corrigir',
                 'não',
+                'não, preciso corrigir',
                 'não, os dados não são corretos',
                 'os dados não são corretos',
-                '❌ não, os dados não são corretos',
                 'dados incorretos',
-                'não estão corretos',
-
+                'não estão corretos'
             ];
 
-            console.log('selectedId:', selectedId);
-            console.log('text:', text);
-            console.log('rawText:', rawText);
-
-
-            // Considera selectedId ou texto normal para resposta de confirmação
-            const respostaConfirmacao = selectedId || text;
-
+            // --- Confirmação de dados corretos ---
             if (
-                respostaConfirmacao === 'dados_corretos' ||
-                respostasPositivas.some((frase) => respostaConfirmacao.toLowerCase().includes(frase))
+                selectedIdNormalizado === 'dados_corretos' ||
+                respostasPositivas.includes(textoNormalizado)
             ) {
                 const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
                 const emailCadastrado = contato.email || 'E-mail não informado';
@@ -232,11 +227,10 @@ async function start(client) {
                 return;
             }
 
-            //////
+            // --- Confirmação de dados incorretos ---
             if (
-                selectedId === 'dados_incorretos' ||
-                text === 'dados_incorretos' ||
-                respostasNegativas.some((frase) => rawText.trim().toLowerCase() === frase.toLowerCase())
+                selectedIdNormalizado === 'dados_incorretos' ||
+                respostasNegativas.includes(textoNormalizado)
             ) {
                 await sendMessage(sender, 'send-message', {
                     message: '📝 Para corrigir seus dados, por favor, me envie seu nome completo correto.',
@@ -246,6 +240,7 @@ async function start(client) {
                 emProcessamento.delete(sender);
                 return;
             }
+
             //////
             /*if (respostaConfirmacao === 'dados_incorretos') {
                 await sendMessage(sender, 'send-message', {
