@@ -57,18 +57,18 @@ function limparNumero(numero) {
 function gerarVariacoes(numeroCompleto) {
     const limpo = limparNumero(numeroCompleto);
     if (!limpo.startsWith('55') || limpo.length < 10) return [limpo];
-    
+
     const ddd = limpo.slice(2, 4);
     const base = limpo.slice(4);
     let var1 = limpo;
     let var2 = limpo;
-    
+
     if (base.length === 9 && base[0] === '9') {
         var2 = '55' + ddd + base.slice(1);
     } else if (base.length === 8) {
         var2 = '55' + ddd + '9' + base;
     }
-    
+
     return [var1, var2];
 }
 
@@ -94,7 +94,7 @@ async function verificarRespostaEsperada(sender, resposta, opcoesValidas) {
  */
 function agendarLembrete(sender, mensagemLista, tempoMs = TEMPO_LEMBRETE) {
     if (timeouts[sender]) clearTimeout(timeouts[sender]);
-    
+
     timeouts[sender] = setTimeout(async () => {
         await sendMessage(sender, 'send-message', {
             message: '👀 Ah, parece que alguém se esqueceu de mim... Vamos continuar?',
@@ -229,7 +229,7 @@ async function processarComandosContinuar(sender, text, selectedId) {
 async function verificarCadastro(sender) {
     const senderVariacoes = gerarVariacoes(sender);
     const contatos = await Contato.findAll();
-    
+
     return contatos.find((c) => {
         const variacoesContato = gerarVariacoes(c.telefone);
         return senderVariacoes.some((num) => variacoesContato.includes(num));
@@ -322,11 +322,11 @@ async function iniciarTreinamento(sender, contato) {
     await sendMessage(sender, 'send-message', {
         message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) à equipe LCM! 💼\n\nVocê está iniciando seu Treinamento Básico de SSMA...`,
     });
-    
+
     await sendMessage(sender, 'send-message', {
         message: '👷 Objetivos do treinamento:\n\n• Respeitar normas de SSMA\n• Evitar acidentes\n• Cuidar da sua segurança e a dos colegas\n• Nunca realizar tarefas sem capacitação',
     });
-    
+
     await sendMessage(sender, 'send-file', {
         path: '../media/SSMA.webp',
         filename: 'SSMA',
@@ -372,10 +372,10 @@ async function processarQuiz(sender, text, selectedId, contato) {
             });
         }
 
-        await sendMessage(sender, 'send-message', { 
-            message: '🎉 Parabéns, você completou o Módulo 1!' 
+        await sendMessage(sender, 'send-message', {
+            message: '🎉 Parabéns, você completou o Módulo 1!'
         });
-        
+
         await sendMessage(sender, 'send-sticker-gif', {
             path: '../media/palmas.gif',
             filename: 'palmas',
@@ -407,11 +407,11 @@ async function gerarEEnviarCertificado(contato, sender) {
         const nomeParaCertificado = contato.nomeCompleto || contato.nome;
         const certificadoPath = await gerarCertificado(nomeParaCertificado);
         await enviarEmail(contato.email, certificadoPath);
-        
+
         await sendMessage(sender, 'send-message', {
             message: `🎉 Seu certificado foi gerado! \n\nEle foi enviado para: ${contato.email}\n\nTambém está disponível aqui:`,
         });
-        
+
         await sendMessage(sender, 'send-file', {
             path: certificadoPath,
             filename: 'certificado.pdf',
@@ -430,21 +430,20 @@ async function gerarEEnviarCertificado(contato, sender) {
 
 async function processarMensagem(message) {
     const sender = message.from.replace('@c.us', '');
-    
+
     if (emProcessamento.has(sender)) {
         console.log(`⏳ Ignorando nova mensagem de ${sender}, já está em processamento.`);
         return;
     }
 
     emProcessamento.add(sender);
-    
+
     try {
         const text = message.body?.toLowerCase() || '';
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
         await salvarUltimaInteracao(sender, 'resposta', rawText.trim());
-
 
         if (timeouts[sender]) clearTimeout(timeouts[sender]);
 
@@ -470,8 +469,12 @@ async function processarMensagem(message) {
             return;
         }
 
+        // ✅ Atualizar a última interação no campo do contato
+        contato.ultimaInteracao = rawText.trim();
+        await contato.save();
+
         console.log(`📩 Mensagem de ${sender} (${contato.nome}): ${text}`);
-        
+
         // Ignorar mensagens de grupo
         if (message.isGroupMsg) {
             return;
@@ -508,7 +511,7 @@ async function processarMensagem(message) {
                     rows: [{ id: 'pronto', title: 'Começar agora!! 😎 🔥🔥🔥', description: '' }],
                 }],
             };
-            
+
             await sendMessage(sender, 'send-message', {
                 message: '😅 Sem problemas! Quando estiver pronto, é só avisar. Estamos aqui para ajudar! 👷‍♂️👷‍♀️',
             });
@@ -523,15 +526,15 @@ async function processarMensagem(message) {
             await sendMessage(sender, 'send-message', {
                 message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
             });
-            
+
             await sendMessage(sender, 'send-message', {
                 message: `✅ Modulo 1️ - 📚 *Conceitos Fundamentais* \n\n1️⃣ Segurança e Saúde no Trabalho (SST) \nConjunto de medidas para previnir doenças e acidentes no trabalho. \n\n2️⃣ Premissas básicas de SST \n• Segurança é responsabilidade de todos \n• A consciência previne acidentes\n• Quem descumpre normas, se coloca em risco`,
             });
-            
+
             await sendMessage(sender, 'send-message', {
                 message: '*Para continuar, digite o número 1️⃣*',
             });
-            
+
             await salvarUltimaInteracao(sender, 'quiz', '*Para continuar, digite o número 1️⃣*');
             agendarLembrete(sender, getMensagemListaContinuar());
             return;
@@ -571,7 +574,7 @@ async function processarMensagem(message) {
                     ],
                 }],
             };
-            
+
             await sendMessage(sender, 'send-list-message', quizList);
             await salvarUltimaInteracao(sender, 'quiz', quizList);
             agendarLembrete(sender, getMensagemListaContinuar());
@@ -621,10 +624,10 @@ wppconnect.create({
     },
     browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
 })
-.then((client) => {
-    console.log('🟢 Cliente conectado! Iniciando listener de mensagens...');
-    start(client);
-})
-.catch((error) => {
-    console.error('❌ Erro ao iniciar WPPConnect:', error);
-});
+    .then((client) => {
+        console.log('🟢 Cliente conectado! Iniciando listener de mensagens...');
+        start(client);
+    })
+    .catch((error) => {
+        console.error('❌ Erro ao iniciar WPPConnect:', error);
+    });
