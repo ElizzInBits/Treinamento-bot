@@ -209,7 +209,7 @@ async function start(client) {
                 }
 
                 await sendMessage(sender, 'send-message', {
-                    message: '✅ Dados confirmados! Gerando seu certificado...',
+                    message: '✅ Dados confirmados!',
                 });
                 await gerarEEnviarCertificado(contato, sender);
                 emProcessamento.delete(sender);
