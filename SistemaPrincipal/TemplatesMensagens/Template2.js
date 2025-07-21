@@ -196,6 +196,7 @@ async function start(client) {
 
             const respostasNegativas = [
                 'não',
+                "❌ Não, preciso corrigir",
                 'não, preciso corrigir',
                 'não, os dados não são corretos',
                 'os dados não são corretos',
