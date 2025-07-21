@@ -190,6 +190,17 @@ async function start(client) {
                 'sim estão corretos'
             ];
 
+            const respostasNegativas = [
+                '❌ Não, preciso corrigir',
+                'não',
+                'não, os dados não são corretos',
+                'os dados não são corretos',
+                '❌ não, os dados não são corretos',
+                'dados incorretos',
+                'não estão corretos',
+            
+            ];
+
             console.log('selectedId:', selectedId);
             console.log('text:', text);
             console.log('rawText:', rawText);
@@ -221,7 +232,11 @@ async function start(client) {
                 return;
             }
 
-            if (respostaConfirmacao === 'dados_incorretos') {
+            //////
+            if (
+                respostaConfirmacao === 'dados_incorretos' ||
+                respostasNegativas.some((frase) => respostaConfirmacao.toLowerCase().includes(frase))
+            ) {
                 await sendMessage(sender, 'send-message', {
                     message: '📝 Para corrigir seus dados, por favor, me envie seu nome completo correto.',
                 });
@@ -230,8 +245,18 @@ async function start(client) {
                 emProcessamento.delete(sender);
                 return;
             }
+            //////
+            /*if (respostaConfirmacao === 'dados_incorretos') {
+                await sendMessage(sender, 'send-message', {
+                    message: '📝 Para corrigir seus dados, por favor, me envie seu nome completo correto.',
+                });
+                await salvarUltimaInteracao(sender, 'corrigir_nome', 'Por favor, me envie seu nome completo correto.');
+                agendarLembrete(sender, getMensagemListaContinuar());
+                emProcessamento.delete(sender);
+                return;
+            } */
 
-            // ✅ Receber nome completo para correção
+            // Receber nome completo para correção
             if (contato.statusTreinamento === 'concluído') {
                 const ultimaInteracao = await obterUltimaInteracao(sender);
 
