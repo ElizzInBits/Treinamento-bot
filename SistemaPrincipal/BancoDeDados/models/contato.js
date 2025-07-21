@@ -45,6 +45,11 @@ module.exports = (sequelize) => {
         key: 'id',
       },
     },
+
+    ultimaInteracao: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   }, {
     timestamps: false,
     freezeTableName: true,
@@ -53,7 +58,7 @@ module.exports = (sequelize) => {
 Contato.associate = (models) => {
   Contato.belongsTo(models.Empresa, {
     foreignKey: 'empresaId',
-    as: 'empresaRef' // ✅ evita conflito com campo 'empresa'
+    as: 'empresaRef' 
   });
 };
 

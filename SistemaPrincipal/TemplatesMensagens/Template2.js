@@ -443,6 +443,9 @@ async function processarMensagem(message) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
+        await salvarUltimaInteracao(sender, 'resposta', rawText.trim());
+
+
         if (timeouts[sender]) clearTimeout(timeouts[sender]);
 
         // Saudação inicial apenas uma vez
