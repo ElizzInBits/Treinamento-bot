@@ -196,7 +196,6 @@ async function start(client) {
 
             const respostasNegativas = [
                 'não',
-                "❌ Não, preciso corrigir",
                 'não, preciso corrigir',
                 'não, os dados não são corretos',
                 'os dados não são corretos',
@@ -428,8 +427,8 @@ async function start(client) {
                     sections: [{
                         title: '',
                         rows: [
-                            { id: 'dados_corretos', title: '✅ Sim, os dados estão corretos', description: '' },
-                            { id: 'dados_incorretos', title: '❌ Não, preciso corrigir', description: '' },
+                            { id: 'dados_corretos', title: 'Sim, os dados estão corretos', description: '' },
+                            { id: 'dados_incorretos', title: 'Não, preciso corrigir', description: '' },
                         ],
                     }],
                 };
