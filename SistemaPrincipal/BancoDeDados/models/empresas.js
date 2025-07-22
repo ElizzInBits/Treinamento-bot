@@ -1,25 +1,26 @@
 const { DataTypes } = require('sequelize');
 
-module.exports = (sequelize) => {
+mmodule.exports = (sequelize) => {
   const Empresa = sequelize.define('empresas', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    razao_social: {
+    razaoSocial: {
       type: DataTypes.STRING,
       allowNull: false,
-      field: "razao_social",
+      field: 'razao_social',
     },
     cnpj: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-    porte_empresa: {
+    porteEmpresa: {
       type: DataTypes.STRING,
       allowNull: true,
+      field: 'porte_empresa',
     },
     endereco: {
       type: DataTypes.STRING,
@@ -41,9 +42,10 @@ module.exports = (sequelize) => {
         isEmail: true,
       },
     },
-    criado_em: {
+    criadoEm: {
       type: DataTypes.DATE,
       allowNull: true,
+      field: 'criado_em',
     },
   }, {
     timestamps: false,
@@ -51,9 +53,7 @@ module.exports = (sequelize) => {
   });
 
   Empresa.associate = (models) => {
-    Empresa.hasMany(models.Contato, { foreignKey: 'empresaId',
-      as: 'contatos'
-     });
+    Empresa.hasMany(models.Contato, { foreignKey: 'empresaId', as: 'contatos' });
   };
 
   return Empresa;
