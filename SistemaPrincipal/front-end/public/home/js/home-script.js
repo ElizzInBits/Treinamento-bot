@@ -162,6 +162,7 @@ function atualizarEstatisticasMapeamento() {
   document.getElementById('mapTreinamentosDisponiveis').textContent = treinamentosDisponiveis;
 }
 
+
 // Atualizar select de empresas
 function atualizarSelectEmpresa() {
   const selects = [
