@@ -1,0 +1,146 @@
+:root {
+  /* Cores Principais */
+  --primary-color: #0f4c5c;
+  --secondary-color: #6ec6ca;
+  --accent-color: #feb200;
+  --accent-light: #fef3d2;
+
+  /* Cores Neutras */
+  --white: #ffffff;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  /* Cores de Estado */
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Transições */
+  --transition: all 0.2s ease-in-out;
+  --transition-slow: all 0.3s ease-in-out;
+}
+
+/* Reset e base */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+}
+
+/* Container principal */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Cabeçalho */
+header {
+  background-color: var(--primary-color);
+  color: var(--white);
+  padding: 1rem 2rem;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+
+header h1 {
+  margin: 0;
+}
+
+/* Botões */
+.button {
+  padding: 0.6rem 1.2rem;
+  background-color: var(--accent-color);
+  color: var(--gray-900);
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.button:hover {
+  background-color: var(--accent-light);
+  box-shadow: var(--shadow-md);
+}
+
+/* Cartões */
+.card {
+  background-color: var(--white);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition-slow);
+  margin-bottom: 1.5rem;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Alertas */
+.alert {
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  font-weight: bold;
+}
+
+.alert.success {
+  background-color: var(--success);
+  color: var(--white);
+}
+
+.alert.error {
+  background-color: var(--error);
+  color: var(--white);
+}
+
+.alert.warning {
+  background-color: var(--warning);
+  color: var(--gray-900);
+}
+
+.alert.info {
+  background-color: var(--info);
+  color: var(--white);
+}
+
+/* Formulários */
+input,
+select,
+textarea {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  width: 100%;
+  margin-bottom: 1rem;
+  transition: var(--transition);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--secondary-color);
+  outline: none;
+  box-shadow: var(--shadow-sm);
+}
