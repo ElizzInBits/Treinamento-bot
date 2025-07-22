@@ -22,8 +22,13 @@ document.addEventListener('DOMContentLoaded', function () {
     .then(() => {
       // Aguardar um pouco para garantir que tudo foi carregado
       setTimeout(() => {
+        atualizarEstatisticasMapeamento();
         atualizarEstatisticasEmpresas();
-        if (document.getElementById('empresas').classList.contains('active')) {
+        
+        // Verificar qual aba está ativa por padrão
+        if (document.getElementById('mapeamento').classList.contains('active')) {
+          atualizarEstatisticasMapeamento();
+        } else if (document.getElementById('empresas').classList.contains('active')) {
           renderizarEmpresas();
         }
       }, 100);
@@ -45,7 +50,9 @@ function showTab(tabName) {
   document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
   document.getElementById(tabName).classList.add('active');
 
-  if (tabName === 'empresas') {
+  if (tabName === 'mapeamento') {
+    atualizarEstatisticasMapeamento();
+  } else if (tabName === 'empresas') {
     renderizarEmpresas();
     atualizarEstatisticasEmpresas();
   } else if (tabName === 'treinamentos') {
@@ -92,59 +99,19 @@ function mostrarAlerta(mensagem, tipo = 'success') {
   }, 5000);
 }
 
-// Cadastrar contato
-document.getElementById('cadastroForm').addEventListener('submit', function (e) {
-  e.preventDefault();
+// Atualizar estatísticas da aba Mapeamento (nova aba principal)
+function atualizarEstatisticasMapeamento() {
+  const totalContatos = contatos.length;
+  const contatosComTreinamento = contatos.filter(c => c.treinamentoId).length;
+  const empresasAtivas = empresas.length;
+  const treinamentosDisponiveis = treinamentos.length;
 
-  const nome = document.getElementById('nome').value.trim();
-  const telefone = document.getElementById('telefone').value.trim();
-  const empresaId = document.getElementById('empresa').value;
-  const treinamentoId = document.getElementById('treinamento').value;
-
-  if (!nome || !telefone || !empresaId) {
-    mostrarAlerta('Por favor, preencha todos os campos obrigatórios.', 'error');
-    return;
-  }
-
-  if (!validarTelefone(telefone)) {
-    mostrarAlerta('Formato de telefone inválido.', 'error');
-    return;
-  }
-
-  // Verificar se já existe contato com este telefone
-  if (contatos.some(c => c.telefone === telefone)) {
-    mostrarAlerta('Já existe um contato com este telefone.', 'error');
-    return;
-  }
-
-  const novoContato = {
-    nome,
-    telefone,
-    empresaId: parseInt(empresaId),
-    treinamentoId: treinamentoId ? parseInt(treinamentoId) : null
-  };
-
-  fetch('http://92.112.178.26:3000/api/contatos', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(novoContato)
-  })
-    .then(res => {
-      if (!res.ok) throw new Error();
-      return res.json();
-    })
-    .then(data => {
-      mostrarAlerta(`Contato ${data.nome} cadastrado com sucesso!`);
-      document.getElementById('cadastroForm').reset();
-      carregarContatos().then(() => {
-        atualizarEstatisticasEmpresas();
-        if (document.getElementById('empresas').classList.contains('active')) {
-          renderizarEmpresas();
-        }
-      });
-    })
-    .catch(() => mostrarAlerta('Erro ao salvar contato.', 'error'));
-});
+  // Atualizar os elementos da aba Mapeamento
+  document.getElementById('mapTotalContatos').textContent = totalContatos;
+  document.getElementById('mapContatosComTreinamento').textContent = contatosComTreinamento;
+  document.getElementById('mapEmpresasAtivas').textContent = empresasAtivas;
+  document.getElementById('mapTreinamentosDisponiveis').textContent = treinamentosDisponiveis;
+}
 
 // Atualizar select de empresas
 function atualizarSelectEmpresa() {
@@ -329,7 +296,6 @@ function renderizarContatosEmpresa() {
               <button class="btn-warning" onclick="abrirEditarContato(${contato.id})">Editar</button>
               <button class="btn-error" onclick="removerContato(${contato.id})">Remover</button>
             </div>
-
           </div>
         `;
   }).join('')}
@@ -402,6 +368,9 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
       mostrarAlerta('Contato atualizado com sucesso!');
       fecharModalEditarContato();
       carregarContatos().then(() => {
+        // Atualizar estatísticas do mapeamento
+        atualizarEstatisticasMapeamento();
+        
         // Atualizar a lista de contatos da empresa no modal se estiver aberto
         if (empresaSelecionada) {
           contatosEmpresaSelecionada = contatos.filter(c => c.empresaId === empresaSelecionada.id);
@@ -428,6 +397,9 @@ function removerContato(id) {
       if (!res.ok) throw new Error();
       mostrarAlerta('Contato removido com sucesso!');
       carregarContatos().then(() => {
+        // Atualizar estatísticas do mapeamento
+        atualizarEstatisticasMapeamento();
+        
         // Atualizar a lista de contatos da empresa no modal se estiver aberto
         if (empresaSelecionada) {
           contatosEmpresaSelecionada = contatos.filter(c => c.empresaId === empresaSelecionada.id);
@@ -587,6 +559,8 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
       document.getElementById('treinamentoForm').reset();
       carregarTreinamentos().then(() => {
         atualizarSelectTreinamento();
+        // Atualizar estatísticas do mapeamento
+        atualizarEstatisticasMapeamento();
       });
     })
     .catch(() => mostrarAlerta('Erro ao criar treinamento.', 'error'));
@@ -661,37 +635,19 @@ function removerTreinamento(id) {
       carregarTreinamentos().then(() => {
         atualizarSelectTreinamento();
         // Recarregar contatos para atualizar as estatísticas
-        carregarContatos();
+        carregarContatos().then(() => {
+          atualizarEstatisticasMapeamento();
+        });
       });
     })
     .catch(() => mostrarAlerta('Erro ao remover treinamento.', 'error'));
 }
 
-// Exportar dados
-/*function exportarDados() {
-  const dados = {
-    empresas: empresas,
-    contatos: contatos,
-    treinamentos: treinamentos,
-    timestamp: new Date().toISOString()
-  };
-
-  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `cadastro-dados-${new Date().toISOString().split('T')[0]}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  mostrarAlerta('Dados exportados com sucesso!');
-}*/
-
+// Exportar dados em XLS
 function exportarDadosXLS() {
   // Mapeia as empresas pelo id para facilitar o lookup
   const mapaEmpresas = Object.fromEntries(empresas.map(e => [e.id, e]));
+  const mapaTreinamentos = Object.fromEntries(treinamentos.map(t => [t.id, t]));
 
   // Formata os dados das empresas para o XLS
   const empresasSheet = empresas.map(empresa => ({
@@ -709,6 +665,7 @@ function exportarDadosXLS() {
   // Formata os contatos, adicionando o nome da empresa relacionada
   const contatosSheet = contatos.map(contato => {
     const empresa = mapaEmpresas[contato.empresaId] || {};
+    const treinamento = mapaTreinamentos[contato.treinamentoId] || {};
     return {
       ID: contato.id,
       Nome: contato.nome,
@@ -717,11 +674,20 @@ function exportarDadosXLS() {
       CPF: contato.cpf,
       Status_Treinamento: contato.statusTreinamento,
       Treinamento_ID: contato.treinamentoId,
+      Treinamento_Nome: treinamento.nome || "Sem treinamento",
       Empresa_ID: contato.empresaId,
       Empresa_Razao_Social: empresa.razao_social || "Desconhecida",
       Ultima_Interacao: contato.ultimaInteracao
     };
   });
+
+  // Formata os dados dos treinamentos
+  const treinamentosSheet = treinamentos.map(treinamento => ({
+    ID: treinamento.id,
+    Nome: treinamento.nome,
+    Descricao: treinamento.descricao,
+    Total_Contatos: contatos.filter(c => c.treinamentoId === treinamento.id).length
+  }));
 
   // Cria um novo workbook (arquivo XLS)
   const wb = XLSX.utils.book_new();
@@ -729,33 +695,64 @@ function exportarDadosXLS() {
   // Converte os arrays em abas do XLS
   const wsEmpresas = XLSX.utils.json_to_sheet(empresasSheet);
   const wsContatos = XLSX.utils.json_to_sheet(contatosSheet);
+  const wsTreinamentos = XLSX.utils.json_to_sheet(treinamentosSheet);
 
   // Adiciona as abas no arquivo
   XLSX.utils.book_append_sheet(wb, wsEmpresas, "Empresas");
   XLSX.utils.book_append_sheet(wb, wsContatos, "Contatos");
+  XLSX.utils.book_append_sheet(wb, wsTreinamentos, "Treinamentos");
 
   // Salva o arquivo XLS com nome baseado na data atual
-  XLSX.writeFile(wb, `cadastro-dados-${new Date().toISOString().split('T')[0]}.xlsx`);
-
-  // Exibe alerta de sucesso (presumo que você já tenha essa função)
-  mostrarAlerta('Dados exportados com sucesso em XLS!');
+  XLSX.writeFile(wb, `gestao-treinamentos-${new Date().toISOString().split('T')[0]}.xlsx`);
+  
+  mostrarAlerta('Dados exportados com sucesso!', 'success');
 }
 
+// Carregar empresas
+function carregarEmpresas() {
+  const loading = document.getElementById('loadingEmpresas');
+  if (loading) loading.style.display = 'block';
 
-// Fechar modais ao clicar fora
-document.addEventListener('click', function (e) {
+  return fetch('http://92.112.178.26:3000/api/empresas')
+    .then(res => {
+      if (!res.ok) throw new Error('Erro ao carregar empresas');
+      return res.json();
+    })
+    .then(data => {
+      console.log('Empresas carregadas:', data);
+      empresas = data.map(e => ({
+        ...e,
+        id: parseInt(e.id, 10)
+      }));
+      
+      // Debug: mostrar empresas carregadas
+      console.log('Empresas processadas:', empresas.map(e => ({
+        id: e.id,
+        razao_social: e.razao_social
+      })));
+    })
+    .catch(error => {
+      console.error('Erro ao carregar empresas:', error);
+      mostrarAlerta('Erro ao carregar empresas.', 'error');
+    })
+    .finally(() => {
+      if (loading) loading.style.display = 'none';
+    });
+}
+
+// Fechar modais ao clicar fora deles
+document.addEventListener('click', function(e) {
   const modals = [
     'modalContatosEmpresa',
-    'modalContatos',
+    'modalContatos', 
     'modalEditarContato',
     'modalDetalhesContato'
   ];
-
+  
   modals.forEach(modalId => {
     const modal = document.getElementById(modalId);
     if (e.target === modal) {
       modal.style.display = 'none';
-
       if (modalId === 'modalContatosEmpresa') {
         empresaSelecionada = null;
         contatosEmpresaSelecionada = [];
@@ -764,197 +761,858 @@ document.addEventListener('click', function (e) {
   });
 });
 
-// Fechar modais com tecla ESC
-document.addEventListener('keydown', function (e) {
-  if (e.key === 'Escape') {
-    const modalsAbertos = document.querySelectorAll('.modal-overlay[style*="block"]');
-    modalsAbertos.forEach(modal => {
-      modal.style.display = 'none';
-      if (modal.id === 'modalContatosEmpresa') {
-        empresaSelecionada = null;
-        contatosEmpresaSelecionada = [];
+// Aplicar máscara de telefone em tempo real
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'editarTelefone') {
+    let value = e.target.value.replace(/\D/g, '');
+    
+    if (value.length <= 11) {
+      // Formato nacional: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+      if (value.length === 11) {
+        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      } else if (value.length === 10) {
+        value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
       }
-    });
+    } else {
+      // Formato internacional: +XX (XX) XXXXX-XXXX
+      if (value.length === 13) {
+        value = value.replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4');
+      } else if (value.length === 12) {
+        value = value.replace(/(\d{2})(\d{2})(\d{4})(\d{4})/, '+$1 ($2) $3-$4');
+      }
+    }
+    
+    e.target.value = value;
   }
 });
 
-// Função para sincronizar dados após operações
-function sincronizarDados() {
-  return Promise.all([
-    carregarEmpresas(),
-    carregarContatos(),
-    carregarTreinamentos()
-  ]).then(() => {
-    atualizarSelectEmpresa();
-    atualizarSelectTreinamento();
-
-    // Se estivermos na aba empresas, atualizar a visualização
-    if (document.getElementById('empresas').classList.contains('active')) {
-      renderizarEmpresas();
-      atualizarEstatisticasEmpresas();
-    }
-
-    // Se estivermos na aba treinamentos, atualizar a visualização
-    if (document.getElementById('treinamentos').classList.contains('active')) {
-      renderizarTreinamentos();
-    }
-
-    // Se houver um modal de empresa aberto, atualizar os contatos
-    if (empresaSelecionada) {
-      contatosEmpresaSelecionada = contatos.filter(c => c.empresaId === empresaSelecionada.id);
-      renderizarContatosEmpresa();
+// Validação adicional para campos obrigatórios
+function validarCamposObrigatorios(form) {
+  const camposObrigatorios = form.querySelectorAll('[required]');
+  let valido = true;
+  
+  camposObrigatorios.forEach(campo => {
+    if (!campo.value.trim()) {
+      campo.classList.add('error');
+      valido = false;
+    } else {
+      campo.classList.remove('error');
     }
   });
+  
+  return valido;
 }
 
-// Função melhorada para carregar contatos
-function carregarContatos() {
-  return fetch('http://92.112.178.26:3000/api/contatos')
-    .then(res => {
-      if (!res.ok) throw new Error('Erro ao carregar contatos');
-      return res.json();
-    })
-    .then(data => {
-      // Garantir que os IDs são números inteiros
-      contatos = data.map(c => ({
-        ...c,
-        id: parseInt(c.id, 10),
-        empresaId: parseInt(c.empresaId, 10),
-        treinamentoId: c.treinamentoId ? parseInt(c.treinamentoId, 10) : null
-      }));
-
-      console.log('Contatos carregados:', contatos.length);
-      return contatos;
-    })
-    .catch(error => {
-      console.error('Erro ao carregar contatos:', error);
-      mostrarAlerta('Erro ao carregar contatos.', 'error');
-      return [];
+// Função para limpar formulários
+function limparFormulario(formId) {
+  const form = document.getElementById(formId);
+  if (form) {
+    form.reset();
+    // Remover classes de erro
+    form.querySelectorAll('.error').forEach(campo => {
+      campo.classList.remove('error');
     });
+  }
 }
 
-// carregar empresas
-function carregarEmpresas() {
-  return fetch('http://92.112.178.26:3000/api/empresas')
-    .then(res => {
-      if (!res.ok) throw new Error('Erro ao carregar empresas');
-      return res.json();
-    })
-    .then(data => {
-      empresas = data.map(e => ({
-        ...e,
-        id: parseInt(e.id, 10)
-      }));
-
-      console.log('Empresas carregadas:', empresas.length);
-
-      // Esconder loading depois de carregar com sucesso
-      const loading = document.getElementById('loadingEmpresas');
-      if (loading) loading.style.display = 'none';
-
-      return empresas;
-    })
-    .catch(error => {
-      console.error('Erro ao carregar empresas:', error);
-      mostrarAlerta('Erro ao carregar empresas.', 'error');
-
-      // Esconder loading mesmo em caso de erro
-      const loading = document.getElementById('loadingEmpresas');
-      if (loading) loading.style.display = 'none';
-
-      return [];
+// Event listeners adicionais para melhorar UX
+document.addEventListener('DOMContentLoaded', function() {
+  // Adicionar event listener para tecla ESC fechar modais
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const modals = document.querySelectorAll('.modal-overlay');
+      modals.forEach(modal => {
+        if (modal.style.display === 'block') {
+          modal.style.display = 'none';
+          if (modal.id === 'modalContatosEmpresa') {
+            empresaSelecionada = null;
+            contatosEmpresaSelecionada = [];
+          }
+        }
+      });
+    }
+  });
+  
+  // Melhorar responsividade das tabs
+  const tabButtons = document.querySelectorAll('.nav-tab');
+  tabButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      // Scroll suave para o topo quando trocar de aba
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-}
-
-
-// Função melhorada para carregar treinamentos
-function carregarTreinamentos() {
-  const loading = document.getElementById('loadingTreinamentos');
-  if (loading) loading.style.display = 'block';
-
-  return fetch('http://92.112.178.26:3000/api/treinamentos')
-    .then(res => {
-      if (!res.ok) throw new Error('Erro ao carregar treinamentos');
-      return res.json();
-    })
-    .then(data => {
-      // Garantir que os IDs são números inteiros
-      treinamentos = data.map(t => ({
-        ...t,
-        id: parseInt(t.id, 10)
-      }));
-
-      console.log('Treinamentos carregados:', treinamentos.length);
-      return treinamentos;
-    })
-    .catch(error => {
-      console.error('Erro ao carregar treinamentos:', error);
-      mostrarAlerta('Erro ao carregar treinamentos.', 'error');
-      return [];
-    })
-    .finally(() => {
-      if (loading) loading.style.display = 'none';
-    });
-}
-
-// Função para atualizar dados quando necessário
-function atualizarDadosCompletos() {
-  return sincronizarDados()
-    .then(() => {
-      console.log('Dados sincronizados com sucesso');
-      console.log('Total de empresas:', empresas.length);
-      console.log('Total de contatos:', contatos.length);
-      console.log('Total de treinamentos:', treinamentos.length);
-    })
-    .catch(error => {
-      console.error('Erro na sincronização:', error);
-      mostrarAlerta('Erro ao sincronizar dados.', 'error');
-    });
-}
-
-// Melhorar a inicialização do sistema
-document.addEventListener('DOMContentLoaded', function () {
-  console.log('Iniciando carregamento do sistema...');
-
-  // Carregar dados em sequência para evitar problemas de dependência
-  carregarEmpresas()
-    .then(() => {
-      console.log('Empresas carregadas, atualizando select...');
-      atualizarSelectEmpresa();
-      return carregarTreinamentos();
-    })
-    .then(() => {
-      console.log('Treinamentos carregados, atualizando select...');
-      atualizarSelectTreinamento();
-      return carregarContatos();
-    })
-    .then(() => {
-      console.log('Contatos carregados, atualizando estatísticas...');
-      atualizarEstatisticasEmpresas();
-
-      // Se estivermos na aba empresas por padrão, renderizar
-      if (document.getElementById('empresas').classList.contains('active')) {
-        renderizarEmpresas();
-      }
-
-      console.log('Sistema inicializado com sucesso!');
-    })
-    .catch(error => {
-      console.error('Erro na inicialização:', error);
-      mostrarAlerta('Erro ao inicializar o sistema.', 'error');
-    });
+  });
 });
 
-// Adicionar debug para verificar dados
-function debugDados() {
-  console.log('=== DEBUG DOS DADOS ===');
-  console.log('Empresas:', empresas);
-  console.log('Contatos:', contatos);
-  console.log('Treinamentos:', treinamentos);
+// Função para atualizar todas as estatísticas
+function atualizarTodasEstatisticas() {
+  atualizarEstatisticasMapeamento();
+  atualizarEstatisticasEmpresas();
+}
 
-  // Verificar associações
-  empresas.forEach(empresa => {
-    const contatosEmpresa = contatos.filter(c => c.empresaId === empresa.id);
-    console.log(`Empresa ${empresa.razao_social} (ID: ${empresa.id}) tem ${contatosEmpresa.length} contatos`);
+// Função de debounce para pesquisa
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Aplicar debounce na pesquisa do modal
+const filtrarContatosModalDebounced = debounce(filtrarContatosModal, 300);
+
+// Substituir o evento onkeyup por um event listener com debounce
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInputModal = document.getElementById('searchInputModal');
+  if (searchInputModal) {
+    searchInputModal.removeAttribute('onkeyup');
+    searchInputModal.addEventListener('input', filtrarContatosModalDebounced);
+  }
+});
+
+// Função para logging de debug (pode ser desabilitada em produção)
+function debugLog(message, data = null) {
+  if (console && console.log) {
+    if (data) {
+      console.log(`[DEBUG] ${message}`, data);
+    } else {
+      console.log(`[DEBUG] ${message}`);
+    }
+  }
+}
+
+// Interceptar erros não tratados
+window.addEventListener('error', function(e) {
+  console.error('Erro não tratado:', e.error);
+  mostrarAlerta('Ocorreu um erro inesperado. Tente recarregar a página.', 'error');
+});
+
+// Função para verificar conectividade com a API
+function verificarConectividadeAPI() {
+  return fetch('http://92.112.178.26:3000/api/health', { 
+    method: 'GET',
+    timeout: 5000 
+  })
+  .then(response => response.ok)
+  .catch(() => false);
+}
+
+// Inicializar verificação de conectividade periodicamente
+setInterval(function() {
+  verificarConectividadeAPI().then(isConnected => {
+    if (!isConnected) {
+      mostrarAlerta('Problemas de conectividade detectados. Algumas funcionalidades podem estar indisponíveis.', 'error');
+    }
+  });
+}, 60000); // Verificar a cada minuto
+
+// Adicionar funcionalidades de cadastro que estavam faltando
+
+// Formulário de cadastro de empresa
+document.getElementById('empresaForm')?.addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const razaoSocial = document.getElementById('novaEmpresa').value.trim();
+  const cnpj = document.getElementById('cnpjEmpresa').value.trim();
+  const email = document.getElementById('emailEmpresa').value.trim();
+  const telefone = document.getElementById('telefoneEmpresa').value.trim();
+  const endereco = document.getElementById('enderecoEmpresa').value.trim();
+  const cep = document.getElementById('cepEmpresa').value.trim();
+  const porte = document.getElementById('porteEmpresa').value;
+
+  if (!razaoSocial) {
+    mostrarAlerta('Por favor, preencha a razão social.', 'error');
+    return;
+  }
+
+  if (cnpj && !validarCNPJ(cnpj)) {
+    mostrarAlerta('CNPJ inválido.', 'error');
+    return;
+  }
+
+  if (email && !validarEmail(email)) {
+    mostrarAlerta('Email inválido.', 'error');
+    return;
+  }
+
+  const novaEmpresa = {
+    razao_social: razaoSocial,
+    cnpj: cnpj || null,
+    email: email || null,
+    contato: telefone || null,
+    endereco: endereco || null,
+    cep: cep || null,
+    porte_empresa: porte || null
+  };
+
+  fetch('http://92.112.178.26:3000/api/empresas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(novaEmpresa)
+  })
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
+    .then(data => {
+      mostrarAlerta(`Empresa ${data.razao_social} cadastrada com sucesso!`);
+      document.getElementById('empresaForm').reset();
+      carregarEmpresas().then(() => {
+        atualizarSelectEmpresa();
+        atualizarEstatisticasMapeamento();
+        if (document.getElementById('empresas').classList.contains('active')) {
+          renderizarEmpresas();
+          atualizarEstatisticasEmpresas();
+        }
+      });
+    })
+    .catch(() => mostrarAlerta('Erro ao cadastrar empresa.', 'error'));
+});
+
+// Formulário de cadastro de contato
+document.getElementById('contatoForm')?.addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const nome = document.getElementById('novoContato').value.trim();
+  const telefone = document.getElementById('telefoneContato').value.trim();
+  const email = document.getElementById('emailContato').value.trim();
+  const cpf = document.getElementById('cpfContato').value.trim();
+  const empresaId = document.getElementById('empresa').value;
+  const treinamentoId = document.getElementById('treinamento').value;
+
+  if (!nome || !telefone || !empresaId) {
+    mostrarAlerta('Por favor, preencha todos os campos obrigatórios.', 'error');
+    return;
+  }
+
+  if (!validarTelefone(telefone)) {
+    mostrarAlerta('Formato de telefone inválido.', 'error');
+    return;
+  }
+
+  if (email && !validarEmail(email)) {
+    mostrarAlerta('Email inválido.', 'error');
+    return;
+  }
+
+  if (cpf && !validarCPF(cpf)) {
+    mostrarAlerta('CPF inválido.', 'error');
+    return;
+  }
+
+  // Verificar se já existe contato com este telefone
+  if (contatos.some(c => c.telefone === telefone)) {
+    mostrarAlerta('Já existe um contato com este telefone.', 'error');
+    return;
+  }
+
+  const novoContato = {
+    nome,
+    telefone,
+    email: email || null,
+    cpf: cpf || null,
+    empresaId: parseInt(empresaId),
+    treinamentoId: treinamentoId ? parseInt(treinamentoId) : null,
+    statusTreinamento: treinamentoId ? 'ativo' : 'sem_treinamento'
+  };
+
+  fetch('http://92.112.178.26:3000/api/contatos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(novoContato)
+  })
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
+    .then(data => {
+      mostrarAlerta(`Contato ${data.nome} cadastrado com sucesso!`);
+      document.getElementById('contatoForm').reset();
+      carregarContatos().then(() => {
+        atualizarEstatisticasMapeamento();
+        if (document.getElementById('empresas').classList.contains('active')) {
+          renderizarEmpresas();
+          atualizarEstatisticasEmpresas();
+        }
+      });
+    })
+    .catch(() => mostrarAlerta('Erro ao cadastrar contato.', 'error'));
+});
+
+// Funções de validação
+function validarEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+function validarCNPJ(cnpj) {
+  const cleaned = cnpj.replace(/\D/g, '');
+  
+  if (cleaned.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(cleaned)) return false; // Todos os dígitos iguais
+
+  let soma = 0;
+  let resto;
+
+  // Validação do primeiro dígito verificador
+  const pesos1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  for (let i = 0; i < 12; i++) {
+    soma += parseInt(cleaned.charAt(i)) * pesos1[i];
+  }
+  
+  resto = soma % 11;
+  const digito1 = resto < 2 ? 0 : 11 - resto;
+  
+  if (parseInt(cleaned.charAt(12)) !== digito1) return false;
+
+  // Validação do segundo dígito verificador
+  soma = 0;
+  const pesos2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  for (let i = 0; i < 13; i++) {
+    soma += parseInt(cleaned.charAt(i)) * pesos2[i];
+  }
+  
+  resto = soma % 11;
+  const digito2 = resto < 2 ? 0 : 11 - resto;
+  
+  return parseInt(cleaned.charAt(13)) === digito2;
+}
+
+function validarCPF(cpf) {
+  const cleaned = cpf.replace(/\D/g, '');
+  
+  if (cleaned.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cleaned)) return false; // Todos os dígitos iguais
+
+  let soma = 0;
+  let resto;
+
+  // Validação do primeiro dígito verificador
+  for (let i = 1; i <= 9; i++) {
+    soma += parseInt(cleaned.substring(i - 1, i)) * (11 - i);
+  }
+  
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cleaned.substring(9, 10))) return false;
+
+  // Validação do segundo dígito verificador
+  soma = 0;
+  for (let i = 1; i <= 10; i++) {
+    soma += parseInt(cleaned.substring(i - 1, i)) * (12 - i);
+  }
+  
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  
+  return resto === parseInt(cleaned.substring(10, 11));
+}
+
+// Aplicar máscaras em tempo real nos formulários
+document.addEventListener('input', function(e) {
+  // Máscara de telefone
+  if (e.target.matches('#telefoneContato, #telefoneEmpresa')) {
+    aplicarMascaraTelefone(e.target);
+  }
+  
+  // Máscara de CNPJ
+  if (e.target.id === 'cnpjEmpresa') {
+    aplicarMascaraCNPJ(e.target);
+  }
+  
+  // Máscara de CPF
+  if (e.target.id === 'cpfContato') {
+    aplicarMascaraCPF(e.target);
+  }
+  
+  // Máscara de CEP
+  if (e.target.id === 'cepEmpresa') {
+    aplicarMascaraCEP(e.target);
+  }
+});
+
+function aplicarMascaraTelefone(input) {
+  let value = input.value.replace(/\D/g, '');
+  
+  if (value.length <= 11) {
+    if (value.length === 11) {
+      value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (value.length === 10) {
+      value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+  } else {
+    if (value.length === 13) {
+      value = value.replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4');
+    } else if (value.length === 12) {
+      value = value.replace(/(\d{2})(\d{2})(\d{4})(\d{4})/, '+$1 ($2) $3-$4');
+    }
+  }
+  
+  input.value = value;
+}
+
+function aplicarMascaraCNPJ(input) {
+  let value = input.value.replace(/\D/g, '');
+  value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+  value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+  value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+  value = value.replace(/(\d{4})(\d)/, '$1-$2');
+  input.value = value;
+}
+
+function aplicarMascaraCPF(input) {
+  let value = input.value.replace(/\D/g, '');
+  value = value.replace(/(\d{3})(\d)/, '$1.$2');
+  value = value.replace(/(\d{3})(\d)/, '$1.$2');
+  value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  input.value = value;
+}
+
+function aplicarMascaraCEP(input) {
+  let value = input.value.replace(/\D/g, '');
+  value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+  input.value = value;
+}
+
+// Buscar CEP automaticamente
+document.getElementById('cepEmpresa')?.addEventListener('blur', function(e) {
+  const cep = e.target.value.replace(/\D/g, '');
+  
+  if (cep.length === 8) {
+    buscarCEP(cep);
+  }
+});
+
+function buscarCEP(cep) {
+  fetch(`https://viacep.com.br/ws/${cep}/json/`)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.erro) {
+        const enderecoInput = document.getElementById('enderecoEmpresa');
+        if (enderecoInput && !enderecoInput.value) {
+          enderecoInput.value = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao buscar CEP:', error);
+    });
+}
+
+// Funcionalidade de pesquisa global
+function implementarPesquisaGlobal() {
+  const searchInput = document.getElementById('searchGlobal');
+  if (searchInput) {
+    searchInput.addEventListener('input', debounce(function(e) {
+      const termo = e.target.value.toLowerCase().trim();
+      
+      if (termo.length >= 2) {
+        pesquisarGlobal(termo);
+      } else {
+        limparResultadosPesquisa();
+      }
+    }, 300));
+  }
+}
+
+function pesquisarGlobal(termo) {
+  const resultados = {
+    contatos: contatos.filter(c => 
+      c.nome.toLowerCase().includes(termo) || 
+      c.telefone.includes(termo) ||
+      c.email?.toLowerCase().includes(termo)
+    ),
+    empresas: empresas.filter(e => 
+      e.razao_social.toLowerCase().includes(termo) ||
+      e.cnpj?.includes(termo) ||
+      e.email?.toLowerCase().includes(termo)
+    ),
+    treinamentos: treinamentos.filter(t => 
+      t.nome.toLowerCase().includes(termo) ||
+      t.descricao?.toLowerCase().includes(termo)
+    )
+  };
+  
+  exibirResultadosPesquisa(resultados);
+}
+
+function exibirResultadosPesquisa(resultados) {
+  const container = document.getElementById('resultadosPesquisa');
+  if (!container) return;
+  
+  let html = '';
+  
+  if (resultados.contatos.length > 0) {
+    html += `<h4>Contatos (${resultados.contatos.length})</h4>`;
+    html += '<div class="search-results-section">';
+    resultados.contatos.forEach(contato => {
+      const empresa = empresas.find(e => e.id === contato.empresaId);
+      html += `
+        <div class="search-result-item" onclick="abrirDetalhesContato(${contato.id})">
+          <strong>${contato.nome}</strong>
+          <p>${formatarTelefone(contato.telefone)} - ${empresa ? empresa.razao_social : 'Empresa não encontrada'}</p>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+  
+  if (resultados.empresas.length > 0) {
+    html += `<h4>Empresas (${resultados.empresas.length})</h4>`;
+    html += '<div class="search-results-section">';
+    resultados.empresas.forEach(empresa => {
+      html += `
+        <div class="search-result-item" onclick="visualizarContatosEmpresa(${empresa.id})">
+          <strong>${empresa.razao_social}</strong>
+          <p>${empresa.cnpj || 'Sem CNPJ'}</p>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+  
+  if (resultados.treinamentos.length > 0) {
+    html += `<h4>Treinamentos (${resultados.treinamentos.length})</h4>`;
+    html += '<div class="search-results-section">';
+    resultados.treinamentos.forEach(treinamento => {
+      html += `
+        <div class="search-result-item" onclick="visualizarContatosTreinamento(${treinamento.id})">
+          <strong>${treinamento.nome}</strong>
+          <p>${treinamento.descricao || 'Sem descrição'}</p>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+  
+  if (html === '') {
+    html = '<p>Nenhum resultado encontrado.</p>';
+  }
+  
+  container.innerHTML = html;
+  container.style.display = 'block';
+}
+
+function limparResultadosPesquisa() {
+  const container = document.getElementById('resultadosPesquisa');
+  if (container) {
+    container.style.display = 'none';
+    container.innerHTML = '';
+  }
+}
+
+// Funcionalidades de filtro e ordenação
+function implementarFiltros() {
+  // Filtro por status de treinamento
+  const filtroStatus = document.getElementById('filtroStatus');
+  if (filtroStatus) {
+    filtroStatus.addEventListener('change', function(e) {
+      const status = e.target.value;
+      filtrarPorStatus(status);
+    });
+  }
+  
+  // Filtro por empresa
+  const filtroEmpresa = document.getElementById('filtroEmpresa');
+  if (filtroEmpresa) {
+    filtroEmpresa.addEventListener('change', function(e) {
+      const empresaId = e.target.value;
+      filtrarPorEmpresa(empresaId);
+    });
+  }
+  
+  // Ordenação
+  const ordenacao = document.getElementById('ordenacao');
+  if (ordenacao) {
+    ordenacao.addEventListener('change', function(e) {
+      const criterio = e.target.value;
+      ordenarResultados(criterio);
+    });
+  }
+}
+
+function filtrarPorStatus(status) {
+  let contatosFiltrados = contatos;
+  
+  if (status === 'com_treinamento') {
+    contatosFiltrados = contatos.filter(c => c.treinamentoId);
+  } else if (status === 'sem_treinamento') {
+    contatosFiltrados = contatos.filter(c => !c.treinamentoId);
+  }
+  
+  // Atualizar visualização baseada na aba atual
+  if (document.getElementById('empresas').classList.contains('active')) {
+    renderizarEmpresasComFiltro(contatosFiltrados);
+  }
+}
+
+function filtrarPorEmpresa(empresaId) {
+  if (!empresaId) {
+    renderizarEmpresas();
+    return;
+  }
+  
+  const contatosFiltrados = contatos.filter(c => c.empresaId === parseInt(empresaId));
+  renderizarEmpresasComFiltro(contatosFiltrados);
+}
+
+function renderizarEmpresasComFiltro(contatosFiltrados) {
+  const empresasComContatos = empresas.filter(empresa => 
+    contatosFiltrados.some(c => c.empresaId === empresa.id)
+  );
+  
+  const empresasGrid = document.getElementById('empresasGrid');
+  
+  if (empresasComContatos.length === 0) {
+    empresasGrid.innerHTML = `
+      <div class="empty-state">
+        <h3>Nenhuma empresa encontrada</h3>
+        <p>Nenhuma empresa corresponde aos filtros aplicados.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Renderizar empresas filtradas (usar mesma lógica da função original)
+  empresasGrid.innerHTML = empresasComContatos.map(empresa => {
+    const contatosEmpresa = contatosFiltrados.filter(c => c.empresaId === empresa.id);
+    const contatosComTreinamento = contatosEmpresa.filter(c => c.treinamentoId);
+    
+    return `
+      <div class="company-card">
+        <div class="company-header">
+          <h3>${empresa.razao_social}</h3>
+          <span class="company-type">${empresa.tipo || empresa.porte || 'Empresa'}</span>
+        </div>
+        <div class="company-info">
+          <p><strong>CNPJ:</strong> ${empresa.cnpj || 'N/A'}</p>
+          <p><strong>Email:</strong> ${empresa.email || 'N/A'}</p>
+          <p><strong>Telefone:</strong> ${formatarTelefone(empresa.contato)}</p>
+        </div>
+        <div class="company-stats">
+          <div class="stat">
+            <span class="stat-number">${contatosEmpresa.length}</span>
+            <span class="stat-label">Contatos</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">${contatosComTreinamento.length}</span>
+            <span class="stat-label">Com Treinamento</span>
+          </div>
+        </div>
+        <div class="company-actions">
+          <button class="btn-primary" onclick="visualizarContatosEmpresa(${empresa.id})">
+            Ver Contatos
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Inicializar funcionalidades adicionais
+document.addEventListener('DOMContentLoaded', function() {
+  implementarPesquisaGlobal();
+  implementarFiltros();
+  
+  // Melhorar acessibilidade
+  implementarNavegacaoTeclado();
+  
+  // Auto-save de formulários
+  implementarAutoSave();
+  
+  // Notificações de sistema
+  verificarNotificacoes();
+});
+
+function implementarNavegacaoTeclado() {
+  document.addEventListener('keydown', function(e) {
+    // Ctrl + 1, 2, 3 para alternar entre abas
+    if (e.ctrlKey && e.key >= '1' && e.key <= '3') {
+      e.preventDefault();
+      const tabs = ['mapeamento', 'empresas', 'treinamentos'];
+      const tabIndex = parseInt(e.key) - 1;
+      if (tabs[tabIndex]) {
+        showTab(tabs[tabIndex]);
+      }
+    }
+    
+    // Enter para submeter formulários
+    if (e.key === 'Enter' && e.target.matches('input:not([type="submit"])')) {
+      const form = e.target.closest('form');
+      if (form) {
+        e.preventDefault();
+        form.requestSubmit();
+      }
+    }
   });
 }
+
+function implementarAutoSave() {
+  const forms = document.querySelectorAll('form');
+  forms.forEach(form => {
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+      input.addEventListener('change', function() {
+        // Salvar dados temporariamente no sessionStorage
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        sessionStorage.setItem(`form_${form.id}`, JSON.stringify(data));
+      });
+    });
+    
+    // Restaurar dados ao carregar a página
+    const savedData = sessionStorage.getItem(`form_${form.id}`);
+    if (savedData) {
+      try {
+        const data = JSON.parse(savedData);
+        Object.entries(data).forEach(([name, value]) => {
+          const input = form.querySelector(`[name="${name}"]`);
+          if (input) input.value = value;
+        });
+      } catch (e) {
+        console.error('Erro ao restaurar dados do formulário:', e);
+      }
+    }
+  });
+}
+
+function verificarNotificacoes() {
+  // Verificar contatos sem treinamento há muito tempo
+  const contatosSemTreinamento = contatos.filter(c => !c.treinamentoId);
+  if (contatosSemTreinamento.length > 0) {
+    // Mostrar notificação discreta
+    setTimeout(() => {
+      const notification = document.createElement('div');
+      notification.className = 'notification warning';
+      notification.innerHTML = `
+        <p><strong>Atenção:</strong> ${contatosSemTreinamento.length} contatos estão sem treinamento.</p>
+        <button onclick="this.parentElement.remove()">×</button>
+      `;
+      document.body.appendChild(notification);
+      
+      // Auto-remover após 10 segundos
+      setTimeout(() => notification.remove(), 10000);
+    }, 3000);
+  }
+}
+
+// Funcionalidade de backup e restore
+function exportarBackup() {
+  const backup = {
+    contatos,
+    empresas,
+    treinamentos,
+    timestamp: new Date().toISOString(),
+    version: '1.0'
+  };
+  
+  const dataStr = JSON.stringify(backup, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(dataBlob);
+  link.download = `backup-gestao-treinamentos-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  mostrarAlerta('Backup exportado com sucesso!', 'success');
+}
+
+function importarBackup(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const backup = JSON.parse(e.target.result);
+      
+      if (!backup.version || !backup.timestamp) {
+        throw new Error('Arquivo de backup inválido');
+      }
+      
+      if (confirm('Tem certeza que deseja importar este backup? Todos os dados atuais serão substituídos.')) {
+        // Aqui você implementaria a lógica para restaurar os dados
+        // Por segurança, seria melhor fazer isso através da API
+        mostrarAlerta('Funcionalidade de importação em desenvolvimento.', 'info');
+      }
+    } catch (error) {
+      console.error('Erro ao importar backup:', error);
+      mostrarAlerta('Erro ao importar backup. Arquivo inválido.', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Performance monitoring
+function monitorarPerformance() {
+  const start = performance.now();
+  
+  return function(operacao) {
+    const end = performance.now();
+    const tempo = end - start;
+    
+    if (tempo > 1000) {
+      console.warn(`Operação lenta detectada: ${operacao} levou ${tempo.toFixed(2)}ms`);
+    }
+    
+    return tempo;
+  };
+}
+
+// Cache simples para melhorar performance
+const cache = {
+  data: new Map(),
+  set(key, value, ttl = 300000) { // TTL padrão: 5 minutos
+    this.data.set(key, {
+      value,
+      expires: Date.now() + ttl
+    });
+  },
+  get(key) {
+    const item = this.data.get(key);
+    if (!item) return null;
+    
+    if (Date.now() > item.expires) {
+      this.data.delete(key);
+      return null;
+    }
+    
+    return item.value;
+  },
+  clear() {
+    this.data.clear();
+  }
+};
+
+// Otimizar carregamento de dados com cache
+const carregarDadosComCache = {
+  async contatos() {
+    const cached = cache.get('contatos');
+    if (cached) return cached;
+    
+    const dados = await carregarContatos();
+    cache.set('contatos', dados);
+    return dados;
+  },
+  
+  async empresas() {
+    const cached = cache.get('empresas');
+    if (cached) return cached;
+    
+    const dados = await carregarEmpresas();
+    cache.set('empresas', dados);
+    return dados;
+  },
+  
+  async treinamentos() {
+    const cached = cache.get('treinamentos');
+    if (cached) return cached;
+    
+    const dados = await carregarTreinamentos();
+    cache.set('treinamentos', dados);
+    return dados;
+  }
+};
