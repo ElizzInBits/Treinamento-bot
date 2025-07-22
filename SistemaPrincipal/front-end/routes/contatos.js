@@ -95,6 +95,7 @@ router.get('/', async (req, res) => {
 });
 
 
+
 // Buscar contato por ID
 router.get('/:id', async (req, res) => {
     try {
