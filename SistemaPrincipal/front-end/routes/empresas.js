@@ -1,4 +1,4 @@
-const { Empresa, Contato } = require('../../BancoDeDados/models');
+const { Empresa, Contato, sequelize } = require('../../BancoDeDados/models');
 const { fn, col } = require('sequelize');
 const express = require('express');
 const router = express.Router();
@@ -14,14 +14,14 @@ router.get('/contatos-por-empresa', async (req, res) => {
       attributes: [
         'id',
         'razao_social',
-        [fn('COUNT', col('contatos.id')), 'totalContatos']  // Conta os contatos associados
+        [sequelize.fn('COUNT', sequelize.col('contatos.id')), 'totalContatos']
       ],
       include: [{
         model: Contato,
-        as: 'contatos',    // ⚠️ MUITO IMPORTANTE: usar exatamente o alias 'contatos' que está no model
-        attributes: []     // não precisa dos dados dos contatos, só queremos contar
+        as: 'contatos',
+        attributes: []
       }],
-      group: ['Empresa.id'],
+      group: ['empresas.id'],
       order: [['razao_social', 'ASC']],
       raw: true
     });
@@ -29,10 +29,11 @@ router.get('/contatos-por-empresa', async (req, res) => {
     res.json(empresas);
 
   } catch (error) {
-    console.error('Erro ao carregar dados para o gráfico:', error);
+    console.error('Erro ao carregar dados para o gráfico:', error.stack || error);
     res.status(500).json({ error: 'Erro ao carregar dados para o gráfico' });
   }
 });
+
 
 
 // Listar todas as empresas
