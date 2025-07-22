@@ -1,5 +1,4 @@
-const { Op } = require('sequelize');
-const { fn, col } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 const express = require('express');
 const router = express.Router();
 const { Empresa, Contato } = require('../../BancoDeDados/models');
@@ -7,6 +6,31 @@ const { Empresa, Contato } = require('../../BancoDeDados/models');
 function limparCNPJ(cnpj) {
   return cnpj.replace(/\D/g, '');
 }
+
+// ➕ Rota para gráfico de contatos por empresa (ANTES de /:id)
+router.get('/contatos-por-empresa', async (req, res) => {
+  try {
+    const empresas = await Empresa.findAll({
+      include: [{
+        model: Contato,
+        as: 'contatos',
+        attributes: []
+      }],
+      attributes: [
+        'razao_social',
+        [fn('COUNT', col('contatos.id')), 'totalContatos']
+      ],
+      group: ['Empresa.id'],
+      order: [['razao_social', 'ASC']],
+      raw: true
+    });
+
+    res.json(empresas);
+  } catch (error) {
+    console.error('Erro ao buscar dados para o gráfico:', error.message);
+    res.status(500).json({ error: 'Erro ao carregar dados para o gráfico' });
+  }
+});
 
 // Listar todas as empresas
 router.get('/', async (req, res) => {
@@ -34,33 +58,6 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
-
-// ➕ Nova rota para gráfico de contatos por empresa
-router.get('/contatos-por-empresa', async (req, res) => {
-  try {
-    const empresas = await Empresa.findAll({
-      include: [{
-        model: Contato,
-        as: 'contatos',
-        attributes: []
-      }],
-      attributes: [
-        'razao_social',
-        [fn('COUNT', col('contatos.id')), 'totalContatos']
-      ],
-      group: ['Empresa.id'], // Corrigido aqui
-      order: [['razao_social', 'ASC']],
-      raw: true // Recomendado para o frontend
-    });
-
-    res.json(empresas);
-  } catch (error) {
-    console.error('Erro ao buscar dados para o gráfico:', error.message);
-    res.status(500).json({ error: 'Erro ao carregar dados para o gráfico' });
-  }
-});
-
-
 
 // Criar nova empresa
 router.post('/', async (req, res) => {
