@@ -10,6 +10,7 @@ module.exports = (sequelize) => {
     razao_social: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: "razao_social",
     },
     cnpj: {
       type: DataTypes.STRING,
