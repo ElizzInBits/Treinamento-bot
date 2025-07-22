@@ -36,111 +36,232 @@
 }
 
 /* Reset e base */
-body {
+* {
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--gray-50);
   color: var(--gray-900);
+  line-height: 1.6;
 }
 
 /* Container principal */
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
 }
 
 /* Cabeçalho */
-header {
-  background-color: var(--primary-color);
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   color: var(--white);
-  padding: 1rem 2rem;
-  box-shadow: var(--shadow-md);
-  transition: var(--transition);
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
 }
 
-header h1 {
-  margin: 0;
+.header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-/* Botões */
-.button {
-  padding: 0.6rem 1.2rem;
-  background-color: var(--accent-color);
-  color: var(--gray-900);
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
+.header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  font-weight: 300;
 }
 
-.button:hover {
-  background-color: var(--accent-light);
-  box-shadow: var(--shadow-md);
-}
-
-/* Cartões */
-.card {
+/* Seção da lista */
+.list-section {
   background-color: var(--white);
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: var(--shadow-lg);
-  transition: var(--transition-slow);
-  margin-bottom: 1.5rem;
+  overflow: hidden;
 }
 
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
+/* Tabela */
+#tabelaContatos {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.9rem;
+  overflow: hidden;
+  border-radius: 8px;
 }
 
-/* Alertas */
-.alert {
-  padding: 1rem;
-  border-radius: 6px;
-  margin: 1rem 0;
-  font-weight: bold;
+/* Cabeçalho da tabela */
+#tabelaContatos thead {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: var(--white);
 }
 
-.alert.success {
+#tabelaContatos thead th {
+  padding: 1rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+}
+
+/* Corpo da tabela */
+#tabelaContatos tbody tr {
+  border-bottom: 1px solid var(--gray-200);
+  transition: var(--transition);
+}
+
+#tabelaContatos tbody tr:hover {
+  background-color: var(--gray-50);
+  transform: translateY(-1px);
+}
+
+#tabelaContatos tbody tr:last-child {
+  border-bottom: none;
+}
+
+#tabelaContatos tbody td {
+  padding: 1rem 0.75rem;
+  vertical-align: middle;
+  border: none;
+}
+
+/* Estilização de status */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-ativo {
   background-color: var(--success);
   color: var(--white);
 }
 
-.alert.error {
-  background-color: var(--error);
+.status-inativo {
+  background-color: var(--gray-400);
   color: var(--white);
 }
 
-.alert.warning {
+.status-pendente {
   background-color: var(--warning);
   color: var(--gray-900);
 }
 
-.alert.info {
-  background-color: var(--info);
-  color: var(--white);
+/* Responsividade */
+@media (max-width: 1024px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  #tabelaContatos {
+    font-size: 0.8rem;
+  }
+  
+  #tabelaContatos thead th,
+  #tabelaContatos tbody td {
+    padding: 0.75rem 0.5rem;
+  }
 }
 
-/* Formulários */
-input,
-select,
-textarea {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--gray-300);
-  border-radius: 6px;
-  width: 100%;
-  margin-bottom: 1rem;
-  transition: var(--transition);
+@media (max-width: 768px) {
+  .header {
+    padding: 1.5rem;
+  }
+  
+  .header h1 {
+    font-size: 1.8rem;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .list-section {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+  
+  #tabelaContatos {
+    min-width: 700px;
+  }
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: var(--secondary-color);
-  outline: none;
-  box-shadow: var(--shadow-sm);
+@media (max-width: 480px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
+  .header {
+    padding: 1rem;
+  }
+  
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header p {
+    font-size: 1rem;
+  }
+  
+  .list-section {
+    padding: 0.5rem;
+  }
+}
+
+/* Estados vazios */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--gray-500);
+}
+
+.empty-state h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--gray-600);
+}
+
+.empty-state p {
+  font-size: 0.9rem;
+}
+
+/* Animações de carregamento */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--gray-200);
+  border-top: 4px solid var(--secondary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
