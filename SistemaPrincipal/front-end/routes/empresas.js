@@ -1,7 +1,8 @@
 const { Op } = require('sequelize');
+const { fn, col } = require('sequelize');
 const express = require('express');
 const router = express.Router();
-const { Empresa } = require('../../BancoDeDados/models');
+const { Empresa, Contato } = require('../../BancoDeDados/models');
 
 function limparCNPJ(cnpj) {
   return cnpj.replace(/\D/g, '');
@@ -40,15 +41,16 @@ router.get('/contatos-por-empresa', async (req, res) => {
     const empresas = await Empresa.findAll({
       include: [{
         model: Contato,
-        as: 'contatos', // use o mesmo `as` que você definiu em Empresa.associate
+        as: 'contatos',
         attributes: []
       }],
       attributes: [
         'razao_social',
         [fn('COUNT', col('contatos.id')), 'totalContatos']
       ],
-      group: ['empresas.id'],
-      order: [['razao_social', 'ASC']]
+      group: ['Empresa.id'], // Corrigido aqui
+      order: [['razao_social', 'ASC']],
+      raw: true // Recomendado para o frontend
     });
 
     res.json(empresas);
