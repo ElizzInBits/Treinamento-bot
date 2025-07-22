@@ -42,11 +42,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 //dashboard
 document.addEventListener("DOMContentLoaded", function () {
-  fetch('/api/empresas/com-contatos') // Ajuste o caminho se necessário
-    .then(res => res.json())
-    .then(dados => {
-      const labels = dados.map(emp => emp.razao_social);
-      const dadosContatos = dados.map(emp => emp.totalContatos);
+  fetch('/api/empresas/contatos-por-empresa')
+    .then(response => response.json())
+    .then(data => {
+      const labels = data.map(item => item.razao_social);
+      const valores = data.map(item => parseInt(item.totalContatos));
 
       const ctx = document.getElementById("graficoEmpresas").getContext("2d");
 
@@ -56,23 +56,27 @@ document.addEventListener("DOMContentLoaded", function () {
           labels: labels,
           datasets: [{
             label: 'Total de Contatos por Empresa',
-            data: dadosContatos,
-            backgroundColor: 'rgba(54, 162, 235, 0.6)',
-            borderColor: 'rgba(54, 162, 235, 1)',
+            data: valores,
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 1
           }]
         },
         options: {
           responsive: true,
           plugins: {
-            legend: { position: 'top' },
+            legend: {
+              position: 'top'
+            },
             title: {
               display: true,
               text: 'Distribuição de Contatos por Empresa'
             }
           },
           scales: {
-            y: { beginAtZero: true }
+            y: {
+              beginAtZero: true
+            }
           }
         }
       });
@@ -81,6 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error('Erro ao carregar gráfico:', error);
     });
 });
+
 
 
 // Funções de navegação
