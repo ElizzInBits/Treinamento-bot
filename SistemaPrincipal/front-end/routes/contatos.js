@@ -83,7 +83,7 @@ router.get('/', async (req, res) => {
       include: {
         model: Empresa,
         as: 'empresaRef',
-        attributes: ['razaoSocial']
+        attributes: ['razao_social']
       },
       order: [['nome', 'ASC']]
     });
