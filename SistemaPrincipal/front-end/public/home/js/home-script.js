@@ -110,7 +110,7 @@ function showTab(tabName) {
 }
 
 // Formatação de telefone
-/**function formatarTelefone(telefone) {
+function formatarTelefone(telefone) {
   if (!telefone) return 'N/A';
 
   const cleaned = telefone.replace(/\D/g, '');
@@ -130,7 +130,7 @@ function showTab(tabName) {
 function validarTelefone(telefone) {
   const cleaned = telefone.replace(/\D/g, '');
   return cleaned.length >= 10 && cleaned.length <= 13;
-}**/
+}
 
 // Funções de alerta
 function mostrarAlerta(mensagem, tipo = 'success') {
