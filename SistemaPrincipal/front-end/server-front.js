@@ -96,7 +96,7 @@ console.log('✅ Rotas da API registradas');
 
 // ✅ 7. Rota de teste básica
 app.get('/test', (req, res) => {
-    res.json({ 
+    res.json({
         message: 'Servidor funcionando!',
         timestamp: new Date().toISOString(),
         routes: {
@@ -112,6 +112,10 @@ app.get('/test', (req, res) => {
 const homePath = path.join(__dirname, 'public', 'home', 'home-index.html');
 const autoCadastroPath = path.join(__dirname, 'public', 'autoCadastro', 'cadastro-index.html');
 const emprePath = path.join(__dirname, 'public', 'empreCadastro', 'empre-index.html');
+
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date() });
+});
 
 app.get('/', (req, res) => {
     fs.existsSync(homePath) ? res.sendFile(homePath) : res.json({ error: 'Painel 1 não encontrado', path: homePath });
@@ -132,7 +136,7 @@ app.get('/empre', (req, res) => {
 // ✅ 9. Middleware de erro
 app.use((err, req, res, next) => {
     console.error('❌ Erro capturado:', err.stack);
-    res.status(500).json({ 
+    res.status(500).json({
         error: 'Erro interno do servidor',
         message: err.message,
         timestamp: new Date().toISOString()
@@ -142,7 +146,7 @@ app.use((err, req, res, next) => {
 // ✅ 10. Rota 404
 app.use((req, res) => {
     console.log(`❌ Rota não encontrada: ${req.method} ${req.path}`);
-    res.status(404).json({ 
+    res.status(404).json({
         error: 'Rota não encontrada',
         method: req.method,
         path: req.path,
@@ -154,7 +158,7 @@ app.use((req, res) => {
 async function iniciarServidor() {
     try {
         console.log('🚀 Iniciando servidor...');
-        
+
         const server = app.listen(PORT, () => {
             console.log(`✅ Servidor rodando na porta ${PORT}`);
             console.log(`🔗 Teste: http://92.112.178.26:${PORT}/test`);
