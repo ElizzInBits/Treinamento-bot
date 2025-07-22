@@ -39,49 +39,47 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-document.addEventListener("DOMContentLoaded", function () {
-  const ctx = document.getElementById("graficoEmpresas").getContext("2d");
 
-  const grafico = new Chart(ctx, {
-    type: 'bar', // tipos: bar, line, pie, doughnut, radar, etc.
-    data: {
-      labels: ['Empresa A', 'Empresa B', 'Empresa C', 'Empresa D'],
-      datasets: [{
-        label: 'Total de Contatos por Empresa',
-        data: [12, 19, 7, 14],
-        backgroundColor: [
-          'rgba(75, 192, 192, 0.6)',
-          'rgba(54, 162, 235, 0.6)',
-          'rgba(255, 206, 86, 0.6)',
-          'rgba(255, 99, 132, 0.6)'
-        ],
-        borderColor: [
-          'rgba(75, 192, 192, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(255, 99, 132, 1)'
-        ],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'top',
+//dashboard
+document.addEventListener("DOMContentLoaded", function () {
+  fetch('/api/empresas/com-contatos') // Ajuste o caminho se necessário
+    .then(res => res.json())
+    .then(dados => {
+      const labels = dados.map(emp => emp.razao_social);
+      const dadosContatos = dados.map(emp => emp.totalContatos);
+
+      const ctx = document.getElementById("graficoEmpresas").getContext("2d");
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total de Contatos por Empresa',
+            data: dadosContatos,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }]
         },
-        title: {
-          display: true,
-          text: 'Distribuição de Contatos por Empresa'
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            title: {
+              display: true,
+              text: 'Distribuição de Contatos por Empresa'
+            }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
         }
-      },
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
-  });
+      });
+    })
+    .catch(error => {
+      console.error('Erro ao carregar gráfico:', error);
+    });
 });
 
 
