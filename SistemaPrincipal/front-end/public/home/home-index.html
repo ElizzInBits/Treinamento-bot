@@ -28,7 +28,6 @@
     </header>
 
     <!-- Navegação por Tabs -->
-    <!-- Navegação por Tabs -->
     <nav class="tab-navigation">
       <div class="nav-container">
         <button class="nav-tab active" onclick="showTab('mapeamento')" data-tab="mapeamento">
@@ -48,137 +47,121 @@
       <!-- Alerts -->
       <div id="alerts" class="alerts-container"></div>
 
-      <!-- Aba Mapeamento (antigo cadastro) -->
+      <!-- Aba Mapeamento -->
       <section id="mapeamento" class="tab-content active">
         <div class="content-card">
           <div class="card-header">
             <h2>Dashboard de Mapeamento</h2>
-            <p>
-              Visualize os principais indicadores e análises de dados do
-              sistema
-            </p>
+            <p>Visualize os principais indicadores e análises de dados do sistema</p>
           </div>
 
           <!-- Cards de Indicadores -->
-            <div class="dashboard-stats">
-              <div class="stat-item">
-                <div class="stat-value" id="mapTotalContatos">0</div>
-                <div class="stat-label">Total de Contatos</div>
+          <div class="dashboard-stats">
+            <div class="stat-item" id="cardTotalContatos" style="cursor: pointer;">
+              <div class="stat-value" id="mapTotalContatos">0</div>
+              <div class="stat-label">Total de Contatos</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="mapContatosComTreinamento">0</div>
+              <div class="stat-label">Contatos com Treinamento</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="mapEmpresasAtivas">0</div>
+              <div class="stat-label">Empresas Ativas</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="mapTreinamentosDisponiveis">0</div>
+              <div class="stat-label">Treinamentos Disponíveis</div>
+            </div>
+          </div>
+
+          <!-- Gráfico -->
+          <div class="charts-container">
+            <canvas id="graficoEmpresas" width="400" height="200"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Aba Empresas -->
+      <section id="empresas" class="tab-content">
+        <div class="content-card">
+          <div class="card-header">
+            <h2>Empresas Cadastradas</h2>
+            <p>Visualize e gerencie as empresas e seus contatos</p>
+          </div>
+
+          <div class="dashboard-stats">
+            <div class="stat-item">
+              <div class="stat-value" id="totalEmpresas">0</div>
+              <div class="stat-label">Total de Empresas</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="totalContatos">0</div>
+              <div class="stat-label">Total de Contatos</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="contatosComTreinamento">0</div>
+              <div class="stat-label">Com Treinamento</div>
+            </div>
+          </div>
+
+          <div class="loading-container" id="loadingEmpresas">
+            <div class="loading-spinner"></div>
+            <p>Carregando empresas...</p>
+          </div>
+
+          <div id="empresasGrid" class="companies-grid"></div>
+        </div>
+      </section>
+
+      <!-- Aba Treinamentos -->
+      <section id="treinamentos" class="tab-content">
+        <div class="content-card">
+          <div class="card-header">
+            <h2>Gerenciar Treinamentos</h2>
+            <p>Crie e gerencie treinamentos disponíveis no sistema</p>
+          </div>
+
+          <div class="training-form-section">
+            <h3>Criar Novo Treinamento</h3>
+            <form id="treinamentoForm" class="professional-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="novoTreinamento">Nome do Treinamento <span class="required">*</span></label>
+                  <input type="text" id="novoTreinamento" name="novoTreinamento" required
+                    placeholder="Digite o nome do treinamento" maxlength="100" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label for="descricaoTreinamento">Descrição</label>
+                  <input type="text" id="descricaoTreinamento" name="descricaoTreinamento"
+                    placeholder="Breve descrição do treinamento" maxlength="200" class="form-control" />
+                </div>
               </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="mapContatosComTreinamento">0</div>
-          <div class="stat-label">Contatos com Treinamento</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="mapEmpresasAtivas">0</div>
-          <div class="stat-label">Empresas Ativas</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="mapTreinamentosDisponiveis">0</div>
-          <div class="stat-label">Treinamentos Disponíveis</div>
-        </div>
-  </div>
-
-  <!-- Espaço para gráficos -->
-  <div class="charts-container">
-    <canvas id="graficoEmpresas" width="400" height="200"></canvas>
-  </div>
-  </div>
-  </section>
-
-  <!-- Aba Empresas -->
-  <section id="empresas" class="tab-content">
-    <div class="content-card">
-      <div class="card-header">
-        <h2>Empresas Cadastradas</h2>
-        <p>Visualize e gerencie as empresas e seus contatos</p>
-      </div>
-
-      <!-- Dashboard de Estatísticas -->
-      <div class="dashboard-stats">
-        <div class="stat-item">
-          <div class="stat-value" id="totalEmpresas">0</div>
-          <div class="stat-label">Total de Empresas</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="totalContatos">0</div>
-          <div class="stat-label">Total de Contatos</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="contatosComTreinamento">0</div>
-          <div class="stat-label">Com Treinamento</div>
-        </div>
-      </div>
-
-      <!-- Loading -->
-      <div class="loading-container" id="loadingEmpresas">
-        <div class="loading-spinner"></div>
-        <p>Carregando empresas...</p>
-      </div>
-
-      <!-- Grid de Empresas -->
-      <div id="empresasGrid" class="companies-grid"></div>
-    </div>
-  </section>
-
-  <!-- Aba Treinamentos -->
-  <section id="treinamentos" class="tab-content">
-    <div class="content-card">
-      <div class="card-header">
-        <h2>Gerenciar Treinamentos</h2>
-        <p>Crie e gerencie treinamentos disponíveis no sistema</p>
-      </div>
-
-      <!-- Formulário de Novo Treinamento -->
-      <div class="training-form-section">
-        <h3>Criar Novo Treinamento</h3>
-        <form id="treinamentoForm" class="professional-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="novoTreinamento">Nome do Treinamento
-                <span class="required">*</span></label>
-              <input type="text" id="novoTreinamento" name="novoTreinamento" required
-                placeholder="Digite o nome do treinamento" maxlength="100" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label for="descricaoTreinamento">Descrição</label>
-              <input type="text" id="descricaoTreinamento" name="descricaoTreinamento"
-                placeholder="Breve descrição do treinamento" maxlength="200" class="form-control" />
-            </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">Criar Treinamento</button>
+              </div>
+            </form>
           </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-primary">
-              Criar Treinamento
-            </button>
+
+          <div class="loading-container" id="loadingTreinamentos">
+            <div class="loading-spinner"></div>
+            <p>Carregando treinamentos...</p>
           </div>
-        </form>
-      </div>
 
-      <!-- Loading Treinamentos -->
-      <div class="loading-container" id="loadingTreinamentos">
-        <div class="loading-spinner"></div>
-        <p>Carregando treinamentos...</p>
-      </div>
-
-      <!-- Grid de Treinamentos -->
-      <div id="treinamentosGrid" class="training-cards"></div>
-    </div>
-  </section>
-  </main>
+          <div id="treinamentosGrid" class="training-cards"></div>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <!-- Modal para visualizar contatos da empresa -->
+  <!-- Modais -->
   <div id="modalContatosEmpresa" class="modal-overlay">
     <div class="modal-container">
       <div class="modal-header">
         <h3 id="modalTituloEmpresa">Contatos da Empresa</h3>
-        <button class="modal-close" onclick="fecharModalContatosEmpresa()">
-          X
-        </button>
+        <button class="modal-close" onclick="fecharModalContatosEmpresa()">X</button>
       </div>
       <div class="modal-content">
-        <!-- Barra de Pesquisa dentro do modal -->
         <div class="search-section">
           <div class="search-input-wrapper">
             <input type="text" id="searchInputModal" placeholder="Pesquisar contatos por nome ou telefone..."
@@ -190,7 +173,6 @@
     </div>
   </div>
 
-  <!-- Modal para visualizar contatos do treinamento -->
   <div id="modalContatos" class="modal-overlay">
     <div class="modal-container">
       <div class="modal-header">
@@ -201,14 +183,11 @@
     </div>
   </div>
 
-  <!-- Modal para editar contato -->
   <div id="modalEditarContato" class="modal-overlay">
     <div class="modal-container">
       <div class="modal-header">
         <h3>Editar Contato</h3>
-        <button class="modal-close" onclick="fecharModalEditarContato()">
-          X
-        </button>
+        <button class="modal-close" onclick="fecharModalEditarContato()">X</button>
       </div>
       <div class="modal-content">
         <form id="editarContatoForm" class="professional-form">
@@ -234,29 +213,30 @@
             </select>
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn-primary">
-              Salvar Alterações
-            </button>
+            <button type="submit" class="btn-primary">Salvar Alterações</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- Modal para detalhes do contato -->
   <div id="modalDetalhesContato" class="modal-overlay">
     <div class="modal-container">
       <div class="modal-header">
         <h3>Detalhes do Contato</h3>
-        <button class="modal-close" onclick="fecharModalDetalhesContato()">
-          X
-        </button>
+        <button class="modal-close" onclick="fecharModalDetalhesContato()">X</button>
       </div>
       <div class="modal-content" id="detalhesContatoConteudo"></div>
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="js/home-script.js"></script>
+  <script>
+    document.getElementById("cardTotalContatos").addEventListener("click", function () {
+      window.location.href = "SistemaPrincipal/front-end/public/home/lista-contatos.html";
+    });
+  </script>
 </body>
 
 </html>
