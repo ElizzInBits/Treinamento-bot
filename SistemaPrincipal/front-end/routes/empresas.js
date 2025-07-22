@@ -34,6 +34,32 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Rota para retornar total de contatos por empresa
+router.get('/com-contatos', async (req, res) => {
+  const { Empresa, Contato } = require('../../BancoDeDados/models');
+
+  try {
+    const empresas = await Empresa.findAll({
+      include: [{
+        model: Contato,
+        attributes: [], // Não precisa dos dados dos contatos, só a contagem
+      }],
+      attributes: [
+        'razao_social',
+        [require('sequelize').fn('COUNT', require('sequelize').col('contatos.id')), 'totalContatos']
+      ],
+      group: ['empresas.id'],
+      order: [['razao_social', 'ASC']]
+    });
+
+    res.json(empresas);
+  } catch (error) {
+    console.error('Erro ao obter dados do gráfico:', error);
+    res.status(500).json({ error: 'Erro ao obter dados para o gráfico' });
+  }
+});
+
+
 // Criar nova empresa
 router.post('/', async (req, res) => {
   try {
