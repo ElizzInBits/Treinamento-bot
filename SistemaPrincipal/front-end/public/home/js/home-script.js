@@ -162,6 +162,10 @@ function atualizarEstatisticasMapeamento() {
   document.getElementById('mapTreinamentosDisponiveis').textContent = treinamentosDisponiveis;
 }
 
+document.getElementById("cardTotalContatos").addEventListener("click", function () {
+    // Redireciona para a página de lista de contatos
+    window.location.href = "/home/lista-contatos.html";
+  });
 
 // Atualizar select de empresas
 function atualizarSelectEmpresa() {
