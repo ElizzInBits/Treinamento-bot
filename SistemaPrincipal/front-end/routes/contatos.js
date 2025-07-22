@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Contato } = require('../../BancoDeDados/models');
+const { Contato, Empresa } = require('../../BancoDeDados/models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../../BancoDeDados/database');
 
@@ -78,16 +78,22 @@ function gerarVariacoes(numeroCompleto) {
 
 // Listar todos os contatos
 router.get('/', async (req, res) => {
-    try {
-        const contatos = await Contato.findAll({
-            order: [['nome', 'ASC']]
-        });
-        res.json(contatos);
-    } catch (error) {
-        console.error('Erro ao listar contatos:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
+  try {
+    const contatos = await Contato.findAll({
+      include: {
+        model: Empresa,
+        as: 'empresaRef',
+        attributes: ['razaoSocial']
+      },
+      order: [['nome', 'ASC']]
+    });
+    res.json(contatos);
+  } catch (error) {
+    console.error('Erro ao listar contatos:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
+
 
 // Buscar contato por ID
 router.get('/:id', async (req, res) => {
