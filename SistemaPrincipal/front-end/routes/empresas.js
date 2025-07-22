@@ -1,7 +1,7 @@
-const { Op, fn, col } = require('sequelize');
+const { Empresa, Contato } = require('../../BancoDeDados/models');
+const { fn, col } = require('sequelize');
 const express = require('express');
 const router = express.Router();
-const { Empresa, Contato } = require('../../BancoDeDados/models');
 
 function limparCNPJ(cnpj) {
   return cnpj.replace(/\D/g, '');
@@ -11,26 +11,29 @@ function limparCNPJ(cnpj) {
 router.get('/contatos-por-empresa', async (req, res) => {
   try {
     const empresas = await Empresa.findAll({
+      attributes: [
+        'id',
+        'razao_social',
+        [fn('COUNT', col('contatos.id')), 'totalContatos']  // Conta os contatos associados
+      ],
       include: [{
         model: Contato,
-        as: 'contatos',
-        attributes: []
+        as: 'contatos',    // ⚠️ MUITO IMPORTANTE: usar exatamente o alias 'contatos' que está no model
+        attributes: []     // não precisa dos dados dos contatos, só queremos contar
       }],
-      attributes: [
-        'razao_social',
-        [fn('COUNT', col('contatos.id')), 'totalContatos']
-      ],
       group: ['Empresa.id'],
       order: [['razao_social', 'ASC']],
       raw: true
     });
 
     res.json(empresas);
+
   } catch (error) {
-    console.error('Erro ao buscar dados para o gráfico:', error.message);
+    console.error('Erro ao carregar dados para o gráfico:', error);
     res.status(500).json({ error: 'Erro ao carregar dados para o gráfico' });
   }
 });
+
 
 // Listar todas as empresas
 router.get('/', async (req, res) => {
