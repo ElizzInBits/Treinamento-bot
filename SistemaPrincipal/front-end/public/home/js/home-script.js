@@ -525,7 +525,7 @@ function carregarTreinamentos() {
       return res.json();
     })
     .then(data => {
-      treinamentos = data;
+      treinamentos = Array.isArray(data) ? data : (data.treinamentos || []);
       renderizarTreinamentos();
     })
     .catch(error => {
