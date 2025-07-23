@@ -16,15 +16,38 @@ router.get('/', async (req, res) => {
 });
 
 // Criar novo treinamento
+
 router.post('/', async (req, res) => {
   try {
-    const { nome, descricao } = req.body;
+    console.log('📝 Corpo da requisição:', req.body);  /
 
+    const {
+      nome,
+      descricao = '',   
+      modalidade,
+      cargaHoraria,
+      tipo,
+      emConformidade,
+      aproveitamento,
+      conteudoProgramatico,
+      instrutor,
+      qualificacaoInstrutor = '',
+      instrutoresAdicionais = '',
+      responsavel,
+      cargoResponsavel = '',
+      areaResponsavel,
+      observacoes = ''
+    } = req.body;
+
+    // Validação mínima
     if (!nome || !nome.trim()) {
       return res.status(400).json({ error: 'Nome do treinamento é obrigatório' });
     }
+    if (!modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudoProgramatico || !instrutor || !responsavel || !areaResponsavel) {
+      return res.status(400).json({ error: 'Preencha todos os campos obrigatórios' });
+    }
 
-    // Verifica se já existe treinamento com o mesmo nome
+    // Checar existência do nome
     const existente = await Treinamento.findOne({ where: { nome: nome.trim() } });
     if (existente) {
       return res.status(400).json({ error: 'Já existe um treinamento com este nome' });
@@ -32,16 +55,31 @@ router.post('/', async (req, res) => {
 
     const novo = await Treinamento.create({
       nome: nome.trim(),
-      descricao: descricao || ''
+      descricao,
+      modalidade,
+      cargaHoraria,
+      tipo,
+      emConformidade,
+      aproveitamento,
+      conteudo: conteudoProgramatico,
+      instrutor,
+      qualificacaoInstrutor,
+      instrutoresAdicionais,
+      responsavel,
+      cargoResponsavel,
+      areaResponsavel,
+      observacoes
     });
 
-    res.status(201).json({ treinamento: novo });
+    return res.status(201).json(novo);
 
   } catch (err) {
-    console.error('Erro ao criar treinamento:', err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('❌ Erro ao criar treinamento:', err);
+    return res.status(500).json({ error: 'Erro interno do servidor', details: err.message });
   }
 });
+
+
 
 // Atualizar treinamento pelo ID
 router.put('/:id', async (req, res) => {

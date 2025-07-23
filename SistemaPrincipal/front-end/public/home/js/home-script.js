@@ -612,14 +612,23 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   }
 
 const novoTreinamento = {
-  nome: document.getElementById('novoTreinamento').value.trim(),
-  descricao: document.getElementById('conteudoProgramatico').value.trim(),
-  modalidade: document.getElementById('modalidadeTreinamento').value.trim(),
-  cargaHoraria: parseInt(document.getElementById('cargaHoraria').value.trim()),
-  tipo: document.getElementById('tipoTreinamento').value.trim(),
-  instrutor: document.getElementById('nomeInstrutor').value.trim(),
-  areaResponsavel: document.getElementById('areaResponsavel').value.trim()
+  nome: nome,
+  descricao: conteudo,
+  modalidade: modalidade,
+  cargaHoraria: cargaHoraria,
+  tipo: tipo,
+  emConformidade: emConformidade,
+  aproveitamento: aproveitamento,
+  conteudoProgramatico: conteudo,
+  instrutor: instrutor,
+  qualificacaoInstrutor: qualificacaoInstrutor,
+  instrutoresAdicionais: instrutoresAdicionais,
+  responsavel: responsavel,
+  cargoResponsavel: cargoResponsavel,
+  areaResponsavel: areaResponsavel,
+  observacoes: observacoes
 };
+
 
 
 
@@ -720,6 +729,13 @@ function removerTreinamento(id) {
     })
     .catch(() => mostrarAlerta('Erro ao remover treinamento.', 'error'));
 }
+  // Formata os dados dos treinamentos
+  const treinamentosSheet = treinamentos.map(treinamento => ({
+    ID: treinamento.id,
+    Nome: treinamento.nome,
+    Descricao: treinamento.descricao,
+    Total_Contatos: contatos.filter(c => c.treinamentoId === treinamento.id).length
+  }));
 
 // Exportar dados em XLS
 function exportarDadosXLS() {
@@ -759,13 +775,7 @@ function exportarDadosXLS() {
     };
   });
 
-  // Formata os dados dos treinamentos
-  const treinamentosSheet = treinamentos.map(treinamento => ({
-    ID: treinamento.id,
-    Nome: treinamento.nome,
-    Descricao: treinamento.descricao,
-    Total_Contatos: contatos.filter(c => c.treinamentoId === treinamento.id).length
-  }));
+
 
   // Cria um novo workbook (arquivo XLS)
   const wb = XLSX.utils.book_new();
