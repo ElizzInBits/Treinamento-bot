@@ -563,7 +563,7 @@ function renderizarTreinamentos() {
           <span class="training-count">${contatosComTreinamento.length} contatos</span>
         </div>
         <div class="training-content">
-          <p class="training-description">${treinamento.descricao || 'Sem descrição'}</p>
+          <p class="training-description">${treinamento.conteudo || 'Sem descrição'}</p>
           <div class="training-details">
             <p><strong>Modalidade:</strong> ${treinamento.modalidade || 'N/A'}</p>
             <p><strong>Carga Horária:</strong> ${treinamento.cargaHoraria || 'N/A'} h</p>
