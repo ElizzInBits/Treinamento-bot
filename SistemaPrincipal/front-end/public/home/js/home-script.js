@@ -1370,7 +1370,7 @@ function exibirResultadosPesquisa(resultados) {
       html += `
         <div class="search-result-item" onclick="visualizarContatosTreinamento(${treinamento.id})">
           <strong>${treinamento.nome}</strong>
-          <p>${treinamento.descricao || 'Sem descrição'}</p>
+          <p>${treinamento.conteudo|| 'Sem descrição'}</p>
         </div>
       `;
     });
