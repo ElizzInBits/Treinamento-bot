@@ -1,7 +1,8 @@
 // routes/treinamentos.js
 const express = require('express');
 const router = express.Router();
-const Treinamento = require('../../BancoDeDados/models/treinamento'); // ajuste o caminho se necessário
+const Treinamento = require('../../BancoDeDados/models/treinamento'); 
+
 
 // Listar todos os treinamentos
 router.get('/', async (req, res) => {
