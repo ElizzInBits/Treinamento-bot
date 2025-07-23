@@ -564,7 +564,6 @@ function renderizarTreinamentos() {
         </div>
         <div class="training-content">
           <p class="training-description">${treinamento.descricao || 'Sem descrição'}</p>
-                  
           <div class="training-details">
             <p><strong>Modalidade:</strong> ${treinamento.modalidade || 'N/A'}</p>
             <p><strong>Carga Horária:</strong> ${treinamento.cargaHoraria || 'N/A'} h</p>
@@ -579,6 +578,9 @@ function renderizarTreinamentos() {
         <div class="training-actions">
           <button class="btn-primary" onclick="visualizarContatosTreinamento(${treinamento.id})">
             Ver Contatos
+          </button>
+          <button class="btn-info" onclick="abrirDetalhesTreinamento(${treinamento.id})">
+            Detalhes / Editar
           </button>
           <button class="btn-secondary" onclick="removerTreinamento(${treinamento.id})">
             Remover
@@ -613,23 +615,23 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
     return;
   }
 
-const novoTreinamento = {
-  nome: nome,
-  descricao: conteudo,
-  modalidade: modalidade,
-  cargaHoraria: cargaHoraria,
-  tipo: tipo,
-  emConformidade: emConformidade,
-  aproveitamento: aproveitamento,
-  conteudoProgramatico: conteudo,
-  instrutor: instrutor,
-  qualificacaoInstrutor: qualificacaoInstrutor,
-  instrutoresAdicionais: instrutoresAdicionais,
-  responsavel: responsavel,
-  cargoResponsavel: cargoResponsavel,
-  areaResponsavel: areaResponsavel,
-  observacoes: observacoes
-};
+  const novoTreinamento = {
+    nome: nome,
+    descricao: conteudo,
+    modalidade: modalidade,
+    cargaHoraria: cargaHoraria,
+    tipo: tipo,
+    emConformidade: emConformidade,
+    aproveitamento: aproveitamento,
+    conteudoProgramatico: conteudo,
+    instrutor: instrutor,
+    qualificacaoInstrutor: qualificacaoInstrutor,
+    instrutoresAdicionais: instrutoresAdicionais,
+    responsavel: responsavel,
+    cargoResponsavel: cargoResponsavel,
+    areaResponsavel: areaResponsavel,
+    observacoes: observacoes
+  };
 
   fetch('http://92.112.178.26:3000/api/treinamentos', {
     method: 'POST',
@@ -728,13 +730,13 @@ function removerTreinamento(id) {
     })
     .catch(() => mostrarAlerta('Erro ao remover treinamento.', 'error'));
 }
-  // Formata os dados dos treinamentos
-  const treinamentosSheet = treinamentos.map(treinamento => ({
-    ID: treinamento.id,
-    Nome: treinamento.nome,
-    Descricao: treinamento.descricao,
-    Total_Contatos: contatos.filter(c => c.treinamentoId === treinamento.id).length
-  }));
+// Formata os dados dos treinamentos
+const treinamentosSheet = treinamentos.map(treinamento => ({
+  ID: treinamento.id,
+  Nome: treinamento.nome,
+  Descricao: treinamento.descricao,
+  Total_Contatos: contatos.filter(c => c.treinamentoId === treinamento.id).length
+}));
 
 // Exportar dados em XLS
 function exportarDadosXLS() {
@@ -1630,6 +1632,87 @@ function importarBackup(file) {
     }
   };
   reader.readAsText(file);
+}
+
+function abrirDetalhesTreinamento(treinamentoId) {
+  const treinamento = treinamentos.find(t => t.id === treinamentoId);
+  if (!treinamento) return;
+
+  document.getElementById('tituloModalTreinamento').textContent = `Treinamento: ${treinamento.nome}`;
+  document.getElementById('conteudoModalTreinamento').innerHTML = `
+    <form id="editarTreinamentoForm" class="professional-form">
+      <div class="form-group">
+        <label for="editarNomeTreinamento">Nome</label>
+        <input type="text" id="editarNomeTreinamento" value="${treinamento.nome}" required />
+      </div>
+      <div class="form-group">
+        <label for="editarModalidadeTreinamento">Modalidade</label>
+        <input type="text" id="editarModalidadeTreinamento" value="${treinamento.modalidade || ''}" required />
+      </div>
+      <div class="form-group">
+        <label for="editarCargaHoraria">Carga Horária</label>
+        <input type="number" id="editarCargaHoraria" value="${treinamento.cargaHoraria || ''}" required />
+      </div>
+      <div class="form-group">
+        <label for="editarTipoTreinamento">Tipo</label>
+        <input type="text" id="editarTipoTreinamento" value="${treinamento.tipo || ''}" required />
+      </div>
+      <div class="form-group">
+        <label for="editarInstrutor">Instrutor</label>
+        <input type="text" id="editarInstrutor" value="${treinamento.instrutor || ''}" />
+      </div>
+      <div class="form-group">
+        <label for="editarAreaResponsavel">Área Responsável</label>
+        <input type="text" id="editarAreaResponsavel" value="${treinamento.areaResponsavel || ''}" />
+      </div>
+      <div class="form-group">
+        <label for="editarDescricaoTreinamento">Descrição</label>
+        <textarea id="editarDescricaoTreinamento" rows="3">${treinamento.descricao || ''}</textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" onclick="fecharModalDetalhesTreinamento()">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar Alterações</button>
+      </div>
+    </form>
+  `;
+
+  document.getElementById('editarTreinamentoForm').onsubmit = function (e) {
+    e.preventDefault();
+    const dadosAtualizados = {
+      nome: document.getElementById('editarNomeTreinamento').value,
+      modalidade: document.getElementById('editarModalidadeTreinamento').value,
+      cargaHoraria: parseInt(document.getElementById('editarCargaHoraria').value),
+      tipo: document.getElementById('editarTipoTreinamento').value,
+      instrutor: document.getElementById('editarInstrutor').value,
+      areaResponsavel: document.getElementById('editarAreaResponsavel').value,
+      descricao: document.getElementById('editarDescricaoTreinamento').value
+    };
+
+    fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dadosAtualizados)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(() => {
+        mostrarAlerta('Treinamento atualizado com sucesso!');
+        fecharModalDetalhesTreinamento();
+        carregarTreinamentos().then(() => {
+          atualizarSelectTreinamento();
+          atualizarEstatisticasMapeamento();
+        });
+      })
+      .catch(() => mostrarAlerta('Erro ao atualizar treinamento.', 'error'));
+  };
+
+  document.getElementById('modalDetalhesTreinamento').style.display = 'block';
+}
+
+function fecharModalDetalhesTreinamento() {
+  document.getElementById('modalDetalhesTreinamento').style.display = 'none';
 }
 
 // Performance monitoring
