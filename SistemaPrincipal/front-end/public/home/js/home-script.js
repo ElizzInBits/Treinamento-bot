@@ -1641,6 +1641,7 @@ function importarBackup(file) {
 function abrirDetalhesTreinamento(treinamentoId) {
   const treinamento = treinamentos.find(t => t.id === treinamentoId);
   if (!treinamento) return;
+  document.body.classList.add('modal-open');
   document.getElementById('tituloModalTreinamento').textContent = `Treinamento: ${treinamento.nome}`;
   document.getElementById('conteudoModalTreinamento').innerHTML = `
   <form id="editarTreinamentoForm" class="professional-form">
@@ -1732,6 +1733,7 @@ function abrirDetalhesTreinamento(treinamentoId) {
 }
 
 function fecharModalDetalhesTreinamento() {
+  document.body.classList.remove('modal-open');
   document.getElementById('modalDetalhesTreinamento').style.display = 'none';
 }
 
