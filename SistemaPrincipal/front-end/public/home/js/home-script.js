@@ -612,14 +612,15 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   }
 
 const novoTreinamento = {
-  nome: document.getElementById('nome').value.trim(),
-  descricao: document.getElementById('descricao').value.trim(),
-  modalidade: document.getElementById('modalidade').value.trim(),
+  nome: document.getElementById('novoTreinamento').value.trim(),
+  descricao: document.getElementById('conteudoProgramatico').value.trim(),
+  modalidade: document.getElementById('modalidadeTreinamento').value.trim(),
   cargaHoraria: parseInt(document.getElementById('cargaHoraria').value.trim()),
-  tipo: document.getElementById('tipo').value.trim(),
-  instrutor: document.getElementById('instrutor').value.trim(),
+  tipo: document.getElementById('tipoTreinamento').value.trim(),
+  instrutor: document.getElementById('nomeInstrutor').value.trim(),
   areaResponsavel: document.getElementById('areaResponsavel').value.trim()
 };
+
 
 
   fetch('http://92.112.178.26:3000/api/treinamentos', {
