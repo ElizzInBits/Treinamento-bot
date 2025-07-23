@@ -19,8 +19,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    console.log('📝 Corpo da requisição:', req.body);  /
-
+    console.log('📝 Corpo da requisição:', req.body);  
     const {
       nome,
       descricao = '',   
