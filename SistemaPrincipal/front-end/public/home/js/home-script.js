@@ -1637,44 +1637,60 @@ function importarBackup(file) {
 function abrirDetalhesTreinamento(treinamentoId) {
   const treinamento = treinamentos.find(t => t.id === treinamentoId);
   if (!treinamento) return;
-
   document.getElementById('tituloModalTreinamento').textContent = `Treinamento: ${treinamento.nome}`;
   document.getElementById('conteudoModalTreinamento').innerHTML = `
-    <form id="editarTreinamentoForm" class="professional-form">
+  <form id="editarTreinamentoForm" class="professional-form">
+    
+    <div class="form-row">
       <div class="form-group">
-        <label for="editarNomeTreinamento">Nome</label>
-        <input type="text" id="editarNomeTreinamento" value="${treinamento.nome}" required />
+        <label for="editarNomeTreinamento">Nome <span class="required">*</span></label>
+        <input type="text" id="editarNomeTreinamento" class="form-control" value="${treinamento.nome}" required />
       </div>
+      
       <div class="form-group">
-        <label for="editarModalidadeTreinamento">Modalidade</label>
-        <input type="text" id="editarModalidadeTreinamento" value="${treinamento.modalidade || ''}" required />
+        <label for="editarModalidadeTreinamento">Modalidade <span class="required">*</span></label>
+        <input type="text" id="editarModalidadeTreinamento" class="form-control" value="${treinamento.modalidade || ''}" required />
       </div>
+    </div>
+
+    <div class="form-row">
       <div class="form-group">
-        <label for="editarCargaHoraria">Carga Horária</label>
-        <input type="number" id="editarCargaHoraria" value="${treinamento.cargaHoraria || ''}" required />
+        <label for="editarCargaHoraria">Carga Horária <span class="required">*</span></label>
+        <input type="number" id="editarCargaHoraria" class="form-control" value="${treinamento.cargaHoraria || ''}" required />
       </div>
+
       <div class="form-group">
-        <label for="editarTipoTreinamento">Tipo</label>
-        <input type="text" id="editarTipoTreinamento" value="${treinamento.tipo || ''}" required />
+        <label for="editarTipoTreinamento">Tipo <span class="required">*</span></label>
+        <input type="text" id="editarTipoTreinamento" class="form-control" value="${treinamento.tipo || ''}" required />
       </div>
+    </div>
+
+    <div class="form-row">
       <div class="form-group">
         <label for="editarInstrutor">Instrutor</label>
-        <input type="text" id="editarInstrutor" value="${treinamento.instrutor || ''}" />
+        <input type="text" id="editarInstrutor" class="form-control" value="${treinamento.instrutor || ''}" />
       </div>
+
       <div class="form-group">
         <label for="editarAreaResponsavel">Área Responsável</label>
-        <input type="text" id="editarAreaResponsavel" value="${treinamento.areaResponsavel || ''}" />
+        <input type="text" id="editarAreaResponsavel" class="form-control" value="${treinamento.areaResponsavel || ''}" />
       </div>
-      <div class="form-group">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="flex: 1 1 100%;">
         <label for="editarDescricaoTreinamento">Descrição</label>
-        <textarea id="editarDescricaoTreinamento" rows="3">${treinamento.descricao || ''}</textarea>
+        <textarea id="editarDescricaoTreinamento" rows="4" class="form-control">${treinamento.descricao || ''}</textarea>
+        <span class="form-hint">Forneça uma breve descrição do treinamento.</span>
       </div>
-      <div class="form-actions">
-        <button type="button" class="btn-secondary" onclick="fecharModalDetalhesTreinamento()">Cancelar</button>
-        <button type="submit" class="btn-primary">Salvar Alterações</button>
-      </div>
-    </form>
-  `;
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" onclick="fecharModalDetalhesTreinamento()">Cancelar</button>
+      <button type="submit" class="btn-primary">Salvar Alterações</button>
+    </div>
+  </form>
+`;
 
   document.getElementById('editarTreinamentoForm').onsubmit = function (e) {
     e.preventDefault();
