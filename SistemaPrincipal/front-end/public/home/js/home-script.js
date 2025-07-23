@@ -611,10 +611,45 @@ function renderizarTreinamentos() {
 
 // Função para atualizar select de treinamento - Com verificação de segurança
 function atualizarSelectTreinamento() {
-  const select = document.getElementById('treinamentoSelect'); // ou o ID correto do seu select
+  // Lista de possíveis IDs do select de treinamento
+  const possiveisIds = [
+    'treinamentoSelect',
+    'selectTreinamento',
+    'select-treinamento',
+    'treinamento',
+    'treinamentoId',
+    'treinamento-select'
+  ];
+  
+  let select = null;
+  
+  // Procurar pelo select usando diferentes IDs possíveis
+  for (const id of possiveisIds) {
+    select = document.getElementById(id);
+    if (select) {
+      console.log(`Select encontrado com ID: ${id}`);
+      break;
+    }
+  }
+  
+  // Se não encontrou por ID, tentar encontrar por seletor
+  if (!select) {
+    select = document.querySelector('select[name*="treinamento"]') || 
+             document.querySelector('select.treinamento') ||
+             document.querySelector('#formContato select') ||
+             document.querySelector('form select');
+  }
   
   if (!select) {
-    console.warn('Select de treinamento não encontrado');
+    console.warn('Select de treinamento não encontrado. IDs tentados:', possiveisIds);
+    console.warn('Selects disponíveis na página:');
+    document.querySelectorAll('select').forEach((sel, index) => {
+      console.warn(`Select ${index}:`, {
+        id: sel.id,
+        name: sel.name,
+        className: sel.className
+      });
+    });
     return;
   }
   
@@ -634,6 +669,8 @@ function atualizarSelectTreinamento() {
     option.textContent = treinamento.nome || 'Nome não disponível';
     select.appendChild(option);
   });
+  
+  console.log(`Select atualizado com ${treinamentos.length} treinamentos`);
 }
 
 // Visualizar contatos do treinamento - Com verificação de segurança
@@ -695,9 +732,33 @@ function visualizarContatosTreinamento(treinamentoId) {
   document.getElementById('modalContatos').style.display = 'block';
 }
 
+// Função para debug - identificar selects na página
+function debugSelects() {
+  console.log('=== DEBUG SELECTS ===');
+  const selects = document.querySelectorAll('select');
+  
+  if (selects.length === 0) {
+    console.log('Nenhum select encontrado na página');
+    return;
+  }
+  
+  selects.forEach((select, index) => {
+    console.log(`Select ${index + 1}:`, {
+      id: select.id || 'sem ID',
+      name: select.name || 'sem name',
+      className: select.className || 'sem class',
+      innerHTML: select.innerHTML.substring(0, 100) + '...'
+    });
+  });
+  console.log('=====================');
+}
+
 // Inicialização do sistema - Exemplo de como chamar corretamente
 async function inicializarSistema() {
   try {
+    // Debug para identificar selects
+    debugSelects();
+    
     // Carregar treinamentos
     await carregarTreinamentos();
     
@@ -710,6 +771,35 @@ async function inicializarSistema() {
     console.error('Erro ao inicializar sistema:', error);
     mostrarAlerta('Erro ao inicializar sistema', 'error');
   }
+}
+
+// Função alternativa se você souber o ID correto
+function atualizarSelectTreinamentoComId(selectId) {
+  const select = document.getElementById(selectId);
+  
+  if (!select) {
+    console.error(`Select com ID '${selectId}' não encontrado`);
+    return;
+  }
+  
+  // Limpar select
+  select.innerHTML = '<option value="">Selecione um treinamento</option>';
+  
+  // Verificar se treinamentos é um array
+  if (!Array.isArray(treinamentos)) {
+    console.warn('treinamentos não é um array:', treinamentos);
+    return;
+  }
+  
+  // Adicionar opções
+  treinamentos.forEach(treinamento => {
+    const option = document.createElement('option');
+    option.value = treinamento.id || '';
+    option.textContent = treinamento.nome || 'Nome não disponível';
+    select.appendChild(option);
+  });
+  
+  console.log(`Select '${selectId}' atualizado com ${treinamentos.length} treinamentos`);
 }
 
 // Exportar dados em XLS
