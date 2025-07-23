@@ -373,6 +373,34 @@
           window.location.href = "/home/lista-contatos.html";
         });
       </script>
+
+
+      <script>
+        function showTab(tabName) {
+          // 1. Remover active dos botões das abas
+          document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.classList.remove('active');
+          });
+
+          // 2. Adicionar active no botão clicado
+          const clickedTab = document.querySelector(`.nav-tab[data-tab="${tabName}"]`);
+          if (clickedTab) {
+            clickedTab.classList.add('active');
+          }
+
+          // 3. Remover active das seções
+          document.querySelectorAll('.tab-content').forEach(section => {
+            section.classList.remove('active');
+          });
+
+          // 4. Adicionar active na seção da aba clicada
+          const targetSection = document.getElementById(tabName);
+          if (targetSection) {
+            targetSection.classList.add('active');
+          }
+        }
+      </script>
+
 </body>
 
 </html>
