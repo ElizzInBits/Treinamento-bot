@@ -142,22 +142,19 @@ router.post('/', async (req, res) => {
       descricao: descricao || ''
     });
 
-    // Cria o arquivo de template com base no nome do treinamento
-    const nomeArquivo = normalizarNomeArquivo(nomeLimpo);
-    const caminhoArquivo = criarArquivoTemplate(nomeArquivo, nomeLimpo);
-
     res.status(201).json({
       sucesso: true,
       treinamento: novo,
-      arquivoTemplate: caminhoArquivo,
-      message: 'Treinamento e template criados com sucesso!'
+      message: 'Treinamento criado com sucesso!'
     });
 
   } catch (err) {
-    console.error('Erro ao criar treinamento:', err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('❌ Erro ao criar treinamento:', err.message);
+    console.error(err.stack);
+    res.status(500).json({ error: 'Erro interno do servidor', detalhes: err.message });
   }
 });
+
 
 // Atualizar treinamento pelo ID
 router.put('/:id', async (req, res) => {
