@@ -642,14 +642,18 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
       if (!res.ok) throw new Error();
       return res.json();
     })
-    .then(data => {
-      mostrarAlerta(`Treinamento ${data.nome} criado com sucesso!`);
-      document.getElementById('treinamentoForm').reset();
-      carregarTreinamentos().then(() => {
-        atualizarSelectTreinamento();
-        atualizarEstatisticasMapeamento();
-      });
-    })
+.then(data => {
+  mostrarAlerta(`Treinamento ${data.nome} criado com sucesso!`);
+  document.getElementById('treinamentoForm').reset();
+  // Remover classes de erro dos campos do formulário
+  document.querySelectorAll('#treinamentoForm .error').forEach(campo => {
+    campo.classList.remove('error');
+  });
+  carregarTreinamentos().then(() => {
+    atualizarSelectTreinamento();
+    atualizarEstatisticasMapeamento();
+  });
+})
     .catch(() => mostrarAlerta('Erro ao criar treinamento.', 'error'));
 });
 
