@@ -611,22 +611,16 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
     return;
   }
 
-  const novoTreinamento = {
-    nome,
-    modalidade,
-    cargaHoraria,
-    tipo,
-    emConformidade,
-    aproveitamento,
-    conteudo,
-    instrutor,
-    qualificacaoInstrutor,
-    instrutoresAdicionais,
-    responsavel,
-    cargoResponsavel,
-    areaResponsavel,
-    observacoes
-  };
+const novoTreinamento = {
+  nome: document.getElementById('nome').value.trim(),
+  descricao: document.getElementById('descricao').value.trim(),
+  modalidade: document.getElementById('modalidade').value.trim(),
+  cargaHoraria: parseInt(document.getElementById('cargaHoraria').value.trim()),
+  tipo: document.getElementById('tipo').value.trim(),
+  instrutor: document.getElementById('instrutor').value.trim(),
+  areaResponsavel: document.getElementById('areaResponsavel').value.trim()
+};
+
 
   fetch('http://92.112.178.26:3000/api/treinamentos', {
     method: 'POST',
