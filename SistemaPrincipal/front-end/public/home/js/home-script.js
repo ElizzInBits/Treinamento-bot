@@ -195,12 +195,14 @@ function atualizarSelectTreinamento() {
     document.getElementById('editarTreinamento')
   ];
 
+  const listaTreinamentos = Array.isArray(treinamentos) ? treinamentos : [];
+
   selects.forEach(select => {
     if (select) {
       const currentValue = select.value;
       select.innerHTML = '<option value="">Selecione um treinamento</option>';
 
-      treinamentos.forEach(treinamento => {
+      listaTreinamentos.forEach(treinamento => {
         const option = document.createElement('option');
         option.value = treinamento.id;
         option.textContent = treinamento.nome;
