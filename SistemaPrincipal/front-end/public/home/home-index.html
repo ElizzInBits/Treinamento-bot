@@ -125,118 +125,254 @@
           <div class="training-form-section">
             <h3>Criar Novo Treinamento</h3>
             <form id="treinamentoForm" class="professional-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="novoTreinamento">Nome do Treinamento <span class="required">*</span></label>
-                  <input type="text" id="novoTreinamento" name="novoTreinamento" required
-                    placeholder="Digite o nome do treinamento" maxlength="100" class="form-control" />
+
+              <!-- Informações Básicas -->
+              <div class="form-section">
+                <h4 class="section-title">Informações Básicas</h4>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="novoTreinamento">Nome do Treinamento <span class="required">*</span></label>
+                    <input type="text" id="novoTreinamento" name="novoTreinamento" required
+                      placeholder="Digite o nome do treinamento" maxlength="100" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="modalidadeTreinamento">Modalidade de Treinamento <span class="required">*</span></label>
+                    <select id="modalidadeTreinamento" name="modalidadeTreinamento" required class="form-control">
+                      <option value="">Selecione a modalidade</option>
+                      <option value="presencial">Presencial</option>
+                      <option value="online">Online</option>
+                      <option value="hibrido">Híbrido</option>
+                      <option value="ead">EAD</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label for="descricaoTreinamento">Descrição</label>
-                  <input type="text" id="descricaoTreinamento" name="descricaoTreinamento"
-                    placeholder="Breve descrição do treinamento" maxlength="200" class="form-control" />
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="cargaHoraria">Carga Horária Realizada <span class="required">*</span></label>
+                    <input type="number" id="cargaHoraria" name="cargaHoraria" required placeholder="Ex: 40" min="1"
+                      max="9999" class="form-control" />
+                    <small class="form-help">Informe em horas</small>
+                  </div>
+                  <div class="form-group">
+                    <label for="tipoTreinamento">Tipo de Treinamento <span class="required">*</span></label>
+                    <select id="tipoTreinamento" name="tipoTreinamento" required class="form-control">
+                      <option value="">Selecione o tipo</option>
+                      <option value="capacitacao">Capacitação</option>
+                      <option value="aperfeicoamento">Aperfeiçoamento</option>
+                      <option value="especializacao">Especialização</option>
+                      <option value="atualizacao">Atualização</option>
+                      <option value="certificacao">Certificação</option>
+                      <option value="seguranca">Segurança do Trabalho</option>
+                      <option value="tecnico">Técnico</option>
+                      <option value="comportamental">Comportamental</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="emConformidade">Em Conformidade <span class="required">*</span></label>
+                    <input type="text" id="emConformidade" name="emConformidade" required placeholder="..."
+                      maxlength="100" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="aproveitamentoConteudo">Aproveitamento de Conteúdo <span
+                        class="required">*</span></label>
+                    <input type="text" id="aproveitamentoConteudo" name="aproveitamentoConteudo" required
+                      placeholder="Ex: Excelente (95%), Bom, Regular..." maxlength="100" class="form-control" />
+                  </div>
                 </div>
               </div>
+
+              <!-- Conteúdo Programático -->
+              <div class="form-section">
+                <h4 class="section-title">Conteúdo Programático</h4>
+                <div class="form-group full-width">
+                  <label for="conteudoProgramatico">Conteúdo Programático Aplicado <span
+                      class="required">*</span></label>
+                  <textarea id="conteudoProgramatico" name="conteudoProgramatico" required
+                    placeholder="Descreva o conteúdo programático aplicado no treinamento" rows="4" maxlength="1000"
+                    class="form-control"></textarea>
+                  <small class="form-help">Máximo 1000 caracteres</small>
+                </div>
+              </div>
+
+              <!-- Informações dos Instrutores -->
+              <div class="form-section">
+                <h4 class="section-title">Informações dos Instrutores</h4>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="nomeInstrutor">Nome do Instrutor Principal <span class="required">*</span></label>
+                    <input type="text" id="nomeInstrutor" name="nomeInstrutor" required
+                      placeholder="Nome completo do instrutor" maxlength="100" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="qualificacaoInstrutor">Qualificação do Instrutor</label>
+                    <input type="text" id="qualificacaoInstrutor" name="qualificacaoInstrutor"
+                      placeholder="Ex: Especialista em Segurança, Certificado..." maxlength="200"
+                      class="form-control" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="instrutoresAdicionais">Instrutores Adicionais</label>
+                  <textarea id="instrutoresAdicionais" name="instrutoresAdicionais"
+                    placeholder="Liste outros instrutores que participaram (opcional)" rows="2" maxlength="500"
+                    class="form-control"></textarea>
+                </div>
+              </div>
+
+              <!-- Informações sobre Responsabilidade -->
+              <div class="form-section">
+                <h4 class="section-title">Informações sobre Responsabilidade</h4>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="responsavelTreinamento">Responsável pelo Treinamento <span
+                        class="required">*</span></label>
+                    <input type="text" id="responsavelTreinamento" name="responsavelTreinamento" required
+                      placeholder="Nome do responsável pela organização" maxlength="100" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="cargoResponsavel">Cargo do Responsável</label>
+                    <input type="text" id="cargoResponsavel" name="cargoResponsavel"
+                      placeholder="Ex: Gerente de RH, Coordenador de Treinamento" maxlength="100"
+                      class="form-control" />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="areaResponsavel">Área Responsável <span class="required">*</span></label>
+                    <select id="areaResponsavel" name="areaResponsavel" required class="form-control">
+                      <option value="">Selecione a área</option>
+                      <option value="rh">Recursos Humanos</option>
+                      <option value="seguranca">Segurança do Trabalho</option>
+                      <option value="qualidade">Qualidade</option>
+                      <option value="operacional">Operacional</option>
+                      <option value="ti">Tecnologia da Informação</option>
+                      <option value="financeiro">Financeiro</option>
+                      <option value="comercial">Comercial</option>
+                      <option value="juridico">Jurídico</option>
+                      <option value="outros">Outros</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="observacoesResponsabilidade">Observações sobre Responsabilidade</label>
+                    <textarea id="observacoesResponsabilidade" name="observacoesResponsabilidade"
+                      placeholder="Informações adicionais sobre responsabilidades" rows="2" maxlength="500"
+                      class="form-control"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ações -->
               <div class="form-actions">
+                <button type="button" class="btn-secondary">Cancelar</button>
                 <button type="submit" class="btn-primary">Criar Treinamento</button>
               </div>
             </form>
           </div>
 
+          <!-- Carregando -->
           <div class="loading-container" id="loadingTreinamentos">
             <div class="loading-spinner"></div>
             <p>Carregando treinamentos...</p>
           </div>
 
+          <!-- Grid de treinamentos -->
           <div id="treinamentosGrid" class="training-cards"></div>
         </div>
       </section>
-    </main>
-  </div>
 
-  <!-- Modais -->
-  <div id="modalContatosEmpresa" class="modal-overlay">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h3 id="modalTituloEmpresa">Contatos da Empresa</h3>
-        <button class="modal-close" onclick="fecharModalContatosEmpresa()">X</button>
-      </div>
-      <div class="modal-content">
-        <div class="search-section">
-          <div class="search-input-wrapper">
-            <input type="text" id="searchInputModal" placeholder="Pesquisar contatos por nome ou telefone..."
-              class="search-input" onkeyup="filtrarContatosModal()" />
+
+
+      <!-- Modais -->
+      <div id="modalContatosEmpresa" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 id="modalTituloEmpresa">Contatos da Empresa</h3>
+            <button class="modal-close" onclick="fecharModalContatosEmpresa()">X</button>
+          </div>
+          <div class="modal-content">
+            <div class="search-section">
+              <div class="search-input-wrapper">
+                <input type="text" id="searchInputModal" placeholder="Pesquisar contatos por nome ou telefone..."
+                  class="search-input" onkeyup="filtrarContatosModal()" />
+              </div>
+            </div>
+            <div id="modalConteudoEmpresa"></div>
           </div>
         </div>
-        <div id="modalConteudoEmpresa"></div>
       </div>
-    </div>
-  </div>
 
-  <div id="modalContatos" class="modal-overlay">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h3 id="modalTitulo">Contatos do Treinamento</h3>
-        <button class="modal-close" onclick="fecharModal()">X</button>
+      <div id="modalContatos" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 id="modalTitulo">Contatos do Treinamento</h3>
+            <button class="modal-close" onclick="fecharModal()">X</button>
+          </div>
+          <div class="modal-content" id="modalConteudo"></div>
+        </div>
       </div>
-      <div class="modal-content" id="modalConteudo"></div>
-    </div>
-  </div>
 
-  <div id="modalEditarContato" class="modal-overlay">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h3>Editar Contato</h3>
-        <button class="modal-close" onclick="fecharModalEditarContato()">X</button>
+      <div id="modalEditarContato" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3>Editar Contato</h3>
+            <button class="modal-close" onclick="fecharModalEditarContato()">X</button>
+          </div>
+          <div class="modal-content">
+            <form id="editarContatoForm" class="professional-form">
+              <input type="hidden" id="editarContatoId" />
+              <div class="form-group">
+                <label for="editarNome">Nome <span class="required">*</span></label>
+                <input type="text" id="editarNome" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label for="editarTelefone">Telefone <span class="required">*</span></label>
+                <input type="text" id="editarTelefone" class="form-control" required placeholder="Ex: 5531999990000" />
+              </div>
+              <div class="form-group">
+                <label for="editarEmpresa">Empresa <span class="required">*</span></label>
+                <select id="editarEmpresa" class="form-control" required>
+                  <option value="">Selecione uma empresa</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="editarTreinamento">Treinamento</label>
+                <select id="editarTreinamento" class="form-control">
+                  <option value="">Sem treinamento</option>
+                </select>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">Salvar Alterações</button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
-      <div class="modal-content">
-        <form id="editarContatoForm" class="professional-form">
-          <input type="hidden" id="editarContatoId" />
-          <div class="form-group">
-            <label for="editarNome">Nome <span class="required">*</span></label>
-            <input type="text" id="editarNome" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label for="editarTelefone">Telefone <span class="required">*</span></label>
-            <input type="text" id="editarTelefone" class="form-control" required placeholder="Ex: 5531999990000" />
-          </div>
-          <div class="form-group">
-            <label for="editarEmpresa">Empresa <span class="required">*</span></label>
-            <select id="editarEmpresa" class="form-control" required>
-              <option value="">Selecione uma empresa</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="editarTreinamento">Treinamento</label>
-            <select id="editarTreinamento" class="form-control">
-              <option value="">Sem treinamento</option>
-            </select>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-primary">Salvar Alterações</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
 
-  <div id="modalDetalhesContato" class="modal-overlay">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h3>Detalhes do Contato</h3>
-        <button class="modal-close" onclick="fecharModalDetalhesContato()">X</button>
+      <div id="modalDetalhesContato" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3>Detalhes do Contato</h3>
+            <button class="modal-close" onclick="fecharModalDetalhesContato()">X</button>
+          </div>
+          <div class="modal-content" id="detalhesContatoConteudo"></div>
+        </div>
       </div>
-      <div class="modal-content" id="detalhesContatoConteudo"></div>
-    </div>
-  </div>
 
-  <!-- Scripts -->
-  <script src="js/home-script.js"></script>
-  <script>
-    document.getElementById("cardTotalContatos").addEventListener("click", function () {
-      window.location.href = "/home/lista-contatos.html";
-    });
-  </script>
+      <!-- Scripts -->
+      <script src="js/home-script.js"></script>
+      <script>
+        document.getElementById("cardTotalContatos").addEventListener("click", function () {
+          window.location.href = "/home/lista-contatos.html";
+        });
+      </script>
 </body>
 
 </html>

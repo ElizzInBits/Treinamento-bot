@@ -11,24 +11,70 @@ const Treinamento = sequelize.define('Treinamento', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  descricao: {
+  modalidade: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  cargaHoraria: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  tipo: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  emConformidade: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  aproveitamento: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  conteudo: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
+  instrutor: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  qualificacaoInstrutor: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  instrutoresAdicionais: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  responsavel: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  cargoResponsavel: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  areaResponsavel: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  observacoes: {
     type: DataTypes.TEXT,
     allowNull: true,
   },
 }, {
   tableName: 'treinamento',
-  timestamps: true,  // createdAt e updatedAt
-  underscored: true, // para usar snake_case nos campos (opcional)
+  timestamps: true,
+  underscored: true,
 });
 
-
 Treinamento.associate = (models) => {
-    Treinamento.belongsToMany(models.Contato, {
-        through: 'ContatoTreinamentos',
-        foreignKey: 'treinamentoId',
-        otherKey: 'contatoId'
-    });
+  Treinamento.belongsToMany(models.Contato, {
+    through: 'ContatoTreinamentos',
+    foreignKey: 'treinamentoId',
+    otherKey: 'contatoId'
+  });
 };
-
 
 module.exports = Treinamento;
