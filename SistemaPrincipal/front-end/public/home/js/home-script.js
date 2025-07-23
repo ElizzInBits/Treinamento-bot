@@ -525,21 +525,41 @@ function carregarTreinamentos() {
       return res.json();
     })
     .then(data => {
-      treinamentos = data;
+      // Verificar se data é um array, se não for, torná-lo um array vazio
+      treinamentos = Array.isArray(data) ? data : [];
+      
+      console.log('Treinamentos carregados:', treinamentos); // Debug
+      
       renderizarTreinamentos();
+      
+      // IMPORTANTE: Retornar os dados para quem chamou a função
+      return treinamentos;
     })
     .catch(error => {
       console.error('Erro ao carregar treinamentos:', error);
       mostrarAlerta('Erro ao carregar treinamentos.', 'error');
+      
+      // Em caso de erro, definir como array vazio
+      treinamentos = [];
+      renderizarTreinamentos();
+      
+      // Retornar array vazio em caso de erro
+      return [];
     })
     .finally(() => {
       if (loading) loading.style.display = 'none';
     });
 }
 
-// Renderizar treinamentos
+// Renderizar treinamentos - Adicionar verificação de segurança
 function renderizarTreinamentos() {
   const treinamentosGrid = document.getElementById('treinamentosGrid');
+  
+  // Verificação de segurança
+  if (!Array.isArray(treinamentos)) {
+    console.warn('treinamentos não é um array:', treinamentos);
+    treinamentos = [];
+  }
 
   if (treinamentos.length === 0) {
     treinamentosGrid.innerHTML = `
@@ -552,7 +572,9 @@ function renderizarTreinamentos() {
   }
 
   treinamentosGrid.innerHTML = treinamentos.map(treinamento => {
-    const contatosComTreinamento = contatos.filter(c => c.treinamentoId === treinamento.id);
+    // Verificar se contatos existe e é um array
+    const contatosArray = Array.isArray(contatos) ? contatos : [];
+    const contatosComTreinamento = contatosArray.filter(c => c.treinamentoId === treinamento.id);
 
     return `
       <div class="training-card">
@@ -587,76 +609,52 @@ function renderizarTreinamentos() {
   }).join('');
 }
 
-// Cadastrar novo treinamento
-document.getElementById('treinamentoForm').addEventListener('submit', function (e) {
-  e.preventDefault();
-
-  const nome = document.getElementById('novoTreinamento').value.trim();
-  const modalidade = document.getElementById('modalidadeTreinamento').value;
-  const cargaHoraria = parseInt(document.getElementById('cargaHoraria').value);
-  const tipo = document.getElementById('tipoTreinamento').value;
-  const emConformidade = document.getElementById('emConformidade').value.trim();
-  const aproveitamento = document.getElementById('aproveitamentoConteudo').value.trim();
-  const conteudo = document.getElementById('conteudoProgramatico').value.trim();
-  const instrutor = document.getElementById('nomeInstrutor').value.trim();
-  const qualificacaoInstrutor = document.getElementById('qualificacaoInstrutor').value.trim();
-  const instrutoresAdicionais = document.getElementById('instrutoresAdicionais').value.trim();
-  const responsavel = document.getElementById('responsavelTreinamento').value.trim();
-  const cargoResponsavel = document.getElementById('cargoResponsavel').value.trim();
-  const areaResponsavel = document.getElementById('areaResponsavel').value;
-  const observacoes = document.getElementById('observacoesResponsabilidade').value.trim();
-
-  if (!nome || !modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudo || !instrutor || !responsavel || !areaResponsavel) {
-    mostrarAlerta('Por favor, preencha todos os campos obrigatórios.', 'error');
+// Função para atualizar select de treinamento - Com verificação de segurança
+function atualizarSelectTreinamento() {
+  const select = document.getElementById('treinamentoSelect'); // ou o ID correto do seu select
+  
+  if (!select) {
+    console.warn('Select de treinamento não encontrado');
     return;
   }
+  
+  // Limpar select
+  select.innerHTML = '<option value="">Selecione um treinamento</option>';
+  
+  // Verificar se treinamentos é um array
+  if (!Array.isArray(treinamentos)) {
+    console.warn('treinamentos não é um array ao atualizar select:', treinamentos);
+    return;
+  }
+  
+  // Adicionar opções
+  treinamentos.forEach(treinamento => {
+    const option = document.createElement('option');
+    option.value = treinamento.id || '';
+    option.textContent = treinamento.nome || 'Nome não disponível';
+    select.appendChild(option);
+  });
+}
 
-const novoTreinamento = {
-  nome: nome,
-  descricao: conteudo,
-  modalidade: modalidade,
-  cargaHoraria: cargaHoraria,
-  tipo: tipo,
-  emConformidade: emConformidade,
-  aproveitamento: aproveitamento,
-  conteudoProgramatico: conteudo,
-  instrutor: instrutor,
-  qualificacaoInstrutor: qualificacaoInstrutor,
-  instrutoresAdicionais: instrutoresAdicionais,
-  responsavel: responsavel,
-  cargoResponsavel: cargoResponsavel,
-  areaResponsavel: areaResponsavel,
-  observacoes: observacoes
-};
-
-
-
-
-  fetch('http://92.112.178.26:3000/api/treinamentos', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(novoTreinamento)
-  })
-    .then(res => {
-      if (!res.ok) throw new Error();
-      return res.json();
-    })
-    .then(data => {
-      mostrarAlerta(`Treinamento ${data.nome} criado com sucesso!`);
-      document.getElementById('treinamentoForm').reset();
-      carregarTreinamentos().then(() => {
-        atualizarSelectTreinamento();
-        atualizarEstatisticasMapeamento();
-      });
-    })
-    .catch(() => mostrarAlerta('Erro ao criar treinamento.', 'error'));
-});
-
-
-// Visualizar contatos do treinamento
+// Visualizar contatos do treinamento - Com verificação de segurança
 function visualizarContatosTreinamento(treinamentoId) {
+  // Verificar se treinamentos é um array
+  if (!Array.isArray(treinamentos)) {
+    console.error('treinamentos não é um array');
+    mostrarAlerta('Erro ao carregar dados do treinamento', 'error');
+    return;
+  }
+  
   const treinamento = treinamentos.find(t => t.id === treinamentoId);
-  const contatosComTreinamento = contatos.filter(c => c.treinamentoId === treinamentoId);
+  
+  if (!treinamento) {
+    mostrarAlerta('Treinamento não encontrado', 'error');
+    return;
+  }
+  
+  // Verificar se contatos é um array
+  const contatosArray = Array.isArray(contatos) ? contatos : [];
+  const contatosComTreinamento = contatosArray.filter(c => c.treinamentoId === treinamentoId);
 
   document.getElementById('modalTitulo').textContent = `Contatos - ${treinamento.nome}`;
 
@@ -671,8 +669,11 @@ function visualizarContatosTreinamento(treinamentoId) {
     document.getElementById('modalConteudo').innerHTML = `
       <div class="contacts-list">
         ${contatosComTreinamento.map(contato => {
-      const empresa = empresas.find(e => e.id === contato.empresaId);
-      return `
+          // Verificar se empresas é um array
+          const empresasArray = Array.isArray(empresas) ? empresas : [];
+          const empresa = empresasArray.find(e => e.id === contato.empresaId);
+          
+          return `
             <div class="contact-item">
               <div class="contact-info">
                 <h4>${contato.nome}</h4>
@@ -686,7 +687,7 @@ function visualizarContatosTreinamento(treinamentoId) {
               </div>
             </div>
           `;
-    }).join('')}
+        }).join('')}
       </div>
     `;
   }
@@ -694,48 +695,22 @@ function visualizarContatosTreinamento(treinamentoId) {
   document.getElementById('modalContatos').style.display = 'block';
 }
 
-// Fechar modal de contatos do treinamento
-function fecharModal() {
-  document.getElementById('modalContatos').style.display = 'none';
-}
-
-// Remover treinamento
-function removerTreinamento(id) {
-  const contatosComTreinamento = contatos.filter(c => c.treinamentoId === id);
-
-  if (contatosComTreinamento.length > 0) {
-    if (!confirm(`Este treinamento possui ${contatosComTreinamento.length} contatos. Ao removê-lo, os contatos perderão a associação com o treinamento. Deseja continuar?`)) {
-      return;
-    }
-  } else {
-    if (!confirm('Tem certeza que deseja remover este treinamento?')) {
-      return;
-    }
+// Inicialização do sistema - Exemplo de como chamar corretamente
+async function inicializarSistema() {
+  try {
+    // Carregar treinamentos
+    await carregarTreinamentos();
+    
+    // Atualizar select após carregar
+    atualizarSelectTreinamento();
+    
+    console.log('Sistema inicializado com sucesso');
+    
+  } catch (error) {
+    console.error('Erro ao inicializar sistema:', error);
+    mostrarAlerta('Erro ao inicializar sistema', 'error');
   }
-
-  fetch(`http://92.112.178.26:3000/api/treinamentos/${id}`, {
-    method: 'DELETE'
-  })
-    .then(res => {
-      if (!res.ok) throw new Error();
-      mostrarAlerta('Treinamento removido com sucesso!');
-      carregarTreinamentos().then(() => {
-        atualizarSelectTreinamento();
-        // Recarregar contatos para atualizar as estatísticas
-        carregarContatos().then(() => {
-          atualizarEstatisticasMapeamento();
-        });
-      });
-    })
-    .catch(() => mostrarAlerta('Erro ao remover treinamento.', 'error'));
 }
-  // Formata os dados dos treinamentos
-  const treinamentosSheet = treinamentos.map(treinamento => ({
-    ID: treinamento.id,
-    Nome: treinamento.nome,
-    Descricao: treinamento.descricao,
-    Total_Contatos: contatos.filter(c => c.treinamentoId === treinamento.id).length
-  }));
 
 // Exportar dados em XLS
 function exportarDadosXLS() {
