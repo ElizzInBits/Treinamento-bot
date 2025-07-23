@@ -87,8 +87,8 @@ async function enviarEmail(destinatario, arquivoPath) {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'elizabethmirandaa302@gmail.com',  // Seu e-mail
-      pass: 'kncv imth bajt bhar',             // Senha de app (não a senha normal!)
+      user: 'elizabethmirandaa302@gmail.com', 
+      pass: 'kncv imth bajt bhar',            
     },
   });
 

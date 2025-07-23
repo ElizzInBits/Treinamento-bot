@@ -562,6 +562,14 @@ function renderizarTreinamentos() {
         </div>
         <div class="training-content">
           <p class="training-description">${treinamento.descricao || 'Sem descrição'}</p>
+                  
+          <div class="training-details">
+            <p><strong>Modalidade:</strong> ${treinamento.modalidade || 'N/A'}</p>
+            <p><strong>Carga Horária:</strong> ${treinamento.cargaHoraria || 'N/A'} h</p>
+            <p><strong>Tipo:</strong> ${treinamento.tipo || 'N/A'}</p>
+            <p><strong>Instrutor:</strong> ${treinamento.instrutor || 'N/A'}</p>
+            <p><strong>Área Responsável:</strong> ${treinamento.areaResponsavel || 'N/A'}</p>
+          </div>
           <div class="training-stats">
             <span class="stat-label">Participantes: ${contatosComTreinamento.length}</span>
           </div>
@@ -584,16 +592,40 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   e.preventDefault();
 
   const nome = document.getElementById('novoTreinamento').value.trim();
-  const descricao = document.getElementById('descricaoTreinamento').value.trim();
+  const modalidade = document.getElementById('modalidadeTreinamento').value;
+  const cargaHoraria = parseInt(document.getElementById('cargaHoraria').value);
+  const tipo = document.getElementById('tipoTreinamento').value;
+  const emConformidade = document.getElementById('emConformidade').value.trim();
+  const aproveitamento = document.getElementById('aproveitamentoConteudo').value.trim();
+  const conteudo = document.getElementById('conteudoProgramatico').value.trim();
+  const instrutor = document.getElementById('nomeInstrutor').value.trim();
+  const qualificacaoInstrutor = document.getElementById('qualificacaoInstrutor').value.trim();
+  const instrutoresAdicionais = document.getElementById('instrutoresAdicionais').value.trim();
+  const responsavel = document.getElementById('responsavelTreinamento').value.trim();
+  const cargoResponsavel = document.getElementById('cargoResponsavel').value.trim();
+  const areaResponsavel = document.getElementById('areaResponsavel').value;
+  const observacoes = document.getElementById('observacoesResponsabilidade').value.trim();
 
-  if (!nome) {
-    mostrarAlerta('Por favor, preencha o nome do treinamento.', 'error');
+  if (!nome || !modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudo || !instrutor || !responsavel || !areaResponsavel) {
+    mostrarAlerta('Por favor, preencha todos os campos obrigatórios.', 'error');
     return;
   }
 
   const novoTreinamento = {
     nome,
-    descricao
+    modalidade,
+    cargaHoraria,
+    tipo,
+    emConformidade,
+    aproveitamento,
+    conteudo,
+    instrutor,
+    qualificacaoInstrutor,
+    instrutoresAdicionais,
+    responsavel,
+    cargoResponsavel,
+    areaResponsavel,
+    observacoes
   };
 
   fetch('http://92.112.178.26:3000/api/treinamentos', {
@@ -610,12 +642,12 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
       document.getElementById('treinamentoForm').reset();
       carregarTreinamentos().then(() => {
         atualizarSelectTreinamento();
-        // Atualizar estatísticas do mapeamento
         atualizarEstatisticasMapeamento();
       });
     })
     .catch(() => mostrarAlerta('Erro ao criar treinamento.', 'error'));
 });
+
 
 // Visualizar contatos do treinamento
 function visualizarContatosTreinamento(treinamentoId) {
