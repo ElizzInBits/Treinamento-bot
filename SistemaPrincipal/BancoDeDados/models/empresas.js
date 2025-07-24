@@ -47,6 +47,11 @@ module.exports = (sequelize) => {
       allowNull: true,
       field: 'criado_em',
     },
+    treinamentosIds: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'treinamentos_ids',
+    },
   }, {
     timestamps: false,
     freezeTableName: true,

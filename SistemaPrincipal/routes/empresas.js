@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const Empresa = require('../../BancoDeDados/models');
+const { Empresa } = require('../BancoDeDados/models');
 const { Op } = require('sequelize');
 
 const { cnpj: cnpjValidator } = require('cpf-cnpj-validator');
@@ -51,7 +51,46 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET - Listar todas as empresas
+// GET - Listar todas as empresas com dados completos
+router.get('/', async (req, res) => {
+  try {
+    const empresas = await Empresa.findAll({
+      include: [{
+        association: 'contatos',
+        attributes: ['id', 'nome', 'telefone', 'email', 'statusTreinamento']
+      }],
+      order: [['razao_social', 'ASC']]
+    });
+
+    // Buscar treinamentos para cada empresa
+    const Treinamento = require('../BancoDeDados/models/treinamento');
+    const empresasCompletas = await Promise.all(empresas.map(async (empresa) => {
+      let treinamentos = [];
+      if (empresa.treinamentos_ids) {
+        try {
+          const treinamentosIds = JSON.parse(empresa.treinamentos_ids);
+          treinamentos = await Treinamento.findAll({
+            where: { id: treinamentosIds },
+            attributes: ['id', 'nome', 'modalidade', 'cargaHoraria']
+          });
+        } catch (e) {
+          console.error('Erro ao buscar treinamentos para empresa:', e);
+        }
+      }
+      return {
+        ...empresa.toJSON(),
+        treinamentos
+      };
+    }));
+
+    res.json(empresasCompletas);
+  } catch (error) {
+    console.error('Erro ao buscar empresas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
+});
+
+// GET - Opções de empresas para select
 router.get('/select/options', async (req, res) => {
   try {
     const empresas = await Empresa.findAll({
@@ -66,14 +105,39 @@ router.get('/select/options', async (req, res) => {
   }
 });
 
-// GET - Buscar empresa por ID
+// GET - Buscar empresa por ID com contatos e treinamentos
 router.get('/:id', async (req, res) => {
   try {
-    const empresa = await Empresa.findByPk(req.params.id);
+    const empresa = await Empresa.findByPk(req.params.id, {
+      include: [{
+        association: 'contatos',
+        attributes: ['id', 'nome', 'telefone', 'email', 'statusTreinamento']
+      }]
+    });
+    
     if (!empresa) {
       return res.status(404).json({ error: 'Empresa não encontrada.' });
     }
-    res.json(empresa);
+
+    // Buscar treinamentos atribuídos
+    let treinamentos = [];
+    if (empresa.treinamentos_ids) {
+      try {
+        const treinamentosIds = JSON.parse(empresa.treinamentos_ids);
+        const Treinamento = require('../BancoDeDados/models/treinamento');
+        treinamentos = await Treinamento.findAll({
+          where: { id: treinamentosIds },
+          attributes: ['id', 'nome', 'modalidade', 'cargaHoraria']
+        });
+      } catch (e) {
+        console.error('Erro ao buscar treinamentos:', e);
+      }
+    }
+
+    res.json({
+      ...empresa.toJSON(),
+      treinamentos
+    });
   } catch (error) {
     console.error('Erro ao buscar empresa:', error);
     res.status(500).json({ error: 'Erro interno do servidor.' });
@@ -117,6 +181,48 @@ router.put('/:id', async (req, res) => {
     res.json({ message: 'Empresa atualizada com sucesso.', empresa });
   } catch (error) {
     console.error('Erro ao atualizar empresa:', error);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
+});
+
+// GET - Listar treinamentos disponíveis para atribuição
+router.get('/treinamentos/disponiveis', async (req, res) => {
+  try {
+    const Treinamento = require('../BancoDeDados/models/treinamento');
+    const treinamentos = await Treinamento.findAll({
+      attributes: ['id', 'nome', 'modalidade', 'cargaHoraria', 'tipo'],
+      order: [['nome', 'ASC']]
+    });
+    
+    res.json(treinamentos);
+  } catch (error) {
+    console.error('Erro ao buscar treinamentos disponíveis:', error);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
+});
+
+// POST - Atribuir treinamentos à empresa
+router.post('/:id/treinamentos', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { treinamentosIds } = req.body;
+
+    const empresa = await Empresa.findByPk(id);
+    if (!empresa) {
+      return res.status(404).json({ error: 'Empresa não encontrada.' });
+    }
+
+    if (!Array.isArray(treinamentosIds)) {
+      return res.status(400).json({ error: 'treinamentosIds deve ser um array.' });
+    }
+
+    // Atualiza os treinamentos da empresa
+    empresa.treinamentos_ids = JSON.stringify(treinamentosIds);
+    await empresa.save();
+
+    res.json({ message: 'Treinamentos atribuídos com sucesso.', empresa });
+  } catch (error) {
+    console.error('Erro ao atribuir treinamentos:', error);
     res.status(500).json({ error: 'Erro interno do servidor.' });
   }
 });

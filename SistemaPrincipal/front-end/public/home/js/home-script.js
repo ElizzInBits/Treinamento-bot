@@ -1973,15 +1973,24 @@ function getMidiaPreview(nomeArquivo) {
   const caminho = `/media/treinamentos/${nomeArquivo}`;
   
   if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extensao)) {
-    return `<img src="${caminho}" alt="${nomeArquivo}" style="max-width: 100px; max-height: 100px; object-fit: cover;" />`;
+    return `<img src="${caminho}" alt="${nomeArquivo}" style="max-width: 100px; max-height: 100px; object-fit: cover; cursor: pointer;" onclick="downloadMidia('${nomeArquivo}')" />`;
   } else if (['mp4', 'avi', 'mov', 'webm'].includes(extensao)) {
     return `<video controls style="max-width: 100px; max-height: 100px;"><source src="${caminho}" type="video/${extensao}"></video>`;
   } else if (['mp3', 'wav', 'ogg'].includes(extensao)) {
     return `<audio controls style="width: 100px;"><source src="${caminho}" type="audio/${extensao}"></audio>`;
   } else if (extensao === 'pdf') {
-    return `<div style="width: 100px; height: 100px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd;"><span>📄 PDF</span></div>`;
+    return `<div style="width: 100px; height: 100px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd; cursor: pointer;" onclick="downloadMidia('${nomeArquivo}')"><span>📄 PDF</span></div>`;
   }
-  return `<div style="width: 100px; height: 100px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd;"><span>📁</span></div>`;
+  return `<div style="width: 100px; height: 100px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd; cursor: pointer;" onclick="downloadMidia('${nomeArquivo}')"><span>📁</span></div>`;
+}
+
+function downloadMidia(nomeArquivo) {
+  const link = document.createElement('a');
+  link.href = `/media/treinamentos/${nomeArquivo}`;
+  link.download = nomeArquivo;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 // Função para remover mídia
