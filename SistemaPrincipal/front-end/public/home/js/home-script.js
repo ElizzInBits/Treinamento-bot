@@ -621,6 +621,28 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   // Pega os arquivos do input
   const arquivos = document.getElementById('midiasTreinamento').files;
 
+  // Validar arquivos se houver
+  if (arquivos.length > 0) {
+    const tiposPermitidos = ['image/', 'video/', 'audio/', 'application/pdf'];
+    const tamanhoMaximo = 20 * 1024 * 1024; // 20MB
+
+    for (let i = 0; i < arquivos.length; i++) {
+      const arquivo = arquivos[i];
+      
+      // Verificar tipo de arquivo
+      if (!tiposPermitidos.some(tipo => arquivo.type.startsWith(tipo))) {
+        mostrarAlerta(`Arquivo "${arquivo.name}" não é suportado. Tipos permitidos: imagens, vídeos, áudios e PDFs.`, 'error');
+        return;
+      }
+      
+      // Verificar tamanho do arquivo
+      if (arquivo.size > tamanhoMaximo) {
+        mostrarAlerta(`Arquivo "${arquivo.name}" é muito grande. Tamanho máximo: 20MB.`, 'error');
+        return;
+      }
+    }
+  }
+
   const formData = new FormData();
   formData.append('nome', nome);
   formData.append('descricao', conteudo);
@@ -637,19 +659,28 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   formData.append('cargoResponsavel', cargoResponsavel);
   formData.append('areaResponsavel', areaResponsavel);
   formData.append('observacoes', observacoes);
-  formData.append('midias', JSON.stringify(Array.from(arquivos).map(file => file.name)));
 
-  // Adiciona cada arquivo individualmente (suportando múltiplos)
+  // Adiciona cada arquivo individualmente com o nome correto esperado pelo backend
   for (let i = 0; i < arquivos.length; i++) {
     formData.append('midias', arquivos[i]);
   }
+
+  // Mostrar indicador de carregamento
+  const submitButton = document.querySelector('#treinamentoForm button[type="submit"]');
+  const originalText = submitButton.textContent;
+  submitButton.textContent = 'Criando treinamento...';
+  submitButton.disabled = true;
 
   fetch('http://92.112.178.26:3000/api/treinamentos', {
     method: 'POST',
     body: formData, // Atenção: não colocar headers 'Content-Type' com JSON aqui
   })
     .then(res => {
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        return res.json().then(errorData => {
+          throw new Error(errorData.error || 'Erro desconhecido');
+        });
+      }
       return res.json();
     })
     .then(data => {
@@ -663,7 +694,15 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
         atualizarEstatisticasMapeamento();
       });
     })
-    .catch(() => mostrarAlerta('Erro ao criar treinamento.', 'error'));
+    .catch(error => {
+      console.error('Erro detalhado:', error);
+      mostrarAlerta(error.message || 'Erro ao criar treinamento.', 'error');
+    })
+    .finally(() => {
+      // Restaurar botão
+      submitButton.textContent = originalText;
+      submitButton.disabled = false;
+    });
 });
 
 

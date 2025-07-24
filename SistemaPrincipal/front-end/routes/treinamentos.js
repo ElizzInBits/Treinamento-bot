@@ -3,15 +3,24 @@ const router = express.Router();
 const Treinamento = require('../../BancoDeDados/models/treinamento');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+
+// Garantir que o diretório de destino existe
+const uploadDir = path.join(__dirname, '../../media/treinamentos');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Configuração do multer para upload de arquivos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../media/treinamentos'));
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, unique + '-' + file.originalname);
+    const extension = path.extname(file.originalname);
+    const baseName = path.basename(file.originalname, extension);
+    cb(null, `${unique}-${baseName}${extension}`);
   }
 });
 const upload = multer({
@@ -41,68 +50,85 @@ router.get('/', async (req, res) => {
 });
 
 // Criar novo treinamento com upload de arquivos
-router.post('/', upload.array('midias', 10), async (req, res) => {
-  try {
-    const {
-      nome,
-      descricao = '',
-      modalidade,
-      cargaHoraria,
-      tipo,
-      emConformidade,
-      aproveitamento,
-      conteudoProgramatico,
-      instrutor,
-      qualificacaoInstrutor = '',
-      instrutoresAdicionais = '',
-      responsavel,
-      cargoResponsavel = '',
-      areaResponsavel,
-      observacoes = ''
-    } = req.body;
-
-    // Arquivos enviados
-    const midias = req.files ? req.files.map(f => f.filename) : [];
-
-    // Validação mínima
-    if (!nome || !nome.trim()) {
-      return res.status(400).json({ error: 'Nome do treinamento é obrigatório' });
-    }
-    if (!modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudoProgramatico || !instrutor || !responsavel || !areaResponsavel) {
-      return res.status(400).json({ error: 'Preencha todos os campos obrigatórios' });
+router.post('/', (req, res) => {
+  upload.array('midias', 10)(req, res, async (err) => {
+    if (err) {
+      console.error('❌ Erro no upload:', err);
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ error: 'Arquivo muito grande. Limite: 20MB por arquivo.' });
+        }
+        if (err.code === 'LIMIT_FILE_COUNT') {
+          return res.status(400).json({ error: 'Muitos arquivos. Limite: 10 arquivos.' });
+        }
+      }
+      return res.status(400).json({ error: err.message || 'Erro no upload de arquivos' });
     }
 
-    // Checar existência do nome
-    const existente = await Treinamento.findOne({ where: { nome: nome.trim() } });
-    if (existente) {
-      return res.status(400).json({ error: 'Já existe um treinamento com este nome' });
+    try {
+      const {
+        nome,
+        descricao = '',
+        modalidade,
+        cargaHoraria,
+        tipo,
+        emConformidade,
+        aproveitamento,
+        conteudoProgramatico,
+        instrutor,
+        qualificacaoInstrutor = '',
+        instrutoresAdicionais = '',
+        responsavel,
+        cargoResponsavel = '',
+        areaResponsavel,
+        observacoes = ''
+      } = req.body;
+
+      // Arquivos enviados
+      const midias = req.files ? req.files.map(f => f.filename) : [];
+      console.log('📁 Arquivos recebidos:', midias);
+
+      // Validação mínima
+      if (!nome || !nome.trim()) {
+        return res.status(400).json({ error: 'Nome do treinamento é obrigatório' });
+      }
+      if (!modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudoProgramatico || !instrutor || !responsavel || !areaResponsavel) {
+        return res.status(400).json({ error: 'Preencha todos os campos obrigatórios' });
+      }
+
+      // Checar existência do nome
+      const existente = await Treinamento.findOne({ where: { nome: nome.trim() } });
+      if (existente) {
+        return res.status(400).json({ error: 'Já existe um treinamento com este nome' });
+      }
+
+      const novo = await Treinamento.create({
+        nome: nome.trim(),
+        descricao,
+        modalidade,
+        cargaHoraria: parseInt(cargaHoraria),
+        tipo,
+        emConformidade,
+        aproveitamento,
+        conteudo: conteudoProgramatico,
+        instrutor,
+        qualificacaoInstrutor,
+        instrutoresAdicionais,
+        responsavel,
+        cargoResponsavel,
+        areaResponsavel,
+        observacoes,
+        midias: JSON.stringify(midias)
+      });
+
+      console.log('✅ Treinamento criado com sucesso:', novo.nome);
+      return res.status(201).json(novo);
+
+    } catch (err) {
+      console.error('❌ Erro ao criar treinamento:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor', details: err.message });
     }
-
-    const novo = await Treinamento.create({
-      nome: nome.trim(),
-      descricao,
-      modalidade,
-      cargaHoraria,
-      tipo,
-      emConformidade,
-      aproveitamento,
-      conteudo: conteudoProgramatico,
-      instrutor,
-      qualificacaoInstrutor,
-      instrutoresAdicionais,
-      responsavel,
-      cargoResponsavel,
-      areaResponsavel,
-      observacoes,
-      midias: JSON.stringify(midias)
-    });
-
-    return res.status(201).json(novo);
-
-  } catch (err) {
-    console.error('❌ Erro ao criar treinamento:', err);
-    return res.status(500).json({ error: 'Erro interno do servidor', details: err.message });
-  }
+  });
 });
 
 // Atualizar treinamento pelo ID com upload de arquivos
