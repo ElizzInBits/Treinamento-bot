@@ -103,8 +103,8 @@ function showTab(tabName) {
     atualizarEstatisticasMapeamento();
   } else if (tabName === 'empresas') {
     Promise.all([carregarEmpresas(), carregarContatos()]).then(() => {
-    renderizarEmpresas();
-    atualizarEstatisticasEmpresas();
+      renderizarEmpresas();
+      atualizarEstatisticasEmpresas();
     });
   } else if (tabName === 'treinamentos') {
     renderizarTreinamentos();
@@ -644,18 +644,18 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
       if (!res.ok) throw new Error();
       return res.json();
     })
-.then(data => {
-  mostrarAlerta(`Treinamento ${data.nome} criado com sucesso!`);
-  document.getElementById('treinamentoForm').reset();
-  // Remover classes de erro dos campos do formulário
-  document.querySelectorAll('#treinamentoForm .error').forEach(campo => {
-    campo.classList.remove('error');
-  });
-  carregarTreinamentos().then(() => {
-    atualizarSelectTreinamento();
-    atualizarEstatisticasMapeamento();
-  });
-})
+    .then(data => {
+      mostrarAlerta(`Treinamento ${data.nome} criado com sucesso!`);
+      document.getElementById('treinamentoForm').reset();
+      // Remover classes de erro dos campos do formulário
+      document.querySelectorAll('#treinamentoForm .error').forEach(campo => {
+        campo.classList.remove('error');
+      });
+      carregarTreinamentos().then(() => {
+        atualizarSelectTreinamento();
+        atualizarEstatisticasMapeamento();
+      });
+    })
     .catch(() => mostrarAlerta('Erro ao criar treinamento.', 'error'));
 });
 
@@ -1376,7 +1376,7 @@ function exibirResultadosPesquisa(resultados) {
       html += `
         <div class="search-result-item" onclick="visualizarContatosTreinamento(${treinamento.id})">
           <strong>${treinamento.nome}</strong>
-          <p>${treinamento.conteudo|| 'Sem descrição'}</p>
+          <p>${treinamento.conteudo || 'Sem descrição'}</p>
         </div>
       `;
     });
@@ -1645,7 +1645,7 @@ function abrirDetalhesTreinamento(treinamentoId) {
   if (!treinamento) return;
   document.body.classList.add('modal-open');
   document.getElementById('tituloModalTreinamento').textContent = `Treinamento: ${treinamento.nome}`;
-ocument.getElementById('conteudoModalTreinamento').innerHTML = `
+  document.getElementById('conteudoModalTreinamento').innerHTML = `
   <form id="editarTreinamentoForm" class="professional-form">
     <div class="form-row">
       <div class="form-group">
@@ -1691,37 +1691,37 @@ ocument.getElementById('conteudoModalTreinamento').innerHTML = `
   </form>
 `;
 
-document.getElementById('editarTreinamentoForm').onsubmit = function (e) {
-  e.preventDefault();
-const dadosAtualizados = {
-  nome: document.getElementById('editarNomeTreinamento').value,
-  modalidade: document.getElementById('editarModalidadeTreinamento').value,
-  cargaHoraria: parseInt(document.getElementById('editarCargaHoraria').value) || 0,
-  tipo: document.getElementById('editarTipoTreinamento').value,
-  instrutor: document.getElementById('editarInstrutor').value,
-  areaResponsavel: document.getElementById('editarAreaResponsavel').value,
-  conteudoProgramatico: document.getElementById('editarConteudoTreinamento').value
-};
+  document.getElementById('editarTreinamentoForm').onsubmit = function (e) {
+    e.preventDefault();
+    const dadosAtualizados = {
+      nome: document.getElementById('editarNomeTreinamento').value,
+      modalidade: document.getElementById('editarModalidadeTreinamento').value,
+      cargaHoraria: parseInt(document.getElementById('editarCargaHoraria').value) || 0,
+      tipo: document.getElementById('editarTipoTreinamento').value,
+      instrutor: document.getElementById('editarInstrutor').value,
+      areaResponsavel: document.getElementById('editarAreaResponsavel').value,
+      conteudoProgramatico: document.getElementById('editarConteudoTreinamento').value
+    };
 
-  fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(dadosAtualizados)
-  })
-    .then(res => {
-      if (!res.ok) throw new Error();
-      return res.json();
+    fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dadosAtualizados)
     })
-    .then(() => {
-      mostrarAlerta('Treinamento atualizado com sucesso!');
-      fecharModalDetalhesTreinamento();
-      carregarTreinamentos().then(() => {
-        atualizarSelectTreinamento();
-        atualizarEstatisticasMapeamento();
-      });
-    })
-    .catch(() => mostrarAlerta('Erro ao atualizar treinamento.', 'error'));
-};
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(() => {
+        mostrarAlerta('Treinamento atualizado com sucesso!');
+        fecharModalDetalhesTreinamento();
+        carregarTreinamentos().then(() => {
+          atualizarSelectTreinamento();
+          atualizarEstatisticasMapeamento();
+        });
+      })
+      .catch(() => mostrarAlerta('Erro ao atualizar treinamento.', 'error'));
+  };
 
   document.getElementById('modalDetalhesTreinamento').style.display = 'block';
 }
