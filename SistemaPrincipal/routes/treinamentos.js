@@ -8,7 +8,7 @@ const Treinamento = require('../BancoDeDados/models/treinamento'); // ajuste o c
 // Config multer para salvar arquivos na pasta uploads/
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '..', 'uploads');
+    const uploadDir = path.join(__dirname, '..', 'media', 'treinamentos');
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
     cb(null, uploadDir);
   },
