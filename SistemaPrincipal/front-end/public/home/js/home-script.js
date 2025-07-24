@@ -1554,32 +1554,52 @@ function implementarNavegacaoTeclado() {
 
 function implementarAutoSave() {
   const forms = document.querySelectorAll('form');
+
   forms.forEach(form => {
     const inputs = form.querySelectorAll('input, select, textarea');
-    inputs.forEach(input => {
-      input.addEventListener('change', function () {
-        // Salvar dados temporariamente no sessionStorage
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        sessionStorage.setItem(`form_${form.id}`, JSON.stringify(data));
-      });
-    });
 
     // Restaurar dados ao carregar a página
     const savedData = sessionStorage.getItem(`form_${form.id}`);
     if (savedData) {
       try {
         const data = JSON.parse(savedData);
+
         Object.entries(data).forEach(([name, value]) => {
           const input = form.querySelector(`[name="${name}"]`);
-          if (input) input.value = value;
+          
+          // ❗ Ignorar campos do tipo file na restauração
+          if (input && input.type !== 'file') {
+            input.value = value;
+          }
         });
       } catch (e) {
         console.error('Erro ao restaurar dados do formulário:', e);
       }
     }
+
+    // Salvar dados ao alterar qualquer campo
+    inputs.forEach(input => {
+      // ❗ Ignorar campos file na escuta também
+      if (input.type === 'file') return;
+
+      input.addEventListener('change', function () {
+        const formData = new FormData(form);
+        const data = {};
+
+        for (const [key, value] of formData.entries()) {
+          const campo = form.querySelector(`[name="${key}"]`);
+          // ❗ Ignorar campos file no salvamento
+          if (campo && campo.type !== 'file') {
+            data[key] = value;
+          }
+        }
+
+        sessionStorage.setItem(`form_${form.id}`, JSON.stringify(data));
+      });
+    });
   });
 }
+
 
 function verificarNotificacoes() {
   // Verificar contatos sem treinamento há muito tempo

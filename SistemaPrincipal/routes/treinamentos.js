@@ -3,7 +3,7 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const Treinamento = require('../BancoDeDados/models/treinamento'); // ajuste o caminho se precisar
+const Treinamento = require('../BancoDeDados/models/treinamento'); // ajuste o caminho se necessário
 
 // Configuração do multer para salvar arquivos em media/treinamentos
 const storage = multer.diskStorage({
@@ -15,7 +15,9 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    const filename = file.fieldname + '-' + uniqueSuffix + ext;
+    console.log(`📁 Salvando arquivo: ${filename}`);  // log para debug
+    cb(null, filename);
   }
 });
 const upload = multer({ storage });
@@ -46,7 +48,7 @@ router.get('/', async (req, res) => {
 router.post('/', upload.array('midias'), async (req, res) => {
   try {
     const {
-      nome, descricao, modalidade, cargaHoraria, tipo,
+      nome, descricao = '', modalidade, cargaHoraria, tipo,
       emConformidade, aproveitamento, conteudo,
       instrutor, qualificacaoInstrutor, instrutoresAdicionais,
       responsavel, cargoResponsavel, areaResponsavel, observacoes
@@ -58,18 +60,18 @@ router.post('/', upload.array('midias'), async (req, res) => {
 
     const nomeLimpo = nome.trim();
 
-    // Verifica se já existe
+    // Verifica se já existe treinamento com mesmo nome
     const existente = await Treinamento.findOne({ where: { nome: nomeLimpo } });
     if (existente) {
       return res.status(400).json({ error: 'Já existe um treinamento com este nome' });
     }
 
-    // Extrai nomes dos arquivos enviados
+    // Extrai nomes dos arquivos enviados (se houver)
     const midiasNomes = (req.files || []).map(file => file.filename);
 
     const novo = await Treinamento.create({
       nome: nomeLimpo,
-      descricao: descricao || '',
+      descricao,
       modalidade,
       cargaHoraria,
       tipo,
@@ -113,6 +115,7 @@ router.put('/:id', async (req, res) => {
     const treinamento = await Treinamento.findByPk(id);
     if (!treinamento) return res.status(404).json({ error: 'Treinamento não encontrado' });
 
+    // Verifica nome novo para evitar duplicidade
     if (nome && nome.trim() !== treinamento.nome) {
       const existente = await Treinamento.findOne({ where: { nome: nome.trim() } });
       if (existente && existente.id !== treinamento.id) {
@@ -121,6 +124,7 @@ router.put('/:id', async (req, res) => {
       treinamento.nome = nome.trim();
     }
 
+    // Atualiza demais campos se enviados
     treinamento.descricao = descricao !== undefined ? descricao : treinamento.descricao;
     treinamento.modalidade = modalidade !== undefined ? modalidade : treinamento.modalidade;
     treinamento.cargaHoraria = cargaHoraria !== undefined ? cargaHoraria : treinamento.cargaHoraria;
@@ -153,6 +157,7 @@ router.delete('/:id', async (req, res) => {
     const treinamento = await Treinamento.findByPk(id);
     if (!treinamento) return res.status(404).json({ error: 'Treinamento não encontrado' });
 
+    // Excluir arquivos de mídia relacionados
     if (treinamento.midias) {
       try {
         const midias = JSON.parse(treinamento.midias);
