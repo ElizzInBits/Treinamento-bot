@@ -84,15 +84,31 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { nome, descricao } = req.body;
+    const {
+      nome,
+      descricao = '',
+      modalidade,
+      cargaHoraria,
+      tipo,
+      emConformidade,
+      aproveitamento,
+      conteudoProgramatico,
+      instrutor,
+      qualificacaoInstrutor = '',
+      instrutoresAdicionais = '',
+      responsavel,
+      cargoResponsavel = '',
+      areaResponsavel,
+      observacoes = ''
+    } = req.body;
 
     const treinamento = await Treinamento.findByPk(id);
     if (!treinamento) {
       return res.status(404).json({ error: 'Treinamento não encontrado' });
     }
 
+    // Verifica se o novo nome já existe em outro registro
     if (nome && nome.trim() !== treinamento.nome) {
-      // Verifica se o novo nome já existe
       const existente = await Treinamento.findOne({ where: { nome: nome.trim() } });
       if (existente && existente.id !== treinamento.id) {
         return res.status(400).json({ error: 'Já existe um treinamento com este nome' });
@@ -100,9 +116,21 @@ router.put('/:id', async (req, res) => {
       treinamento.nome = nome.trim();
     }
 
-    if (descricao !== undefined) {
-      treinamento.descricao = descricao;
-    }
+    // Atualiza todos os campos
+    treinamento.descricao = descricao;
+    treinamento.modalidade = modalidade;
+    treinamento.cargaHoraria = cargaHoraria;
+    treinamento.tipo = tipo;
+    treinamento.emConformidade = emConformidade;
+    treinamento.aproveitamento = aproveitamento;
+    treinamento.conteudo = conteudoProgramatico;
+    treinamento.instrutor = instrutor;
+    treinamento.qualificacaoInstrutor = qualificacaoInstrutor;
+    treinamento.instrutoresAdicionais = instrutoresAdicionais;
+    treinamento.responsavel = responsavel;
+    treinamento.cargoResponsavel = cargoResponsavel;
+    treinamento.areaResponsavel = areaResponsavel;
+    treinamento.observacoes = observacoes;
 
     await treinamento.save();
 
