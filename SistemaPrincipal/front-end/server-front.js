@@ -36,11 +36,11 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ 4. Servir arquivos estáticos
+// ✅ 4. Servir arquivos estáticos da pasta public
 const publicPath = path.join(__dirname, 'public');
 if (fs.existsSync(publicPath)) {
     app.use(express.static(publicPath));
-    console.log('✅ Arquivos estáticos configurados');
+    console.log('✅ Arquivos estáticos configurados em /public');
 } else {
     console.error('❌ Pasta public não encontrada!');
 }
@@ -92,10 +92,17 @@ console.log('🔗 Registrando rotas da API...');
 app.use('/api/contatos', contatosRoutes);
 app.use('/api/treinamentos', treinamentosRoutes);
 app.use('/api/empresas', empresasRoutes);
-app.use('/media/treinamentos', express.static(path.join(__dirname, 'media/treinamentos')));
-console.log('✅ Rotas da API registradas');
 
-// ✅ 7. Rota de teste básica
+// ✅ 7. Servir mídia (uploads) estáticos
+const midiaPath = path.join(__dirname, 'media', 'treinamentos');
+if (fs.existsSync(midiaPath)) {
+    app.use('/media/treinamentos', express.static(midiaPath));
+    console.log('✅ Servindo arquivos de mídia em /media/treinamentos');
+} else {
+    console.warn('⚠️ Pasta de mídia media/treinamentos não encontrada!');
+}
+
+// ✅ 8. Rota de teste básica
 app.get('/test', (req, res) => {
     res.json({
         message: 'Servidor funcionando!',
@@ -108,11 +115,10 @@ app.get('/test', (req, res) => {
     });
 });
 
-
-// ✅ 8. Painéis HTML
-const homePath = path.join(__dirname, 'public', 'home', 'home-index.html');
-const autoCadastroPath = path.join(__dirname, 'public', 'autoCadastro', 'cadastro-index.html');
-const emprePath = path.join(__dirname, 'public', 'empreCadastro', 'empre-index.html');
+// ✅ 9. Painéis HTML
+const homePath = path.join(publicPath, 'home', 'home-index.html');
+const autoCadastroPath = path.join(publicPath, 'autoCadastro', 'cadastro-index.html');
+const emprePath = path.join(publicPath, 'empreCadastro', 'empre-index.html');
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date() });
@@ -134,7 +140,7 @@ app.get('/empre', (req, res) => {
     fs.existsSync(emprePath) ? res.sendFile(emprePath) : res.json({ error: 'Painel 3 não encontrado', path: emprePath });
 });
 
-// ✅ 9. Middleware de erro
+// ✅ 10. Middleware de erro
 app.use((err, req, res, next) => {
     console.error('❌ Erro capturado:', err.stack);
     res.status(500).json({
@@ -144,7 +150,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// ✅ 10. Rota 404
+// ✅ 11. Rota 404
 app.use((req, res) => {
     console.log(`❌ Rota não encontrada: ${req.method} ${req.path}`);
     res.status(404).json({
@@ -155,20 +161,20 @@ app.use((req, res) => {
     });
 });
 
-// ✅ 11. Inicializar servidor e conectar ao banco
+// ✅ 12. Inicializar servidor e conectar ao banco
 async function iniciarServidor() {
     try {
         console.log('🚀 Iniciando servidor...');
 
         const server = app.listen(PORT, () => {
             console.log(`✅ Servidor rodando na porta ${PORT}`);
-            console.log(`🔗 Teste: http://92.112.178.26:${PORT}/test`);
-            console.log(`📱 Painel 1: http://92.112.178.26:${PORT}/home`);
-            console.log(`📱 Painel 2: http://92.112.178.26:${PORT}/autoCadastro`);
-            console.log(`📱 Painel 3: http://92.112.178.26:${PORT}/empre`);
-            console.log(`🔗 API Contatos: http://92.112.178.26:${PORT}/api/contatos`);
-            console.log(`🔗 API Treinamentos: http://92.112.178.26:${PORT}/api/treinamentos`);
-            console.log(`🔗 API Empresas: http://92.112.178.26:${PORT}/api/empresas`);
+            console.log(`🔗 Teste: http://localhost:${PORT}/test`);
+            console.log(`📱 Painel 1: http://localhost:${PORT}/home`);
+            console.log(`📱 Painel 2: http://localhost:${PORT}/autoCadastro`);
+            console.log(`📱 Painel 3: http://localhost:${PORT}/empre`);
+            console.log(`🔗 API Contatos: http://localhost:${PORT}/api/contatos`);
+            console.log(`🔗 API Treinamentos: http://localhost:${PORT}/api/treinamentos`);
+            console.log(`🔗 API Empresas: http://localhost:${PORT}/api/empresas`);
         });
 
         try {
