@@ -51,7 +51,7 @@ router.post('/', upload.array('midias'), async (req, res) => {
       nome, descricao = '', modalidade, cargaHoraria, tipo,
       emConformidade, aproveitamento, conteudo,
       instrutor, qualificacaoInstrutor, instrutoresAdicionais,
-      responsavel, cargoResponsavel, areaResponsavel, observacoes
+      responsavel, cargoResponsavel, areaResponsavel, observacoes, midias
     } = req.body;
 
     if (!nome || !nome.trim()) {
