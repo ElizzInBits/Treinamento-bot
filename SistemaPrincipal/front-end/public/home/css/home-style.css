@@ -644,8 +644,7 @@ body {
 }
 
 .training-card {
-  max-width: 600px; 
-  margin: 0 auto;
+  max-width: 100%; /* Garante que o card respeite o grid */
   background: var(--white);
   border-radius: 12px;
   box-shadow: var(--shadow-md);
@@ -653,6 +652,9 @@ body {
   transition: var(--transition);
   border: 1px solid var(--gray-200);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .training-card:hover {
@@ -682,11 +684,14 @@ body {
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
+  word-wrap: break-word;
 }
 
 .training-card p {
   color: var(--gray-600);
   margin-bottom: 1rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .training-stats {
@@ -741,7 +746,6 @@ body {
   padding: 20px;
   overflow: hidden;
 }
-
 
 .modal-overlay.active {
   display: flex;
