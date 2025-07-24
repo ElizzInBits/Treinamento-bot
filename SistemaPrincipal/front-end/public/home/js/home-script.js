@@ -269,7 +269,7 @@ function renderizarEmpresas() {
     return `
       <div class="company-card">
         <div class="company-header">
-          <h3>${empresa.razao_social}</h3>
+          <h3>${empresa.razaoSocial}</h3>
           <span class="company-type">${empresa.tipo || empresa.porte || 'Empresa'}</span>
         </div>
         <div class="company-info">
