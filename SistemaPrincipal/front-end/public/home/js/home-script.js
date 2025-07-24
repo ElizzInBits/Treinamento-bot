@@ -1673,8 +1673,38 @@ function abrirDetalhesTreinamento(treinamentoId) {
         <input type="text" id="editarInstrutor" class="form-control" value="${treinamento.instrutor || ''}" />
       </div>
       <div class="form-group">
+        <label for="editarQualificacaoInstrutor">Qualificação Instrutor</label>
+        <input type="text" id="editarQualificacaoInstrutor" class="form-control" value="${treinamento.qualificacaoInstrutor || ''}" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="editarInstrutoresAdicionais">Instrutores Adicionais</label>
+        <input type="text" id="editarInstrutoresAdicionais" class="form-control" value="${treinamento.instrutoresAdicionais || ''}" />
+      </div>
+      <div class="form-group">
+        <label for="editarResponsavel">Responsável</label>
+        <input type="text" id="editarResponsavel" class="form-control" value="${treinamento.responsavel || ''}" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="editarCargoResponsavel">Cargo Responsável</label>
+        <input type="text" id="editarCargoResponsavel" class="form-control" value="${treinamento.cargoResponsavel || ''}" />
+      </div>
+      <div class="form-group">
         <label for="editarAreaResponsavel">Área Responsável</label>
         <input type="text" id="editarAreaResponsavel" class="form-control" value="${treinamento.areaResponsavel || ''}" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="editarEmConformidade">Em Conformidade</label>
+        <input type="text" id="editarEmConformidade" class="form-control" value="${treinamento.emConformidade || ''}" />
+      </div>
+      <div class="form-group">
+        <label for="editarAproveitamento">Aproveitamento</label>
+        <input type="text" id="editarAproveitamento" class="form-control" value="${treinamento.aproveitamento || ''}" />
       </div>
     </div>
     <div class="form-row">
@@ -1682,6 +1712,12 @@ function abrirDetalhesTreinamento(treinamentoId) {
         <label for="editarConteudoTreinamento">Conteúdo Programático</label>
         <textarea id="editarConteudoTreinamento" rows="4" class="form-control">${treinamento.conteudoProgramatico || treinamento.conteudo || ''}</textarea>
         <span class="form-hint">Forneça o conteúdo programático do treinamento.</span>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex: 1 1 100%;">
+        <label for="editarObservacoes">Observações</label>
+        <textarea id="editarObservacoes" rows="2" class="form-control">${treinamento.observacoes || ''}</textarea>
       </div>
     </div>
     <div class="form-actions">
@@ -1699,8 +1735,15 @@ function abrirDetalhesTreinamento(treinamentoId) {
       cargaHoraria: parseInt(document.getElementById('editarCargaHoraria').value) || 0,
       tipo: document.getElementById('editarTipoTreinamento').value,
       instrutor: document.getElementById('editarInstrutor').value,
+      qualificacaoInstrutor: document.getElementById('editarQualificacaoInstrutor').value,
+      instrutoresAdicionais: document.getElementById('editarInstrutoresAdicionais').value,
+      responsavel: document.getElementById('editarResponsavel').value,
+      cargoResponsavel: document.getElementById('editarCargoResponsavel').value,
       areaResponsavel: document.getElementById('editarAreaResponsavel').value,
-      conteudoProgramatico: document.getElementById('editarConteudoTreinamento').value
+      emConformidade: document.getElementById('editarEmConformidade').value,
+      aproveitamento: document.getElementById('editarAproveitamento').value,
+      conteudoProgramatico: document.getElementById('editarConteudoTreinamento').value,
+      observacoes: document.getElementById('editarObservacoes').value
     };
 
     fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
