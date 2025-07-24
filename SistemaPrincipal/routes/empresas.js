@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { Empresa } = require('../BancoDeDados/models');
+const { Empresa } = require('../BancoDeDados/models/index');
 const { Op } = require('sequelize');
 
 const { cnpj: cnpjValidator } = require('cpf-cnpj-validator');
@@ -51,39 +51,13 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET - Listar todas as empresas com dados completos
+// GET - Listar todas as empresas
 router.get('/', async (req, res) => {
   try {
     const empresas = await Empresa.findAll({
-      include: [{
-        association: 'contatos',
-        attributes: ['id', 'nome', 'telefone', 'email', 'statusTreinamento']
-      }],
       order: [['razao_social', 'ASC']]
     });
-
-    // Buscar treinamentos para cada empresa
-    const Treinamento = require('../BancoDeDados/models/treinamento');
-    const empresasCompletas = await Promise.all(empresas.map(async (empresa) => {
-      let treinamentos = [];
-      if (empresa.treinamentos_ids) {
-        try {
-          const treinamentosIds = JSON.parse(empresa.treinamentos_ids);
-          treinamentos = await Treinamento.findAll({
-            where: { id: treinamentosIds },
-            attributes: ['id', 'nome', 'modalidade', 'cargaHoraria']
-          });
-        } catch (e) {
-          console.error('Erro ao buscar treinamentos para empresa:', e);
-        }
-      }
-      return {
-        ...empresa.toJSON(),
-        treinamentos
-      };
-    }));
-
-    res.json(empresasCompletas);
+    res.json(empresas);
   } catch (error) {
     console.error('Erro ao buscar empresas:', error);
     res.status(500).json({ error: 'Erro interno do servidor.' });
@@ -105,39 +79,14 @@ router.get('/select/options', async (req, res) => {
   }
 });
 
-// GET - Buscar empresa por ID com contatos e treinamentos
+// GET - Buscar empresa por ID
 router.get('/:id', async (req, res) => {
   try {
-    const empresa = await Empresa.findByPk(req.params.id, {
-      include: [{
-        association: 'contatos',
-        attributes: ['id', 'nome', 'telefone', 'email', 'statusTreinamento']
-      }]
-    });
-    
+    const empresa = await Empresa.findByPk(req.params.id);
     if (!empresa) {
       return res.status(404).json({ error: 'Empresa não encontrada.' });
     }
-
-    // Buscar treinamentos atribuídos
-    let treinamentos = [];
-    if (empresa.treinamentos_ids) {
-      try {
-        const treinamentosIds = JSON.parse(empresa.treinamentos_ids);
-        const Treinamento = require('../BancoDeDados/models/treinamento');
-        treinamentos = await Treinamento.findAll({
-          where: { id: treinamentosIds },
-          attributes: ['id', 'nome', 'modalidade', 'cargaHoraria']
-        });
-      } catch (e) {
-        console.error('Erro ao buscar treinamentos:', e);
-      }
-    }
-
-    res.json({
-      ...empresa.toJSON(),
-      treinamentos
-    });
+    res.json(empresa);
   } catch (error) {
     console.error('Erro ao buscar empresa:', error);
     res.status(500).json({ error: 'Erro interno do servidor.' });
@@ -181,6 +130,47 @@ router.put('/:id', async (req, res) => {
     res.json({ message: 'Empresa atualizada com sucesso.', empresa });
   } catch (error) {
     console.error('Erro ao atualizar empresa:', error);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
+});
+
+// GET - Buscar dados completos da empresa (contatos e treinamentos)
+router.get('/:id/completo', async (req, res) => {
+  try {
+    const empresa = await Empresa.findByPk(req.params.id);
+    if (!empresa) {
+      return res.status(404).json({ error: 'Empresa não encontrada.' });
+    }
+
+    // Buscar contatos da empresa
+    const { Contato } = require('../BancoDeDados/models/index');
+    const contatos = await Contato.findAll({
+      where: { empresaId: req.params.id },
+      attributes: ['id', 'nome', 'telefone', 'email', 'statusTreinamento']
+    });
+
+    // Buscar treinamentos atribuídos
+    let treinamentos = [];
+    if (empresa.treinamentos_ids) {
+      try {
+        const treinamentosIds = JSON.parse(empresa.treinamentos_ids);
+        const Treinamento = require('../BancoDeDados/models/treinamento');
+        treinamentos = await Treinamento.findAll({
+          where: { id: treinamentosIds },
+          attributes: ['id', 'nome', 'modalidade', 'cargaHoraria']
+        });
+      } catch (e) {
+        console.error('Erro ao buscar treinamentos:', e);
+      }
+    }
+
+    res.json({
+      ...empresa.toJSON(),
+      contatos,
+      treinamentos
+    });
+  } catch (error) {
+    console.error('Erro ao buscar dados completos da empresa:', error);
     res.status(500).json({ error: 'Erro interno do servidor.' });
   }
 });
