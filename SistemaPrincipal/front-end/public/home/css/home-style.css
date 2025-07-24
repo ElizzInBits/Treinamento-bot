@@ -1238,13 +1238,7 @@ body.modal-open {
     flex-direction: column;
   }
   
- .modal-container {
-    margin: 10px;
-    max-height: 90vh;
-  }
-  
 
-  
   .alerts-container {
     position: fixed;
     top: 10px;

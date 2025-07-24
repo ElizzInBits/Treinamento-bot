@@ -102,8 +102,10 @@ function showTab(tabName) {
   if (tabName === 'mapeamento') {
     atualizarEstatisticasMapeamento();
   } else if (tabName === 'empresas') {
+    Promise.all([carregarEmpresas(), carregarContatos()]).then(() => {
     renderizarEmpresas();
     atualizarEstatisticasEmpresas();
+    });
   } else if (tabName === 'treinamentos') {
     renderizarTreinamentos();
   }
