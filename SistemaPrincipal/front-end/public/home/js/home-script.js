@@ -1699,37 +1699,37 @@ function abrirDetalhesTreinamento(treinamentoId) {
   </form>
 `;
 
-  document.getElementById('editarTreinamentoForm').onsubmit = function (e) {
-    e.preventDefault();
-    const dadosAtualizados = {
-      nome: document.getElementById('editarNomeTreinamento').value,
-      modalidade: document.getElementById('editarModalidadeTreinamento').value,
-      cargaHoraria: parseInt(document.getElementById('editarCargaHoraria').value),
-      tipo: document.getElementById('editarTipoTreinamento').value,
-      instrutor: document.getElementById('editarInstrutor').value,
-      areaResponsavel: document.getElementById('editarAreaResponsavel').value,
-      descricao: document.getElementById('editarDescricaoTreinamento').value
-    };
-
-    fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dadosAtualizados)
-    })
-      .then(res => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then(() => {
-        mostrarAlerta('Treinamento atualizado com sucesso!');
-        fecharModalDetalhesTreinamento();
-        carregarTreinamentos().then(() => {
-          atualizarSelectTreinamento();
-          atualizarEstatisticasMapeamento();
-        });
-      })
-      .catch(() => mostrarAlerta('Erro ao atualizar treinamento.', 'error'));
+document.getElementById('editarTreinamentoForm').onsubmit = function (e) {
+  e.preventDefault();
+  const dadosAtualizados = {
+    nome: document.getElementById('editarNomeTreinamento').value,
+    modalidade: document.getElementById('editarModalidadeTreinamento').value,
+    cargaHoraria: parseInt(document.getElementById('editarCargaHoraria').value) || 0,
+    tipo: document.getElementById('editarTipoTreinamento').value,
+    instrutor: document.getElementById('editarInstrutor').value,
+    areaResponsavel: document.getElementById('editarAreaResponsavel').value,
+    conteudoProgramatico: document.getElementById('editarDescricaoTreinamento').value // <-- use o mesmo campo do POST
   };
+
+  fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dadosAtualizados)
+  })
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
+    .then(() => {
+      mostrarAlerta('Treinamento atualizado com sucesso!');
+      fecharModalDetalhesTreinamento();
+      carregarTreinamentos().then(() => {
+        atualizarSelectTreinamento();
+        atualizarEstatisticasMapeamento();
+      });
+    })
+    .catch(() => mostrarAlerta('Erro ao atualizar treinamento.', 'error'));
+};
 
   document.getElementById('modalDetalhesTreinamento').style.display = 'block';
 }
