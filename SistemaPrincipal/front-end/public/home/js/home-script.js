@@ -1645,9 +1645,38 @@ function abrirDetalhesTreinamento(treinamentoId) {
   if (!treinamento) return;
   document.body.classList.add('modal-open');
   document.getElementById('tituloModalTreinamento').textContent = `Treinamento: ${treinamento.nome}`;
-  document.getElementById('conteudoModalTreinamento').innerHTML = `
+ocument.getElementById('conteudoModalTreinamento').innerHTML = `
   <form id="editarTreinamentoForm" class="professional-form">
-    ...
+    <div class="form-row">
+      <div class="form-group">
+        <label for="editarNomeTreinamento">Nome <span class="required">*</span></label>
+        <input type="text" id="editarNomeTreinamento" class="form-control" value="${treinamento.nome}" required />
+      </div>
+      <div class="form-group">
+        <label for="editarModalidadeTreinamento">Modalidade <span class="required">*</span></label>
+        <input type="text" id="editarModalidadeTreinamento" class="form-control" value="${treinamento.modalidade || ''}" required />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="editarCargaHoraria">Carga Horária <span class="required">*</span></label>
+        <input type="number" id="editarCargaHoraria" class="form-control" value="${treinamento.cargaHoraria || ''}" required />
+      </div>
+      <div class="form-group">
+        <label for="editarTipoTreinamento">Tipo <span class="required">*</span></label>
+        <input type="text" id="editarTipoTreinamento" class="form-control" value="${treinamento.tipo || ''}" required />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="editarInstrutor">Instrutor</label>
+        <input type="text" id="editarInstrutor" class="form-control" value="${treinamento.instrutor || ''}" />
+      </div>
+      <div class="form-group">
+        <label for="editarAreaResponsavel">Área Responsável</label>
+        <input type="text" id="editarAreaResponsavel" class="form-control" value="${treinamento.areaResponsavel || ''}" />
+      </div>
+    </div>
     <div class="form-row">
       <div class="form-group" style="flex: 1 1 100%;">
         <label for="editarConteudoTreinamento">Conteúdo Programático</label>
@@ -1655,45 +1684,6 @@ function abrirDetalhesTreinamento(treinamentoId) {
         <span class="form-hint">Forneça o conteúdo programático do treinamento.</span>
       </div>
     </div>
-      
-      <div class="form-group">
-        <label for="editarModalidadeTreinamento">Modalidade <span class="required">*</span></label>
-        <input type="text" id="editarModalidadeTreinamento" class="form-control" value="${treinamento.modalidade || ''}" required />
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="editarCargaHoraria">Carga Horária <span class="required">*</span></label>
-        <input type="number" id="editarCargaHoraria" class="form-control" value="${treinamento.cargaHoraria || ''}" required />
-      </div>
-
-      <div class="form-group">
-        <label for="editarTipoTreinamento">Tipo <span class="required">*</span></label>
-        <input type="text" id="editarTipoTreinamento" class="form-control" value="${treinamento.tipo || ''}" required />
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="editarInstrutor">Instrutor</label>
-        <input type="text" id="editarInstrutor" class="form-control" value="${treinamento.instrutor || ''}" />
-      </div>
-
-      <div class="form-group">
-        <label for="editarAreaResponsavel">Área Responsável</label>
-        <input type="text" id="editarAreaResponsavel" class="form-control" value="${treinamento.areaResponsavel || ''}" />
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group" style="flex: 1 1 100%;">
-        <label for="editarDescricaoTreinamento">Descrição</label>
-        <textarea id="editarDescricaoTreinamento" rows="4" class="form-control">${treinamento.descricao || ''}</textarea>
-        <span class="form-hint">Forneça uma breve descrição do treinamento.</span>
-      </div>
-    </div>
-
     <div class="form-actions">
       <button type="button" class="btn-secondary" onclick="fecharModalDetalhesTreinamento()">Cancelar</button>
       <button type="submit" class="btn-primary">Salvar Alterações</button>
@@ -1710,7 +1700,7 @@ const dadosAtualizados = {
   tipo: document.getElementById('editarTipoTreinamento').value,
   instrutor: document.getElementById('editarInstrutor').value,
   areaResponsavel: document.getElementById('editarAreaResponsavel').value,
-  conteudoProgramatico: document.getElementById('editarConteudoTreinamento').value // <-- agora pega do campo correto
+  conteudoProgramatico: document.getElementById('editarConteudoTreinamento').value
 };
 
   fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
