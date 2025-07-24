@@ -359,7 +359,7 @@ body {
 /* Dashboard de Estatísticas */
 .dashboard-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1.5rem;
   padding: 2rem;
   background: var(--gray-50);
@@ -374,6 +374,7 @@ body {
   box-shadow: var(--shadow-md);
   transition: var(--transition);
   position: relative;
+  overflow: hidden;
 }
 
 .stat-item:hover {
@@ -388,7 +389,7 @@ body {
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--accent-color);
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
   transform: scaleX(0);
   transform-origin: center;
   transition: transform 0.3s ease;
@@ -398,16 +399,54 @@ body {
   transform: scaleX(1);
 }
 
+.stat-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
 .stat-value {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 700;
   color: var(--primary-color);
   margin-bottom: 0.5rem;
+  word-break: break-word;
 }
 
 .stat-label {
   color: var(--gray-600);
   font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Charts Container */
+.charts-container {
+  padding: 2rem;
+  background: var(--white);
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.chart-item {
+  background: var(--gray-50);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--gray-200);
+}
+
+.chart-item h4 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.chart-item canvas {
+  max-height: 300px;
 }
 
 /* Pesquisa */

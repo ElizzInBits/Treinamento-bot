@@ -7,6 +7,7 @@
   <title>Gestão de Treinamentos</title>
   <link rel="stylesheet" href="css/home-style.css" />
   <link rel="stylesheet" href="css/midias.css" />
+  <link rel="stylesheet" href="css/empresas-melhoradas.css" />
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -59,26 +60,59 @@
           <!-- Cards de Indicadores -->
           <div class="dashboard-stats">
             <div class="stat-item" id="cardTotalContatos" style="cursor: pointer;">
+              <div class="stat-icon">👥</div>
               <div class="stat-value" id="mapTotalContatos">0</div>
               <div class="stat-label">Total de Contatos</div>
             </div>
             <div class="stat-item">
+              <div class="stat-icon">🎓</div>
               <div class="stat-value" id="mapContatosComTreinamento">0</div>
-              <div class="stat-label">Contatos com Treinamento</div>
+              <div class="stat-label">Com Treinamento</div>
             </div>
             <div class="stat-item">
+              <div class="stat-icon">🏢</div>
               <div class="stat-value" id="mapEmpresasAtivas">0</div>
               <div class="stat-label">Empresas Ativas</div>
             </div>
             <div class="stat-item">
+              <div class="stat-icon">📚</div>
               <div class="stat-value" id="mapTreinamentosDisponiveis">0</div>
-              <div class="stat-label">Treinamentos Disponíveis</div>
+              <div class="stat-label">Treinamentos</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">📈</div>
+              <div class="stat-value" id="mapPercentualTreinados">0%</div>
+              <div class="stat-label">Taxa de Treinamento</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">📋</div>
+              <div class="stat-value" id="mapMediaContatos">0</div>
+              <div class="stat-label">Média por Empresa</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">✅</div>
+              <div class="stat-value" id="mapEmpresasComContatos">0</div>
+              <div class="stat-label">Empresas Ativas</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">🏆</div>
+              <div class="stat-value" id="mapTreinamentoPopular" style="font-size: 1rem;">N/A</div>
+              <div class="stat-label">Mais Popular</div>
             </div>
           </div>
 
-          <!-- Gráfico -->
+          <!-- Gráficos -->
           <div class="charts-container">
-            <canvas id="graficoEmpresas" width="400" height="200"></canvas>
+            <div class="chart-row">
+              <div class="chart-item">
+                <h4>Contatos por Empresa</h4>
+                <canvas id="graficoEmpresas" width="400" height="200"></canvas>
+              </div>
+              <div class="chart-item">
+                <h4>Status de Treinamento</h4>
+                <canvas id="graficoStatus" width="400" height="200"></canvas>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -201,8 +235,14 @@
                 <h4 class="section-title">Mídias do Treinamento</h4>
                 <div class="form-group full-width">
                   <label for="midiasTreinamento">Anexar Mídias (Imagens, Vídeos, Áudios, PDFs)</label>
+                  <div class="file-upload-area" onclick="document.getElementById('midiasTreinamento').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Clique aqui ou arraste arquivos</div>
+                    <div class="upload-hint">Suporte para múltiplos arquivos (máx. 20MB cada)</div>
+                  </div>
                   <input type="file" id="midiasTreinamento" name="midiasTreinamento" multiple
-                    accept="image/*,video/*,audio/*,application/pdf" class="form-control" />
+                    accept="image/*,video/*,audio/*,application/pdf" class="form-control" style="display: none;" />
+                  <div id="selectedFiles" class="selected-files" style="display: none;"></div>
                 </div>
               </div>
 
