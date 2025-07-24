@@ -94,12 +94,21 @@ app.use('/api/treinamentos', treinamentosRoutes);
 app.use('/api/empresas', empresasRoutes);
 
 // ✅ 7. Servir mídia (uploads) estáticos
-const midiaPath = path.join(__dirname, 'media', 'treinamentos');
+const midiaPath = path.join(__dirname, '..', 'media', 'treinamentos');
 if (fs.existsSync(midiaPath)) {
     app.use('/media/treinamentos', express.static(midiaPath));
     console.log('✅ Servindo arquivos de mídia em /media/treinamentos');
 } else {
     console.warn('⚠️ Pasta de mídia media/treinamentos não encontrada!');
+    // Tentar criar o diretório
+    try {
+        const fs = require('fs');
+        fs.mkdirSync(midiaPath, { recursive: true });
+        app.use('/media/treinamentos', express.static(midiaPath));
+        console.log('✅ Diretório de mídia criado e configurado');
+    } catch (e) {
+        console.error('❌ Erro ao criar diretório de mídia:', e.message);
+    }
 }
 
 // ✅ 8. Rota de teste básica
