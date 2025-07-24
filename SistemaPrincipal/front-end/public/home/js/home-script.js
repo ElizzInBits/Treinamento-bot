@@ -597,6 +597,7 @@ function renderizarTreinamentos() {
 document.getElementById('treinamentoForm').addEventListener('submit', function (e) {
   e.preventDefault();
 
+  // Dados do formulário (exceto arquivos)
   const nome = document.getElementById('novoTreinamento').value.trim();
   const modalidade = document.getElementById('modalidadeTreinamento').value;
   const cargaHoraria = parseInt(document.getElementById('cargaHoraria').value);
@@ -617,28 +618,34 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
     return;
   }
 
-  const novoTreinamento = {
-    nome: nome,
-    descricao: conteudo,
-    modalidade: modalidade,
-    cargaHoraria: cargaHoraria,
-    tipo: tipo,
-    emConformidade: emConformidade,
-    aproveitamento: aproveitamento,
-    conteudoProgramatico: conteudo,
-    instrutor: instrutor,
-    qualificacaoInstrutor: qualificacaoInstrutor,
-    instrutoresAdicionais: instrutoresAdicionais,
-    responsavel: responsavel,
-    cargoResponsavel: cargoResponsavel,
-    areaResponsavel: areaResponsavel,
-    observacoes: observacoes
-  };
+  // Pega os arquivos do input
+  const arquivos = document.getElementById('midiasTreinamento').files;
+
+  const formData = new FormData();
+  formData.append('nome', nome);
+  formData.append('descricao', conteudo);
+  formData.append('modalidade', modalidade);
+  formData.append('cargaHoraria', cargaHoraria);
+  formData.append('tipo', tipo);
+  formData.append('emConformidade', emConformidade);
+  formData.append('aproveitamento', aproveitamento);
+  formData.append('conteudoProgramatico', conteudo);
+  formData.append('instrutor', instrutor);
+  formData.append('qualificacaoInstrutor', qualificacaoInstrutor);
+  formData.append('instrutoresAdicionais', instrutoresAdicionais);
+  formData.append('responsavel', responsavel);
+  formData.append('cargoResponsavel', cargoResponsavel);
+  formData.append('areaResponsavel', areaResponsavel);
+  formData.append('observacoes', observacoes);
+
+  // Adiciona cada arquivo individualmente (suportando múltiplos)
+  for (let i = 0; i < arquivos.length; i++) {
+    formData.append('midias', arquivos[i]);
+  }
 
   fetch('http://92.112.178.26:3000/api/treinamentos', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(novoTreinamento)
+    body: formData, // Atenção: não colocar headers 'Content-Type' com JSON aqui
   })
     .then(res => {
       if (!res.ok) throw new Error();
@@ -647,7 +654,6 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
     .then(data => {
       mostrarAlerta(`Treinamento ${data.nome} criado com sucesso!`);
       document.getElementById('treinamentoForm').reset();
-      // Remover classes de erro dos campos do formulário
       document.querySelectorAll('#treinamentoForm .error').forEach(campo => {
         campo.classList.remove('error');
       });
@@ -658,6 +664,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
     })
     .catch(() => mostrarAlerta('Erro ao criar treinamento.', 'error'));
 });
+
 
 
 // Visualizar contatos do treinamento

@@ -1,8 +1,33 @@
-// routes/treinamentos.js
 const express = require('express');
 const router = express.Router();
-const Treinamento = require('../../BancoDeDados/models/treinamento'); 
+const Treinamento = require('../../BancoDeDados/models/treinamento');
+const multer = require('multer');
+const path = require('path');
 
+// Configuração do multer para upload de arquivos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../../media/treinamentos'));
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, unique + '-' + file.originalname);
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB por arquivo
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      'image/', 'video/', 'audio/', 'application/pdf'
+    ];
+    if (allowed.some(type => file.mimetype.startsWith(type))) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo de arquivo não suportado'), false);
+    }
+  }
+});
 
 // Listar todos os treinamentos
 router.get('/', async (req, res) => {
@@ -15,14 +40,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Criar novo treinamento
-
-router.post('/', async (req, res) => {
+// Criar novo treinamento com upload de arquivos
+router.post('/', upload.array('midias', 10), async (req, res) => {
   try {
-    console.log('📝 Corpo da requisição:', req.body);  
     const {
       nome,
-      descricao = '',   
+      descricao = '',
       modalidade,
       cargaHoraria,
       tipo,
@@ -37,6 +60,9 @@ router.post('/', async (req, res) => {
       areaResponsavel,
       observacoes = ''
     } = req.body;
+
+    // Arquivos enviados
+    const midias = req.files ? req.files.map(f => f.filename) : [];
 
     // Validação mínima
     if (!nome || !nome.trim()) {
@@ -67,7 +93,8 @@ router.post('/', async (req, res) => {
       responsavel,
       cargoResponsavel,
       areaResponsavel,
-      observacoes
+      observacoes,
+      midias: JSON.stringify(midias)
     });
 
     return res.status(201).json(novo);
@@ -78,10 +105,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-
-
-// Atualizar treinamento pelo ID
-router.put('/:id', async (req, res) => {
+// Atualizar treinamento pelo ID com upload de arquivos
+router.put('/:id', upload.array('midias', 10), async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -101,6 +126,8 @@ router.put('/:id', async (req, res) => {
       areaResponsavel,
       observacoes = ''
     } = req.body;
+
+    const midias = req.files ? req.files.map(f => f.filename) : [];
 
     const treinamento = await Treinamento.findByPk(id);
     if (!treinamento) {
@@ -131,6 +158,11 @@ router.put('/:id', async (req, res) => {
     treinamento.cargoResponsavel = cargoResponsavel;
     treinamento.areaResponsavel = areaResponsavel;
     treinamento.observacoes = observacoes;
+
+    // Se enviou arquivos, atualiza o campo midias
+    if (midias.length > 0) {
+      treinamento.midias = JSON.stringify(midias);
+    }
 
     await treinamento.save();
 

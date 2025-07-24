@@ -92,6 +92,7 @@ console.log('🔗 Registrando rotas da API...');
 app.use('/api/contatos', contatosRoutes);
 app.use('/api/treinamentos', treinamentosRoutes);
 app.use('/api/empresas', empresasRoutes);
+app.use('/media/treinamentos', express.static(path.join(__dirname, 'media/treinamentos')));
 console.log('✅ Rotas da API registradas');
 
 // ✅ 7. Rota de teste básica
