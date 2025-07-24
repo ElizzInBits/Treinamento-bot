@@ -5,11 +5,11 @@ const path = require('path');
 const multer = require('multer');
 const Treinamento = require('../BancoDeDados/models/treinamento'); // ajuste o caminho se precisar
 
-// Config multer para salvar arquivos na pasta uploads/
+// Configuração do multer para salvar arquivos em media/treinamentos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, '..', 'media', 'treinamentos');
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
@@ -113,7 +113,6 @@ router.put('/:id', async (req, res) => {
     const treinamento = await Treinamento.findByPk(id);
     if (!treinamento) return res.status(404).json({ error: 'Treinamento não encontrado' });
 
-    // Verifica duplicidade de nome se for alterado
     if (nome && nome.trim() !== treinamento.nome) {
       const existente = await Treinamento.findOne({ where: { nome: nome.trim() } });
       if (existente && existente.id !== treinamento.id) {
@@ -154,12 +153,11 @@ router.delete('/:id', async (req, res) => {
     const treinamento = await Treinamento.findByPk(id);
     if (!treinamento) return res.status(404).json({ error: 'Treinamento não encontrado' });
 
-    // Excluir arquivos de mídia do servidor
     if (treinamento.midias) {
       try {
         const midias = JSON.parse(treinamento.midias);
         midias.forEach(nomeArquivo => {
-          const caminhoArquivo = path.join(__dirname, '..', 'uploads', nomeArquivo);
+          const caminhoArquivo = path.join(__dirname, '..', 'media', 'treinamentos', nomeArquivo);
           if (fs.existsSync(caminhoArquivo)) {
             fs.unlinkSync(caminhoArquivo);
             console.log(`Arquivo de mídia excluído: ${nomeArquivo}`);
