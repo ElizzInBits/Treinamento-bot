@@ -1712,6 +1712,15 @@ function abrirDetalhesTreinamento(treinamentoId) {
   if (!treinamento) return;
   document.body.classList.add('modal-open');
   document.getElementById('tituloModalTreinamento').textContent = `Treinamento: ${treinamento.nome}`;
+  
+  // Parse das mídias existentes
+  let midiasExistentes = [];
+  try {
+    midiasExistentes = treinamento.midias ? JSON.parse(treinamento.midias) : [];
+  } catch (e) {
+    console.error('Erro ao parsear mídias:', e);
+  }
+  
   document.getElementById('conteudoModalTreinamento').innerHTML = `
   <form id="editarTreinamentoForm" class="professional-form">
     <div class="form-row">
@@ -1778,7 +1787,6 @@ function abrirDetalhesTreinamento(treinamentoId) {
       <div class="form-group" style="flex: 1 1 100%;">
         <label for="editarConteudoTreinamento">Conteúdo Programático</label>
         <textarea id="editarConteudoTreinamento" rows="4" class="form-control">${treinamento.conteudoProgramatico || treinamento.conteudo || ''}</textarea>
-        <span class="form-hint">Forneça o conteúdo programático do treinamento.</span>
       </div>
     </div>
     <div class="form-row">
@@ -1787,6 +1795,35 @@ function abrirDetalhesTreinamento(treinamentoId) {
         <textarea id="editarObservacoes" rows="2" class="form-control">${treinamento.observacoes || ''}</textarea>
       </div>
     </div>
+    
+    <!-- Seção de Mídias -->
+    <div class="form-section">
+      <h4>Mídias do Treinamento</h4>
+      <div id="midiasExistentes">
+        ${midiasExistentes.length > 0 ? `
+          <div class="midias-grid">
+            ${midiasExistentes.map(midia => `
+              <div class="midia-item">
+                <div class="midia-preview">
+                  ${getMidiaPreview(midia)}
+                </div>
+                <div class="midia-info">
+                  <span class="midia-nome">${midia}</span>
+                  <button type="button" class="btn-error btn-small" onclick="removerMidia('${midia}', ${treinamentoId})">Remover</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p>Nenhuma mídia anexada</p>'}
+      </div>
+      
+      <div class="form-group">
+        <label for="novasMidias">Adicionar Novas Mídias</label>
+        <input type="file" id="novasMidias" multiple accept="image/*,video/*,audio/*,application/pdf" class="form-control" />
+        <small>Tipos permitidos: imagens, vídeos, áudios e PDFs (máx. 20MB cada)</small>
+      </div>
+    </div>
+    
     <div class="form-actions">
       <button type="button" class="btn-secondary" onclick="fecharModalDetalhesTreinamento()">Cancelar</button>
       <button type="submit" class="btn-primary">Salvar Alterações</button>
@@ -1796,27 +1833,34 @@ function abrirDetalhesTreinamento(treinamentoId) {
 
   document.getElementById('editarTreinamentoForm').onsubmit = function (e) {
     e.preventDefault();
-    const dadosAtualizados = {
-      nome: document.getElementById('editarNomeTreinamento').value,
-      modalidade: document.getElementById('editarModalidadeTreinamento').value,
-      cargaHoraria: parseInt(document.getElementById('editarCargaHoraria').value) || 0,
-      tipo: document.getElementById('editarTipoTreinamento').value,
-      instrutor: document.getElementById('editarInstrutor').value,
-      qualificacaoInstrutor: document.getElementById('editarQualificacaoInstrutor').value,
-      instrutoresAdicionais: document.getElementById('editarInstrutoresAdicionais').value,
-      responsavel: document.getElementById('editarResponsavel').value,
-      cargoResponsavel: document.getElementById('editarCargoResponsavel').value,
-      areaResponsavel: document.getElementById('editarAreaResponsavel').value,
-      emConformidade: document.getElementById('editarEmConformidade').value,
-      aproveitamento: document.getElementById('editarAproveitamento').value,
-      conteudoProgramatico: document.getElementById('editarConteudoTreinamento').value,
-      observacoes: document.getElementById('editarObservacoes').value
-    };
+    
+    const novasMidias = document.getElementById('novasMidias').files;
+    const formData = new FormData();
+    
+    // Adicionar dados do formulário
+    formData.append('nome', document.getElementById('editarNomeTreinamento').value);
+    formData.append('modalidade', document.getElementById('editarModalidadeTreinamento').value);
+    formData.append('cargaHoraria', document.getElementById('editarCargaHoraria').value);
+    formData.append('tipo', document.getElementById('editarTipoTreinamento').value);
+    formData.append('instrutor', document.getElementById('editarInstrutor').value);
+    formData.append('qualificacaoInstrutor', document.getElementById('editarQualificacaoInstrutor').value);
+    formData.append('instrutoresAdicionais', document.getElementById('editarInstrutoresAdicionais').value);
+    formData.append('responsavel', document.getElementById('editarResponsavel').value);
+    formData.append('cargoResponsavel', document.getElementById('editarCargoResponsavel').value);
+    formData.append('areaResponsavel', document.getElementById('editarAreaResponsavel').value);
+    formData.append('emConformidade', document.getElementById('editarEmConformidade').value);
+    formData.append('aproveitamento', document.getElementById('editarAproveitamento').value);
+    formData.append('conteudoProgramatico', document.getElementById('editarConteudoTreinamento').value);
+    formData.append('observacoes', document.getElementById('editarObservacoes').value);
+    
+    // Adicionar novas mídias se houver
+    for (let i = 0; i < novasMidias.length; i++) {
+      formData.append('midias', novasMidias[i]);
+    }
 
     fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dadosAtualizados)
+      body: formData
     })
       .then(res => {
         if (!res.ok) throw new Error();
@@ -1839,6 +1883,39 @@ function abrirDetalhesTreinamento(treinamentoId) {
 function fecharModalDetalhesTreinamento() {
   document.body.classList.remove('modal-open');
   document.getElementById('modalDetalhesTreinamento').style.display = 'none';
+}
+
+// Função para gerar preview de mídia
+function getMidiaPreview(nomeArquivo) {
+  const extensao = nomeArquivo.split('.').pop().toLowerCase();
+  const caminho = `/media/treinamentos/${nomeArquivo}`;
+  
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extensao)) {
+    return `<img src="${caminho}" alt="${nomeArquivo}" style="max-width: 100px; max-height: 100px; object-fit: cover;" />`;
+  } else if (['mp4', 'avi', 'mov', 'webm'].includes(extensao)) {
+    return `<video controls style="max-width: 100px; max-height: 100px;"><source src="${caminho}" type="video/${extensao}"></video>`;
+  } else if (['mp3', 'wav', 'ogg'].includes(extensao)) {
+    return `<audio controls style="width: 100px;"><source src="${caminho}" type="audio/${extensao}"></audio>`;
+  } else if (extensao === 'pdf') {
+    return `<div style="width: 100px; height: 100px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd;"><span>📄 PDF</span></div>`;
+  }
+  return `<div style="width: 100px; height: 100px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd;"><span>📁</span></div>`;
+}
+
+// Função para remover mídia
+function removerMidia(nomeArquivo, treinamentoId) {
+  if (!confirm(`Tem certeza que deseja remover a mídia "${nomeArquivo}"?`)) return;
+  
+  fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}/midia/${nomeArquivo}`, {
+    method: 'DELETE'
+  })
+  .then(res => {
+    if (!res.ok) throw new Error();
+    mostrarAlerta('Mídia removida com sucesso!');
+    // Reabrir o modal para atualizar a lista
+    abrirDetalhesTreinamento(treinamentoId);
+  })
+  .catch(() => mostrarAlerta('Erro ao remover mídia.', 'error'));
 }
 
 // Performance monitoring

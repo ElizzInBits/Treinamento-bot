@@ -185,9 +185,17 @@ router.put('/:id', upload.array('midias', 10), async (req, res) => {
     treinamento.areaResponsavel = areaResponsavel;
     treinamento.observacoes = observacoes;
 
-    // Se enviou arquivos, atualiza o campo midias
+    // Se enviou arquivos, adiciona às mídias existentes
     if (midias.length > 0) {
-      treinamento.midias = JSON.stringify(midias);
+      let midiasExistentes = [];
+      try {
+        midiasExistentes = treinamento.midias ? JSON.parse(treinamento.midias) : [];
+      } catch (e) {
+        midiasExistentes = [];
+      }
+      
+      const todasMidias = [...midiasExistentes, ...midias];
+      treinamento.midias = JSON.stringify(todasMidias);
     }
 
     await treinamento.save();
@@ -196,6 +204,49 @@ router.put('/:id', upload.array('midias', 10), async (req, res) => {
 
   } catch (err) {
     console.error('Erro ao atualizar treinamento:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Remover mídia específica de um treinamento
+router.delete('/:id/midia/:nomeArquivo', async (req, res) => {
+  try {
+    const { id, nomeArquivo } = req.params;
+    
+    const treinamento = await Treinamento.findByPk(id);
+    if (!treinamento) {
+      return res.status(404).json({ error: 'Treinamento não encontrado' });
+    }
+    
+    // Parse das mídias existentes
+    let midias = [];
+    try {
+      midias = treinamento.midias ? JSON.parse(treinamento.midias) : [];
+    } catch (e) {
+      midias = [];
+    }
+    
+    // Remover a mídia da lista
+    const novasMidias = midias.filter(m => m !== nomeArquivo);
+    
+    // Atualizar no banco
+    treinamento.midias = JSON.stringify(novasMidias);
+    await treinamento.save();
+    
+    // Tentar remover o arquivo físico
+    try {
+      const caminhoArquivo = path.join(uploadDir, nomeArquivo);
+      if (fs.existsSync(caminhoArquivo)) {
+        fs.unlinkSync(caminhoArquivo);
+      }
+    } catch (e) {
+      console.warn('Não foi possível remover o arquivo físico:', e.message);
+    }
+    
+    res.json({ message: 'Mídia removida com sucesso' });
+    
+  } catch (err) {
+    console.error('Erro ao remover mídia:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
