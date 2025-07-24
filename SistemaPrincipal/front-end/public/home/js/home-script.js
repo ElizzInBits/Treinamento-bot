@@ -1647,12 +1647,14 @@ function abrirDetalhesTreinamento(treinamentoId) {
   document.getElementById('tituloModalTreinamento').textContent = `Treinamento: ${treinamento.nome}`;
   document.getElementById('conteudoModalTreinamento').innerHTML = `
   <form id="editarTreinamentoForm" class="professional-form">
-    
+    ...
     <div class="form-row">
-      <div class="form-group">
-        <label for="editarNomeTreinamento">Nome <span class="required">*</span></label>
-        <input type="text" id="editarNomeTreinamento" class="form-control" value="${treinamento.nome}" required />
+      <div class="form-group" style="flex: 1 1 100%;">
+        <label for="editarConteudoTreinamento">Conteúdo Programático</label>
+        <textarea id="editarConteudoTreinamento" rows="4" class="form-control">${treinamento.conteudoProgramatico || treinamento.conteudo || ''}</textarea>
+        <span class="form-hint">Forneça o conteúdo programático do treinamento.</span>
       </div>
+    </div>
       
       <div class="form-group">
         <label for="editarModalidadeTreinamento">Modalidade <span class="required">*</span></label>
@@ -1701,15 +1703,15 @@ function abrirDetalhesTreinamento(treinamentoId) {
 
 document.getElementById('editarTreinamentoForm').onsubmit = function (e) {
   e.preventDefault();
-  const dadosAtualizados = {
-    nome: document.getElementById('editarNomeTreinamento').value,
-    modalidade: document.getElementById('editarModalidadeTreinamento').value,
-    cargaHoraria: parseInt(document.getElementById('editarCargaHoraria').value) || 0,
-    tipo: document.getElementById('editarTipoTreinamento').value,
-    instrutor: document.getElementById('editarInstrutor').value,
-    areaResponsavel: document.getElementById('editarAreaResponsavel').value,
-    conteudoProgramatico: document.getElementById('editarDescricaoTreinamento').value // <-- use o mesmo campo do POST
-  };
+const dadosAtualizados = {
+  nome: document.getElementById('editarNomeTreinamento').value,
+  modalidade: document.getElementById('editarModalidadeTreinamento').value,
+  cargaHoraria: parseInt(document.getElementById('editarCargaHoraria').value) || 0,
+  tipo: document.getElementById('editarTipoTreinamento').value,
+  instrutor: document.getElementById('editarInstrutor').value,
+  areaResponsavel: document.getElementById('editarAreaResponsavel').value,
+  conteudoProgramatico: document.getElementById('editarConteudoTreinamento').value // <-- agora pega do campo correto
+};
 
   fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
     method: 'PUT',
