@@ -637,6 +637,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   formData.append('cargoResponsavel', cargoResponsavel);
   formData.append('areaResponsavel', areaResponsavel);
   formData.append('observacoes', observacoes);
+  formData.append('midias', JSON.stringify(Array.from(arquivos).map(file => file.name)));
 
   // Adiciona cada arquivo individualmente (suportando múltiplos)
   for (let i = 0; i < arquivos.length; i++) {
