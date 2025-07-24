@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 //dashboard
 document.addEventListener("DOMContentLoaded", function () {
+  // Gráfico de Contatos por Empresa
   fetch('/api/empresas/contatos-por-empresa')
     .then(response => response.json())
     .then(data => {
@@ -55,27 +56,33 @@ document.addEventListener("DOMContentLoaded", function () {
         data: {
           labels: labels,
           datasets: [{
-            label: 'Total de Contatos por Empresa',
+            label: 'Contatos',
             data: valores,
-            backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
+            backgroundColor: 'rgba(15, 76, 92, 0.8)',
+            borderColor: 'rgba(15, 76, 92, 1)',
+            borderWidth: 2,
+            borderRadius: 8
           }]
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'top'
-            },
-            title: {
-              display: true,
-              text: 'Distribuição de Contatos por Empresa'
+              display: false
             }
           },
           scales: {
             y: {
-              beginAtZero: true
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(0,0,0,0.1)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
             }
           }
         }
@@ -84,7 +91,48 @@ document.addEventListener("DOMContentLoaded", function () {
     .catch(error => {
       console.error('Erro ao carregar gráfico:', error);
     });
+
+  // Gráfico de Status de Treinamento
+  setTimeout(() => {
+    criarGraficoStatus();
+  }, 1000);
 });
+
+function criarGraficoStatus() {
+  const totalContatos = contatos.length;
+  const comTreinamento = contatos.filter(c => c.treinamentoId).length;
+  const semTreinamento = totalContatos - comTreinamento;
+
+  const ctx2 = document.getElementById("graficoStatus").getContext("2d");
+
+  new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: ['Com Treinamento', 'Sem Treinamento'],
+      datasets: [{
+        data: [comTreinamento, semTreinamento],
+        backgroundColor: [
+          'rgba(110, 198, 202, 0.8)',
+          'rgba(254, 178, 0, 0.8)'
+        ],
+        borderColor: [
+          'rgba(110, 198, 202, 1)',
+          'rgba(254, 178, 0, 1)'
+        ],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+}
 
 
 
@@ -156,12 +204,42 @@ function atualizarEstatisticasMapeamento() {
   const contatosComTreinamento = contatos.filter(c => c.treinamentoId).length;
   const empresasAtivas = empresas.length;
   const treinamentosDisponiveis = treinamentos.length;
+  const percentualTreinados = totalContatos > 0 ? Math.round((contatosComTreinamento / totalContatos) * 100) : 0;
+  const mediaContatosPorEmpresa = empresasAtivas > 0 ? Math.round(totalContatos / empresasAtivas) : 0;
+  const empresasComContatos = empresas.filter(e => contatos.some(c => c.empresaId === e.id)).length;
+  const treinamentoMaisPopular = getTreinamentoMaisPopular();
 
   // Atualizar os elementos da aba Mapeamento
   document.getElementById('mapTotalContatos').textContent = totalContatos;
   document.getElementById('mapContatosComTreinamento').textContent = contatosComTreinamento;
   document.getElementById('mapEmpresasAtivas').textContent = empresasAtivas;
   document.getElementById('mapTreinamentosDisponiveis').textContent = treinamentosDisponiveis;
+  document.getElementById('mapPercentualTreinados').textContent = percentualTreinados + '%';
+  document.getElementById('mapMediaContatos').textContent = mediaContatosPorEmpresa;
+  document.getElementById('mapEmpresasComContatos').textContent = empresasComContatos;
+  document.getElementById('mapTreinamentoPopular').textContent = treinamentoMaisPopular || 'N/A';
+}
+
+function getTreinamentoMaisPopular() {
+  const contagemTreinamentos = {};
+  contatos.forEach(c => {
+    if (c.treinamentoId) {
+      contagemTreinamentos[c.treinamentoId] = (contagemTreinamentos[c.treinamentoId] || 0) + 1;
+    }
+  });
+  
+  let maisPopularId = null;
+  let maiorContagem = 0;
+  
+  Object.entries(contagemTreinamentos).forEach(([id, contagem]) => {
+    if (contagem > maiorContagem) {
+      maiorContagem = contagem;
+      maisPopularId = parseInt(id);
+    }
+  });
+  
+  const treinamento = treinamentos.find(t => t.id === maisPopularId);
+  return treinamento ? treinamento.nome : null;
 }
 
 
@@ -620,6 +698,9 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
 
   // Pega os arquivos do input
   const arquivos = document.getElementById('midiasTreinamento').files;
+  
+  // Mostrar arquivos selecionados
+  mostrarArquivosSelecionados(arquivos);
 
   // Validar arquivos se houver
   if (arquivos.length > 0) {
@@ -692,6 +773,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
       carregarTreinamentos().then(() => {
         atualizarSelectTreinamento();
         atualizarEstatisticasMapeamento();
+        atualizarGraficos();
       });
     })
     .catch(error => {
@@ -1988,3 +2070,80 @@ const carregarDadosComCache = {
     return dados;
   }
 };
+
+// Função para mostrar arquivos selecionados
+function mostrarArquivosSelecionados(arquivos) {
+  const container = document.getElementById('selectedFiles');
+  if (arquivos.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  
+  container.style.display = 'block';
+  container.innerHTML = `
+    <h5>Arquivos Selecionados (${arquivos.length}):</h5>
+    ${Array.from(arquivos).map((arquivo, index) => `
+      <div class="file-item">
+        <div class="file-info">
+          <span class="file-icon">${getFileIcon(arquivo.type)}</span>
+          <span class="file-name">${arquivo.name}</span>
+          <span class="file-size">(${formatFileSize(arquivo.size)})</span>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function getFileIcon(mimeType) {
+  if (mimeType.startsWith('image/')) return '🖼️';
+  if (mimeType.startsWith('video/')) return '🎥';
+  if (mimeType.startsWith('audio/')) return '🎧';
+  if (mimeType === 'application/pdf') return '📄';
+  return '📁';
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Event listeners para drag and drop
+document.addEventListener('DOMContentLoaded', function() {
+  const uploadArea = document.querySelector('.file-upload-area');
+  const fileInput = document.getElementById('midiasTreinamento');
+  
+  if (uploadArea && fileInput) {
+    uploadArea.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      
+      const files = e.dataTransfer.files;
+      fileInput.files = files;
+      mostrarArquivosSelecionados(files);
+    });
+    
+    fileInput.addEventListener('change', function() {
+      mostrarArquivosSelecionados(this.files);
+    });
+  }
+});
+
+// Atualizar gráfico de status quando dados mudarem
+function atualizarGraficos() {
+  setTimeout(() => {
+    criarGraficoStatus();
+  }, 500);
+}
