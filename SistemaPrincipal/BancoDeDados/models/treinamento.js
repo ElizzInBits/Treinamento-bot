@@ -63,6 +63,11 @@ const Treinamento = sequelize.define('Treinamento', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+
+  midias: {
+    type: DataTypes.TEXT, 
+    allowNull: true,
+  }
 }, {
   tableName: 'treinamento',
   timestamps: true,
