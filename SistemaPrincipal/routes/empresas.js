@@ -150,19 +150,18 @@ router.get('/:id/completo', async (req, res) => {
     });
 
     // Buscar treinamentos atribuídos
-    let treinamentos = [];
-    if (empresa.treinamentos_ids) {
-      try {
-        const treinamentosIds = JSON.parse(empresa.treinamentos_ids);
-        const Treinamento = require('../BancoDeDados/models/treinamento');
-        treinamentos = await Treinamento.findAll({
-          where: { id: treinamentosIds },
-          attributes: ['id', 'nome', 'modalidade', 'cargaHoraria']
-        });
-      } catch (e) {
-        console.error('Erro ao buscar treinamentos:', e);
-      }
-    }
+    const { EmpresaTreinamento } = require('../BancoDeDados/models/index');
+    const Treinamento = require('../BancoDeDados/models/treinamento');
+    
+    const empresaTreinamentos = await EmpresaTreinamento.findAll({
+      where: { empresa_id: req.params.id }
+    });
+    
+    const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id);
+    const treinamentos = treinamentosIds.length > 0 ? await Treinamento.findAll({
+      where: { id: treinamentosIds },
+      attributes: ['id', 'nome', 'modalidade', 'cargaHoraria']
+    }) : [];
 
     res.json({
       ...empresa.toJSON(),
@@ -206,9 +205,19 @@ router.post('/:id/treinamentos', async (req, res) => {
       return res.status(400).json({ error: 'treinamentosIds deve ser um array.' });
     }
 
-    // Atualiza os treinamentos da empresa
-    empresa.treinamentos_ids = JSON.stringify(treinamentosIds);
-    await empresa.save();
+    const { EmpresaTreinamento } = require('../BancoDeDados/models/index');
+    
+    // Remove treinamentos existentes
+    await EmpresaTreinamento.destroy({ where: { empresa_id: id } });
+    
+    // Adiciona novos treinamentos
+    if (treinamentosIds.length > 0) {
+      const registros = treinamentosIds.map(treinamentoId => ({
+        empresa_id: id,
+        treinamento_id: treinamentoId
+      }));
+      await EmpresaTreinamento.bulkCreate(registros);
+    }
 
     res.json({ message: 'Treinamentos atribuídos com sucesso.', empresa });
   } catch (error) {
