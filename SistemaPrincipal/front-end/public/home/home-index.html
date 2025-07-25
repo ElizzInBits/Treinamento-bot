@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/home-style.css" />
   <link rel="stylesheet" href="css/midias.css" />
   <link rel="stylesheet" href="css/empresas-melhoradas.css" />
+  <link rel="stylesheet" href="css/professional-enhancements.css" />
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -59,45 +60,35 @@
 
           <!-- Cards de Indicadores -->
           <div class="dashboard-stats">
-            <div class="stat-item" id="cardTotalContatos" style="cursor: pointer;">
+            <div class="stat-item" onclick="showTab('empresas')" style="cursor: pointer;">
               <div class="stat-icon">👥</div>
               <div class="stat-value" id="mapTotalContatos">0</div>
               <div class="stat-label">Total de Contatos</div>
             </div>
-            <div class="stat-item">
+            <div class="stat-item" onclick="showTab('empresas')" style="cursor: pointer;">
               <div class="stat-icon">🎓</div>
               <div class="stat-value" id="mapContatosComTreinamento">0</div>
               <div class="stat-label">Com Treinamento</div>
             </div>
-            <div class="stat-item">
+            <div class="stat-item" onclick="showTab('empresas')" style="cursor: pointer;">
               <div class="stat-icon">🏢</div>
               <div class="stat-value" id="mapEmpresasAtivas">0</div>
               <div class="stat-label">Empresas Ativas</div>
             </div>
-            <div class="stat-item">
+            <div class="stat-item" onclick="showTab('treinamentos')" style="cursor: pointer;">
               <div class="stat-icon">📚</div>
               <div class="stat-value" id="mapTreinamentosDisponiveis">0</div>
               <div class="stat-label">Treinamentos</div>
             </div>
-            <div class="stat-item">
+            <div class="stat-item" onclick="showTab('empresas')" style="cursor: pointer;">
               <div class="stat-icon">📈</div>
               <div class="stat-value" id="mapPercentualTreinados">0%</div>
               <div class="stat-label">Taxa de Treinamento</div>
             </div>
-            <div class="stat-item">
+            <div class="stat-item" onclick="showTab('empresas')" style="cursor: pointer;">
               <div class="stat-icon">📋</div>
               <div class="stat-value" id="mapMediaContatos">0</div>
-              <div class="stat-label">Média por Empresa</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-icon">✅</div>
-              <div class="stat-value" id="mapEmpresasComContatos">0</div>
-              <div class="stat-label">Empresas Ativas</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-icon">🏆</div>
-              <div class="stat-value" id="mapTreinamentoPopular" style="font-size: 1rem;">N/A</div>
-              <div class="stat-label">Mais Popular</div>
+              <div class="stat-label">Média de Contatos por Empresa</div>
             </div>
           </div>
 
@@ -427,7 +418,7 @@
       </div>
 
       <!-- Modal de Treinamentos da Empresa -->
-      <div id="modalTreinamentosEmpresa" class="modal-overlay" style="display:none;">
+      <div id="modalTreinamentosEmpresa" class="modal-overlay" style="display:none; z-index: 1001;">
         <div class="modal-container">
           <div class="modal-header">
             <h3 id="modalTituloTreinamentosEmpresa">Treinamentos da Empresa</h3>
@@ -440,7 +431,7 @@
       </div>
 
       <!-- Modal de Detalhes da Empresa -->
-      <div id="modalDetalhesEmpresa" class="modal-overlay" style="display:none;">
+      <div id="modalDetalhesEmpresa" class="modal-overlay" style="display:none; z-index: 1000;">
         <div class="modal-container">
           <div class="modal-header">
             <h3 id="modalTituloDetalhesEmpresa">Detalhes da Empresa</h3>
@@ -454,11 +445,6 @@
 
       <!-- Scripts -->
       <script src="js/home-script.js"></script>
-      <script>
-        document.getElementById("cardTotalContatos").addEventListener("click", function () {
-          window.location.href = "/home/lista-contatos.html";
-        });
-      </script>
 
 
 </body>
