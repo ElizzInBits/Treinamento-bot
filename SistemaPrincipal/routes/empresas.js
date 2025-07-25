@@ -12,6 +12,11 @@ function limparCNPJ(cnpj) {
   return cnpj.replace(/\D/g, '');
 }
 
+// GET - Teste simples
+router.get('/teste', (req, res) => {
+  res.json({ message: 'Rota de empresas funcionando!' });
+});
+
 // GET - Listar treinamentos disponíveis para atribuição
 router.get('/treinamentos/disponiveis', async (req, res) => {
   try {
@@ -24,7 +29,7 @@ router.get('/treinamentos/disponiveis', async (req, res) => {
     res.json(treinamentos);
   } catch (error) {
     console.error('Erro ao buscar treinamentos disponíveis:', error);
-    res.status(500).json({ error: 'Erro interno do servidor.' });
+    res.status(500).json({ error: 'Erro interno do servidor.', details: error.message });
   }
 });
 
