@@ -1,7 +1,7 @@
 const fs = require('fs');
+const path = require('path');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const nodemailer = require('nodemailer');
-const path = require('path');
 
 // Função para preencher e gerar o certificado com base no modelo PDF
 async function gerarCertificadoPDF(dados, nomeCompleto, emailDestinatario) {
@@ -52,46 +52,6 @@ async function gerarCertificadoPDF(dados, nomeCompleto, emailDestinatario) {
   // Envia por e-mail
   await enviarEmail(emailDestinatario, caminhoArquivo);
 }
-
-// Função para enviar o PDF por e-mail
-async function enviarEmail(destinatario, arquivoPath) {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: 'elizabethmirandaa302@gmail.com',
-      pass: 'kncv imth bajt bhar', // Lembre de proteger sua senha de app!
-    },
-  });
-
-  const mailOptions = {
-    from: 'elizabethmirandaa302@gmail.com',
-    to: destinatario,
-    subject: 'Certificado de Conclusão de Treinamento',
-    text: 'Parabéns por concluir o treinamento! Segue seu certificado em anexo.',
-    attachments: [
-      {
-        filename: path.basename(arquivoPath),
-        path: arquivoPath,
-        contentType: 'application/pdf',
-      },
-    ],
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log('📧 E-mail enviado com sucesso para:', destinatario);
-  } catch (error) {
-    console.error('❌ Erro ao enviar o e-mail:', error);
-  }
-}
-
-module.exports = {
-  gerarCertificadoPDF,
-};
-const fs = require('fs');
-const path = require('path');
-const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
-const nodemailer = require('nodemailer');
 
 // Gera certificado com base no modelo existente
 async function gerarCertificado(nomeCompleto, dadosTreinamento = {}) {
@@ -146,34 +106,40 @@ async function gerarCertificado(nomeCompleto, dadosTreinamento = {}) {
   return caminho;
 }
 
-// Envio por e-mail com Nodemailer
-async function enviarEmail(destinatario, caminhoPdf) {
-  const transporter = nodemailer.createTransport({
+// Função para enviar o PDF por e-mail
+async function enviarEmail(destinatario, arquivoPath) {
+  const transporter = nodemailer.createTransporter({
     service: 'gmail',
     auth: {
       user: 'elizabethmirandaa302@gmail.com',
-      pass: 'kncv imth bajt bhar', // Use uma senha de app!
+      pass: 'kncv imth bajt bhar',
     },
   });
 
   const mailOptions = {
     from: 'elizabethmirandaa302@gmail.com',
     to: destinatario,
-    subject: 'Seu Certificado de Treinamento',
-    text: 'Parabéns! Seu certificado está em anexo.',
+    subject: 'Certificado de Conclusão de Treinamento',
+    text: 'Parabéns por concluir o treinamento! Segue seu certificado em anexo.',
     attachments: [
       {
-        filename: path.basename(caminhoPdf),
-        path: caminhoPdf,
+        filename: path.basename(arquivoPath),
+        path: arquivoPath,
         contentType: 'application/pdf',
       },
     ],
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('📧 E-mail enviado com sucesso para:', destinatario);
+  } catch (error) {
+    console.error('❌ Erro ao enviar o e-mail:', error);
+  }
 }
 
 module.exports = {
   gerarCertificado,
+  gerarCertificadoPDF,
   enviarEmail,
 };
