@@ -42,6 +42,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 //dashboard
 document.addEventListener("DOMContentLoaded", function () {
+  // Verificar se Chart.js está carregado
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js não está carregado');
+    return;
+  }
+  
   // Gráfico de Contatos por Empresa
   fetch('http://92.112.178.26:3000/api/empresas/contatos-por-empresa')
     .then(response => response.json())
@@ -106,12 +112,17 @@ document.addEventListener("DOMContentLoaded", function () {
   // Gráfico de Status de Treinamento
   setTimeout(() => {
     criarGraficoStatus();
-  }, 1000);
+  }, 2000);
 });
 
 let graficoStatusInstance = null;
 
 function criarGraficoStatus() {
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js não está carregado para gráfico de status');
+    return;
+  }
+  
   const totalContatos = contatos.length;
   const comTreinamento = contatos.filter(c => c.treinamentoId).length;
   const semTreinamento = totalContatos - comTreinamento;
