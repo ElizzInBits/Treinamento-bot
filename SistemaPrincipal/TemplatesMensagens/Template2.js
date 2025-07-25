@@ -6,7 +6,7 @@ const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const Message = require('../BancoDeDados/models/message');
 const { Contato, Interacao } = require('../BancoDeDados/models');
-const { gerarCertificado, enviarEmail } = require('./Certificados/certificados.js');
+const { gerarCertificado, enviarEmail } = require('./Certificados/certificados2.js');
 
 // ========================================
 // VARIÁVEIS DE CONTROLE GLOBAIS
@@ -413,35 +413,40 @@ async function processarQuiz(sender, text, selectedId, contato) {
 /**
  * Gera e envia certificado para o usuário
  */
+const { gerarCertificado, enviarEmail } = require('./Certificados/certificados2.js');
+
 async function gerarEEnviarCertificado(contato, sender) {
+  await sendMessage(sender, 'send-message', {
+    message: '📧 Gerando seu certificado...\n\nIsso pode demorar um pouco....',
+  });
+
+  try {
+    const nomeParaCertificado = contato.nomeCompleto || contato.nome;
+    const dadosTreinamento = contato.treinamento || {}; // supondo que os dados venham assim
+    const certificadoPath = await gerarCertificado(nomeParaCertificado, dadosTreinamento);
+
+    await enviarEmail(contato.email, certificadoPath);
+
     await sendMessage(sender, 'send-message', {
-        message: '📧 Gerando seu certificado...\n\nIsso pode demorar um pouco....',
+      message: `🎉 Seu certificado foi gerado! \n\nEle foi enviado para: ${contato.email}\n\nTambém está disponível aqui:`,
     });
 
-    try {
-        const nomeParaCertificado = contato.nomeCompleto || contato.nome;
-        const certificadoPath = await gerarCertificado(nomeParaCertificado);
-        await enviarEmail(contato.email, certificadoPath);
+    await sendMessage(sender, 'send-file', {
+      path: certificadoPath,
+      filename: 'certificado.pdf',
+    });
 
-        await sendMessage(sender, 'send-message', {
-            message: `🎉 Seu certificado foi gerado! \n\nEle foi enviado para: ${contato.email}\n\nTambém está disponível aqui:`,
-        });
+    await sendMessage(sender, 'send-list-message', getFinalizarTreinamento());
+    await salvarUltimaInteracao(sender, 'finalizacao', getFinalizarTreinamento());
 
-        await sendMessage(sender, 'send-file', {
-            path: certificadoPath,
-            filename: 'certificado.pdf',
-        });
-
-        await sendMessage(sender, 'send-list-message', getFinalizarTreinamento());
-        await salvarUltimaInteracao(sender, 'finalizacao', getFinalizarTreinamento());
-
-    } catch (err) {
-        console.error('Erro ao gerar certificado:', err);
-        await sendMessage(sender, 'send-message', {
-            message: '❌ Ocorreu um erro ao gerar ou enviar seu certificado. Tente novamente mais tarde.',
-        });
-    }
+  } catch (err) {
+    console.error('Erro ao gerar certificado:', err);
+    await sendMessage(sender, 'send-message', {
+      message: '❌ Ocorreu um erro ao gerar ou enviar seu certificado. Tente novamente mais tarde.',
+    });
+  }
 }
+
 
 // ========================================
 // FUNÇÃO PRINCIPAL DE PROCESSAMENTO
