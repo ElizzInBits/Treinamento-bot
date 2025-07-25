@@ -7,7 +7,7 @@ const FormData = require('form-data');
 
 const BASE_URL = 'http://92.112.178.26:21465';
 const SESSION = 'NERDWHATS_AMERICA';
-const TOKEN = '$2b$10$RH.nxhsrH3Abrb30YskW2uHuFUMZGv5OKulj17hxLTCvLAF05qIhG'; 
+const TOKEN = '$2b$10$AqzeJt3CjST58yFhGSxCS.mIZSE_lR7ja9XCSiv0BoU8np4Hh_mpm'; 
 
 async function sendMessage(phone, endpoint, body = {}) {
   console.log('🚀 CHAMANDO API:', phone, endpoint, body);
