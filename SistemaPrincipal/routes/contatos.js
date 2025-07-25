@@ -1,7 +1,7 @@
 // routes/contatos.js
 const express = require('express');
 const router = express.Router();
-const Contato = require('../../BancoDeDados/models');
+const { Contato } = require('../BancoDeDados/models/index');
 const { sequelize } = require('../BancoDeDados/database');
 const { Op } = require('sequelize');
 
