@@ -1,13 +1,13 @@
-2025/07/25-15:43:49.159 197390 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/25-15:43:49.160 197390 Recovering log #179
-2025/07/25-15:43:49.177 197390 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000179.log 
-2025/07/25-15:43:50.210 197390 Level-0 table #184: started
-2025/07/25-15:43:50.222 197390 Level-0 table #184: 366837 bytes OK
-2025/07/25-15:43:50.227 197390 Delete type=0 #179
-2025/07/25-15:43:50.227 197392 Manual compaction at level-0 from '\x00E\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00F\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/25-15:43:52.243 197392 Compacting 1@1 + 1@2 files
-2025/07/25-15:43:52.312 197392 Generated table #185@1: 51008 keys, 1995488 bytes
-2025/07/25-15:43:52.312 197392 Compacted 1@1 + 1@2 files => 1995488 bytes
-2025/07/25-15:43:52.318 197392 compacted to: files[ 0 0 1 0 0 0 0 ]
-2025/07/25-15:43:52.318 197392 Delete type=2 #181
-2025/07/25-15:43:52.318 197392 Delete type=2 #184
+2025/07/25-16:04:25.325 19bc62 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/25-16:04:25.325 19bc62 Recovering log #183
+2025/07/25-16:04:25.337 19bc62 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000183.log 
+2025/07/25-16:04:26.359 19bc64 Level-0 table #188: started
+2025/07/25-16:04:26.368 19bc64 Level-0 table #188: 255490 bytes OK
+2025/07/25-16:04:26.371 19bc64 Delete type=0 #183
+2025/07/25-16:04:26.371 19bc64 Manual compaction at level-0 from '\x00F\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00G\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/25-16:04:28.225 19bc63 Compacting 1@1 + 1@2 files
+2025/07/25-16:04:28.267 19bc63 Generated table #189@1: 53434 keys, 2077701 bytes
+2025/07/25-16:04:28.267 19bc63 Compacted 1@1 + 1@2 files => 2077701 bytes
+2025/07/25-16:04:28.269 19bc63 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/07/25-16:04:28.269 19bc63 Delete type=2 #188
+2025/07/25-16:04:28.269 19bc63 Delete type=2 #185
