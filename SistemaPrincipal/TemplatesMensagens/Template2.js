@@ -413,8 +413,6 @@ async function processarQuiz(sender, text, selectedId, contato) {
 /**
  * Gera e envia certificado para o usuário
  */
-const { gerarCertificado, enviarEmail } = require('./Certificados/certificados2.js');
-
 async function gerarEEnviarCertificado(contato, sender) {
   await sendMessage(sender, 'send-message', {
     message: '📧 Gerando seu certificado...\n\nIsso pode demorar um pouco....',
