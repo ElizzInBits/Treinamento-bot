@@ -109,6 +109,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }, 1000);
 });
 
+let graficoStatusInstance = null;
+
 function criarGraficoStatus() {
   const totalContatos = contatos.length;
   const comTreinamento = contatos.filter(c => c.treinamentoId).length;
@@ -120,9 +122,14 @@ function criarGraficoStatus() {
     return;
   }
   
+  // Destruir gráfico anterior se existir
+  if (graficoStatusInstance) {
+    graficoStatusInstance.destroy();
+  }
+  
   const context = ctx2.getContext("2d");
 
-  new Chart(context, {
+  graficoStatusInstance = new Chart(context, {
     type: 'doughnut',
     data: {
       labels: ['Com Treinamento', 'Sem Treinamento'],
@@ -1139,8 +1146,10 @@ function debugLog(message, data = null) {
 
 // Interceptar erros não tratados
 window.addEventListener('error', function (e) {
-  console.error('Erro não tratado:', e.error);
-  mostrarAlerta('Ocorreu um erro inesperado. Tente recarregar a página.', 'error');
+  if (e.error) {
+    console.error('Erro não tratado:', e.error);
+    mostrarAlerta('Ocorreu um erro inesperado. Tente recarregar a página.', 'error');
+  }
 });
 
 // Função para verificar conectividade com a API
