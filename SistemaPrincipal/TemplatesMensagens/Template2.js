@@ -479,7 +479,8 @@ async function processarMensagem(message) {
         // Saudação inicial apenas uma vez
         if (!saudacoesEnviadas.has(sender)) {
             console.log(`📤 Enviando saudação para ${sender}`);
-            const resultado = await sendMessage(sender, 'send-message', {
+            const phoneFormatted = sender.includes('@') ? sender : `${sender}@c.us`;
+            const resultado = await sendMessage(phoneFormatted, 'send-message', {
                 message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
             });
             

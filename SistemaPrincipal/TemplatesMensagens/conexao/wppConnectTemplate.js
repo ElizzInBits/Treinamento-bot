@@ -11,7 +11,6 @@ const TOKEN = '$2b$10$RH.nxhsrH3Abrb30YskW2uHuFUMZGv5OKulj17hxLTCvLAF05qIhG';
 
 async function sendMessage(phone, endpoint, body = {}) {
   try {
-    console.log(`📤 Tentando enviar para ${phone} via ${endpoint}:`, body);
     const payload = { phone, ...body };
     let response;
 
@@ -47,14 +46,9 @@ async function sendMessage(phone, endpoint, body = {}) {
       );
     }
 
-    console.log(`✅ Mensagem enviada com sucesso para ${phone}`);
     return { success: true, data: response.data };
   } catch (err) {
-    console.error(`❌ Erro ao enviar para ${phone}:`, err.message);
-    if (err.response) {
-      console.error('Status:', err.response.status);
-      console.error('Data:', err.response.data);
-    }
+    console.error('Erro no envio:', err.message);
     return {
       success: false,
       error: err.response?.data || err.message,
