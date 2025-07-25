@@ -9,9 +9,9 @@ const PORT = process.env.PORT || 3000;
 // ✅ 1. Verificar se os arquivos de rota existem
 console.log('🔍 Verificando arquivos de rota...');
 
-const contatosPath = path.join(__dirname, 'routes', 'contatos.js');
-const treinamentosPath = path.join(__dirname, 'routes', 'treinamentos.js');
-const empresasPath = path.join(__dirname, 'routes', 'empresas.js');
+const contatosPath = path.join(__dirname, '..', 'routes', 'contatos.js');
+const treinamentosPath = path.join(__dirname, '..', 'routes', 'treinamentos.js');
+const empresasPath = path.join(__dirname, '..', 'routes', 'empresas.js');
 const databasePath = path.join(__dirname, '..', 'BancoDeDados', 'database.js');
 
 console.log('📁 Caminhos dos arquivos:');
@@ -51,7 +51,7 @@ let contatosRoutes, treinamentosRoutes, empresasRoutes;
 // 📥 Contatos
 try {
     console.log('📥 Carregando rota de contatos...');
-    contatosRoutes = require('./routes/contatos.js');
+    contatosRoutes = require('../routes/contatos.js');
     console.log('✅ Rota de contatos carregada com sucesso');
 } catch (error) {
     console.error('❌ Erro ao carregar rota de contatos:', error.message);
@@ -64,7 +64,7 @@ try {
 // 📥 Treinamentos
 try {
     console.log('📥 Carregando rota de treinamentos...');
-    treinamentosRoutes = require('./routes/treinamentos.js');
+    treinamentosRoutes = require('../routes/treinamentos.js');
     console.log('✅ Rota de treinamentos carregada com sucesso');
 } catch (error) {
     console.error('❌ Erro ao carregar rota de treinamentos:', error.message);
@@ -77,7 +77,7 @@ try {
 // 📥 Empresas
 try {
     console.log('📥 Carregando rota de empresas...');
-    empresasRoutes = require('./routes/empresas.js');
+    empresasRoutes = require('../routes/empresas.js');
     console.log('✅ Rota de empresas carregada com sucesso');
 } catch (error) {
     console.error('❌ Erro ao carregar rota de empresas:', error.message);
