@@ -112,6 +112,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Gráfico de Status de Treinamento
   setTimeout(() => {
     criarGraficoStatus();
+    criarGraficoModalidades();
+    criarGraficoEvolucao();
   }, 2000);
 });
 
@@ -2203,10 +2205,113 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// Gráfico de Modalidades
+let graficoModalidadesInstance = null;
+
+function criarGraficoModalidades() {
+  if (typeof Chart === 'undefined') return;
+  
+  const ctx = document.getElementById('graficoModalidades');
+  if (!ctx) return;
+  
+  if (graficoModalidadesInstance) {
+    graficoModalidadesInstance.destroy();
+  }
+  
+  const modalidades = {};
+  treinamentos.forEach(t => {
+    const modalidade = t.modalidade || 'Não informado';
+    modalidades[modalidade] = (modalidades[modalidade] || 0) + 1;
+  });
+  
+  const labels = Object.keys(modalidades);
+  const dados = Object.values(modalidades);
+  
+  graficoModalidadesInstance = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: dados,
+        backgroundColor: [
+          'rgba(15, 76, 92, 0.8)',
+          'rgba(110, 198, 202, 0.8)',
+          'rgba(230, 165, 0, 0.8)',
+          'rgba(16, 185, 129, 0.8)'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+}
+
+// Gráfico de Evolução
+let graficoEvolucaoInstance = null;
+
+function criarGraficoEvolucao() {
+  if (typeof Chart === 'undefined') return;
+  
+  const ctx = document.getElementById('graficoEvolucao');
+  if (!ctx) return;
+  
+  if (graficoEvolucaoInstance) {
+    graficoEvolucaoInstance.destroy();
+  }
+  
+  // Simular dados de evolução mensal
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+  const contatosData = [10, 25, 40, 65, 80, contatos.length];
+  const treinamentosData = [2, 4, 6, 8, 10, treinamentos.length];
+  
+  graficoEvolucaoInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: meses,
+      datasets: [{
+        label: 'Contatos',
+        data: contatosData,
+        borderColor: 'rgba(15, 76, 92, 1)',
+        backgroundColor: 'rgba(15, 76, 92, 0.1)',
+        tension: 0.4
+      }, {
+        label: 'Treinamentos',
+        data: treinamentosData,
+        borderColor: 'rgba(110, 198, 202, 1)',
+        backgroundColor: 'rgba(110, 198, 202, 0.1)',
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'top'
+        }
+      }
+    }
+  });
+}
+
 // Atualizar gráfico de status quando dados mudarem
 function atualizarGraficos() {
   setTimeout(() => {
     criarGraficoStatus();
+    criarGraficoModalidades();
+    criarGraficoEvolucao();
   }, 500);
 }
 

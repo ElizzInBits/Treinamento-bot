@@ -534,6 +534,11 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.chart-row:last-child {
+  margin-bottom: 0;
 }
 
 .chart-item {
