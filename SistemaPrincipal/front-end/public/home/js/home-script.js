@@ -207,40 +207,26 @@ function atualizarEstatisticasMapeamento() {
   const percentualTreinados = totalContatos > 0 ? Math.round((contatosComTreinamento / totalContatos) * 100) : 0;
   const mediaContatosPorEmpresa = empresasAtivas > 0 ? Math.round(totalContatos / empresasAtivas) : 0;
   const empresasComContatos = empresas.filter(e => contatos.some(c => c.empresaId === e.id)).length;
-  const treinamentoMaisPopular = getTreinamentoMaisPopular();
 
   // Atualizar os elementos da aba Mapeamento
-  document.getElementById('mapTotalContatos').textContent = totalContatos;
-  document.getElementById('mapContatosComTreinamento').textContent = contatosComTreinamento;
-  document.getElementById('mapEmpresasAtivas').textContent = empresasAtivas;
-  document.getElementById('mapTreinamentosDisponiveis').textContent = treinamentosDisponiveis;
-  document.getElementById('mapPercentualTreinados').textContent = percentualTreinados + '%';
-  document.getElementById('mapMediaContatos').textContent = mediaContatosPorEmpresa;
-  document.getElementById('mapEmpresasComContatos').textContent = empresasComContatos;
-  document.getElementById('mapTreinamentoPopular').textContent = treinamentoMaisPopular || 'N/A';
+  const elementos = {
+    'mapTotalContatos': totalContatos,
+    'mapContatosComTreinamento': contatosComTreinamento,
+    'mapEmpresasAtivas': empresasAtivas,
+    'mapTreinamentosDisponiveis': treinamentosDisponiveis,
+    'mapPercentualTreinados': percentualTreinados + '%',
+    'mapMediaContatos': mediaContatosPorEmpresa
+  };
+  
+  Object.entries(elementos).forEach(([id, valor]) => {
+    const elemento = document.getElementById(id);
+    if (elemento) {
+      elemento.textContent = valor;
+    }
+  });
 }
 
-function getTreinamentoMaisPopular() {
-  const contagemTreinamentos = {};
-  contatos.forEach(c => {
-    if (c.treinamentoId) {
-      contagemTreinamentos[c.treinamentoId] = (contagemTreinamentos[c.treinamentoId] || 0) + 1;
-    }
-  });
-  
-  let maisPopularId = null;
-  let maiorContagem = 0;
-  
-  Object.entries(contagemTreinamentos).forEach(([id, contagem]) => {
-    if (contagem > maiorContagem) {
-      maiorContagem = contagem;
-      maisPopularId = parseInt(id);
-    }
-  });
-  
-  const treinamento = treinamentos.find(t => t.id === maisPopularId);
-  return treinamento ? treinamento.nome : null;
-}
+
 
 
 
