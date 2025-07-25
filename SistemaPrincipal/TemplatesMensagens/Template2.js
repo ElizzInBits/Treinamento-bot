@@ -479,11 +479,16 @@ async function processarMensagem(message) {
         // Saudação inicial apenas uma vez
         if (!saudacoesEnviadas.has(sender)) {
             console.log(`📤 Enviando saudação para ${sender}`);
-            await sendMessage(sender, 'send-message', {
+            const resultado = await sendMessage(sender, 'send-message', {
                 message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
             });
-            saudacoesEnviadas.add(sender);
-            console.log(`✅ Saudação enviada para ${sender}`);
+            
+            if (resultado.success) {
+                saudacoesEnviadas.add(sender);
+                console.log(`✅ Saudação enviada para ${sender}`);
+            } else {
+                console.error(`❌ Falha ao enviar saudação para ${sender}:`, resultado.error);
+            }
         }
 
         // Processar comandos continuar/pausar
