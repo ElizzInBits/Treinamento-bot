@@ -43,9 +43,14 @@ document.addEventListener('DOMContentLoaded', function () {
 //dashboard
 document.addEventListener("DOMContentLoaded", function () {
   // Gráfico de Contatos por Empresa
-  fetch('/api/empresas/contatos-por-empresa')
+  fetch('http://92.112.178.26:3000/api/empresas/contatos-por-empresa')
     .then(response => response.json())
     .then(data => {
+      if (!Array.isArray(data) || data.length === 0) {
+        console.log('Nenhum dado para o gráfico de empresas');
+        return;
+      }
+      
       const labels = data.map(item => item.razao_social);
       const valores = data.map(item => parseInt(item.totalContatos));
 
@@ -103,9 +108,15 @@ function criarGraficoStatus() {
   const comTreinamento = contatos.filter(c => c.treinamentoId).length;
   const semTreinamento = totalContatos - comTreinamento;
 
-  const ctx2 = document.getElementById("graficoStatus").getContext("2d");
+  const ctx2 = document.getElementById("graficoStatus");
+  if (!ctx2) {
+    console.log('Elemento graficoStatus não encontrado');
+    return;
+  }
+  
+  const context = ctx2.getContext("2d");
 
-  new Chart(ctx2, {
+  new Chart(context, {
     type: 'doughnut',
     data: {
       labels: ['Com Treinamento', 'Sem Treinamento'],
