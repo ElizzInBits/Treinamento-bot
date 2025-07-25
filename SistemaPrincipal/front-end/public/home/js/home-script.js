@@ -2359,7 +2359,7 @@ function abrirDetalhesEmpresa(empresaId) {
                 </div>
               `).join('') : '<p>Nenhum treinamento atribuído</p>'}
             </div>
-            <button class="btn-secondary" onclick="abrirModalTreinamentosEmpresa(${empresaId})">
+            <button class="btn-secondary" onclick="fecharModalDetalhesEmpresa(); abrirModalTreinamentosEmpresa(${empresaId})">
               Gerenciar Treinamentos
             </button>
           </div>

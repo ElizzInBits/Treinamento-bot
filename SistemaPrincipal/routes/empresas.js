@@ -45,11 +45,17 @@ router.get('/contatos-por-empresa', async (req, res) => {
 // GET - Listar treinamentos disponíveis para atribuição
 router.get('/treinamentos/disponiveis', async (req, res) => {
   try {
+    console.log('=== BUSCANDO TREINAMENTOS DISPONÍVEIS ===');
     const Treinamento = require('../BancoDeDados/models/treinamento');
+    console.log('Modelo Treinamento carregado:', !!Treinamento);
+    
     const treinamentos = await Treinamento.findAll({
       attributes: ['id', 'nome', 'modalidade', 'cargaHoraria', 'tipo'],
       order: [['nome', 'ASC']]
     });
+    
+    console.log('Treinamentos encontrados:', treinamentos.length);
+    console.log('Dados:', treinamentos.map(t => ({ id: t.id, nome: t.nome })));
     
     res.json(treinamentos);
   } catch (error) {
@@ -183,10 +189,16 @@ router.put('/:id', async (req, res) => {
 // GET - Buscar dados completos da empresa (contatos e treinamentos)
 router.get('/:id/completo', async (req, res) => {
   try {
+    console.log('=== BUSCANDO EMPRESA COMPLETA ===');
+    console.log('ID da empresa:', req.params.id);
+    
     const empresa = await Empresa.findByPk(req.params.id);
     if (!empresa) {
+      console.log('Empresa não encontrada');
       return res.status(404).json({ error: 'Empresa não encontrada.' });
     }
+    
+    console.log('Empresa encontrada:', empresa.razao_social);
 
     // Buscar contatos da empresa
     const { Contato } = require('../BancoDeDados/models/index');
@@ -204,16 +216,24 @@ router.get('/:id/completo', async (req, res) => {
     });
     
     const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id);
+    console.log('IDs de treinamentos da empresa:', treinamentosIds);
+    
     const treinamentos = treinamentosIds.length > 0 ? await Treinamento.findAll({
       where: { id: treinamentosIds },
       attributes: ['id', 'nome', 'modalidade', 'cargaHoraria']
     }) : [];
+    
+    console.log('Treinamentos da empresa:', treinamentos.length);
+    console.log('Contatos da empresa:', contatos.length);
 
-    res.json({
+    const resultado = {
       ...empresa.toJSON(),
       contatos,
       treinamentos
-    });
+    };
+    
+    console.log('Enviando resultado completo');
+    res.json(resultado);
   } catch (error) {
     console.error('Erro ao buscar dados completos da empresa:', error);
     res.status(500).json({ error: 'Erro interno do servidor.' });
