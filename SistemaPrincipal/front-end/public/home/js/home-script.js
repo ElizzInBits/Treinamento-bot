@@ -2156,3 +2156,113 @@ function atualizarGraficos() {
     criarGraficoStatus();
   }, 500);
 }
+
+// Funções para gerenciar treinamentos das empresas
+function abrirModalTreinamentosEmpresa(empresaId) {
+  const empresa = empresas.find(e => e.id === empresaId);
+  if (!empresa) return;
+
+  document.getElementById('modalTituloTreinamentosEmpresa').textContent = `Treinamentos - ${empresa.razao_social}`;
+  
+  // Carregar treinamentos disponíveis e da empresa
+  Promise.all([
+    fetch('/api/empresas/treinamentos/disponiveis').then(r => r.json()),
+    fetch(`/api/empresas/${empresaId}/completo`).then(r => r.json())
+  ])
+  .then(([treinamentosDisponiveis, empresaCompleta]) => {
+    const treinamentosEmpresa = empresaCompleta.treinamentos || [];
+    
+    document.getElementById('conteudoTreinamentosEmpresa').innerHTML = `
+      <div class="treinamentos-empresa-container">
+        <div class="treinamentos-disponiveis">
+          <h4>Treinamentos Disponíveis</h4>
+          <div class="treinamentos-list">
+            ${treinamentosDisponiveis.map(t => `
+              <div class="treinamento-item">
+                <div class="treinamento-info">
+                  <strong>${t.nome}</strong>
+                  <p>${t.modalidade} - ${t.cargaHoraria}h</p>
+                </div>
+                <button class="btn-primary btn-small" onclick="atribuirTreinamento(${empresaId}, ${t.id})">
+                  Atribuir
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div class="treinamentos-atribuidos">
+          <h4>Treinamentos Atribuídos</h4>
+          <div class="treinamentos-list">
+            ${treinamentosEmpresa.length > 0 ? treinamentosEmpresa.map(t => `
+              <div class="treinamento-item">
+                <div class="treinamento-info">
+                  <strong>${t.nome}</strong>
+                  <p>${t.modalidade} - ${t.cargaHoraria}h</p>
+                </div>
+                <button class="btn-error btn-small" onclick="removerTreinamentoEmpresa(${empresaId}, ${t.id})">
+                  Remover
+                </button>
+              </div>
+            `).join('') : '<p>Nenhum treinamento atribuído</p>'}
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('modalTreinamentosEmpresa').style.display = 'block';
+  })
+  .catch(error => {
+    console.error('Erro ao carregar treinamentos:', error);
+    mostrarAlerta('Erro ao carregar treinamentos da empresa.', 'error');
+  });
+}
+
+function atribuirTreinamento(empresaId, treinamentoId) {
+  fetch(`/api/empresas/${empresaId}/treinamentos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ treinamentosIds: [treinamentoId] })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error();
+    return res.json();
+  })
+  .then(() => {
+    mostrarAlerta('Treinamento atribuído com sucesso!');
+    abrirModalTreinamentosEmpresa(empresaId);
+  })
+  .catch(() => mostrarAlerta('Erro ao atribuir treinamento.', 'error'));
+}
+
+function removerTreinamentoEmpresa(empresaId, treinamentoId) {
+  if (!confirm('Tem certeza que deseja remover este treinamento da empresa?')) return;
+  
+  fetch(`/api/empresas/${empresaId}/completo`)
+    .then(r => r.json())
+    .then(empresa => {
+      const treinamentosAtuais = empresa.treinamentos || [];
+      const novosIds = treinamentosAtuais
+        .filter(t => t.id !== treinamentoId)
+        .map(t => t.id);
+      
+      return fetch(`/api/empresas/${empresaId}/treinamentos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ treinamentosIds: novosIds })
+      });
+    })
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
+    .then(() => {
+      mostrarAlerta('Treinamento removido da empresa!');
+      abrirModalTreinamentosEmpresa(empresaId);
+    })
+    .catch(() => mostrarAlerta('Erro ao remover treinamento.', 'error'));
+}
+
+function fecharModalTreinamentosEmpresa() {
+  document.getElementById('modalTreinamentosEmpresa').style.display = 'none';
+}
