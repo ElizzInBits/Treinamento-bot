@@ -369,6 +369,9 @@ function renderizarEmpresas() {
           <button class="btn-primary" onclick="visualizarContatosEmpresa(${empresa.id})">
             Ver Contatos
           </button>
+          <button class="btn-info" onclick="abrirDetalhesEmpresa(${empresa.id})">
+            Detalhes/Editar
+          </button>
         </div>
       </div>
     `;
@@ -2265,4 +2268,136 @@ function removerTreinamentoEmpresa(empresaId, treinamentoId) {
 
 function fecharModalTreinamentosEmpresa() {
   document.getElementById('modalTreinamentosEmpresa').style.display = 'none';
+}
+
+// Função para abrir detalhes da empresa
+function abrirDetalhesEmpresa(empresaId) {
+  const empresa = empresas.find(e => e.id === empresaId);
+  if (!empresa) return;
+
+  document.getElementById('modalTituloDetalhesEmpresa').textContent = `Detalhes - ${empresa.razao_social}`;
+  
+  // Carregar dados completos da empresa
+  fetch(`/api/empresas/${empresaId}/completo`)
+    .then(r => r.json())
+    .then(empresaCompleta => {
+      const treinamentosEmpresa = empresaCompleta.treinamentos || [];
+      const contatosEmpresa = empresaCompleta.contatos || [];
+      
+      document.getElementById('conteudoDetalhesEmpresa').innerHTML = `
+        <div class="empresa-detalhes">
+          <form id="editarEmpresaForm" class="professional-form">
+            <div class="form-section">
+              <h4>Dados da Empresa</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Razão Social</label>
+                  <input type="text" id="editRazaoSocial" value="${empresa.razao_social}" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>CNPJ</label>
+                  <input type="text" id="editCnpj" value="${empresa.cnpj || ''}" class="form-control" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" id="editEmail" value="${empresa.email || ''}" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Telefone</label>
+                  <input type="text" id="editTelefone" value="${empresa.contato || ''}" class="form-control" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Endereço</label>
+                  <input type="text" id="editEndereco" value="${empresa.endereco || ''}" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>CEP</label>
+                  <input type="text" id="editCep" value="${empresa.cep || ''}" class="form-control" />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn-primary" onclick="salvarEmpresa(${empresaId})">
+                  Salvar Alterações
+                </button>
+              </div>
+            </div>
+          </form>
+          
+          <div class="form-section">
+            <h4>Treinamentos Atribuídos (${treinamentosEmpresa.length})</h4>
+            <div class="treinamentos-atribuidos">
+              ${treinamentosEmpresa.length > 0 ? treinamentosEmpresa.map(t => `
+                <div class="treinamento-item">
+                  <div class="treinamento-info">
+                    <strong>${t.nome}</strong>
+                    <p>${t.modalidade} - ${t.cargaHoraria}h</p>
+                  </div>
+                  <button class="btn-error btn-small" onclick="removerTreinamentoEmpresa(${empresaId}, ${t.id})">
+                    Remover
+                  </button>
+                </div>
+              `).join('') : '<p>Nenhum treinamento atribuído</p>'}
+            </div>
+            <button class="btn-secondary" onclick="abrirModalTreinamentosEmpresa(${empresaId})">
+              Gerenciar Treinamentos
+            </button>
+          </div>
+          
+          <div class="form-section">
+            <h4>Contatos Vinculados (${contatosEmpresa.length})</h4>
+            <div class="contatos-lista">
+              ${contatosEmpresa.length > 0 ? contatosEmpresa.map(c => `
+                <div class="contato-item">
+                  <div class="contato-info">
+                    <strong>${c.nome}</strong>
+                    <p>${formatarTelefone(c.telefone)}</p>
+                  </div>
+                </div>
+              `).join('') : '<p>Nenhum contato vinculado</p>'}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('modalDetalhesEmpresa').style.display = 'block';
+    })
+    .catch(error => {
+      console.error('Erro ao carregar detalhes:', error);
+      mostrarAlerta('Erro ao carregar detalhes da empresa.', 'error');
+    });
+}
+
+function salvarEmpresa(empresaId) {
+  const dados = {
+    razaoSocial: document.getElementById('editRazaoSocial').value,
+    cnpj: document.getElementById('editCnpj').value,
+    email: document.getElementById('editEmail').value,
+    contato: document.getElementById('editTelefone').value,
+    endereco: document.getElementById('editEndereco').value,
+    cep: document.getElementById('editCep').value
+  };
+  
+  fetch(`/api/empresas/${empresaId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados)
+  })
+  .then(res => {
+    if (!res.ok) throw new Error();
+    return res.json();
+  })
+  .then(() => {
+    mostrarAlerta('Empresa atualizada com sucesso!');
+    fecharModalDetalhesEmpresa();
+    carregarEmpresas().then(() => renderizarEmpresas());
+  })
+  .catch(() => mostrarAlerta('Erro ao atualizar empresa.', 'error'));
+}
+
+function fecharModalDetalhesEmpresa() {
+  document.getElementById('modalDetalhesEmpresa').style.display = 'none';
 }
