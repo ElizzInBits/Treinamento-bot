@@ -17,6 +17,31 @@ router.get('/teste', (req, res) => {
   res.json({ message: 'Rota de empresas funcionando!' });
 });
 
+// GET - Contatos por empresa (para gráfico)
+router.get('/contatos-por-empresa', async (req, res) => {
+  try {
+    const { Contato } = require('../BancoDeDados/models/index');
+    const empresas = await Empresa.findAll({
+      attributes: ['id', 'razao_social'],
+      include: [{
+        model: Contato,
+        as: 'contatos',
+        attributes: ['id']
+      }]
+    });
+    
+    const resultado = empresas.map(empresa => ({
+      razao_social: empresa.razao_social,
+      totalContatos: empresa.contatos ? empresa.contatos.length : 0
+    }));
+    
+    res.json(resultado);
+  } catch (error) {
+    console.error('Erro ao buscar contatos por empresa:', error);
+    res.json([]);
+  }
+});
+
 // GET - Listar treinamentos disponíveis para atribuição
 router.get('/treinamentos/disponiveis', async (req, res) => {
   try {
