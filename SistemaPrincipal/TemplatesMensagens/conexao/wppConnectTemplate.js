@@ -11,6 +11,7 @@ const TOKEN = '$2b$10$RH.nxhsrH3Abrb30YskW2uHuFUMZGv5OKulj17hxLTCvLAF05qIhG';
 
 async function sendMessage(phone, endpoint, body = {}) {
   try {
+    console.log(`📤 API: Enviando para ${phone} via ${endpoint}:`, body);
     const payload = { phone, ...body };
     let response;
 
@@ -42,13 +43,22 @@ async function sendMessage(phone, endpoint, body = {}) {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${TOKEN}`,
           },
+          timeout: 15000,
         }
       );
     }
 
+    console.log(`✅ API: Mensagem enviada para ${phone}`);
     return { success: true, data: response.data };
   } catch (err) {
-    console.error('Erro no envio:', err.message);
+    console.error(`❌ API: Erro ao enviar para ${phone}:`, err.message);
+    if (err.code === 'ECONNABORTED') {
+      console.error('⏰ Timeout na requisição');
+    }
+    if (err.response) {
+      console.error('Status:', err.response.status);
+      console.error('Data:', err.response.data);
+    }
     return {
       success: false,
       error: err.response?.data || err.message,
