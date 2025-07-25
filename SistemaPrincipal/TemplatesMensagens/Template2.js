@@ -453,12 +453,19 @@ async function gerarEEnviarCertificado(contato, sender) {
 async function processarMensagem(message) {
     const sender = message.from.replace('@c.us', '');
 
+    // Remover da lista de processamento se estiver travado há muito tempo
     if (emProcessamento.has(sender)) {
-        console.log(`⏳ Ignorando nova mensagem de ${sender}, já está em processamento.`);
-        return;
+        console.log(`⚠️ Removendo ${sender} do processamento travado`);
+        emProcessamento.delete(sender);
     }
 
     emProcessamento.add(sender);
+    
+    // Timeout para evitar travamento
+    const timeoutId = setTimeout(() => {
+        console.log(`⏰ Timeout: removendo ${sender} do processamento`);
+        emProcessamento.delete(sender);
+    }, 30000); // 30 segundos
 
     try {
         const text = message.body?.toLowerCase() || '';
@@ -471,10 +478,12 @@ async function processarMensagem(message) {
 
         // Saudação inicial apenas uma vez
         if (!saudacoesEnviadas.has(sender)) {
+            console.log(`📤 Enviando saudação para ${sender}`);
             await sendMessage(sender, 'send-message', {
                 message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
             });
             saudacoesEnviadas.add(sender);
+            console.log(`✅ Saudação enviada para ${sender}`);
         }
 
         // Processar comandos continuar/pausar
@@ -624,6 +633,7 @@ async function processarMensagem(message) {
     } catch (error) {
         console.error('Erro no processamento da mensagem:', error);
     } finally {
+        clearTimeout(timeoutId);
         emProcessamento.delete(sender);
     }
 }
