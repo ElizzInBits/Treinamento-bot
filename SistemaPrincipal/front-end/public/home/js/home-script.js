@@ -801,6 +801,8 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
       document.querySelectorAll('#treinamentoForm .error').forEach(campo => {
         campo.classList.remove('error');
       });
+      // Limpar dados salvos do sessionStorage
+      sessionStorage.removeItem('form_treinamentoForm');
       carregarTreinamentos().then(() => {
         atualizarSelectTreinamento();
         atualizarEstatisticasMapeamento();
@@ -1716,6 +1718,8 @@ function implementarAutoSave() {
   const forms = document.querySelectorAll('form');
 
   forms.forEach(form => {
+    // Pular auto-save para formulário de treinamento
+    if (form.id === 'treinamentoForm') return;
     const inputs = form.querySelectorAll('input, select, textarea');
 
     // Restaurar dados ao carregar a página
