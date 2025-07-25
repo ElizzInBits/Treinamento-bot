@@ -49,68 +49,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   
   // Gráfico de Contatos por Empresa
-  fetch('http://92.112.178.26:3000/api/empresas/contatos-por-empresa')
-    .then(response => response.json())
-    .then(data => {
-      if (!Array.isArray(data) || data.length === 0) {
-        console.log('Nenhum dado para o gráfico de empresas');
-        return;
-      }
-      
-      const labels = data.map(item => item.razao_social);
-      const valores = data.map(item => parseInt(item.totalContatos));
-
-      const graficoEmpresas = document.getElementById("graficoEmpresas");
-      if (!graficoEmpresas) {
-        console.log('Elemento graficoEmpresas não encontrado');
-        return;
-      }
-      
-      const ctx = graficoEmpresas.getContext("2d");
-
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Contatos',
-            data: valores,
-            backgroundColor: 'rgba(15, 76, 92, 0.8)',
-            borderColor: 'rgba(15, 76, 92, 1)',
-            borderWidth: 2,
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: {
-                color: 'rgba(0,0,0,0.1)'
-              }
-            },
-            x: {
-              grid: {
-                display: false
-              }
-            }
-          }
-        }
-      });
-    })
-    .catch(error => {
-      console.error('Erro ao carregar gráfico:', error);
-    });
-
-  // Gráfico de Status de Treinamento
   setTimeout(() => {
+    criarGraficoEmpresas();
+  }, 1000);
+
+  // Gráficos do Dashboard
+  setTimeout(() => {
+    criarGraficoEmpresas();
     criarGraficoStatus();
     criarGraficoModalidades();
     criarGraficoEvolucao();
@@ -2205,6 +2150,74 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// Gráfico de Empresas
+let graficoEmpresasInstance = null;
+
+function criarGraficoEmpresas() {
+  if (typeof Chart === 'undefined') return;
+  
+  const ctx = document.getElementById('graficoEmpresas');
+  if (!ctx) return;
+  
+  if (graficoEmpresasInstance) {
+    graficoEmpresasInstance.destroy();
+  }
+  
+  // Usar dados locais
+  const dadosEmpresas = empresas.map(empresa => {
+    const contatosEmpresa = contatos.filter(c => c.empresaId === empresa.id);
+    return {
+      nome: empresa.razao_social,
+      total: contatosEmpresa.length
+    };
+  }).filter(e => e.total > 0);
+  
+  if (dadosEmpresas.length === 0) {
+    console.log('Nenhuma empresa com contatos');
+    return;
+  }
+  
+  const labels = dadosEmpresas.map(e => e.nome);
+  const valores = dadosEmpresas.map(e => e.total);
+  
+  graficoEmpresasInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Contatos',
+        data: valores,
+        backgroundColor: 'rgba(15, 76, 92, 0.8)',
+        borderColor: 'rgba(15, 76, 92, 1)',
+        borderWidth: 2,
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: 'rgba(0,0,0,0.1)'
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          }
+        }
+      }
+    }
+  });
+}
+
 // Gráfico de Modalidades
 let graficoModalidadesInstance = null;
 
@@ -2309,6 +2322,7 @@ function criarGraficoEvolucao() {
 // Atualizar gráfico de status quando dados mudarem
 function atualizarGraficos() {
   setTimeout(() => {
+    criarGraficoEmpresas();
     criarGraficoStatus();
     criarGraficoModalidades();
     criarGraficoEvolucao();
