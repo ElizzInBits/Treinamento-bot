@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (document.getElementById('empresas').classList.contains('active')) {
           renderizarEmpresas();
         }
-      }, 100);
+      }, 500);
     })
     .catch(error => {
       console.error('Erro ao inicializar sistema:', error);
@@ -54,7 +54,13 @@ document.addEventListener("DOMContentLoaded", function () {
       const labels = data.map(item => item.razao_social);
       const valores = data.map(item => parseInt(item.totalContatos));
 
-      const ctx = document.getElementById("graficoEmpresas").getContext("2d");
+      const graficoEmpresas = document.getElementById("graficoEmpresas");
+      if (!graficoEmpresas) {
+        console.log('Elemento graficoEmpresas não encontrado');
+        return;
+      }
+      
+      const ctx = graficoEmpresas.getContext("2d");
 
       new Chart(ctx, {
         type: 'bar',
@@ -211,30 +217,36 @@ function mostrarAlerta(mensagem, tipo = 'success') {
 
 // Atualizar estatísticas da aba Mapeamento (nova aba principal)
 function atualizarEstatisticasMapeamento() {
-  const totalContatos = contatos.length;
-  const contatosComTreinamento = contatos.filter(c => c.treinamentoId).length;
-  const empresasAtivas = empresas.length;
-  const treinamentosDisponiveis = treinamentos.length;
-  const percentualTreinados = totalContatos > 0 ? Math.round((contatosComTreinamento / totalContatos) * 100) : 0;
-  const mediaContatosPorEmpresa = empresasAtivas > 0 ? Math.round(totalContatos / empresasAtivas) : 0;
-  const empresasComContatos = empresas.filter(e => contatos.some(c => c.empresaId === e.id)).length;
+  try {
+    const totalContatos = contatos.length;
+    const contatosComTreinamento = contatos.filter(c => c.treinamentoId).length;
+    const empresasAtivas = empresas.length;
+    const treinamentosDisponiveis = treinamentos.length;
+    const percentualTreinados = totalContatos > 0 ? Math.round((contatosComTreinamento / totalContatos) * 100) : 0;
+    const mediaContatosPorEmpresa = empresasAtivas > 0 ? Math.round(totalContatos / empresasAtivas) : 0;
+    const empresasComContatos = empresas.filter(e => contatos.some(c => c.empresaId === e.id)).length;
 
-  // Atualizar os elementos da aba Mapeamento
-  const elementos = {
-    'mapTotalContatos': totalContatos,
-    'mapContatosComTreinamento': contatosComTreinamento,
-    'mapEmpresasAtivas': empresasAtivas,
-    'mapTreinamentosDisponiveis': treinamentosDisponiveis,
-    'mapPercentualTreinados': percentualTreinados + '%',
-    'mapMediaContatos': mediaContatosPorEmpresa
-  };
-  
-  Object.entries(elementos).forEach(([id, valor]) => {
-    const elemento = document.getElementById(id);
-    if (elemento) {
-      elemento.textContent = valor;
-    }
-  });
+    // Atualizar os elementos da aba Mapeamento
+    const elementos = {
+      'mapTotalContatos': totalContatos,
+      'mapContatosComTreinamento': contatosComTreinamento,
+      'mapEmpresasAtivas': empresasAtivas,
+      'mapTreinamentosDisponiveis': treinamentosDisponiveis,
+      'mapPercentualTreinados': percentualTreinados + '%',
+      'mapMediaContatos': mediaContatosPorEmpresa
+    };
+    
+    Object.entries(elementos).forEach(([id, valor]) => {
+      const elemento = document.getElementById(id);
+      if (elemento) {
+        elemento.textContent = valor;
+      } else {
+        console.log(`Elemento ${id} não encontrado`);
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar estatísticas:', error);
+  }
 }
 
 
