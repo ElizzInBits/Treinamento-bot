@@ -453,19 +453,12 @@ async function gerarEEnviarCertificado(contato, sender) {
 async function processarMensagem(message) {
     const sender = message.from.replace('@c.us', '');
 
-    // Remover da lista de processamento se estiver travado há muito tempo
     if (emProcessamento.has(sender)) {
-        console.log(`⚠️ Removendo ${sender} do processamento travado`);
-        emProcessamento.delete(sender);
+        console.log(`⏳ Ignorando nova mensagem de ${sender}, já está em processamento.`);
+        return;
     }
 
     emProcessamento.add(sender);
-    
-    // Timeout para evitar travamento
-    const timeoutId = setTimeout(() => {
-        console.log(`⏰ Timeout: removendo ${sender} do processamento`);
-        emProcessamento.delete(sender);
-    }, 30000); // 30 segundos
 
     try {
         const text = message.body?.toLowerCase() || '';
@@ -478,31 +471,10 @@ async function processarMensagem(message) {
 
         // Saudação inicial apenas uma vez
         if (!saudacoesEnviadas.has(sender)) {
-            console.log(`📤 Enviando saudação para ${sender}`);
-            
-            // Testar conectividade primeiro
-            try {
-                const axios = require('axios');
-                const testResponse = await axios.get('http://92.112.178.26:21465/api/NERDWHATS_AMERICA/status', {
-                    headers: { Authorization: 'Bearer $2b$10$RH.nxhsrH3Abrb30YskW2uHuFUMZGv5OKulj17hxLTCvLAF05qIhG' },
-                    timeout: 5000
-                });
-                console.log('📱 Status da sessão:', testResponse.data);
-            } catch (testError) {
-                console.error('❌ Erro ao verificar status:', testError.message);
-            }
-            
-            const phoneFormatted = sender.includes('@') ? sender : `${sender}@c.us`;
-            const resultado = await sendMessage(phoneFormatted, 'send-message', {
+            await sendMessage(sender, 'send-message', {
                 message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
             });
-            
-            if (resultado.success) {
-                saudacoesEnviadas.add(sender);
-                console.log(`✅ Saudação enviada para ${sender}`);
-            } else {
-                console.error(`❌ Falha ao enviar saudação para ${sender}:`, resultado.error);
-            }
+            saudacoesEnviadas.add(sender);
         }
 
         // Processar comandos continuar/pausar
@@ -652,7 +624,6 @@ async function processarMensagem(message) {
     } catch (error) {
         console.error('Erro no processamento da mensagem:', error);
     } finally {
-        clearTimeout(timeoutId);
         emProcessamento.delete(sender);
     }
 }
