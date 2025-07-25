@@ -1,2 +1,42 @@
-node_modules
-tokens/NERDWHATS_AMERICA/
+# Arquivos temporários de cache e banco de dados
+*.log
+*.ldb
+*.lock
+*.tmp
+
+# Pastas de cache de navegadores ou Electron
+**/Cache/**
+**/GPUCache/**
+**/ShaderCache/**
+**/Code Cache/**
+**/DawnGraphiteCache/**
+**/DawnWebGPUCache/**
+**/GraphiteDawnCache/**
+**/Service Worker/**
+**/IndexedDB/**
+**/Local Storage/**
+**/Session Storage/**
+**/Cookies
+**/History
+**/Preferences
+**/TransportSecurity
+**/QuotaManager
+**/Reporting and NEL
+**/Sync Data/**
+**/shared_proto_db/**
+**/Site Characteristics Database/**
+**/DevToolsActivePort
+**/first_party_sets.db
+**/Extension Rules/**
+**/Extension Scripts/**
+**/Extension State/**
+**/Sessions/**
+**/Network Persistent State
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Ignorar arquivos de sistema
+.DS_Store
+Thumbs.db
