@@ -2391,20 +2391,33 @@ function abrirModalTreinamentosEmpresa(empresaId) {
 }
 
 function atribuirTreinamento(empresaId, treinamentoId) {
-  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ treinamentosIds: [treinamentoId] })
-  })
-  .then(res => {
-    if (!res.ok) throw new Error();
-    return res.json();
-  })
-  .then(() => {
-    mostrarAlerta('Treinamento atribuído com sucesso!');
-    abrirModalTreinamentosEmpresa(empresaId);
-  })
-  .catch(() => mostrarAlerta('Erro ao atribuir treinamento.', 'error'));
+  // Primeiro buscar treinamentos existentes
+  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/completo`)
+    .then(r => r.json())
+    .then(empresa => {
+      const treinamentosAtuais = empresa.treinamentos || [];
+      const idsExistentes = treinamentosAtuais.map(t => t.id);
+      
+      // Adicionar novo treinamento se não existir
+      if (!idsExistentes.includes(treinamentoId)) {
+        idsExistentes.push(treinamentoId);
+      }
+      
+      return fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ treinamentosIds: idsExistentes })
+      });
+    })
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
+    .then(() => {
+      mostrarAlerta('Treinamento atribuído com sucesso!');
+      abrirModalTreinamentosEmpresa(empresaId);
+    })
+    .catch(() => mostrarAlerta('Erro ao atribuir treinamento.', 'error'));
 }
 
 function removerTreinamentoEmpresa(empresaId, treinamentoId) {

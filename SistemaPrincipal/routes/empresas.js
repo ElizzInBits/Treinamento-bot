@@ -208,20 +208,19 @@ router.get('/:id/completo', async (req, res) => {
     });
 
     // Buscar treinamentos atribuídos
-    const { EmpresaTreinamento } = require('../BancoDeDados/models/index');
-    const Treinamento = require('../BancoDeDados/models/treinamento');
+    const { sequelize } = require('../BancoDeDados/database');
     
-    const empresaTreinamentos = await EmpresaTreinamento.findAll({
-      where: { empresa_id: req.params.id }
+    const treinamentos = await sequelize.query(`
+      SELECT t.id, t.nome, t.modalidade, t.carga_horaria as cargaHoraria
+      FROM treinamento t
+      INNER JOIN empresa_treinamentos et ON t.id = et.treinamento_id
+      WHERE et.empresa_id = ?
+    `, {
+      replacements: [req.params.id],
+      type: sequelize.QueryTypes.SELECT
     });
     
-    const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id);
-    console.log('IDs de treinamentos da empresa:', treinamentosIds);
-    
-    const treinamentos = treinamentosIds.length > 0 ? await Treinamento.findAll({
-      where: { id: treinamentosIds },
-      attributes: ['id', 'nome', 'modalidade', 'cargaHoraria']
-    }) : [];
+    console.log('Treinamentos encontrados via SQL:', treinamentos.length);
     
     console.log('Treinamentos da empresa:', treinamentos.length);
     console.log('Contatos da empresa:', contatos.length);
@@ -255,18 +254,18 @@ router.post('/:id/treinamentos', async (req, res) => {
       return res.status(400).json({ error: 'treinamentosIds deve ser um array.' });
     }
 
-    const { EmpresaTreinamento } = require('../BancoDeDados/models/index');
+    const { sequelize } = require('../BancoDeDados/database');
     
     // Remove treinamentos existentes
-    await EmpresaTreinamento.destroy({ where: { empresa_id: id } });
+    await sequelize.query('DELETE FROM empresa_treinamentos WHERE empresa_id = ?', {
+      replacements: [id],
+      type: sequelize.QueryTypes.DELETE
+    });
     
     // Adiciona novos treinamentos
     if (treinamentosIds.length > 0) {
-      const registros = treinamentosIds.map(treinamentoId => ({
-        empresa_id: id,
-        treinamento_id: treinamentoId
-      }));
-      await EmpresaTreinamento.bulkCreate(registros);
+      const values = treinamentosIds.map(treinamentoId => `(${id}, ${treinamentoId})`).join(',');
+      await sequelize.query(`INSERT INTO empresa_treinamentos (empresa_id, treinamento_id) VALUES ${values}`);
     }
 
     res.json({ message: 'Treinamentos atribuídos com sucesso.', empresa });
