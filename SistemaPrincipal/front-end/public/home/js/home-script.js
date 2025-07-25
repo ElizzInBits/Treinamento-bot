@@ -326,8 +326,8 @@ function renderizarEmpresas() {
     return `
       <div class="company-card">
         <div class="company-header">
-          <h3>${empresa.razaoSocial}</h3>
-          <span class="company-type">${empresa.tipo || empresa.porte || 'Empresa'}</span>
+          <h3>${empresa.razao_social || empresa.razaoSocial || 'Empresa'}</h3>
+          <span class="company-type">${empresa.porte_empresa || empresa.tipo || empresa.porte || 'Empresa'}</span>
         </div>
         <div class="company-info">
           <p><strong>CNPJ:</strong> ${empresa.cnpj || 'N/A'}</p>
@@ -2334,7 +2334,7 @@ function abrirModalTreinamentosEmpresa(empresaId) {
   const empresa = empresas.find(e => e.id === empresaId);
   if (!empresa) return;
 
-  document.getElementById('modalTituloTreinamentosEmpresa').textContent = `Treinamentos - ${empresa.razao_social}`;
+  document.getElementById('modalTituloTreinamentosEmpresa').textContent = `Treinamentos - ${empresa.razao_social || empresa.razaoSocial || 'Empresa'}`;
   
   // Carregar treinamentos disponíveis e da empresa
   Promise.all([
@@ -2457,7 +2457,7 @@ function abrirDetalhesEmpresa(empresaId) {
   const empresa = empresas.find(e => e.id === empresaId);
   if (!empresa) return;
 
-  document.getElementById('modalTituloDetalhesEmpresa').textContent = `Detalhes - ${empresa.razao_social}`;
+  document.getElementById('modalTituloDetalhesEmpresa').textContent = `Detalhes - ${empresa.razao_social || empresa.razaoSocial || 'Empresa'}`;
   
   // Carregar dados completos da empresa
   fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/completo`)
@@ -2474,7 +2474,7 @@ function abrirDetalhesEmpresa(empresaId) {
               <div class="form-row">
                 <div class="form-group">
                   <label>Razão Social</label>
-                  <input type="text" id="editRazaoSocial" value="${empresa.razao_social}" class="form-control" />
+                  <input type="text" id="editRazaoSocial" value="${empresa.razao_social || empresa.razaoSocial || ''}" class="form-control" />
                 </div>
                 <div class="form-group">
                   <label>CNPJ</label>
