@@ -12,6 +12,22 @@ function limparCNPJ(cnpj) {
   return cnpj.replace(/\D/g, '');
 }
 
+// GET - Listar treinamentos disponíveis para atribuição
+router.get('/treinamentos/disponiveis', async (req, res) => {
+  try {
+    const Treinamento = require('../BancoDeDados/models/treinamento');
+    const treinamentos = await Treinamento.findAll({
+      attributes: ['id', 'nome', 'modalidade', 'cargaHoraria', 'tipo'],
+      order: [['nome', 'ASC']]
+    });
+    
+    res.json(treinamentos);
+  } catch (error) {
+    console.error('Erro ao buscar treinamentos disponíveis:', error);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
+});
+
 // POST - Criar nova empresa
 router.post('/', async (req, res) => {
   try {
@@ -170,22 +186,6 @@ router.get('/:id/completo', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao buscar dados completos da empresa:', error);
-    res.status(500).json({ error: 'Erro interno do servidor.' });
-  }
-});
-
-// GET - Listar treinamentos disponíveis para atribuição
-router.get('/treinamentos/disponiveis', async (req, res) => {
-  try {
-    const Treinamento = require('../BancoDeDados/models/treinamento');
-    const treinamentos = await Treinamento.findAll({
-      attributes: ['id', 'nome', 'modalidade', 'cargaHoraria', 'tipo'],
-      order: [['nome', 'ASC']]
-    });
-    
-    res.json(treinamentos);
-  } catch (error) {
-    console.error('Erro ao buscar treinamentos disponíveis:', error);
     res.status(500).json({ error: 'Erro interno do servidor.' });
   }
 });
