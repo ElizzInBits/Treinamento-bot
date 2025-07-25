@@ -2169,8 +2169,8 @@ function abrirModalTreinamentosEmpresa(empresaId) {
   
   // Carregar treinamentos disponíveis e da empresa
   Promise.all([
-    fetch('/api/empresas/treinamentos/disponiveis').then(r => r.json()),
-    fetch(`/api/empresas/${empresaId}/completo`).then(r => r.json())
+    fetch('http://92.112.178.26:3000/api/empresas/treinamentos/disponiveis').then(r => r.json()),
+    fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/completo`).then(r => r.json())
   ])
   .then(([treinamentosDisponiveis, empresaCompleta]) => {
     const treinamentosEmpresa = empresaCompleta.treinamentos || [];
@@ -2222,7 +2222,7 @@ function abrirModalTreinamentosEmpresa(empresaId) {
 }
 
 function atribuirTreinamento(empresaId, treinamentoId) {
-  fetch(`/api/empresas/${empresaId}/treinamentos`, {
+  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ treinamentosIds: [treinamentoId] })
@@ -2241,7 +2241,7 @@ function atribuirTreinamento(empresaId, treinamentoId) {
 function removerTreinamentoEmpresa(empresaId, treinamentoId) {
   if (!confirm('Tem certeza que deseja remover este treinamento da empresa?')) return;
   
-  fetch(`/api/empresas/${empresaId}/completo`)
+  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/completo`)
     .then(r => r.json())
     .then(empresa => {
       const treinamentosAtuais = empresa.treinamentos || [];
@@ -2249,7 +2249,7 @@ function removerTreinamentoEmpresa(empresaId, treinamentoId) {
         .filter(t => t.id !== treinamentoId)
         .map(t => t.id);
       
-      return fetch(`/api/empresas/${empresaId}/treinamentos`, {
+      return fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ treinamentosIds: novosIds })
@@ -2278,7 +2278,7 @@ function abrirDetalhesEmpresa(empresaId) {
   document.getElementById('modalTituloDetalhesEmpresa').textContent = `Detalhes - ${empresa.razao_social}`;
   
   // Carregar dados completos da empresa
-  fetch(`/api/empresas/${empresaId}/completo`)
+  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/completo`)
     .then(r => r.json())
     .then(empresaCompleta => {
       const treinamentosEmpresa = empresaCompleta.treinamentos || [];
@@ -2381,7 +2381,7 @@ function salvarEmpresa(empresaId) {
     cep: document.getElementById('editCep').value
   };
   
-  fetch(`/api/empresas/${empresaId}`, {
+  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados)
