@@ -435,7 +435,7 @@ async function gerarEEnviarCertificado(contato, sender) {
     };
     
     console.log('📝 Gerando certificado para:', nomeParaCertificado);
-    const certificadoPath = await gerarCertificado(nomeParaCertificado, dadosTreinamento);
+    const certificadoPath = await gerarCertificado(contato.id);
     
     console.log('📧 Enviando e-mail para:', contato.email);
     await enviarEmail(contato.email, certificadoPath);
