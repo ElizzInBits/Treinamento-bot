@@ -80,19 +80,29 @@ async function start(client) {
     await sequelize.sync();
 })();
 
+let qrMostrado = false;
+
 // Inicializar WPPConnect com sessão diferente para o bot
 wppconnect.create({
-    session: 'BOT_LISTENER', // Sessão diferente para o bot
-    headless: 'new',
+    session: 'BOT_LISTENER',
+    headless: 'new', 
     executablePath: '/snap/bin/chromium',
     catchQR: (base64Qr, asciiQR) => {
-        console.log('\n\n🤖 ========== QR CODE DO BOT ==========');
-        console.log('📱 Escaneie este QR Code para conectar o BOT:');
-        console.log(asciiQR);
-        console.log('========================================\n');
+        if (!qrMostrado) {
+            console.clear();
+            console.log('\n🤖 ========== QR CODE DO BOT ==========');
+            console.log('📱 Escaneie este QR Code para conectar o BOT:');
+            console.log(asciiQR);
+            console.log('========================================\n');
+            qrMostrado = true;
+        }
     },
     statusFind: (status) => {
-        console.log('🤖 [BOT] Status da sessão:', status);
+        if (status === 'authenticated') {
+            console.log('🤖 [BOT] ✅ Conectado com sucesso!');
+        } else if (status === 'qrReadSuccess') {
+            console.log('🤖 [BOT] QR Code lido, aguardando autenticação...');
+        }
     },
     browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
 })
