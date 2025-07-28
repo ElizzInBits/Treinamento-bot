@@ -6,7 +6,7 @@ const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const Message = require('../BancoDeDados/models/message');
 const { Contato, Interacao } = require('../BancoDeDados/models');
-const { gerarCertificadoBanco } = require('./Certificados/certificados2.js');
+
 
 
 // ========================================
