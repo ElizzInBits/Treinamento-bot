@@ -14,6 +14,12 @@ module.exports = {
       interpreter: "node"
     },
     {
+      name: "Template",
+      cwd: "./SistemaPrincipal/TemplatesMensagens/Template2.js",
+      script: "server.js",
+      interpreter: "node"
+    },
+    {
       name: "front-end",
       cwd: "./SistemaPrincipal/front-end",
       script: "server-front.js",
