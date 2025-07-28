@@ -60,7 +60,6 @@ async function sendMessage(phone, endpoint, body = {}) {
 
 // Importar função de processamento
 const wppconnect = require('@wppconnect-team/wppconnect');
-const { processarMensagem } = require('../Template2');
 const { connectDB, sequelize } = require('../../BancoDeDados/database');
 
 // ========================================
@@ -69,7 +68,13 @@ const { connectDB, sequelize } = require('../../BancoDeDados/database');
 
 async function start(client) {
     console.log('✅ Evento onMessage registrado com sucesso.');
-    client.onMessage(processarMensagem);
+    
+    // Importar aqui para evitar problemas de dependência circular
+    const { processarMensagem } = require('../Template2');
+    
+    client.onMessage((message) => {
+        processarMensagem(message);
+    });
 }
 
 // Conectar ao banco de dados
@@ -77,8 +82,6 @@ async function start(client) {
     await connectDB();
     await sequelize.sync();
 })();
-
-
 
 // Inicializar WPPConnect
 wppconnect.create({

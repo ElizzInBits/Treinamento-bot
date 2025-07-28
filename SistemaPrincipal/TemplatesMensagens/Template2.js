@@ -630,11 +630,5 @@ async function processarMensagem(message) {
     }
 }
 
-// Conectar ao banco de dados
-(async () => {
-    await connectDB();
-    await sequelize.sync();
-})();
-
 // Exportar função para ser usada externamente
 module.exports = { processarMensagem };
