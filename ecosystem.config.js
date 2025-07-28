@@ -15,8 +15,8 @@ module.exports = {
     },
     {
       name: "Template",
-      cwd: "./SistemaPrincipal/TemplatesMensagens/Template2.js",
-      script: "server.js",
+      cwd: "./SistemaPrincipal/TemplatesMensagens",
+      script: "Template2.js",
       interpreter: "node"
     },
     {
