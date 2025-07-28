@@ -22,7 +22,11 @@ async function sendMessage(phone, endpoint, body = {}) {
         await clienteWpp.sendListMessage(phoneFormatted, body);
         break;
       case 'send-file':
-        await clienteWpp.sendFile(phoneFormatted, body.path, body.filename, body.caption || '');
+        if (body.path && body.path.endsWith('.gif')) {
+          await clienteWpp.sendVideoAsGif(phoneFormatted, body.path, body.filename, body.caption || '');
+        } else {
+          await clienteWpp.sendFile(phoneFormatted, body.path, body.filename, body.caption || '');
+        }
         break;
       case 'send-sticker-gif':
         await clienteWpp.sendImageAsSticker(phoneFormatted, body.path);

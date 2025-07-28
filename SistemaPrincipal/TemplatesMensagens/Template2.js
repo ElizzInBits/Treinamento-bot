@@ -393,9 +393,10 @@ async function processarQuiz(sender, text, selectedId, contato) {
             message: '🎉 Parabéns, você completou o Módulo 1!'
         });
 
-        await sendMessage(sender, 'send-sticker-gif', {
+        await sendMessage(sender, 'send-file', {
             path: '../../media/palmas.gif',
             filename: 'palmas.gif',
+            caption: '👏 Parabéns!'
         });
 
         const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
