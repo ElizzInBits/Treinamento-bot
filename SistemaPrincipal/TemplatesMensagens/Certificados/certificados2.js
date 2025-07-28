@@ -125,7 +125,7 @@ async function enviarEmail(destinatario, arquivoPath) {
       throw new Error('❌ Arquivo de certificado não encontrado.');
     }
 
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: 'elizabethmirandaa302@gmail.com',
