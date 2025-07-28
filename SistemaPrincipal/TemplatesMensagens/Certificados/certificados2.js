@@ -60,7 +60,7 @@ async function gerarCertificadoBanco(contatoId) {
       fs.mkdirSync(certificadosDir, { recursive: true });
     }
 
-    const nomeArquivo = contato.nomeCompleto.replace(/[^\w\s]/gi, '').replace(/\s+/g, '_');
+    const nomeArquivo = (contato.nomeCompleto || contato.nome || 'certificado').replace(/[^\w\s]/gi, '').replace(/\s+/g, '_');
     const caminhoArquivo = path.join(certificadosDir, `certificado_${nomeArquivo}.pdf`);
     fs.writeFileSync(caminhoArquivo, await pdfDoc.save());
 
