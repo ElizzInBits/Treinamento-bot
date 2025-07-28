@@ -1,58 +1,40 @@
 // wppConnectTemplate.js
 
-const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
-const FormData = require('form-data');
 
-const BASE_URL = 'http://92.112.178.26:21465';
-const SESSION = 'NERDWHATS_AMERICA'; // Sessão do wppconnect-server
-const TOKEN = '$2b$10$ndo6.vqy0vzSkM_3IwYKQu6ZZRpI9bXl5wWn_vhw2nIJ92RtDQ.v2';
+let clienteWpp = null;
 
 async function sendMessage(phone, endpoint, body = {}) {
-  console.log('🚀 CHAMANDO API:', phone, endpoint, body);
+  if (!clienteWpp) {
+    console.error('❌ Cliente WPP não conectado');
+    return { success: false, error: 'Cliente não conectado' };
+  }
+
   try {
-    const payload = { phone, ...body };
-    let response;
-
-    if (body.path) {
-      const form = new FormData();
-      form.append('phone', phone);
-      form.append('caption', body.caption || '');
-      form.append('filename', body.filename || 'file');
-      form.append('file', fs.createReadStream(path.resolve(body.path)));
-
-      response = await axios.post(
-        `${BASE_URL}/api/${SESSION}/${endpoint}`,
-        form,
-        {
-          headers: {
-            ...form.getHeaders(),
-            Authorization: `Bearer ${TOKEN}`,
-          },
-        }
-      );
-    } else {
-      response = await axios.post(
-        `${BASE_URL}/api/${SESSION}/${endpoint}`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${TOKEN}`,
-          },
-        }
-      );
+    const phoneFormatted = phone.includes('@c.us') ? phone : `${phone}@c.us`;
+    
+    switch (endpoint) {
+      case 'send-message':
+        await clienteWpp.sendText(phoneFormatted, body.message);
+        break;
+      case 'send-list-message':
+        await clienteWpp.sendListMessage(phoneFormatted, body);
+        break;
+      case 'send-file':
+        await clienteWpp.sendFile(phoneFormatted, body.path, body.filename, body.caption || '');
+        break;
+      case 'send-sticker-gif':
+        await clienteWpp.sendImageAsSticker(phoneFormatted, body.path);
+        break;
+      default:
+        throw new Error(`Endpoint ${endpoint} não suportado`);
     }
-
-    console.log('✅ SUCESSO NA API');
-    return { success: true, data: response.data };
+    
+    return { success: true };
   } catch (err) {
-    console.error('❌ ERRO NA API:', err.message);
-    return {
-      success: false,
-      error: err.response?.data || err.message,
-    };
+    console.error('❌ ERRO AO ENVIAR:', err.message);
+    return { success: false, error: err.message };
   }
 }
 
@@ -66,6 +48,7 @@ const { connectDB, sequelize } = require('../../BancoDeDados/database');
 
 async function start(client) {
     console.log('✅ Evento onMessage registrado com sucesso.');
+    clienteWpp = client; // Salvar referência global
     
     const { processarMensagem } = require('../Template2');
     
