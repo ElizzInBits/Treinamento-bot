@@ -18,12 +18,6 @@ module.exports = {
       cwd: "./SistemaPrincipal/front-end",
       script: "server-front.js",
       interpreter: "node"
-    },
-    {
-      name: "template-mensagens",
-      cwd: "./SistemaPrincipal/TemplatesMensagens",
-      script: "Template2.js",
-      interpreter: "node"
     }
   ]
 }
