@@ -37,13 +37,13 @@ async function gerarCertificadoBanco(contatoId) {
     // Preencher dados no certificado com posições adequadas
 
     // Conferido a: (nome do contato)
-    page.drawText(contato.nomeCompleto || contato.nome, { x: 180, y: 595, size: 12, font: helvetica, color: cor });
+    page.drawText(contato.nomeCompleto || contato.nome, { x: 628, y: 466, size: 12, font: helvetica, color: cor });
 
     // Documento de Identificação: (CPF)
-    page.drawText(formatarCPF(contato.cpf), { x: 180, y: 565, size: tamanho, font: helvetica, color: cor });
+    page.drawText(formatarCPF(contato.cpf), { x: 364, y: 649, size: tamanho, font: helvetica, color: cor });
 
     // Nome do curso
-    page.drawText(treinamento.nome, { x: 180, y: 535, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.nome, { x: 562, y: 715, size: tamanho, font: helvetica, color: cor });
 
     // Modalidade de Treinamento
     page.drawText(treinamento.modalidade, { x: 180, y: 505, size: tamanho, font: helvetica, color: cor });
