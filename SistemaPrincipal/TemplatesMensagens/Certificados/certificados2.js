@@ -36,59 +36,83 @@ async function gerarCertificadoBanco(contatoId) {
 
     // Preencher dados no certificado com posições adequadas
 
-    // Conferido a: (nome do contato)
-    page.drawText(contato.nomeCompleto || contato.nome, { x: 628, y: 466, size: 12, font: helvetica, color: cor });
+    // Fonte e cor continuam os mesmos
+    const tamanho = 12;
 
-    // Documento de Identificação: (CPF)
-    page.drawText(formatarCPF(contato.cpf), { x: 364, y: 649, size: tamanho, font: helvetica, color: cor });
+    // Conferido a: (nome do contato) - abaixo do título
+    page.drawText(contato.nomeCompleto || contato.nome, {
+      x: 260, y: 185, size: tamanho, font: helvetica, color: cor
+    });
 
-    // Nome do curso
-    page.drawText(treinamento.nome, { x: 562, y: 715, size: tamanho, font: helvetica, color: cor });
+    // Documento de Identificação: (CPF) — ao lado direito do texto (posição estimada)
+    page.drawText(formatarCPF(contato.cpf), {
+      x: 400, y: 185, size: tamanho, font: helvetica, color: cor
+    });
 
-    // Modalidade de Treinamento
-    page.drawText(treinamento.modalidade, { x: 180, y: 505, size: tamanho, font: helvetica, color: cor });
+    // Nome do curso — à direita de "Nome do Curso:"
+    page.drawText(treinamento.nome, {
+      x: 160, y: 350, size: tamanho, font: helvetica, color: cor
+    });
 
-    // Carga Horária Realizada
-    page.drawText(`${treinamento.cargaHoraria} horas`, { x: 180, y: 445, size: tamanho, font: helvetica, color: cor });
+    // Empresa — à direita de "Empresa:"
+    page.drawText(treinamento.empresa || '', {
+      x: 130, y: 385, size: tamanho, font: helvetica, color: cor
+    });
+
+    // Modalidade de Treinamento — à direita
+    page.drawText(treinamento.modalidade, {
+      x: 160, y: 425, size: tamanho, font: helvetica, color: cor
+    });
+
+    // Carga Horária — à direita
+    page.drawText(`${treinamento.cargaHoraria} horas`, {
+      x: 160, y: 472, size: tamanho, font: helvetica, color: cor
+    });
+
+    // Período de realização — à direita de "Período de"
+    page.drawText(treinamento.periodo || '', {
+      x: 400, y: 472, size: tamanho, font: helvetica, color: cor
+    });
 
     // Em conformidade
     page.drawText(treinamento.emConformidade || '', {
-      x: 80, y: 415, size: 9, font: helvetica, color: cor, maxWidth: 450, lineHeight: 12
+      x: 70, y: 455, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 12
     });
 
     // Conteúdo programático aplicado
     page.drawText(treinamento.conteudo || '', {
-      x: 80, y: 330, size: 9, font: helvetica, color: cor, maxWidth: 450, lineHeight: 12
+      x: 70, y: 370, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 12
     });
 
     // Informações dos instrutores
     const instrutorInfo = `${treinamento.instrutor || ''} - ${treinamento.qualificacaoInstrutor || ''}`;
     page.drawText(instrutorInfo, {
-      x: 80, y: 295, size: 9, font: helvetica, color: cor, maxWidth: 450, lineHeight: 12
+      x: 70, y: 330, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 12
     });
 
     // Instrutores adicionais (se houver)
     if (treinamento.instrutoresAdicionais) {
       page.drawText(`Instrutores adicionais: ${treinamento.instrutoresAdicionais}`, {
-        x: 80, y: 280, size: 9, font: helvetica, color: cor, maxWidth: 450, lineHeight: 12
+        x: 70, y: 310, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 12
       });
     }
 
-    // Informações sobre responsabilidade
+    // Responsável
     const responsavelInfo = `${treinamento.responsavel || ''} - ${treinamento.cargoResponsavel || ''}`;
     page.drawText(responsavelInfo, {
-      x: 80, y: 250, size: 9, font: helvetica, color: cor, maxWidth: 450, lineHeight: 12
+      x: 70, y: 280, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 12
     });
 
     // Aproveitamento de conteúdo
     page.drawText(treinamento.aproveitamento || '', {
-      x: 80, y: 220, size: 9, font: helvetica, color: cor, maxWidth: 450, lineHeight: 12
+      x: 70, y: 250, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 12
     });
 
     // Data de conclusão
     page.drawText(`Data de conclusão: ${new Date().toLocaleDateString('pt-BR')}`, {
-      x: 80, y: 190, size: 9, font: helvetica, color: cor
+      x: 70, y: 220, size: 9, font: helvetica, color: cor
     });
+
 
 
     // Salvar PDF
