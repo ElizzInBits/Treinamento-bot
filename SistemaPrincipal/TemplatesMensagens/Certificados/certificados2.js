@@ -38,7 +38,7 @@ async function gerarCertificadoBanco(contatoId) {
 
     // Conferido a: (nome do contato) - abaixo do título
     page.drawText(contato.nomeCompleto || contato.nome, {
-      x: 151, y: 218, size: tamanho, font: helvetica, color: cor
+      x: 90, y: 218, size: tamanho, font: helvetica, color: cor
     });
 
     // Documento de Identificação: (CPF) — ao lado direito do texto (posição estimada)
