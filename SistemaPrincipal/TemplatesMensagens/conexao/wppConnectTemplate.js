@@ -78,6 +78,10 @@ async function start(client) {
     await sequelize.sync();
 })();
 
+console.log('=-=-=-==-==-=-==-=-==-==-=');
+console.log('QR CODE DO BOT ABAIXO');
+console.log('=-=-=-==-==-=-==-=-==-==-=');
+
 // Inicializar WPPConnect
 wppconnect.create({
     session: 'NERDWHATS_AMERICA',
