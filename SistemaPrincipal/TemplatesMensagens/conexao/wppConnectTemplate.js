@@ -63,38 +63,29 @@ async function start(client) {
     await sequelize.sync();
 })();
 
-let qrMostrado = false;
-
-// Inicializar WPPConnect com sessão diferente para o bot
+// Inicializar WPPConnect
 wppconnect.create({
-    session: 'BOT_LISTENER',
+    session: 'TREINAMENTO_BOT',
     headless: 'new', 
     executablePath: '/snap/bin/chromium',
     catchQR: (base64Qr, asciiQR) => {
-        if (!qrMostrado) {
-            console.clear();
-            console.log('\n🤖 ========== QR CODE DO BOT ==========');
-            console.log('📱 Escaneie este QR Code para conectar o BOT:');
-            console.log(asciiQR);
-            console.log('========================================\n');
-            qrMostrado = true;
-        }
+        console.clear();
+        console.log('🤖 ========== QR CODE DO BOT ==========');
+        console.log('📱 Escaneie este QR Code para conectar o BOT:');
+        console.log(asciiQR);
+        console.log('========================================');
     },
     statusFind: (status) => {
-        if (status === 'authenticated') {
-            console.log('🤖 [BOT] ✅ Conectado com sucesso!');
-        } else if (status === 'qrReadSuccess') {
-            console.log('🤖 [BOT] QR Code lido, aguardando autenticação...');
-        }
+        console.log('🤖 [BOT] Status:', status);
     },
     browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
 })
     .then((client) => {
-        console.log('🤖 [BOT] Cliente conectado! Iniciando listener de mensagens...');
+        console.log('🤖 [BOT] ✅ Conectado! Iniciando bot...');
         start(client);
     })
     .catch((error) => {
-        console.error('❌ [BOT] Erro ao iniciar WPPConnect:', error);
+        console.error('❌ [BOT] Erro:', error);
     });
 
 module.exports = { sendMessage };

@@ -1,22 +1,9 @@
 module.exports = {
   apps: [
     {
-      name: "wppconnect-server",
-      cwd: "./wppconnect-server",
-      script: "npm",
-      args: "run dev",
-      interpreter: "none"
-    },
-    {
       name: "BOT",
       cwd: "./SistemaPrincipal/TemplatesMensagens/conexao",
       script: "wppConnectTemplate.js",
-      interpreter: "node"
-    },
-    {
-      name: "Template",
-      cwd: "./SistemaPrincipal/TemplatesMensagens",
-      script: "Template2.js",
       interpreter: "node"
     },
     {
