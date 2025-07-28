@@ -2,7 +2,7 @@ const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
-const { Contato, Treinamento } = require('./models'); // ajuste conforme sua estrutura de arquivos
+const { Contato, Treinamento } = require('../../BancoDeDados/models'); // ajuste conforme sua estrutura de arquivos
 
 async function gerarCertificadoBanco(contatoId) {
   try {
