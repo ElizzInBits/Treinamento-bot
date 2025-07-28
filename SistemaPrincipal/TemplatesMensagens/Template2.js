@@ -6,7 +6,8 @@ const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const Message = require('../BancoDeDados/models/message');
 const { Contato, Interacao } = require('../BancoDeDados/models');
-const { gerarCertificado, enviarEmail } = require('./Certificados/certificados2.js');
+const { gerarCertificadoBanco } = require('./Certificados/certificados2.js');
+
 
 // ========================================
 // VARIÁVEIS DE CONTROLE GLOBAIS
@@ -419,22 +420,38 @@ async function gerarEEnviarCertificado(contato, sender) {
   });
 
   try {
-    console.log('📝 Gerando certificado via banco para:', contato.nomeCompleto || contato.nome);
-
-    const certificadoPath = await gerarCertificadoBanco(contato.id);
+    const nomeParaCertificado = contato.nomeCompleto || contato.nome;
+    
+    // Dados padrão para o treinamento SSMA
+    const dadosTreinamento = {
+      nome: 'Treinamento Básico de SSMA',
+      modalidade: 'EAD - Ensino à Distância',
+      cargaHoraria: '4',
+      tipo: 'Treinamento Básico',
+      emConformidade: 'Em conformidade com as normas de Segurança, Saúde e Meio Ambiente aplicáveis.',
+      documento: 'CPF: ***.***.***-**',
+      periodo: new Date().toLocaleDateString('pt-BR')
+    };
+    
+    console.log('📝 Gerando certificado para:', nomeParaCertificado);
+    const certificadoPath = await gerarCertificado(nomeParaCertificado, dadosTreinamento);
+    
+    console.log('📧 Enviando e-mail para:', contato.email);
+    await enviarEmail(contato.email, certificadoPath);
 
     await sendMessage(sender, 'send-message', {
-      message: `🎉 Seu certificado foi gerado com sucesso!\n\n📧 Ele foi enviado para: ${contato.email}`,
+      message: `🎉 Seu certificado foi gerado com sucesso! \n\n📧 Ele foi enviado para: ${contato.email}\n\n📄 Também está disponível aqui:`,
     });
 
     await sendMessage(sender, 'send-file', {
       path: certificadoPath,
       filename: 'Certificado_SSMA.pdf',
-      caption: '🎓 Seu certificado de conclusão do Treinamento SSMA',
+      caption: '🎓 Seu certificado de conclusão do Treinamento SSMA'
     });
 
     await sendMessage(sender, 'send-list-message', getFinalizarTreinamento());
     await salvarUltimaInteracao(sender, 'finalizacao', getFinalizarTreinamento());
+
   } catch (err) {
     console.error('❌ Erro detalhado ao gerar certificado:', err);
     await sendMessage(sender, 'send-message', {
