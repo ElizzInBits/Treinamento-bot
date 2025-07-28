@@ -126,5 +126,7 @@ async function enviarEmail(destinatario, arquivoPath) {
 }
 
 module.exports = {
+  gerarCertificado: gerarCertificadoBanco,
   gerarCertificadoBanco,
+  enviarEmail,
 };
