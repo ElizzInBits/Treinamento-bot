@@ -2,7 +2,8 @@ const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
-const { Contato, Treinamento } = require('../../BancoDeDados/models');
+const { Contato } = require('../../BancoDeDados/models');
+const Treinamento = require('../../BancoDeDados/models/treinamento');
 
 async function gerarCertificadoBanco(contatoId) {
   try {
@@ -13,11 +14,11 @@ async function gerarCertificadoBanco(contatoId) {
       throw new Error('❌ Contato não encontrado.');
     }
 
-    // Buscar treinamento pelo ID 35
-    const treinamento = await Treinamento.findByPk(35);
+    // Buscar treinamento pelo ID 32 (CIPA)
+    const treinamento = await Treinamento.findByPk(32);
 
     if (!treinamento) {
-      throw new Error('❌ Treinamento ID 35 não encontrado no banco de dados.');
+      throw new Error('❌ Treinamento ID 32 não encontrado no banco de dados.');
     }
 
     // Carregar modelo do certificado
