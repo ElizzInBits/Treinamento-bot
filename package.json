@@ -100,6 +100,7 @@
     "path-key": "^2.0.1",
     "path-parse": "^1.0.7",
     "path-type": "^3.0.0",
+    "pdf-lib": "^1.17.1",
     "pidtree": "^0.3.1",
     "pify": "^3.0.0",
     "possible-typed-array-names": "^1.1.0",
