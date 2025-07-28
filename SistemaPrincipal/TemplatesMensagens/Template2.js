@@ -6,7 +6,7 @@ const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const Message = require('../BancoDeDados/models/message');
 const { Contato, Interacao } = require('../BancoDeDados/models');
-const { gerarCertificado, enviarEmail } = require('./Certificados/certificados2.js');
+const { gerarCertificadoBanco, enviarEmail } = require('./Certificados/certificados2.js');
 
 
 
@@ -435,7 +435,7 @@ async function gerarEEnviarCertificado(contato, sender) {
     };
     
     console.log('📝 Gerando certificado para:', nomeParaCertificado);
-    const certificadoPath = await gerarCertificado(contato.id);
+    const certificadoPath = await gerarCertificadoBanco(contato.id);
     
     console.log('📧 Enviando e-mail para:', contato.email);
     await enviarEmail(contato.email, certificadoPath);
