@@ -6,6 +6,7 @@ const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const Message = require('../BancoDeDados/models/message');
 const { Contato, Interacao } = require('../BancoDeDados/models');
+const { gerarCertificado, enviarEmail } = require('./Certificados/certificados2.js');
 
 
 
@@ -344,8 +345,8 @@ async function iniciarTreinamento(sender, contato) {
     });
 
     await sendMessage(sender, 'send-file', {
-        path: '../media/SSMA.webp',
-        filename: 'SSMA',
+        path: '../../media/SSMA.webp',
+        filename: 'SSMA.webp',
         caption: '',
     });
 
@@ -393,8 +394,8 @@ async function processarQuiz(sender, text, selectedId, contato) {
         });
 
         await sendMessage(sender, 'send-sticker-gif', {
-            path: '../media/palmas.gif',
-            filename: 'palmas',
+            path: '../../media/palmas.gif',
+            filename: 'palmas.gif',
         });
 
         const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
