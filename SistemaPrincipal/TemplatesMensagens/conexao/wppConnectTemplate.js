@@ -78,9 +78,7 @@ async function start(client) {
     await sequelize.sync();
 })();
 
-console.log('=-=-=-==-==-=-==-=-==-==-=');
-console.log('QR CODE DO BOT ABAIXO');
-console.log('=-=-=-==-==-=-==-=-==-==-=');
+
 
 // Inicializar WPPConnect
 wppconnect.create({
@@ -89,6 +87,9 @@ wppconnect.create({
     executablePath: '/snap/bin/chromium',
     catchQR: (base64Qr, asciiQR) => {
         console.clear();
+        console.log('=-=-=-==-==-=-==-=-==-==-=');
+        console.log('QR CODE DO BOT ABAIXO');
+        console.log('=-=-=-==-==-=-==-=-==-==-=');
         console.log('📱 Escaneie o QR Code abaixo com seu WhatsApp:');
         console.log(asciiQR);
     },
