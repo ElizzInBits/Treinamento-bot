@@ -34,24 +34,48 @@ async function gerarCertificadoBanco(contatoId) {
     const cor = rgb(0, 0, 0);
     const tamanho = 11;
 
-    // Preencher dados no certificado
-    page.drawText(contato.nomeCompleto || contato.nome, { x: 180, y: 455, size: 14, font: helvetica, color: cor });
-    page.drawText(`CPF: ${formatarCPF(contato.cpf)}`, { x: 180, y: 432, size: tamanho, font: helvetica, color: cor });
+    // Preencher dados no certificado conforme campos solicitados
+    
+    // Conferido a: (nome do contato)
+    page.drawText(contato.nomeCompleto || contato.nome, { x: 180, y: 455, size: 12, font: helvetica, color: cor });
+    
+    // Documento de Identificação: (CPF)
+    page.drawText(formatarCPF(contato.cpf), { x: 180, y: 432, size: tamanho, font: helvetica, color: cor });
+    
+    // Nome do curso
     page.drawText(treinamento.nome, { x: 180, y: 410, size: tamanho, font: helvetica, color: cor });
-    page.drawText('SALUBRITÁ TREINAMENTOS LTDA.', { x: 180, y: 388, size: tamanho, font: helvetica, color: cor });
+    
+    // Modalidade de Treinamento
     page.drawText(treinamento.modalidade, { x: 180, y: 365, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.tipo, { x: 180, y: 342, size: tamanho, font: helvetica, color: cor });
+    
+    // Carga Horária Realizada
     page.drawText(`${treinamento.cargaHoraria} horas`, { x: 180, y: 320, size: tamanho, font: helvetica, color: cor });
-    page.drawText(new Date().toLocaleDateString('pt-BR'), { x: 180, y: 297, size: tamanho, font: helvetica, color: cor });
-
-    page.drawText(treinamento.emConformidade, {
-      x: 50,
-      y: 265,
-      size: 9,
-      font: helvetica,
-      color: cor,
-      maxWidth: 500,
-      lineHeight: 11,
+    
+    // Em conformidade
+    page.drawText(treinamento.emConformidade || '', {
+      x: 50, y: 280, size: 9, font: helvetica, color: cor, maxWidth: 500, lineHeight: 11
+    });
+    
+    // Conteúdo programático aplicado
+    page.drawText(treinamento.conteudo || '', {
+      x: 50, y: 250, size: 9, font: helvetica, color: cor, maxWidth: 500, lineHeight: 11
+    });
+    
+    // Informações dos instrutores
+    const instrutorInfo = `${treinamento.instrutor || ''} - ${treinamento.qualificacaoInstrutor || ''}${treinamento.instrutoresAdicionais ? '. Instrutores adicionais: ' + treinamento.instrutoresAdicionais : ''}`;
+    page.drawText(instrutorInfo, {
+      x: 50, y: 220, size: 9, font: helvetica, color: cor, maxWidth: 500, lineHeight: 11
+    });
+    
+    // Informações sobre responsabilidade
+    const responsavelInfo = `${treinamento.responsavel || ''} - ${treinamento.cargoResponsavel || ''}`;
+    page.drawText(responsavelInfo, {
+      x: 50, y: 190, size: 9, font: helvetica, color: cor, maxWidth: 500, lineHeight: 11
+    });
+    
+    // Aproveitamento de conteúdo
+    page.drawText(treinamento.aproveitamento || '', {
+      x: 50, y: 160, size: 9, font: helvetica, color: cor, maxWidth: 500, lineHeight: 11
     });
 
     // Salvar PDF
