@@ -38,17 +38,17 @@ async function gerarCertificadoBanco(contatoId) {
 
     // Conferido a: (nome do contato) - abaixo do título
     page.drawText(contato.nomeCompleto || contato.nome, {
-      x: 260, y: 185, size: tamanho, font: helvetica, color: cor
+      x: 281, y: 232, size: tamanho, font: helvetica, color: cor
     });
 
     // Documento de Identificação: (CPF) — ao lado direito do texto (posição estimada)
     page.drawText(formatarCPF(contato.cpf), {
-      x: 400, y: 185, size: tamanho, font: helvetica, color: cor
+      x: 216, y: 316, size: tamanho, font: helvetica, color: cor
     });
 
     // Nome do curso — à direita de "Nome do Curso:"
     page.drawText(treinamento.nome, {
-      x: 160, y: 350, size: tamanho, font: helvetica, color: cor
+      x: 322, y: 355, size: tamanho, font: helvetica, color: cor
     });
 
     // Empresa — à direita de "Empresa:"
@@ -58,7 +58,7 @@ async function gerarCertificadoBanco(contatoId) {
 
     // Modalidade de Treinamento — à direita
     page.drawText(treinamento.modalidade, {
-      x: 160, y: 425, size: tamanho, font: helvetica, color: cor
+      x: 226, y: 430, size: tamanho, font: helvetica, color: cor
     });
 
     // Carga Horária — à direita
