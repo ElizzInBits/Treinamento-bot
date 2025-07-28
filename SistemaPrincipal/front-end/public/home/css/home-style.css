@@ -960,9 +960,7 @@ body {
   color: var(--white);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  position: relative;
 }
-
 .modal-header::after {
   content: '';
   position: absolute;
@@ -1019,6 +1017,8 @@ body.modal-open {
   flex-direction: column;
   border-bottom-left-radius: 16px;
   border-bottom-right-radius: 16px;
+
+
 }
 
 /* Animação */

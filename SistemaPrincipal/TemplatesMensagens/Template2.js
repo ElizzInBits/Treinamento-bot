@@ -630,40 +630,11 @@ async function processarMensagem(message) {
     }
 }
 
-// ========================================
-// INICIALIZAÇÃO DO BOT
-// ========================================
-
-async function start(client) {
-    console.log('✅ Evento onMessage registrado com sucesso.');
-    client.onMessage(processarMensagem);
-}
-
 // Conectar ao banco de dados
 (async () => {
     await connectDB();
     await sequelize.sync();
 })();
 
-// Inicializar WPPConnect
-wppconnect.create({
-    session: 'NERDWHATS_AMERICA',
-    headless: 'new',
-    executablePath: '/snap/bin/chromium',
-    catchQR: (base64Qr, asciiQR) => {
-        console.clear();
-        console.log('📱 Escaneie o QR Code abaixo com seu WhatsApp:');
-        console.log(asciiQR);
-    },
-    statusFind: (status) => {
-        console.log('📶 Status da sessão:', status);
-    },
-    browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
-})
-    .then((client) => {
-        console.log('🟢 Cliente conectado! Iniciando listener de mensagens...');
-        start(client);
-    })
-    .catch((error) => {
-        console.error('❌ Erro ao iniciar WPPConnect:', error);
-    });
+// Exportar função para ser usada externamente
+module.exports = { processarMensagem };
