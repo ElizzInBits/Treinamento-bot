@@ -6,8 +6,8 @@ const fs = require('fs');
 const FormData = require('form-data');
 
 const BASE_URL = 'http://92.112.178.26:21465';
-const SESSION = 'NERDWHATS_AMERICA';
-const TOKEN = '$2b$10$ndo6.vqy0vzSkM_3IwYKQu6ZZRpI9bXl5wWn_vhw2nIJ92RtDQ.v2'; 
+const SESSION = 'NERDWHATS_AMERICA'; // Sessão do wppconnect-server
+const TOKEN = '$2b$10$ndo6.vqy0vzSkM_3IwYKQu6ZZRpI9bXl5wWn_vhw2nIJ92RtDQ.v2';
 
 async function sendMessage(phone, endpoint, body = {}) {
   console.log('🚀 CHAMANDO API:', phone, endpoint, body);
@@ -16,7 +16,6 @@ async function sendMessage(phone, endpoint, body = {}) {
     let response;
 
     if (body.path) {
-      // Enviando arquivo via path com FormData
       const form = new FormData();
       form.append('phone', phone);
       form.append('caption', body.caption || '');
@@ -34,7 +33,6 @@ async function sendMessage(phone, endpoint, body = {}) {
         }
       );
     } else {
-      // Enviando texto, localização etc.
       response = await axios.post(
         `${BASE_URL}/api/${SESSION}/${endpoint}`,
         payload,
@@ -69,7 +67,6 @@ const { connectDB, sequelize } = require('../../BancoDeDados/database');
 async function start(client) {
     console.log('✅ Evento onMessage registrado com sucesso.');
     
-    // Importar aqui para evitar problemas de dependência circular
     const { processarMensagem } = require('../Template2');
     
     client.onMessage((message) => {
@@ -83,30 +80,28 @@ async function start(client) {
     await sequelize.sync();
 })();
 
-// Inicializar WPPConnect
+// Inicializar WPPConnect com sessão diferente para o bot
 wppconnect.create({
-    session: 'NERDWHATS_AMERICA',
+    session: 'BOT_LISTENER', // Sessão diferente para o bot
     headless: 'new',
     executablePath: '/snap/bin/chromium',
     catchQR: (base64Qr, asciiQR) => {
-        console.clear();
-        console.log('=-=-=-==-==-=-==-=-==-==-=');
-        console.log('QR CODE DO BOT ABAIXO');
-        console.log('=-=-=-==-==-=-==-=-==-==-=');
-        console.log('📱 Escaneie o QR Code abaixo com seu WhatsApp:');
+        console.log('\n\n🤖 ========== QR CODE DO BOT ==========');
+        console.log('📱 Escaneie este QR Code para conectar o BOT:');
         console.log(asciiQR);
+        console.log('========================================\n');
     },
     statusFind: (status) => {
-        console.log('📶 Status da sessão:', status);
+        console.log('🤖 [BOT] Status da sessão:', status);
     },
     browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
 })
     .then((client) => {
-        console.log('🟢 Cliente conectado! Iniciando listener de mensagens...');
+        console.log('🤖 [BOT] Cliente conectado! Iniciando listener de mensagens...');
         start(client);
     })
     .catch((error) => {
-        console.error('❌ Erro ao iniciar WPPConnect:', error);
+        console.error('❌ [BOT] Erro ao iniciar WPPConnect:', error);
     });
 
 module.exports = { sendMessage };
