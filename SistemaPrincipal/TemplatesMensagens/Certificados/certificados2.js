@@ -36,9 +36,6 @@ async function gerarCertificadoBanco(contatoId) {
 
     // Preencher dados no certificado com posições adequadas
 
-    // Fonte e cor continuam os mesmos
-    const tamanho = 12;
-
     // Conferido a: (nome do contato) - abaixo do título
     page.drawText(contato.nomeCompleto || contato.nome, {
       x: 260, y: 185, size: tamanho, font: helvetica, color: cor
