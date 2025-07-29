@@ -56,7 +56,7 @@ async function gerarCertificadoBanco(contatoId) {
     page.drawText(treinamento.modalidade || '', { x: 250, y: 400, size: tamanho, font: helvetica, color: cor });
 
     // Tipo
-    page.drawText('Tipo de Treinamento:', { x: 70, y: 380, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Tipo de Treinamento:', { x: 100, y: 380, size: tamanho, font: helvetica, color: cor });
     page.drawText(treinamento.tipo || 'TEÓRICO E PRÁTICO', { x: 250, y: 380, size: tamanho, font: helvetica, color: cor });
 
     // Carga horária
