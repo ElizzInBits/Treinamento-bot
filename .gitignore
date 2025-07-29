@@ -40,3 +40,5 @@ npm-debug.log*
 # Ignorar arquivos de sistema
 .DS_Store
 Thumbs.db
+
+*QuotaManager-journal
