@@ -41,40 +41,40 @@ async function gerarCertificadoBanco(contatoId) {
     page.drawText(contato.nomeCompleto || contato.nome, { x: 216, y: 490, size: tamanho, font: helvetica, color: cor });
 
     // CPF
-    page.drawText('Documento de Identificação:', { x: 70, y: 475, size: tamanho, font: helvetica, color: cor });
-    page.drawText(formatarCPF(contato.cpf), { x: 250, y: 475, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Documento de Identificação:', { x: 70, y: 470, size: tamanho, font: helvetica, color: cor });
+    page.drawText(formatarCPF(contato.cpf), { x: 250, y: 470, size: tamanho, font: helvetica, color: cor });
 
     // Curso
-    page.drawText('Nome do Curso:', { x: 70, y: 460, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.nome, { x: 250, y: 460, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Nome do Curso:', { x: 70, y: 450, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.nome, { x: 250, y: 450, size: tamanho, font: helvetica, color: cor });
 
     // Empresa
-    page.drawText('Empresa:', { x: 70, y: 445, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.empresa || '', { x: 250, y: 445, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Empresa:', { x: 70, y: 430, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.empresa || '', { x: 250, y: 430, size: tamanho, font: helvetica, color: cor });
 
     // Modalidade
-    page.drawText('Modalidade', { x: 70, y: 430, size: tamanho, font: helvetica, color: cor });
-    page.drawText('de treinamento:', { x: 70, y: 420, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.modalidade || '', { x: 225, y: 425, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Modalidade', { x: 70, y: 410, size: tamanho, font: helvetica, color: cor });
+    page.drawText('de treinamento:', { x: 70, y: 400, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.modalidade || '', { x: 225, y: 405, size: tamanho, font: helvetica, color: cor });
 
     // Tipo
-    page.drawText('Tipo de', { x: 325, y: 430, size: tamanho, font: helvetica, color: cor });
-    page.drawText('Treinamento:', { x: 325, y: 420, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.tipo || 'TEÓRICO E PRÁTICO', { x: 450, y: 425, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Tipo de', { x: 325, y: 410, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Treinamento:', { x: 325, y: 400, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.tipo || 'TEÓRICO E PRÁTICO', { x: 450, y: 405, size: tamanho, font: helvetica, color: cor });
 
     // Carga horária
-    page.drawText('Carga Horária Realizada:', { x: 70, y: 405, size: tamanho, font: helvetica, color: cor });
-    page.drawText(`${treinamento.cargaHoraria} horas`, { x: 250, y: 405, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Carga Horária Realizada:', { x: 70, y: 380, size: tamanho, font: helvetica, color: cor });
+    page.drawText(`${treinamento.cargaHoraria} horas`, { x: 250, y: 380, size: tamanho, font: helvetica, color: cor });
 
     // Período
-    page.drawText('Período de Treinamento:', { x: 70, y: 390, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.periodo || '', { x: 250, y: 390, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Período de Treinamento:', { x: 70, y: 360, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.periodo || '', { x: 250, y: 360, size: tamanho, font: helvetica, color: cor });
 
     // Em conformidade
-    page.drawText('Em conformidade:', { x: 70, y: 375, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Em conformidade:', { x: 70, y: 340, size: tamanho, font: helvetica, color: cor });
     page.drawText(
       treinamento.emConformidade || '',
-      { x: 70, y: 360, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 12 }
+      { x: 70, y: 325, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 12 }
     );
 
     // Data de conclusão
