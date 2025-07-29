@@ -53,12 +53,12 @@ async function gerarCertificadoBanco(contatoId) {
     page.drawText(treinamento.empresa || '', { x: 250, y: 420, size: tamanho, font: helvetica, color: cor });
 
     // Modalidade
-    page.drawText('Modalidade de treinamento:', { x: 70, y: 400, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.modalidade || '', { x: 250, y: 400, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Modalidade \nde treinamento:', { x: 70, y: 400, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.modalidade || '', { x: 225, y: 400, size: tamanho, font: helvetica, color: cor });
 
     // Tipo
-    page.drawText('Tipo de Treinamento:', { x: 325, y: 400, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.tipo || 'TEÓRICO E PRÁTICO', { x: 470, y: 400, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Tipo de \nTreinamento:', { x: 325, y: 400, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.tipo || 'TEÓRICO E PRÁTICO', { x: 450, y: 400, size: tamanho, font: helvetica, color: cor });
 
     // Carga horária
     page.drawText('Carga Horária Realizada:', { x: 70, y: 360, size: tamanho, font: helvetica, color: cor });
