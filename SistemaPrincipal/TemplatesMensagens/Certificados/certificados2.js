@@ -75,7 +75,7 @@ async function gerarCertificadoBanco(contatoId) {
     page.drawText('Em conformidade:', { x: 80, y: 268, size: tamanho + 2, font: helvetica, color: cor });
     page.drawText(
       treinamento.emConformidade || '',
-      { x: 200, y: 268, size: 12, font: helvetica, color: cor, maxWidth: 350, lineHeight: 12 }
+      { x: 200, y: 270, size: 10, font: helvetica, color: cor, maxWidth: 350, lineHeight: 12 }
     );
 
     // Data de conclusão (bottom right)
