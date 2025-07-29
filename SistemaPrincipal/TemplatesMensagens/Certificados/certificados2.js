@@ -41,22 +41,22 @@ async function gerarCertificadoBanco(contatoId) {
 
 
     // Linha 1: Documento de Identificação
-    page.drawText('Documento de', { x: 80, y: 514, size: tamanho, font: helvetica, color: cor });
-    page.drawText('Identificação:', { x: 80, y: 499, size: tamanho, font: helvetica, color: cor });
-    page.drawText(formatarCPF(contato.cpf), { x: 200, y: 504, size: tamanho + 2, font: helvetica, color: cor });
+    page.drawText('Documento de', { x: 76, y: 514, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Identificação:', { x: 76, y: 499, size: tamanho, font: helvetica, color: cor });
+    page.drawText(formatarCPF(contato.cpf), { x: 196, y: 504, size: tamanho + 2, font: helvetica, color: cor });
 
     // Linha 2: Nome do Curso
-    page.drawText('Nome do Curso:', { x: 80, y: 459, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.nome, { x: 200, y: 459, size: tamanho + 2, font: helvetica, color: cor });
+    page.drawText('Nome do Curso:', { x: 76, y: 459, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.nome, { x: 196, y: 459, size: tamanho + 2, font: helvetica, color: cor });
 
     // Linha 3: Empresa
-    page.drawText('Empresa:', { x: 80, y: 419, size: tamanho, font: helvetica, color: cor });
-    page.drawText('SALUBRITÁ TREINAMENTOS LTDA', { x: 200, y: 414, size: tamanho + 2, font: helvetica, color: cor });
+    page.drawText('Empresa:', { x: 76, y: 419, size: tamanho, font: helvetica, color: cor });
+    page.drawText('SALUBRITÁ TREINAMENTOS LTDA', { x: 196, y: 414, size: tamanho + 2, font: helvetica, color: cor });
 
     // Linha 4: Modalidade (esquerda) e Tipo (direita) - MESMA LINHA
-    page.drawText('Modalidade de', { x: 80, y: 372, size: tamanho, font: helvetica, color: cor });
-    page.drawText('treinamento:', { x: 80, y: 357, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.modalidade || '', { x: 200, y: 364, size: tamanho + 2, font: helvetica, color: cor });
+    page.drawText('Modalidade de', { x: 76, y: 372, size: tamanho, font: helvetica, color: cor });
+    page.drawText('treinamento:', { x: 76, y: 357, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.modalidade || '', { x: 196, y: 364, size: tamanho + 2, font: helvetica, color: cor });
 
     page.drawText('Tipo de', { x: 350, y: 372, size: tamanho, font: helvetica, color: cor });
     page.drawText('Treinamento:', { x: 350, y: 357, size: tamanho, font: helvetica, color: cor });
