@@ -36,8 +36,8 @@ async function gerarCertificadoBanco(contatoId) {
     const tamanho = 12;
 
     // Nome da pessoa (centralizado)
-    page.drawText('Conferido a:', { x: 270, y: 590, size: tamanho, font: helvetica, color: cor });
-    page.drawText(contato.nomeCompleto || contato.nome, { x: 200, y: 575, size: tamanho + 4, font: helvetica, color: cor });
+    page.drawText('Conferido a:', { x: 270, y: 620, size: tamanho, font: helvetica, color: cor });
+    page.drawText(contato.nomeCompleto || contato.nome, { x: 190, y: 590, size: tamanho + 4, font: helvetica, color: cor });
 
 
     // Linha 1: Documento de Identificação
