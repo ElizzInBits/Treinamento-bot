@@ -1,3 +1,4 @@
+require('dotenv').config({ path: '../../../.env' });
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const fs = require('fs');
 const path = require('path');
@@ -150,13 +151,13 @@ async function enviarEmail(destinatario, arquivoPath) {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'elizabethmirandaa302@gmail.com',
-        pass: 'kncv imth bajt bhar',
+        user: process.env.EMAIL_USER || 'seu-email@gmail.com',
+        pass: process.env.EMAIL_PASS || 'sua-senha-app',
       },
     });
 
     const mailOptions = {
-      from: 'elizabethmirandaa302@gmail.com',
+      from: process.env.EMAIL_USER || 'seu-email@gmail.com',
       to: destinatario,
       subject: '🎓 Certificado de Conclusão - Treinamento CIPA',
       html: `
