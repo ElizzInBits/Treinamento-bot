@@ -41,17 +41,17 @@ async function gerarCertificadoBanco(contatoId) {
 
 
     // Linha 1: Documento de Identificação
-    page.drawText('Documento de', { x: 80, y: 485, size: tamanho, font: helvetica, color: cor });
-    page.drawText('Identificação:', { x: 80, y: 470, size: tamanho, font: helvetica, color: cor });
-    page.drawText(formatarCPF(contato.cpf), { x: 200, y: 471, size: tamanho + 1, font: helvetica, color: cor });
+    page.drawText('Documento de', { x: 80, y: 510, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Identificação:', { x: 80, y: 495, size: tamanho, font: helvetica, color: cor });
+    page.drawText(formatarCPF(contato.cpf), { x: 200, y: 496, size: tamanho + 1, font: helvetica, color: cor });
 
     // Linha 2: Nome do Curso
     page.drawText('Nome do Curso:', { x: 80, y: 445, size: tamanho, font: helvetica, color: cor });
     page.drawText(treinamento.nome, { x: 200, y: 445, size: tamanho + 1, font: helvetica, color: cor });
 
     // Linha 3: Empresa
-    page.drawText('Empresa:', { x: 80, y: 420, size: tamanho, font: helvetica, color: cor });
-    page.drawText('SALUBRITÁ TREINAMENTOS LTDA', { x: 200, y: 420, size: tamanho + 1, font: helvetica, color: cor });
+    page.drawText('Empresa:', { x: 80, y: 445, size: tamanho, font: helvetica, color: cor });
+    page.drawText('SALUBRITÁ TREINAMENTOS LTDA', { x: 200, y: 445, size: tamanho + 1, font: helvetica, color: cor });
 
     // Linha 4: Modalidade (esquerda) e Tipo (direita) - MESMA LINHA
     page.drawText('Modalidade de', { x: 80, y: 395, size: tamanho, font: helvetica, color: cor });
