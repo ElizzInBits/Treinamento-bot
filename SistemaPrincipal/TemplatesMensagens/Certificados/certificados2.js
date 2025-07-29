@@ -36,14 +36,14 @@ async function gerarCertificadoBanco(contatoId) {
     const tamanho = 13;
 
     // Nome da pessoa (centralizado)
-    page.drawText('Conferido a:', { x: 270, y: 640, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Conferido a:', { x: 270, y: 630, size: tamanho, font: helvetica, color: cor });
     page.drawText(contato.nomeCompleto || contato.nome, { x: 160, y: 600, size: tamanho + 5, font: helvetica, color: cor });
 
 
     // Linha 1: Documento de Identificação
-    page.drawText('Documento de', { x: 80, y: 500, size: tamanho, font: helvetica, color: cor });
-    page.drawText('Identificação:', { x: 80, y: 485, size: tamanho, font: helvetica, color: cor });
-    page.drawText(formatarCPF(contato.cpf), { x: 200, y: 492, size: tamanho + 1, font: helvetica, color: cor });
+    page.drawText('Documento de', { x: 80, y: 530, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Identificação:', { x: 80, y: 515, size: tamanho, font: helvetica, color: cor });
+    page.drawText(formatarCPF(contato.cpf), { x: 200, y: 507, size: tamanho + 1, font: helvetica, color: cor });
 
     // Linha 2: Nome do Curso
     page.drawText('Nome do Curso:', { x: 80, y: 460, size: tamanho, font: helvetica, color: cor });
