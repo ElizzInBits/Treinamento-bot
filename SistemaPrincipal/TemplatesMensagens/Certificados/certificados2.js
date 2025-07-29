@@ -33,12 +33,12 @@ async function gerarCertificadoBanco(contatoId) {
     const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const page = pdfDoc.getPages()[0];
     const cor = rgb(0, 0, 0);
-    const tamanho = 10;
+    const tamanho = 13;
 
 
-    // Conferido a: (nome do contato) - abaixo do título
-    page.drawText('Conferido a:', { x: 70, y: 490, size: tamanho, font: helvetica, color: cor });
-    page.drawText(contato.nomeCompleto || contato.nome, { x: 216, y: 490, size: tamanho, font: helvetica, color: cor });
+    // Conferido a: (nome do contato) - no meio da página e mais em cima
+    page.drawText('Conferido a:', { x: 250, y: 520, size: tamanho, font: helvetica, color: cor });
+    page.drawText(contato.nomeCompleto || contato.nome, { x: 250, y: 505, size: tamanho, font: helvetica, color: cor });
 
     // CPF
     page.drawText('Documento de Identificação:', { x: 70, y: 465, size: tamanho, font: helvetica, color: cor });
