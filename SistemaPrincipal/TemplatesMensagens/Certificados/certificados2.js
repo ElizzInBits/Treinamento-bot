@@ -33,7 +33,7 @@ async function gerarCertificadoBanco(contatoId) {
     const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const page = pdfDoc.getPages()[0];
     const cor = rgb(0, 0, 0);
-    const tamanho = 11;
+    const tamanho = 12;
 
 
     // Conferido a: (nome do contato) - abaixo do título
