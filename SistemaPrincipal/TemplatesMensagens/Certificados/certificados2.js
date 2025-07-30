@@ -15,11 +15,11 @@ async function gerarCertificadoBanco(contatoId) {
       throw new Error('❌ Contato não encontrado.');
     }
 
-    // Buscar treinamento pelo ID 32 (CIPA)
-    const treinamento = await Treinamento.findByPk(32);
+    // Buscar treinamento pelo ID 
+    const treinamento = await Treinamento.findByPk(29);
 
     if (!treinamento) {
-      throw new Error('❌ Treinamento ID 32 não encontrado no banco de dados.');
+      throw new Error(`❌ Treinamento ${treinamentoId} não encontrado no banco de dados.`);
     }
 
     // Carregar modelo do certificado
@@ -72,20 +72,28 @@ async function gerarCertificadoBanco(contatoId) {
     page.drawText(treinamento.periodo || '', { x: 450, y: 337, size: tamanho + 2, font: helvetica, color: cor });
 
     // Linha 6: Em conformidade (largura total)
-    page.drawText('Em conformidade:', { x: 70, y: 295, size: tamanho , font: helvetica, color: cor });
-    page.drawText(treinamento.emConformidade || '',{ x: 190, y: 290, size: 10, font: helvetica, color: cor, maxWidth: 350, lineHeight: 12 }
+    page.drawText('Em conformidade:', { x: 70, y: 295, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.emConformidade || '', { x: 190, y: 290, size: 10, font: helvetica, color: cor, maxWidth: 350, lineHeight: 12 }
     );
 
     // Data de conclusão (bottom right)
     page.drawText(`Data de conclusão: ${new Date().toLocaleDateString('pt-BR')}`, {
       x: 380, y: 85, size: 9, font: helvetica, color: cor
     });
-    // Conteúdo programático
-    /* page.drawText('CONTEÚDO PROGRAMÁTICO APLICADO:', { x: 70, y: 300, size: tamanho, font: helvetica, color: cor });
-     page.drawText(
-       treinamento.conteudo || 'Conteúdo não informado',
-       { x: 70, y: 280, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 11 }
-     ); */
+
+
+    // preencher a segunda página
+    const paginas = pdfDoc.getPages();
+    let segundaPagina;
+
+    if (paginas.length >= 2) {
+      segundaPagina = paginas[1]; 
+    } else {
+      segundaPagina = pdfDoc.addPage(); //caso não tenha segunda página, cria uma nova
+    }
+
+    // Conteúdo programático (na segunda página)
+    segundaPagina.drawText(treinamento.conteudo || 'Conteúdo não informado', {x: 70, y: 730, size: tamanho + 2, font: helvetica, color: cor, maxWidth: 460, lineHeight: 11});
 
     // Instrutores
     /*  page.drawText('INFORMAÇÕES DOS INSTRUTORES:', { x: 70, y: 150, size: tamanho, font: helvetica, color: cor });
