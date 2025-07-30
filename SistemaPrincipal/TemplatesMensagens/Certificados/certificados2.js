@@ -91,25 +91,25 @@ async function gerarCertificadoBanco(contatoId) {
     } 
 
     // Conteúdo programático (na segunda página)
-    segundaPagina.drawText(treinamento.conteudo || 'Conteúdo não informado', { x: 70, y: 650, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 11 });
+    segundaPagina.drawText(treinamento.conteudo || 'Conteúdo não informado', { x: 70, y: 650, size: tamanho, font: helvetica, color: cor, maxWidth: 460, lineHeight: 11 });
 
     // Informações dos instrutores
     const instrutorInfo = `${treinamento.instrutor || ''} – ${treinamento.qualificacaoInstrutor || ''}`;
-    segundaPagina.drawText(instrutorInfo, { x: 70, y: 450, size: 9, font: helvetica, color: cor });
+    segundaPagina.drawText(instrutorInfo, { x: 70, y: 430, size: tamanho, font: helvetica, color: cor });
 
     if (treinamento.instrutoresAdicionais) {
       segundaPagina.drawText(`Instrutores adicionais: ${treinamento.instrutoresAdicionais}`, {
-        x: 70, y: 435, size: 9, font: helvetica, color: cor, maxWidth: 360
+        x: 70, y: 425, size: tamanho, font: helvetica, color: cor, maxWidth: 360
       });
     }
 
     // Responsável
     const responsavelInfo = `${treinamento.responsavel || ''} – ${treinamento.cargoResponsavel || ''}`;
-    segundaPagina.drawText(responsavelInfo, { x: 70, y: 380, size: 9, font: helvetica, color: cor });
+    segundaPagina.drawText(responsavelInfo, { x: 70, y: 320, size: tamanho, font: helvetica, color: cor });
 
     // Aproveitamento
     segundaPagina.drawText(treinamento.aproveitamento || 'Não há aproveitamento de conteúdo a ser considerado para esta capacitação.', {
-      x: 70, y: 320, size: 9, font: helvetica, color: cor, maxWidth: 250
+      x: 70, y: 280, size: tamanho, font: helvetica, color: cor, maxWidth: 250
     });
 
 
