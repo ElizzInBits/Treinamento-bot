@@ -15,8 +15,8 @@ async function gerarCertificadoBanco(contatoId) {
       throw new Error('❌ Contato não encontrado.');
     }
 
-    // Buscar treinamento pelo ID 32 (CIPA)
-    const treinamento = await Treinamento.findByPk(32);
+    // Buscar treinamento pelo ID 
+    const treinamento = await Treinamento.findByPk(29);
 
     if (!treinamento) {
       throw new Error('❌ Treinamento ID 32 não encontrado no banco de dados.');
@@ -93,25 +93,25 @@ async function gerarCertificadoBanco(contatoId) {
     }
 
     // Conteúdo programático (na segunda página)
-    segundaPagina.drawText(treinamento.conteudo || 'Conteúdo não informado', { x: 70, y: 600, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 11 });
+    segundaPagina.drawText(treinamento.conteudo || 'Conteúdo não informado', { x: 70, y: 700, size: 9, font: helvetica, color: cor, maxWidth: 460, lineHeight: 11 });
 
     // Informações dos instrutores
     const instrutorInfo = `${treinamento.instrutor || ''} – ${treinamento.qualificacaoInstrutor || ''}`;
-    segundaPagina.drawText(instrutorInfo, { x: 70, y: 535, size: 9, font: helvetica, color: cor });
+    segundaPagina.drawText(instrutorInfo, { x: 70, y: 400, size: 9, font: helvetica, color: cor });
 
     if (treinamento.instrutoresAdicionais) {
       segundaPagina.drawText(`Instrutores adicionais: ${treinamento.instrutoresAdicionais}`, {
-        x: 70, y: 520, size: 9, font: helvetica, color: cor, maxWidth: 460
+        x: 70, y: 380, size: 9, font: helvetica, color: cor, maxWidth: 460
       });
     }
 
     // Responsável
     const responsavelInfo = `${treinamento.responsavel || ''} – ${treinamento.cargoResponsavel || ''}`;
-    segundaPagina.drawText(responsavelInfo, { x: 70, y: 475, size: 9, font: helvetica, color: cor });
+    segundaPagina.drawText(responsavelInfo, { x: 70, y: 200, size: 9, font: helvetica, color: cor });
 
     // Aproveitamento
     segundaPagina.drawText(treinamento.aproveitamento || 'Não há aproveitamento de conteúdo a ser considerado para esta capacitação.', {
-      x: 70, y: 435, size: 9, font: helvetica, color: cor, maxWidth: 460
+      x: 70, y: 100, size: 9, font: helvetica, color: cor, maxWidth: 460
     });
 
 
