@@ -93,7 +93,7 @@ async function gerarCertificadoBanco(contatoId) {
     }
 
     // Conteúdo programático (na segunda página)
-    segundaPagina.drawText(treinamento.conteudo || 'Conteúdo não informado', {x: 70, y: 730, size: tamanho + 2, font: helvetica, color: cor, maxWidth: 460, lineHeight: 11});
+    segundaPagina.drawText(treinamento.conteudo || 'Conteúdo não informado', {x: 60, y: 800, size: tamanho + 2, font: helvetica, color: cor, maxWidth: 460, lineHeight: 11});
 
     // Instrutores
     /*  page.drawText('INFORMAÇÕES DOS INSTRUTORES:', { x: 70, y: 150, size: tamanho, font: helvetica, color: cor });
