@@ -680,7 +680,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   const areaResponsavel = document.getElementById('areaResponsavel').value;
   const registroResponsavel = document.getElementById('registroResponsavel').value.trim();
 
-  if (!nome || !modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudo || !instrutor || !responsavel || !areaResponsavel) {
+  if (!nome || !modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudo || !instrutor || !registroInstrutor || !responsavel || !registroResponsavel || !areaResponsavel) {
     mostrarAlerta('Por favor, preencha todos os campos obrigatórios.', 'error');
     return;
   }
