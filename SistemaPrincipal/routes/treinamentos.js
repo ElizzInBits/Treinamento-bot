@@ -78,7 +78,7 @@ router.post('/', upload.array('midias'), async (req, res) => {
       tipo: tipo || '',
       emConformidade: emConformidade || '',
       aproveitamento: aproveitamento || '',
-      conteudo: conteudo || conteudoProgramatico || 'Conteúdo não informado',
+      conteudo: conteudo || 'Conteúdo não informado',
       instrutor: instrutor || '',
       qualificacaoInstrutor: qualificacaoInstrutor || null,
       registroInstrutor: registroInstrutor || null,
