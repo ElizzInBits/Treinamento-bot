@@ -674,11 +674,11 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   const conteudo = document.getElementById('conteudoProgramatico').value.trim();
   const instrutor = document.getElementById('nomeInstrutor').value.trim();
   const qualificacaoInstrutor = document.getElementById('qualificacaoInstrutor').value.trim();
-  const instrutoresAdicionais = document.getElementById('instrutoresAdicionais').value.trim();
+  const registroInstrutor = document.getElementById('registroInstrutor').value.trim();
   const responsavel = document.getElementById('responsavelTreinamento').value.trim();
   const cargoResponsavel = document.getElementById('cargoResponsavel').value.trim();
   const areaResponsavel = document.getElementById('areaResponsavel').value;
-  const observacoes = document.getElementById('observacoesResponsabilidade').value.trim();
+  const registroResponsavel = document.getElementById('registroResponsavel').value.trim();
 
   if (!nome || !modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudo || !instrutor || !responsavel || !areaResponsavel) {
     mostrarAlerta('Por favor, preencha todos os campos obrigatórios.', 'error');
@@ -724,11 +724,11 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   formData.append('conteudoProgramatico', conteudo);
   formData.append('instrutor', instrutor);
   formData.append('qualificacaoInstrutor', qualificacaoInstrutor);
-  formData.append('instrutoresAdicionais', instrutoresAdicionais);
+  formData.append('registroInstrutor', registroInstrutor);
   formData.append('responsavel', responsavel);
   formData.append('cargoResponsavel', cargoResponsavel);
   formData.append('areaResponsavel', areaResponsavel);
-  formData.append('observacoes', observacoes);
+  formData.append('registroResponsavel', registroResponsavel);
 
   // Adiciona cada arquivo individualmente com o nome correto esperado pelo backend
   for (let i = 0; i < arquivos.length; i++) {
@@ -1837,8 +1837,8 @@ function abrirDetalhesTreinamento(treinamentoId) {
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label for="editarInstrutoresAdicionais">Instrutores Adicionais</label>
-        <input type="text" id="editarInstrutoresAdicionais" class="form-control" value="${treinamento.instrutoresAdicionais || ''}" />
+        <label for="editarRegistroInstrutor">Registro do Instrutor</label>
+        <input type="text" id="editarRegistroInstrutor" class="form-control" value="${treinamento.registroInstrutor || ''}" />
       </div>
       <div class="form-group">
         <label for="editarResponsavel">Responsável</label>
@@ -1872,9 +1872,9 @@ function abrirDetalhesTreinamento(treinamentoId) {
       </div>
     </div>
     <div class="form-row">
-      <div class="form-group" style="flex: 1 1 100%;">
-        <label for="editarObservacoes">Observações</label>
-        <textarea id="editarObservacoes" rows="2" class="form-control">${treinamento.observacoes || ''}</textarea>
+      <div class="form-group">
+        <label for="editarRegistroResponsavel">Registro do Responsável</label>
+        <input type="text" id="editarRegistroResponsavel" class="form-control" value="${treinamento.registroResponsavel || ''}" />
       </div>
     </div>
     
@@ -1926,14 +1926,14 @@ function abrirDetalhesTreinamento(treinamentoId) {
     formData.append('tipo', document.getElementById('editarTipoTreinamento').value);
     formData.append('instrutor', document.getElementById('editarInstrutor').value);
     formData.append('qualificacaoInstrutor', document.getElementById('editarQualificacaoInstrutor').value);
-    formData.append('instrutoresAdicionais', document.getElementById('editarInstrutoresAdicionais').value);
+    formData.append('registroInstrutor', document.getElementById('editarRegistroInstrutor').value);
     formData.append('responsavel', document.getElementById('editarResponsavel').value);
     formData.append('cargoResponsavel', document.getElementById('editarCargoResponsavel').value);
     formData.append('areaResponsavel', document.getElementById('editarAreaResponsavel').value);
+    formData.append('registroResponsavel', document.getElementById('editarRegistroResponsavel').value);
     formData.append('emConformidade', document.getElementById('editarEmConformidade').value);
     formData.append('aproveitamento', document.getElementById('editarAproveitamento').value);
     formData.append('conteudoProgramatico', document.getElementById('editarConteudoTreinamento').value);
-    formData.append('observacoes', document.getElementById('editarObservacoes').value);
     
     // Adicionar novas mídias se houver
     for (let i = 0; i < novasMidias.length; i++) {

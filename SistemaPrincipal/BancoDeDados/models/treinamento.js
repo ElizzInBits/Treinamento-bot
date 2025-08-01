@@ -46,6 +46,7 @@ const Treinamento = sequelize.define('Treinamento', {
   registroInstrutor: {
     type: DataTypes.STRING,
     allowNull: true,
+    field: 'registro_instrutor'
   },
   responsavel: {
     type: DataTypes.STRING,
@@ -62,6 +63,7 @@ const Treinamento = sequelize.define('Treinamento', {
   registroResponsavel: {
     type: DataTypes.STRING,
     allowNull: true,
+    field: 'registro_responsavel'
   },
 
   midias: {
