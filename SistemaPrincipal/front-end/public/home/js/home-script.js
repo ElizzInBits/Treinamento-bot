@@ -754,7 +754,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
       return res.json();
     })
     .then(data => {
-      mostrarAlerta(`Treinamento ${data.nome} criado com sucesso!`);
+      mostrarAlerta(`Treinamento ${data.treinamento?.nome || 'novo'} criado com sucesso!`);
       document.getElementById('treinamentoForm').reset();
       document.querySelectorAll('#treinamentoForm .error').forEach(campo => {
         campo.classList.remove('error');
