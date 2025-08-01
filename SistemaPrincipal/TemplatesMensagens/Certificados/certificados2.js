@@ -35,86 +35,165 @@ async function gerarCertificadoBanco(contatoId) {
     const cor = rgb(0, 0, 0);
     const tamanho = 12;
 
-    // Nome da pessoa (centralizado)
+    // Função para formatar data do período
+    function formatarDataPeriodo(periodoStr) {
+      if (!periodoStr) return "";
+      
+      const dataLimpa = periodoStr.includes(' ') ? periodoStr.split(' ')[0] : periodoStr;
+      
+      // Se a data já está no formato brasileiro (dd/mm/yyyy), mantém
+      if (dataLimpa.includes('/') && dataLimpa.split('/').length === 3) {
+        return dataLimpa;
+      }
+      
+      // Tenta converter outros formatos
+      try {
+        const data = new Date(dataLimpa);
+        if (!isNaN(data.getTime())) {
+          return data.toLocaleDateString('pt-BR');
+        }
+      } catch (error) {
+        // Se não conseguir converter, retorna original
+      }
+      
+      return dataLimpa;
+    }
+
+    // Função para quebrar texto em linhas
+    function quebrarTexto(texto, fonte, tamanhoFonte, larguraMax) {
+      if (!texto) return [''];
+      
+      const palavras = texto.split(' ');
+      const linhas = [];
+      let linhaAtual = '';
+      
+      for (const palavra of palavras) {
+        const testeLinhaAtual = linhaAtual ? `${linhaAtual} ${palavra}` : palavra;
+        // Estimativa de largura (aproximada)
+        const larguraEstimada = testeLinhaAtual.length * (tamanhoFonte * 0.6);
+        
+        if (larguraEstimada <= larguraMax) {
+          linhaAtual = testeLinhaAtual;
+        } else {
+          if (linhaAtual) {
+            linhas.push(linhaAtual);
+            linhaAtual = palavra;
+          } else {
+            linhas.push(palavra);
+          }
+        }
+      }
+      
+      if (linhaAtual) {
+        linhas.push(linhaAtual);
+      }
+      
+      return linhas;
+    }
+
+    // PRIMEIRA PÁGINA - Formatação baseada no código Python
+    
+    // "Conferido a:" (posição ajustada)
     page.drawText('Conferido a:', { x: 270, y: 630, size: tamanho, font: helvetica, color: cor });
-    page.drawText(contato.nomeCompleto || contato.nome, { x: 160, y: 600, size: tamanho + 6, font: helvetica, color: cor });
 
+    // Nome da pessoa (centralizado)
+    const nomeCompleto = contato.nomeCompleto || contato.nome;
+    const nomeSize = 16;
+    const larguraPagina = 595.28; // A4 width in points
+    const larguraNome = nomeCompleto.length * (nomeSize * 0.6); // Estimativa
+    const nomeX = (larguraPagina / 2) - (larguraNome / 2);
+    page.drawText(nomeCompleto, { x: nomeX, y: 600, size: nomeSize, font: helvetica, color: cor });
 
-    // Linha 1: Documento de Identificação
-    page.drawText('Documento de', { x: 70, y: 521, size: tamanho, font: helvetica, color: cor });
-    page.drawText('Identificação:', { x: 70, y: 506, size: tamanho, font: helvetica, color: cor });
-    page.drawText(formatarCPF(contato.cpf), { x: 196, y: 511, size: tamanho + 2, font: helvetica, color: cor });
+    // Documento de Identificação (posições ajustadas conforme Python)
+    page.drawText('Documento de', { x: 60, y: 519, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Identificação:', { x: 60, y: 506, size: tamanho, font: helvetica, color: cor });
+    page.drawText(formatarCPF(contato.cpf), { x: 166, y: 513, size: tamanho + 2, font: helvetica, color: cor });
 
-    // Linha 2: Nome do Curso
-    page.drawText('Nome do Curso:', { x: 70, y: 469, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.nome, { x: 196, y: 469, size: tamanho + 2, font: helvetica, color: cor });
+    // Nome do Curso (posições ajustadas)
+    page.drawText('Nome do Curso:', { x: 60, y: 467, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.nome, { x: 166, y: 467, size: 10, font: helvetica, color: cor });
 
-    // Linha 3: Empresa
-    page.drawText('Empresa:', { x: 70, y: 429, size: tamanho, font: helvetica, color: cor });
-    page.drawText('SALUBRITÁ TREINAMENTOS LTDA', { x: 196, y: 424, size: tamanho + 2, font: helvetica, color: cor });
+    // Empresa (posições ajustadas)
+    page.drawText('Empresa:', { x: 60, y: 429, size: tamanho, font: helvetica, color: cor });
+    page.drawText('SALUBRITÁ TREINAMENTOS LTDA', { x: 166, y: 427, size: tamanho + 2, font: helvetica, color: cor });
 
-    // Linha 4: Modalidade (esquerda) e Tipo (direita) - MESMA LINHA
-    page.drawText('Modalidade de', { x: 70, y: 382, size: tamanho, font: helvetica, color: cor });
-    page.drawText('treinamento:', { x: 70, y: 367, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.modalidade || '', { x: 196, y: 374, size: tamanho + 2, font: helvetica, color: cor });
+    // Modalidade de treinamento (posições ajustadas)
+    page.drawText('Modalidade de', { x: 60, y: 382, size: tamanho, font: helvetica, color: cor });
+    page.drawText('treinamento:', { x: 60, y: 367, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.modalidade || '', { x: 166, y: 374, size: tamanho + 2, font: helvetica, color: cor });
 
-    page.drawText('Tipo de', { x: 350, y: 386, size: tamanho, font: helvetica, color: cor });
-    page.drawText('Treinamento:', { x: 350, y: 371, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.tipo || 'TEÓRICO E PRÁTICO', { x: 450, y: 380, size: tamanho + 2, font: helvetica, color: cor });
+    // Tipo de Treinamento (lado direito - posições ajustadas)
+    page.drawText('Tipo de', { x: 310, y: 386, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Treinamento:', { x: 310, y: 371, size: tamanho, font: helvetica, color: cor });
+    page.drawText(treinamento.tipo || 'TEÓRICO E PRÁTICO', { x: 400, y: 380, size: tamanho + 2, font: helvetica, color: cor });
 
-    // Linha 5: Carga Horária (esquerda) e Período (direita) - MESMA LINHA
-    page.drawText('Carga Horária', { x: 70, y: 336, size: tamanho, font: helvetica, color: cor });
-    page.drawText('Realizada:', { x: 70, y: 321, size: tamanho, font: helvetica, color: cor });
-    page.drawText(`${treinamento.cargaHoraria} HORAS`, { x: 200, y: 328, size: tamanho + 2, font: helvetica, color: cor });
+    // Carga Horária (posições ajustadas)
+    page.drawText('Carga Horária', { x: 60, y: 336, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Realizada:', { x: 60, y: 321, size: tamanho, font: helvetica, color: cor });
+    page.drawText(`${treinamento.cargaHoraria} HORAS`, { x: 166, y: 328, size: tamanho + 2, font: helvetica, color: cor });
 
-    page.drawText('Período de', { x: 350, y: 345, size: tamanho, font: helvetica, color: cor });
-    page.drawText('Treinamento:', { x: 350, y: 330, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.periodo || '', { x: 450, y: 337, size: tamanho + 2, font: helvetica, color: cor });
+    // Período de Treinamento (lado direito - posições ajustadas)
+    const periodoFormatado = formatarDataPeriodo(treinamento.periodo || '');
+    page.drawText('Período de', { x: 310, y: 336, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Treinamento:', { x: 310, y: 321, size: tamanho, font: helvetica, color: cor });
+    page.drawText(periodoFormatado, { x: 400, y: 328, size: tamanho + 2, font: helvetica, color: cor });
 
-    // Linha 6: Em conformidade (
-    page.drawText('Em conformidade:', { x: 70, y: 295, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.emConformidade || '', { x: 190, y: 290, size: 10, font: helvetica, color: cor, maxWidth: 350, lineHeight: 12 }
-    );
+    // Em conformidade (posições e quebra de texto ajustadas)
+    page.drawText('Em conformidade:', { x: 60, y: 285, size: tamanho, font: helvetica, color: cor });
+    
+    const linhasConformidade = quebrarTexto(treinamento.emConformidade || '', helvetica, 10, 480);
+    let yConformidade = 270;
+    linhasConformidade.forEach(linha => {
+      page.drawText(linha, { x: 60, y: yConformidade, size: 10, font: helvetica, color: cor });
+      yConformidade -= 12;
+    });
 
-    // Data de conclusão 
+    // Data de conclusão (posição mantida)
     page.drawText(`Data de conclusão: ${new Date().toLocaleDateString('pt-BR')}`, {
       x: 380, y: 85, size: 9, font: helvetica, color: cor
     });
 
-
-    // PREENCHER A SEGUNDA PÁGINA COM O CONTEÚDO PROGRAMÁTICO E INFORMAÇÕES DOS INSTRUTORES
+    // SEGUNDA PÁGINA - Formatação baseada no código Python
     const paginas = pdfDoc.getPages();
     let segundaPagina;
 
     if (paginas.length >= 2) {
       segundaPagina = paginas[1];
-    } 
+    }
 
-    // Conteúdo programático (na segunda página)
-    segundaPagina.drawText(treinamento.conteudo || 'Conteúdo não informado', { x: 70, y: 650, size: tamanho, font: helvetica, color: cor, maxWidth: 460, lineHeight: 11 });
+    if (segundaPagina) {
+      // Conteúdo programático (posições e quebra ajustadas)
+      const linhasConteudo = quebrarTexto(treinamento.conteudo || 'Conteúdo não informado', helvetica, tamanho, 515);
+      let yConteudo = 660;
+      
+      linhasConteudo.forEach(linha => {
+        if (yConteudo >= 450) { // Ajusta para não sobrepor outras informações
+          segundaPagina.drawText(linha, { x: 40, y: yConteudo, size: tamanho, font: helvetica, color: cor });
+          yConteudo -= 16;
+        }
+      });
 
-    // Informações dos instrutores
-    const instrutorInfo = `${treinamento.instrutor || ''} – ${treinamento.qualificacaoInstrutor || ''}`;
-    segundaPagina.drawText(instrutorInfo, { x: 70, y: 430, size: tamanho, font: helvetica, color: cor });
+      // Informações dos instrutores (posição ajustada)
+      const instrutorInfo = `${treinamento.instrutor || ''} – ${treinamento.qualificacaoInstrutor || ''}`;
+      segundaPagina.drawText(instrutorInfo, { x: 40, y: 430, size: tamanho, font: helvetica, color: cor });
 
-    if (treinamento.instrutoresAdicionais) {
-      segundaPagina.drawText(`Instrutores adicionais: ${treinamento.instrutoresAdicionais}`, {
-        x: 70, y: 425, size: tamanho, font: helvetica, color: cor, maxWidth: 360
+      if (treinamento.instrutoresAdicionais) {
+        segundaPagina.drawText(`Instrutores adicionais: ${treinamento.instrutoresAdicionais}`, {
+          x: 40, y: 415, size: tamanho, font: helvetica, color: cor
+        });
+      }
+
+      // Responsável (posição ajustada)
+      const responsavelInfo = `${treinamento.responsavel || ''} – ${treinamento.cargoResponsavel || ''}`;
+      segundaPagina.drawText(responsavelInfo, { x: 40, y: 320, size: tamanho, font: helvetica, color: cor });
+
+      // Aproveitamento (posição ajustada)
+      segundaPagina.drawText(treinamento.aproveitamento || 'Não há aproveitamento de conteúdo a ser considerado para esta capacitação.', {
+        x: 40, y: 220, size: tamanho, font: helvetica, color: cor, maxWidth: 500
       });
     }
 
-    // Responsável
-    const responsavelInfo = `${treinamento.responsavel || ''} – ${treinamento.cargoResponsavel || ''}`;
-    segundaPagina.drawText(responsavelInfo, { x: 70, y: 320, size: tamanho, font: helvetica, color: cor });
-
-    // Aproveitamento
-    segundaPagina.drawText(treinamento.aproveitamento || 'Não há aproveitamento de conteúdo a ser considerado para esta capacitação.', {
-      x: 70, y: 280, size: tamanho, font: helvetica, color: cor, maxWidth: 250
-    });
-
-
-     
-    // Salvar PDF
+    // Salvar PDF (código mantido)
     const certificadosDir = path.join(__dirname, 'Certificados');
     if (!fs.existsSync(certificadosDir)) {
       fs.mkdirSync(certificadosDir, { recursive: true });
@@ -149,7 +228,7 @@ async function enviarEmail(destinatario, arquivoPath) {
       throw new Error('❌ Arquivo de certificado não encontrado.');
     }
 
-    const transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransporter({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER || 'seu-email@gmail.com',
