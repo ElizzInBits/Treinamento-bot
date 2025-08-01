@@ -204,6 +204,12 @@ router.delete('/:id', async (req, res) => {
     const treinamento = await Treinamento.findByPk(id);
     if (!treinamento) return res.status(404).json({ error: 'Treinamento não encontrado' });
 
+    // Remover referências na tabela empresa_treinamentos primeiro
+    await treinamento.sequelize.query(
+      'DELETE FROM empresa_treinamentos WHERE treinamento_id = ?',
+      { replacements: [id] }
+    );
+
     // Excluir arquivos de mídia relacionados
     if (treinamento.midias) {
       try {
