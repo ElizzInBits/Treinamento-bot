@@ -102,8 +102,8 @@ router.post('/', upload.array('midias'), async (req, res) => {
   }
 });
 
-// ATUALIZAR treinamento pelo ID (sem alterar arquivos)
-router.put('/:id', async (req, res) => {
+// ATUALIZAR treinamento pelo ID (com suporte a arquivos)
+router.put('/:id', upload.array('midias'), async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -140,6 +140,23 @@ router.put('/:id', async (req, res) => {
     treinamento.cargoResponsavel = cargoResponsavel !== undefined ? cargoResponsavel : treinamento.cargoResponsavel;
     treinamento.areaResponsavel = areaResponsavel !== undefined ? areaResponsavel : treinamento.areaResponsavel;
     treinamento.registroResponsavel = registroResponsavel !== undefined ? registroResponsavel : treinamento.registroResponsavel;
+
+    // Processar novas mídias se houver
+    if (req.files && req.files.length > 0) {
+      const novasMidias = req.files.map(file => file.filename);
+      let midiasExistentes = [];
+      
+      if (treinamento.midias) {
+        try {
+          midiasExistentes = JSON.parse(treinamento.midias);
+        } catch {
+          midiasExistentes = [];
+        }
+      }
+      
+      const todasMidias = [...midiasExistentes, ...novasMidias];
+      treinamento.midias = JSON.stringify(todasMidias);
+    }
 
     await treinamento.save();
 
