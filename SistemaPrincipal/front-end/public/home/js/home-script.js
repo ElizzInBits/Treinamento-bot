@@ -1798,8 +1798,10 @@ function abrirDetalhesTreinamento(treinamentoId) {
   // Parse das mídias existentes
   let midiasExistentes = [];
   try {
-    if (treinamento.midias && treinamento.midias.trim() !== '') {
+    if (treinamento.midias && typeof treinamento.midias === 'string' && treinamento.midias.trim() !== '') {
       midiasExistentes = JSON.parse(treinamento.midias);
+    } else if (Array.isArray(treinamento.midias)) {
+      midiasExistentes = treinamento.midias;
     }
   } catch (e) {
     console.error('Erro ao parsear mídias:', e);
