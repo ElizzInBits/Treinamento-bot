@@ -176,16 +176,22 @@ async function gerarCertificadoBanco(contatoId) {
       // Informações dos instrutores (posição ajustada)
       const instrutorInfo = `${treinamento.instrutor || ''} – ${treinamento.qualificacaoInstrutor || ''}`;
       segundaPagina.drawText(instrutorInfo, { x: 40, y: 430, size: tamanho, font: helvetica, color: cor });
-
-      if (treinamento.instrutoresAdicionais) {
-        segundaPagina.drawText(`Instrutores adicionais: ${treinamento.instrutoresAdicionais}`, {
+      
+      if (treinamento.registroInstrutor) {
+        segundaPagina.drawText(`Registro: ${treinamento.registroInstrutor}`, {
           x: 40, y: 415, size: tamanho, font: helvetica, color: cor
         });
       }
 
       // Responsável (posição ajustada)
       const responsavelInfo = `${treinamento.responsavel || ''} – ${treinamento.cargoResponsavel || ''}`;
-      segundaPagina.drawText(responsavelInfo, { x: 40, y: 320, size: tamanho, font: helvetica, color: cor });
+      segundaPagina.drawText(responsavelInfo, { x: 40, y: 350, size: tamanho, font: helvetica, color: cor });
+      
+      if (treinamento.registroResponsavel) {
+        segundaPagina.drawText(`Registro: ${treinamento.registroResponsavel}`, {
+          x: 40, y: 335, size: tamanho, font: helvetica, color: cor
+        });
+      }
 
       // Aproveitamento (posição ajustada)
       segundaPagina.drawText(treinamento.aproveitamento || 'Não há aproveitamento de conteúdo a ser considerado para esta capacitação.', {
