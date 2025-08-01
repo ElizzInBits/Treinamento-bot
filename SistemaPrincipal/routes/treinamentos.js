@@ -50,7 +50,7 @@ router.post('/', upload.array('midias'), async (req, res) => {
   try {
     const {
       nome, descricao = '', modalidade, cargaHoraria, tipo,
-      emConformidade, aproveitamento, conteudo,
+      emConformidade, aproveitamento, conteudo, conteudoProgramatico,
       instrutor, qualificacaoInstrutor, registroInstrutor,
       responsavel, cargoResponsavel, areaResponsavel, registroResponsavel, midias
     } = req.body;
@@ -78,7 +78,7 @@ router.post('/', upload.array('midias'), async (req, res) => {
       tipo: tipo || '',
       emConformidade: emConformidade || '',
       aproveitamento: aproveitamento || '',
-      conteudo: conteudo || 'Conteúdo não informado',
+      conteudo: conteudoProgramatico || conteudo || 'Conteúdo não informado',
       instrutor: instrutor || '',
       qualificacaoInstrutor: qualificacaoInstrutor || null,
       registroInstrutor: registroInstrutor || null,
@@ -108,7 +108,7 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const {
       nome, descricao, modalidade, cargaHoraria, tipo,
-      emConformidade, aproveitamento, conteudo,
+      emConformidade, aproveitamento, conteudo, conteudoProgramatico,
       instrutor, qualificacaoInstrutor, registroInstrutor,
       responsavel, cargoResponsavel, areaResponsavel, registroResponsavel
     } = req.body;
@@ -132,7 +132,7 @@ router.put('/:id', async (req, res) => {
     treinamento.tipo = tipo !== undefined ? tipo : treinamento.tipo;
     treinamento.emConformidade = emConformidade !== undefined ? emConformidade : treinamento.emConformidade;
     treinamento.aproveitamento = aproveitamento !== undefined ? aproveitamento : treinamento.aproveitamento;
-    treinamento.conteudo = conteudo !== undefined ? conteudo : treinamento.conteudo;
+    treinamento.conteudo = conteudoProgramatico !== undefined ? conteudoProgramatico : (conteudo !== undefined ? conteudo : treinamento.conteudo);
     treinamento.instrutor = instrutor !== undefined ? instrutor : treinamento.instrutor;
     treinamento.qualificacaoInstrutor = qualificacaoInstrutor !== undefined ? qualificacaoInstrutor : treinamento.qualificacaoInstrutor;
     treinamento.registroInstrutor = registroInstrutor !== undefined ? registroInstrutor : treinamento.registroInstrutor;
