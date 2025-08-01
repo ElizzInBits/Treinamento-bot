@@ -51,8 +51,8 @@ router.post('/', upload.array('midias'), async (req, res) => {
     const {
       nome, descricao = '', modalidade, cargaHoraria, tipo,
       emConformidade, aproveitamento, conteudo,
-      instrutor, qualificacaoInstrutor, instrutoresAdicionais,
-      responsavel, cargoResponsavel, areaResponsavel, observacoes, midias
+      instrutor, qualificacaoInstrutor, registroInstrutor,
+      responsavel, cargoResponsavel, areaResponsavel, registroResponsavel, midias
     } = req.body;
 
     if (!nome || !nome.trim()) {
@@ -81,11 +81,11 @@ router.post('/', upload.array('midias'), async (req, res) => {
       conteudo: conteudo || conteudoProgramatico || 'Conteúdo não informado',
       instrutor: instrutor || '',
       qualificacaoInstrutor: qualificacaoInstrutor || null,
-      instrutoresAdicionais: instrutoresAdicionais || null,
+      registroInstrutor: registroInstrutor || null,
       responsavel: responsavel || '',
       cargoResponsavel: cargoResponsavel || null,
       areaResponsavel: areaResponsavel || '',
-      observacoes: observacoes || null,
+      registroResponsavel: registroResponsavel || null,
       midias: JSON.stringify(midiasNomes)
     });
 
@@ -109,8 +109,8 @@ router.put('/:id', async (req, res) => {
     const {
       nome, descricao, modalidade, cargaHoraria, tipo,
       emConformidade, aproveitamento, conteudo,
-      instrutor, qualificacaoInstrutor, instrutoresAdicionais,
-      responsavel, cargoResponsavel, areaResponsavel, observacoes
+      instrutor, qualificacaoInstrutor, registroInstrutor,
+      responsavel, cargoResponsavel, areaResponsavel, registroResponsavel
     } = req.body;
 
     const treinamento = await Treinamento.findByPk(id);
@@ -135,11 +135,11 @@ router.put('/:id', async (req, res) => {
     treinamento.conteudo = conteudo !== undefined ? conteudo : treinamento.conteudo;
     treinamento.instrutor = instrutor !== undefined ? instrutor : treinamento.instrutor;
     treinamento.qualificacaoInstrutor = qualificacaoInstrutor !== undefined ? qualificacaoInstrutor : treinamento.qualificacaoInstrutor;
-    treinamento.instrutoresAdicionais = instrutoresAdicionais !== undefined ? instrutoresAdicionais : treinamento.instrutoresAdicionais;
+    treinamento.registroInstrutor = registroInstrutor !== undefined ? registroInstrutor : treinamento.registroInstrutor;
     treinamento.responsavel = responsavel !== undefined ? responsavel : treinamento.responsavel;
     treinamento.cargoResponsavel = cargoResponsavel !== undefined ? cargoResponsavel : treinamento.cargoResponsavel;
     treinamento.areaResponsavel = areaResponsavel !== undefined ? areaResponsavel : treinamento.areaResponsavel;
-    treinamento.observacoes = observacoes !== undefined ? observacoes : treinamento.observacoes;
+    treinamento.registroResponsavel = registroResponsavel !== undefined ? registroResponsavel : treinamento.registroResponsavel;
 
     await treinamento.save();
 

@@ -43,7 +43,7 @@ const Treinamento = sequelize.define('Treinamento', {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  instrutoresAdicionais: {
+  registroInstrutor: {
     type: DataTypes.STRING,
     allowNull: true,
   },
@@ -59,8 +59,8 @@ const Treinamento = sequelize.define('Treinamento', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  observacoes: {
-    type: DataTypes.TEXT,
+  registroResponsavel: {
+    type: DataTypes.STRING,
     allowNull: true,
   },
 
