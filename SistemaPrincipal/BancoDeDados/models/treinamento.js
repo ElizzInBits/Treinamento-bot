@@ -45,7 +45,7 @@ const Treinamento = sequelize.define('Treinamento', {
   },
   registroInstrutor: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
     field: 'registro_instrutor'
   },
   responsavel: {
@@ -62,7 +62,7 @@ const Treinamento = sequelize.define('Treinamento', {
   },
   registroResponsavel: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
     field: 'registro_responsavel'
   },
 
