@@ -612,7 +612,14 @@ async function processarMensagem(message) {
                 });
                 
                 try {
-                    const scriptPath = `./Treinamentos/${treinamento.nome}.js`;
+                    // Converter nome do banco para nome do arquivo
+                    const nomeArquivo = treinamento.nome
+                        .toLowerCase()
+                        .split(' ')
+                        .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1))
+                        .join(' ');
+                    
+                    const scriptPath = `./Treinamentos/${nomeArquivo}.js`;
                     console.log(`🔍 Carregando script:`, scriptPath);
                     const scriptTreinamento = require(scriptPath);
                     await scriptTreinamento.executarTreinamento(sender, contato);
