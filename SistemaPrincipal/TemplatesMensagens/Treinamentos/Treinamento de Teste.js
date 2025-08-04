@@ -102,17 +102,40 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     const ultimaInteracao = await obterUltimaInteracao(sender);
     console.log(`📝 [TREINAMENTO TESTE] Última interação:`, ultimaInteracao?.tipo);
     
-    // Início do treinamento - detectar por selectedId OU por texto
     const textLower = text.toLowerCase();
+    console.log(`🔍 [DEBUG] textLower: '${textLower}'`);
+    console.log(`🔍 [DEBUG] ultimaInteracao.tipo: '${ultimaInteracao?.tipo}'`);
+    
+    // PRIMEIRO: Confirmação de dados - por selectedId OU por texto
+    if (selectedId === 'dados_corretos_teste' || 
+        (ultimaInteracao?.tipo === 'confirmacao_dados_teste' && RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
+        console.log(`✅ Confirmando dados para certificado`);
+        await sendMessage(sender, 'send-message', {
+            message: '✅ Dados confirmados! Gerando seu certificado...',
+        });
+        await gerarEEnviarCertificadoTeste(contato, sender);
+        return true;
+    }
+    
+    // Dados incorretos
+    if (selectedId === 'dados_incorretos_teste' || 
+        (ultimaInteracao?.tipo === 'confirmacao_dados_teste' && RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
+        console.log(`❌ Dados incorretos, solicitando correção`);
+        await sendMessage(sender, 'send-message', {
+            message: '📝 Para corrigir seus dados, por favor, entre em contato com o suporte.',
+        });
+        return true;
+    }
+    
+    // SEGUNDO: Início do treinamento - detectar por selectedId OU por texto
     const contemComecaAgora = textLower.includes('começar agora');
     const contemRespositaPositiva = RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase()));
     
-    console.log(`🔍 [DEBUG] textLower: '${textLower}'`);
     console.log(`🔍 [DEBUG] contemComecaAgora: ${contemComecaAgora}`);
     console.log(`🔍 [DEBUG] contemRespositaPositiva: ${contemRespositaPositiva}`);
     
-    if (selectedId === 'começar_teste' || selectedId === 'pronto_teste' || 
-        contemComecaAgora || contemRespositaPositiva) {
+    if ((selectedId === 'começar_teste' || selectedId === 'pronto_teste' || contemComecaAgora) ||
+        (ultimaInteracao?.tipo === 'aguardando_inicio_teste' && contemRespositaPositiva)) {
         console.log(`✅ [TREINAMENTO TESTE] Iniciando treinamento com selectedId: '${selectedId}' ou text: '${text}'`);
         await sendMessage(sender, 'send-message', {
             message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
@@ -241,26 +264,7 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
         return true;
     }
 
-    // Confirmação de dados - por selectedId OU por texto
-    if (selectedId === 'dados_corretos_teste' || 
-        RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase()))) {
-        console.log(`✅ Confirmando dados para certificado`);
-        await sendMessage(sender, 'send-message', {
-            message: '✅ Dados confirmados! Gerando seu certificado...',
-        });
-        await gerarEEnviarCertificadoTeste(contato, sender);
-        return true;
-    }
-    
-    // Dados incorretos
-    if (selectedId === 'dados_incorretos_teste' || 
-        RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase()))) {
-        console.log(`❌ Dados incorretos, solicitando correção`);
-        await sendMessage(sender, 'send-message', {
-            message: '📝 Para corrigir seus dados, por favor, entre em contato com o suporte.',
-        });
-        return true;
-    }
+
 
     // Se chegou até aqui e é o número 1, pode ser que a interação não foi salva corretamente
     if (text === '1') {
