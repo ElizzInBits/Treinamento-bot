@@ -616,7 +616,13 @@ async function processarMensagem(message) {
                     const nomeArquivo = treinamento.nome
                         .toLowerCase()
                         .split(' ')
-                        .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1))
+                        .map((palavra, index) => {
+                            // Manter preposições em minúsculo
+                            if (['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para'].includes(palavra)) {
+                                return palavra;
+                            }
+                            return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+                        })
                         .join(' ');
                     
                     const scriptPath = `./Treinamentos/${nomeArquivo}.js`;
