@@ -592,17 +592,31 @@ async function processarMensagem(message) {
 
         // Processar seleção de treinamento
         const ultimaInteracao = await obterUltimaInteracao(sender);
-        console.log(`🔍 Debug - ultimaInteracao:`, ultimaInteracao?.tipo);
-        console.log(`🔍 Debug - selectedId:`, selectedId);
-        console.log(`🔍 Debug - text:`, text);
         
-        if (ultimaInteracao?.tipo === 'selecionar_treinamento' && selectedId.startsWith('treinamento_')) {
-            const treinamentoId = selectedId.replace('treinamento_', '');
-            console.log(`🔍 Debug - treinamentoId:`, treinamentoId);
-            const treinamento = await Treinamento.findByPk(treinamentoId);
+        // Verificar se é seleção por lista ou por texto
+        const isSelecaoTreinamento = (ultimaInteracao?.tipo === 'selecionar_treinamento' && selectedId.startsWith('treinamento_')) ||
+                                   (ultimaInteracao?.tipo === 'selecionar_treinamento' && text.toLowerCase().includes('treinamento'));
+        
+        if (isSelecaoTreinamento) {
+            let treinamento;
+            
+            if (selectedId.startsWith('treinamento_')) {
+                // Seleção por lista
+                const treinamentoId = selectedId.replace('treinamento_', '');
+                treinamento = await Treinamento.findByPk(treinamentoId);
+            } else {
+                // Seleção por texto - buscar por nome
+                treinamento = await Treinamento.findOne({
+                    where: {
+                        nome: {
+                            [sequelize.Op.iLike]: '%' + text.split('\n')[0].trim() + '%'
+                        }
+                    }
+                });
+            }
             
             if (treinamento) {
-                console.log(`🔍 Debug - treinamento encontrado:`, treinamento.nome);
+                console.log(`✅ Treinamento selecionado:`, treinamento.nome);
                 await contato.update({ 
                     statusTreinamento: 'em andamento',
                     treinamentoId: treinamento.id 
@@ -611,34 +625,14 @@ async function processarMensagem(message) {
                 // Executar script específico do treinamento
                 try {
                     const scriptPath = `./Treinamentos/${treinamento.nome}.js`;
-                    console.log(`🔍 Debug - tentando carregar script:`, scriptPath);
                     const scriptTreinamento = require(scriptPath);
                     await scriptTreinamento.executarTreinamento(sender, contato);
                     console.log(`✅ Script executado com sucesso`);
                 } catch (error) {
-                    console.error(`❌ Erro ao executar script do treinamento ${treinamento.nome}:`, error);
-                    // Fallback para mensagem padrão
+                    console.error(`❌ Erro ao executar script:`, error);
                     await sendMessage(sender, 'send-message', {
-                        message: `✅ Você selecionou: *${treinamento.nome}*\n\n📋 Modalidade: ${treinamento.modalidade}\n⏱️ Carga Horária: ${treinamento.cargaHoraria}h\n\n${treinamento.conteudo}`,
+                        message: `✅ Você selecionou: *${treinamento.nome}*\n\n📋 Modalidade: ${treinamento.modalidade}\n⏱️ Carga Horária: ${treinamento.cargaHoraria}h`,
                     });
-                    
-                    const listMsg = {
-                        title: '',
-                        description: '*Pronto para começar?* \nEscolha uma opção:',
-                        buttonText: 'Ver opções',
-                        listType: 'SINGLE_SELECT',
-                        sections: [{
-                            title: '',
-                            rows: [
-                                { id: 'começar agora', title: 'Começar agora!! 😎 🔥🔥🔥', description: '' },
-                                { id: 'não começar', title: 'Não, começo assim que possível 👀 😅', description: '' },
-                            ],
-                        }],
-                    };
-
-                    await sendMessage(sender, 'send-list-message', listMsg);
-                    await salvarUltimaInteracao(sender, 'quiz', listMsg);
-                    agendarLembrete(sender, getMensagemListaContinuar());
                 }
             }
             return;
