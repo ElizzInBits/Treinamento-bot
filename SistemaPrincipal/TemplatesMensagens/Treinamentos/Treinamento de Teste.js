@@ -21,11 +21,15 @@ async function executarTreinamento(sender, contato) {
     }
 
     await sendMessage(sender, 'send-message', {
-        message: `Teste simples`,
+        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) ao ${treinamento.nome}! 💼`,
+    });
+
+    await sendMessage(sender, 'send-message', {
+        message: '👷 Objetivos do treinamento:\n\n• Respeitar normas de SSMA\n• Evitar acidentes\n• Cuidar da sua segurança e a dos colegas\n• Nunca realizar tarefas sem capacitação',
     });
 
     await sendMessage(sender, 'send-file', {
-        path: '../../media/foto.jpg',
+        path: '../../media/SSMA.webp',
         filename: 'SSMA.webp',
         caption: '',
     });
@@ -57,14 +61,18 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     // Início do treinamento
     if (selectedId === 'começar_teste' || selectedId === 'pronto_teste') {
         await sendMessage(sender, 'send-message', {
-            message: 'Iniciando teste',
+            message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
         });
 
         await sendMessage(sender, 'send-message', {
-            message: 'Digite 1 para continuar',
+            message: `✅ Módulo 1️ - 📚 *Conceitos Fundamentais* \n\n1️⃣ Segurança e Saúde no Trabalho (SST) \nConjunto de medidas para prevenir doenças e acidentes no trabalho. \n\n2️⃣ Premissas básicas de SST \n• Segurança é responsabilidade de todos \n• A consciência previne acidentes\n• Quem descumpre normas, se coloca em risco`,
         });
 
-        await salvarInteracao(sender, 'aguardando_numero_teste', 'Digite 1 para continuar');
+        await sendMessage(sender, 'send-message', {
+            message: '*Para continuar, digite o número 1️⃣*',
+        });
+
+        await salvarInteracao(sender, 'aguardando_numero_teste', '*Para continuar, digite o número 1️⃣*');
         return true;
     }
 
@@ -82,7 +90,7 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
         };
 
         await sendMessage(sender, 'send-message', {
-            message: 'Ok, avise quando estiver pronto',
+            message: '😅 Sem problemas! Quando estiver pronto, é só avisar. Estamos aqui para ajudar! 👷‍♂️👷‍♀️',
         });
         await sendMessage(sender, 'send-list-message', listMsg);
         await salvarInteracao(sender, 'aguardando_inicio_teste', JSON.stringify(listMsg));
@@ -92,12 +100,12 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     // Continuar para o quiz
     if (text === '1' && ultimaInteracao?.tipo === 'aguardando_numero_teste') {
         await sendMessage(sender, 'send-message', {
-            message: 'Agora responda a pergunta:',
+            message: 'Vamos continuar!🚀🚀🚀 \n\nPra esquentar as coisas, vamos fazer um pequeno quiz! 😜 🔥🔥🔥',
         });
 
         const quizList = {
             title: '',
-            description: 'Isso é um teste?\n\nA) Não\n\nB) Sim',
+            description: 'Qual das alternativas é uma premissa básica de SST?\n\nA) Só a Empresa é responsável\n\nB) Segurança é de responsabilidade coletiva\n\nC) Só os supervisores devem usar EPI\n\nD) Acidentes não podem ser evitados',
             buttonText: 'Responder',
             listType: 'SINGLE_SELECT',
             sections: [{
@@ -105,6 +113,8 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
                 rows: [
                     { id: 'a_teste', title: 'A', description: '' },
                     { id: 'b_teste', title: 'B', description: '' },
+                    { id: 'c_teste', title: 'C', description: '' },
+                    { id: 'd_teste', title: 'D', description: '' },
                 ],
             }],
         };
@@ -120,16 +130,16 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
         
         if (selectedId !== respostaCorreta) {
             await sendMessage(sender, 'send-message', {
-                message: 'Incorreto. Resposta: B) Sim',
+                message: '❌ Resposta incorreta! A resposta correta é B) Segurança é de responsabilidade coletiva.',
             });
         } else {
             await sendMessage(sender, 'send-message', {
-                message: 'Correto!',
+                message: '✅ Resposta correta! Segurança é de responsabilidade coletiva!',
             });
         }
 
         await sendMessage(sender, 'send-message', {
-            message: 'Teste concluído'
+            message: '🎉 Parabéns, você completou o Módulo 1!'
         });
 
         await sendMessage(sender, 'send-sticker-gif', {
