@@ -22,6 +22,7 @@ const RESPOSTAS_POSITIVAS = [
     'sim estão corretos',
     'começar agora',
     'pronto'
+    
 ];
 
 const RESPOSTAS_NEGATIVAS = [
@@ -102,8 +103,16 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     console.log(`📝 [TREINAMENTO TESTE] Última interação:`, ultimaInteracao?.tipo);
     
     // Início do treinamento - detectar por selectedId OU por texto
+    const textLower = text.toLowerCase();
+    const contemComecaAgora = textLower.includes('começar agora');
+    const contemRespositaPositiva = RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase()));
+    
+    console.log(`🔍 [DEBUG] textLower: '${textLower}'`);
+    console.log(`🔍 [DEBUG] contemComecaAgora: ${contemComecaAgora}`);
+    console.log(`🔍 [DEBUG] contemRespositaPositiva: ${contemRespositaPositiva}`);
+    
     if (selectedId === 'começar_teste' || selectedId === 'pronto_teste' || 
-        text.toLowerCase().includes('começar agora') || RESPOSTAS_POSITIVAS.includes(text.toLowerCase())) {
+        contemComecaAgora || contemRespositaPositiva) {
         console.log(`✅ [TREINAMENTO TESTE] Iniciando treinamento com selectedId: '${selectedId}' ou text: '${text}'`);
         await sendMessage(sender, 'send-message', {
             message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
@@ -145,6 +154,7 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     }
 
     // Continuar para o quiz
+    console.log(`🔍 [DEBUG] Verificando número 1 - text: '${text}', ultimaInteracao.tipo: '${ultimaInteracao?.tipo}'`);
     if (text === '1' && ultimaInteracao?.tipo === 'aguardando_numero_teste') {
         console.log(`➡️ Continuando para o quiz`);
         await sendMessage(sender, 'send-message', {
@@ -229,8 +239,37 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
         return true;
     }
 
+    // Se chegou até aqui e é o número 1, pode ser que a interação não foi salva corretamente
+    if (text === '1') {
+        console.log(`🔄 [TREINAMENTO TESTE] Detectou número 1, forçando continuação para o quiz`);
+        await sendMessage(sender, 'send-message', {
+            message: 'Vamos continuar!🚀🚀🚀 \n\nPra esquentar as coisas, vamos fazer um pequeno quiz! 😜 🔥🔥🔥',
+        });
+
+        const quizList = {
+            title: '',
+            description: `${QUIZ_CONFIG.pergunta}\n\nA) ${QUIZ_CONFIG.alternativas.a}\n\nB) ${QUIZ_CONFIG.alternativas.b}\n\nC) ${QUIZ_CONFIG.alternativas.c}\n\nD) ${QUIZ_CONFIG.alternativas.d}`,
+            buttonText: 'Responder',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'a_teste', title: 'A', description: '' },
+                    { id: 'b_teste', title: 'B', description: '' },
+                    { id: 'c_teste', title: 'C', description: '' },
+                    { id: 'd_teste', title: 'D', description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', quizList);
+        await salvarInteracao(sender, 'quiz_teste', JSON.stringify(quizList));
+        return true;
+    }
+    
     console.log(`❌ [TREINAMENTO TESTE] Nenhuma condição atendida para selectedId: '${selectedId}' e text: '${text}'`);
     return false;
+}
 }
 
 /**
