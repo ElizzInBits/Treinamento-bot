@@ -591,14 +591,20 @@ async function processarMensagem(message) {
 
         // Processar seleção de treinamento
         const ultimaInteracao = await obterUltimaInteracao(sender);
+        console.log(`🔍 ultimaInteracao.tipo:`, ultimaInteracao?.tipo);
+        console.log(`🔍 text:`, text);
+        console.log(`🔍 selectedId:`, selectedId);
         
         if (ultimaInteracao?.tipo === 'selecionar_treinamento') {
+            console.log(`🔍 Processando seleção de treinamento`);
             let treinamento;
             
-            if (selectedId.startsWith('treinamento_')) {
+            if (selectedId && selectedId.startsWith('treinamento_')) {
+                console.log(`🔍 Seleção por lista`);
                 const treinamentoId = selectedId.replace('treinamento_', '');
                 treinamento = await Treinamento.findByPk(treinamentoId);
             } else if (text.toLowerCase().includes('treinamento de teste')) {
+                console.log(`🔍 Seleção por texto`);
                 treinamento = await Treinamento.findOne({
                     where: { nome: 'TREINAMENTO DE TESTE' }
                 });
@@ -613,13 +619,17 @@ async function processarMensagem(message) {
                 
                 try {
                     const scriptPath = `./Treinamentos/${treinamento.nome}.js`;
+                    console.log(`🔍 Carregando script:`, scriptPath);
                     const scriptTreinamento = require(scriptPath);
                     await scriptTreinamento.executarTreinamento(sender, contato);
                     await salvarUltimaInteracao(sender, 'treinamento_iniciado', 'Treinamento iniciado');
+                    console.log(`✅ Script executado e interação salva`);
                     return;
                 } catch (error) {
                     console.error(`❌ Erro ao executar script:`, error);
                 }
+            } else {
+                console.log(`❌ Treinamento não encontrado`);
             }
         }
 
