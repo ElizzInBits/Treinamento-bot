@@ -398,7 +398,6 @@ async function iniciarTreinamento(sender, contato) {
 
     await sendMessage(sender, 'send-list-message', listMsg);
     await salvarUltimaInteracao(sender, 'selecionar_treinamento', JSON.stringify(listMsg));
-    console.log(`🔍 Debug - Salvou interação selecionar_treinamento`);
     agendarLembrete(sender, getMensagemListaContinuar());
 }
 
@@ -593,49 +592,35 @@ async function processarMensagem(message) {
         // Processar seleção de treinamento
         const ultimaInteracao = await obterUltimaInteracao(sender);
         
-        // Verificar se é seleção por lista ou por texto
-        const isSelecaoTreinamento = (ultimaInteracao?.tipo === 'selecionar_treinamento' && selectedId.startsWith('treinamento_')) ||
-                                   (ultimaInteracao?.tipo === 'selecionar_treinamento' && text.toLowerCase().includes('treinamento'));
-        
-        if (isSelecaoTreinamento) {
+        if (ultimaInteracao?.tipo === 'selecionar_treinamento') {
             let treinamento;
             
             if (selectedId.startsWith('treinamento_')) {
-                // Seleção por lista
                 const treinamentoId = selectedId.replace('treinamento_', '');
                 treinamento = await Treinamento.findByPk(treinamentoId);
-            } else {
-                // Seleção por texto - buscar por nome
+            } else if (text.toLowerCase().includes('treinamento de teste')) {
                 treinamento = await Treinamento.findOne({
-                    where: {
-                        nome: {
-                            [sequelize.Op.iLike]: '%' + text.split('\n')[0].trim() + '%'
-                        }
-                    }
+                    where: { nome: 'TREINAMENTO DE TESTE' }
                 });
             }
             
             if (treinamento) {
-                console.log(`✅ Treinamento selecionado:`, treinamento.nome);
+                console.log(`✅ Executando treinamento:`, treinamento.nome);
                 await contato.update({ 
                     statusTreinamento: 'em andamento',
                     treinamentoId: treinamento.id 
                 });
                 
-                // Executar script específico do treinamento
                 try {
                     const scriptPath = `./Treinamentos/${treinamento.nome}.js`;
                     const scriptTreinamento = require(scriptPath);
                     await scriptTreinamento.executarTreinamento(sender, contato);
-                    console.log(`✅ Script executado com sucesso`);
+                    await salvarUltimaInteracao(sender, 'treinamento_iniciado', 'Treinamento iniciado');
+                    return;
                 } catch (error) {
                     console.error(`❌ Erro ao executar script:`, error);
-                    await sendMessage(sender, 'send-message', {
-                        message: `✅ Você selecionou: *${treinamento.nome}*\n\n📋 Modalidade: ${treinamento.modalidade}\n⏱️ Carga Horária: ${treinamento.cargaHoraria}h`,
-                    });
                 }
             }
-            return;
         }
 
         // Iniciar treinamento para novos usuários
