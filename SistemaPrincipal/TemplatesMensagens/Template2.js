@@ -713,7 +713,19 @@ async function processarMensagem(message) {
             const treinamento = await Treinamento.findByPk(contato.treinamentoId);
             if (treinamento) {
                 try {
-                    const scriptPath = `./Treinamentos/${treinamento.nome}.js`;
+                    // Converter nome do banco para nome do arquivo
+                    const nomeArquivo = treinamento.nome
+                        .toLowerCase()
+                        .split(' ')
+                        .map((palavra, index) => {
+                            if (['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para'].includes(palavra)) {
+                                return palavra;
+                            }
+                            return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+                        })
+                        .join(' ');
+                    
+                    const scriptPath = `./Treinamentos/${nomeArquivo}.js`;
                     const scriptTreinamento = require(scriptPath);
                     if (scriptTreinamento.processarRespostaTeste && await scriptTreinamento.processarRespostaTeste(sender, text, selectedId, contato)) {
                         return;
