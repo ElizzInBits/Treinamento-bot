@@ -149,9 +149,9 @@ async function gerarCertificadoBanco(contatoId) {
     });
 
     // Data de conclusão (posição mantida)
-    page.drawText(`Data de conclusão: ${new Date().toLocaleDateString('pt-BR')}`, {
+   /* page.drawText(`Data de conclusão: ${new Date().toLocaleDateString('pt-BR')}`, {
       x: 380, y: 85, size: 9, font: helvetica, color: cor
-    });
+    }); */
 
     // SEGUNDA PÁGINA - Formatação baseada no código Python
     const paginas = pdfDoc.getPages();
@@ -164,7 +164,7 @@ async function gerarCertificadoBanco(contatoId) {
     if (segundaPagina) {
       // Conteúdo programático (posições e quebra ajustadas)
       const linhasConteudo = quebrarTexto(treinamento.conteudo || 'Conteúdo não informado', helvetica, tamanho, 515);
-      let yConteudo = 660;
+      let yConteudo = 680;
       
       linhasConteudo.forEach(linha => {
         if (yConteudo >= 450) { // Ajusta para não sobrepor outras informações
@@ -173,33 +173,33 @@ async function gerarCertificadoBanco(contatoId) {
         }
       });
 
-      // Informações dos instrutores (posição ajustada)
+      // Informações dos instrutores (
       const instrutorInfo = `${treinamento.instrutor || ''} – ${treinamento.qualificacaoInstrutor || ''}`;
-      segundaPagina.drawText(instrutorInfo, { x: 40, y: 430, size: tamanho, font: helvetica, color: cor });
+      segundaPagina.drawText(instrutorInfo, { x: 45, y: 430, size: tamanho, font: helvetica, color: cor });
       
       if (treinamento.registroInstrutor) {
         segundaPagina.drawText(`Registro: ${treinamento.registroInstrutor}`, {
-          x: 40, y: 415, size: tamanho, font: helvetica, color: cor
+          x: 45, y: 415, size: tamanho, font: helvetica, color: cor
         });
       }
 
-      // Responsável (posição ajustada)
+      // Responsável 
       const responsavelInfo = `${treinamento.responsavel || ''} – ${treinamento.cargoResponsavel || ''}`;
-      segundaPagina.drawText(responsavelInfo, { x: 40, y: 350, size: tamanho, font: helvetica, color: cor });
+      segundaPagina.drawText(responsavelInfo, { x: 45, y: 365, size: tamanho, font: helvetica, color: cor });
       
       if (treinamento.registroResponsavel) {
         segundaPagina.drawText(`Registro: ${treinamento.registroResponsavel}`, {
-          x: 40, y: 335, size: tamanho, font: helvetica, color: cor
+          x: 45, y: 335, size: tamanho, font: helvetica, color: cor
         });
       }
 
-      // Aproveitamento (posição ajustada)
+      // Aproveitamento 
       segundaPagina.drawText(treinamento.aproveitamento || 'Não há aproveitamento de conteúdo a ser considerado para esta capacitação.', {
-        x: 40, y: 220, size: tamanho, font: helvetica, color: cor, maxWidth: 500
+        x: 45, y: 220, size: tamanho, font: helvetica, color: cor, maxWidth: 500
       });
     }
 
-    // Salvar PDF (código mantido)
+    // Salvar PDF 
     const certificadosDir = path.join(__dirname, 'Certificados');
     if (!fs.existsSync(certificadosDir)) {
       fs.mkdirSync(certificadosDir, { recursive: true });
