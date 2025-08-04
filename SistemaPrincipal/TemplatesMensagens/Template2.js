@@ -397,7 +397,8 @@ async function iniciarTreinamento(sender, contato) {
     };
 
     await sendMessage(sender, 'send-list-message', listMsg);
-    await salvarUltimaInteracao(sender, 'selecionar_treinamento', listMsg);
+    await salvarUltimaInteracao(sender, 'selecionar_treinamento', JSON.stringify(listMsg));
+    console.log(`🔍 Debug - Salvou interação selecionar_treinamento`);
     agendarLembrete(sender, getMensagemListaContinuar());
 }
 
@@ -591,11 +592,17 @@ async function processarMensagem(message) {
 
         // Processar seleção de treinamento
         const ultimaInteracao = await obterUltimaInteracao(sender);
+        console.log(`🔍 Debug - ultimaInteracao:`, ultimaInteracao?.tipo);
+        console.log(`🔍 Debug - selectedId:`, selectedId);
+        console.log(`🔍 Debug - text:`, text);
+        
         if (ultimaInteracao?.tipo === 'selecionar_treinamento' && selectedId.startsWith('treinamento_')) {
             const treinamentoId = selectedId.replace('treinamento_', '');
+            console.log(`🔍 Debug - treinamentoId:`, treinamentoId);
             const treinamento = await Treinamento.findByPk(treinamentoId);
             
             if (treinamento) {
+                console.log(`🔍 Debug - treinamento encontrado:`, treinamento.nome);
                 await contato.update({ 
                     statusTreinamento: 'em andamento',
                     treinamentoId: treinamento.id 
@@ -604,10 +611,12 @@ async function processarMensagem(message) {
                 // Executar script específico do treinamento
                 try {
                     const scriptPath = `./Treinamentos/${treinamento.nome}.js`;
+                    console.log(`🔍 Debug - tentando carregar script:`, scriptPath);
                     const scriptTreinamento = require(scriptPath);
                     await scriptTreinamento.executarTreinamento(sender, contato);
+                    console.log(`✅ Script executado com sucesso`);
                 } catch (error) {
-                    console.error(`Erro ao executar script do treinamento ${treinamento.nome}:`, error);
+                    console.error(`❌ Erro ao executar script do treinamento ${treinamento.nome}:`, error);
                     // Fallback para mensagem padrão
                     await sendMessage(sender, 'send-message', {
                         message: `✅ Você selecionou: *${treinamento.nome}*\n\n📋 Modalidade: ${treinamento.modalidade}\n⏱️ Carga Horária: ${treinamento.cargaHoraria}h\n\n${treinamento.conteudo}`,
