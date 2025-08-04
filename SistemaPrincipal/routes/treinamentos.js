@@ -5,6 +5,46 @@ const path = require('path');
 const multer = require('multer');
 const Treinamento = require('../BancoDeDados/models/treinamento'); // ajuste o caminho se necessário
 
+// Função para criar script de treinamento
+function criarScriptTreinamento(nomeOriginal, treinamentoId) {
+  const caminhoScript = path.join(__dirname, '..', 'TemplatesMensagens', 'Treinamentos', `${nomeOriginal}.js`);
+  
+  const conteudoScript = `// Script de treinamento: ${nomeOriginal}
+// ID do treinamento: ${treinamentoId}
+// Gerado automaticamente em: ${new Date().toLocaleString('pt-BR')}
+
+const { sendMessage } = require('../conexao/wppConnectTemplate');
+const Treinamento = require('../../BancoDeDados/models/treinamento');
+
+/**
+ * Executa o treinamento: ${nomeOriginal}
+ */
+async function executarTreinamento(sender, contato) {
+    const treinamento = await Treinamento.findByPk(${treinamentoId});
+    
+    if (!treinamento) {
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Treinamento não encontrado.',
+        });
+        return;
+    }
+
+    // Mensagem inicial do treinamento
+    await sendMessage(sender, 'send-message', {
+        message: \`🎓 Iniciando: *\${treinamento.nome}*\n\n📋 Modalidade: \${treinamento.modalidade}\n⏱️ Carga Horária: \${treinamento.cargaHoraria}h\n\n\${treinamento.conteudo}\`,
+    });
+
+    // TODO: Implementar lógica específica do treinamento aqui
+    // Exemplo: quiz, módulos, certificação, etc.
+}
+
+module.exports = { executarTreinamento };
+`;
+
+  fs.writeFileSync(caminhoScript, conteudoScript, 'utf8');
+  console.log(`📝 Script criado: ${nomeOriginal}.js`);
+}
+
 // Configuração do multer para salvar arquivos em media/treinamentos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -89,11 +129,14 @@ router.post('/', upload.array('midias'), async (req, res) => {
       midias: JSON.stringify(midiasNomes)
     });
 
+    // Criar script automaticamente
+    criarScriptTreinamento(nomeLimpo, novo.id);
+
     res.status(201).json({
       sucesso: true,
       treinamento: novo,
       arquivosRecebidos: midiasNomes.length,
-      message: 'Treinamento criado com arquivos!'
+      message: 'Treinamento criado com arquivos e script gerado!'
     });
 
   } catch (err) {
