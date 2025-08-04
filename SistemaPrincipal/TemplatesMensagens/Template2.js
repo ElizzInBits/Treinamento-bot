@@ -4,6 +4,7 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
 const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
+const { Op } = require('sequelize');
 const Message = require('../BancoDeDados/models/message');
 const { Contato, Interacao, Empresa, EmpresaTreinamento } = require('../BancoDeDados/models');
 const Treinamento = require('../BancoDeDados/models/treinamento');
@@ -598,7 +599,7 @@ async function processarMensagem(message) {
             const treinamento = await Treinamento.findOne({
                 where: {
                     nome: {
-                        [sequelize.Op.iLike]: `%${nomeTexto}%`
+                        [Op.iLike]: `%${nomeTexto}%`
                     }
                 }
             });
