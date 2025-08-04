@@ -59,7 +59,7 @@ async function gerarCertificadoBanco(contatoId) {
       return dataLimpa;
     }
 
-    // Função para quebrar texto em linhas
+    // Função para quebrar texto em linhas com medição precisa
     function quebrarTexto(texto, fonte, tamanhoFonte, larguraMax) {
       if (!texto) return [''];
       
@@ -69,10 +69,9 @@ async function gerarCertificadoBanco(contatoId) {
       
       for (const palavra of palavras) {
         const testeLinhaAtual = linhaAtual ? `${linhaAtual} ${palavra}` : palavra;
-        // Estimativa de largura (aproximada)
-        const larguraEstimada = testeLinhaAtual.length * (tamanhoFonte * 0.6);
+        const larguraReal = fonte.widthOfTextAtSize(testeLinhaAtual, tamanhoFonte);
         
-        if (larguraEstimada <= larguraMax) {
+        if (larguraReal <= larguraMax) {
           linhaAtual = testeLinhaAtual;
         } else {
           if (linhaAtual) {
@@ -96,11 +95,11 @@ async function gerarCertificadoBanco(contatoId) {
     // "Conferido a:" 
     page.drawText('Conferido a:', { x: 270, y: 630, size: tamanho, font: helvetica, color: cor });
 
-    // Nome (centralizado)
+    // Nome (centralizado automaticamente)
     const nomeCompleto = contato.nomeCompleto || contato.nome;
     const nomeSize = 16;
     const larguraPagina = 595.28; // A4 width in points
-    const larguraNome = nomeCompleto.length * (nomeSize * 0.6); // Estimativa
+    const larguraNome = helvetica.widthOfTextAtSize(nomeCompleto, nomeSize);
     const nomeX = (larguraPagina / 2) - (larguraNome / 2);
     page.drawText(nomeCompleto, { x: nomeX, y: 600, size: nomeSize, font: helvetica, color: cor });
 
@@ -163,7 +162,7 @@ async function gerarCertificadoBanco(contatoId) {
 
     if (segundaPagina) {
       // Conteúdo Programático
-      const linhasConteudo = quebrarTexto(treinamento.conteudo || 'Conteúdo não informado', helvetica, tamanho, 515);
+      const linhasConteudo = quebrarTexto(treinamento.conteudo || 'Conteúdo não informado', helvetica, tamanho, 555);
       let yConteudo = 660;
       
       linhasConteudo.forEach(linha => {
