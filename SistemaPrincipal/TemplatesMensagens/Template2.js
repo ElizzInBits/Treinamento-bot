@@ -5,7 +5,8 @@ const wppconnect = require('@wppconnect-team/wppconnect');
 const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const Message = require('../BancoDeDados/models/message');
-const { Contato, Interacao } = require('../BancoDeDados/models');
+const { Contato, Interacao, Empresa, EmpresaTreinamento } = require('../BancoDeDados/models');
+const Treinamento = require('../BancoDeDados/models/treinamento');
 const { gerarCertificadoBanco, enviarEmail } = require('./Certificados/certificados2.js');
 
 
@@ -333,40 +334,74 @@ async function processarCorrecaoDados(sender, rawText, contato) {
 }
 
 /**
+ * Busca treinamentos atribuídos à empresa do usuário
+ */
+async function buscarTreinamentosEmpresa(empresaId) {
+    const treinamentosEmpresa = await EmpresaTreinamento.findAll({
+        where: { empresa_id: empresaId },
+        include: [{
+            model: sequelize.models.Treinamento,
+            as: 'treinamento'
+        }]
+    });
+    
+    const treinamentos = [];
+    for (const et of treinamentosEmpresa) {
+        const treinamento = await Treinamento.findByPk(et.treinamento_id);
+        if (treinamento) {
+            treinamentos.push(treinamento);
+        }
+    }
+    
+    return treinamentos;
+}
+
+/**
  * Inicia o treinamento para novos usuários
  */
 async function iniciarTreinamento(sender, contato) {
+    // Buscar empresa do contato
+    const empresa = await Empresa.findByPk(contato.empresaId);
+    const nomeEmpresa = empresa ? empresa.razaoSocial : 'sua empresa';
+    
     await sendMessage(sender, 'send-message', {
-        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) à equipe LCM! 💼\n\nVocê está iniciando seu Treinamento Básico de SSMA...`,
+        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) à ${nomeEmpresa}! 💼`,
     });
 
+    // Buscar treinamentos da empresa
+    const treinamentos = await buscarTreinamentosEmpresa(contato.empresaId);
+    
+    if (treinamentos.length === 0) {
+        await sendMessage(sender, 'send-message', {
+            message: '⚠️ Não há treinamentos disponíveis para sua empresa no momento. Entre em contato com o suporte.',
+        });
+        return;
+    }
+
     await sendMessage(sender, 'send-message', {
-        message: '👷 Objetivos do treinamento:\n\n• Respeitar normas de SSMA\n• Evitar acidentes\n• Cuidar da sua segurança e a dos colegas\n• Nunca realizar tarefas sem capacitação',
+        message: '📚 Aqui estão os treinamentos disponíveis para você:',
     });
 
-    await sendMessage(sender, 'send-file', {
-        path: '../../media/SSMA.webp',
-        filename: 'SSMA.webp',
-        caption: '',
-    });
+    // Criar lista de treinamentos
+    const rows = treinamentos.map((treinamento, index) => ({
+        id: `treinamento_${treinamento.id}`,
+        title: treinamento.nome,
+        description: `${treinamento.modalidade} - ${treinamento.cargaHoraria}h`
+    }));
 
     const listMsg = {
         title: '',
-        description: '*Pronto para começar?* \nEscolha uma opção:',
-        buttonText: 'Ver opções',
+        description: '*Escolha qual treinamento deseja iniciar:*',
+        buttonText: 'Selecionar',
         listType: 'SINGLE_SELECT',
         sections: [{
             title: '',
-            rows: [
-                { id: 'começar agora', title: 'Começar agora!! 😎 🔥🔥🔥', description: '' },
-                { id: 'não começar', title: 'Não, começo assim que possível 👀 😅', description: '' },
-            ],
+            rows: rows
         }],
     };
 
     await sendMessage(sender, 'send-list-message', listMsg);
-    await contato.update({ statusTreinamento: 'em andamento' });
-    await salvarUltimaInteracao(sender, 'quiz', listMsg);
+    await salvarUltimaInteracao(sender, 'selecionar_treinamento', listMsg);
     agendarLembrete(sender, getMensagemListaContinuar());
 }
 
@@ -536,6 +571,43 @@ async function processarMensagem(message) {
             if (await processarCorrecaoDados(sender, rawText, contato)) {
                 return;
             }
+        }
+
+        // Processar seleção de treinamento
+        const ultimaInteracao = await obterUltimaInteracao(sender);
+        if (ultimaInteracao?.tipo === 'selecionar_treinamento' && selectedId.startsWith('treinamento_')) {
+            const treinamentoId = selectedId.replace('treinamento_', '');
+            const treinamento = await Treinamento.findByPk(treinamentoId);
+            
+            if (treinamento) {
+                await contato.update({ 
+                    statusTreinamento: 'em andamento',
+                    treinamentoId: treinamento.id 
+                });
+                
+                await sendMessage(sender, 'send-message', {
+                    message: `✅ Você selecionou: *${treinamento.nome}*\n\n📋 Modalidade: ${treinamento.modalidade}\n⏱️ Carga Horária: ${treinamento.cargaHoraria}h\n\n${treinamento.conteudo}`,
+                });
+
+                const listMsg = {
+                    title: '',
+                    description: '*Pronto para começar?* \nEscolha uma opção:',
+                    buttonText: 'Ver opções',
+                    listType: 'SINGLE_SELECT',
+                    sections: [{
+                        title: '',
+                        rows: [
+                            { id: 'começar agora', title: 'Começar agora!! 😎 🔥🔥🔥', description: '' },
+                            { id: 'não começar', title: 'Não, começo assim que possível 👀 😅', description: '' },
+                        ],
+                    }],
+                };
+
+                await sendMessage(sender, 'send-list-message', listMsg);
+                await salvarUltimaInteracao(sender, 'quiz', listMsg);
+                agendarLembrete(sender, getMensagemListaContinuar());
+            }
+            return;
         }
 
         // Iniciar treinamento para novos usuários
