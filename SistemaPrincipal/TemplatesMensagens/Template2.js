@@ -523,19 +523,27 @@ async function processarMensagem(message) {
             }
         }
 
-        // Processar seleção de treinamento - detectar por texto
-        if (contato.statusTreinamento === 'não iniciado' && text.toLowerCase().includes('treinamento')) {
+        // Processar seleção de treinamento - detectar por selectedId ou texto
+        if (contato.statusTreinamento === 'não iniciado' && (selectedId.startsWith('treinamento_') || text.toLowerCase().includes('treinamento'))) {
             console.log(`✅ Detectou seleção de treinamento`);
             
-            // Buscar treinamento pelo nome no texto
-            const nomeTexto = text.split('\n')[0].trim();
-            const treinamento = await Treinamento.findOne({
-                where: {
-                    nome: {
-                        [Op.like]: `%${nomeTexto}%`
+            let treinamento;
+            
+            // Se foi selecionado por ID
+            if (selectedId.startsWith('treinamento_')) {
+                const treinamentoId = selectedId.replace('treinamento_', '');
+                treinamento = await Treinamento.findByPk(treinamentoId);
+            } else {
+                // Buscar treinamento pelo nome no texto
+                const nomeTexto = text.split('\n')[0].trim();
+                treinamento = await Treinamento.findOne({
+                    where: {
+                        nome: {
+                            [Op.like]: `%${nomeTexto}%`
+                        }
                     }
-                }
-            });
+                });
+            }
             
             if (treinamento) {
                 console.log(`✅ Executando treinamento:`, treinamento.nome);
@@ -579,15 +587,7 @@ async function processarMensagem(message) {
             return;
         }
         
-        // Evitar loop - se já tem treinamento em andamento, não mostrar seleção novamente
-        if (contato.statusTreinamento === 'em andamento' && contato.treinamentoId) {
-            // Já processado pelos scripts específicos acima
-            return;
-        }
-
-
-
-        // Processar respostas de treinamentos específicos
+        // Processar respostas de treinamentos específicos PRIMEIRO
         if (contato.treinamentoId) {
             const treinamento = await Treinamento.findByPk(contato.treinamentoId);
             if (treinamento) {
@@ -608,11 +608,15 @@ async function processarMensagem(message) {
                 console.log(`🔍 Tentando processar com script: ${nomeArquivo}`);
                 console.log(`🔍 Script encontrado:`, !!script);
                 console.log(`🔍 Função processarRespostaTeste:`, !!script?.processarRespostaTeste);
+                console.log(`🔍 selectedId recebido: '${selectedId}'`);
+                console.log(`🔍 text recebido: '${text}'`);
                 
                 if (script && script.processarRespostaTeste) {
                     try {
                         console.log(`🔍 Executando processarRespostaTeste`);
-                        if (await script.processarRespostaTeste(sender, text, selectedId, contato)) {
+                        const resultado = await script.processarRespostaTeste(sender, text, selectedId, contato);
+                        console.log(`🔍 Resultado do processamento:`, resultado);
+                        if (resultado) {
                             console.log(`✅ Resposta processada pelo script`);
                             return;
                         }
@@ -624,6 +628,10 @@ async function processarMensagem(message) {
                 }
             }
         }
+
+
+
+
 
 
 

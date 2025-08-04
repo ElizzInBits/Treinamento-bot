@@ -97,10 +97,13 @@ async function executarTreinamento(sender, contato) {
  * Processa as respostas do treinamento de teste
  */
 async function processarRespostaTeste(sender, text, selectedId, contato) {
+    console.log(`📝 [TREINAMENTO TESTE] Processando resposta - text: '${text}', selectedId: '${selectedId}'`);
     const ultimaInteracao = await obterUltimaInteracao(sender);
+    console.log(`📝 [TREINAMENTO TESTE] Última interação:`, ultimaInteracao?.tipo);
     
     // Início do treinamento
     if (selectedId === 'começar_teste' || selectedId === 'pronto_teste') {
+        console.log(`✅ [TREINAMENTO TESTE] Iniciando treinamento com selectedId: ${selectedId}`);
         await sendMessage(sender, 'send-message', {
             message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
         });
@@ -119,6 +122,7 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
 
     // Não começar agora
     if (selectedId === 'não_começar_teste') {
+        console.log(`⏸️ Adiando treinamento`);
         const listMsg = {
             title: '',
             description: 'Escolha uma opção:',
@@ -140,6 +144,7 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
 
     // Continuar para o quiz
     if (text === '1' && ultimaInteracao?.tipo === 'aguardando_numero_teste') {
+        console.log(`➡️ Continuando para o quiz`);
         await sendMessage(sender, 'send-message', {
             message: 'Vamos continuar!🚀🚀🚀 \n\nPra esquentar as coisas, vamos fazer um pequeno quiz! 😜 🔥🔥🔥',
         });
@@ -167,6 +172,7 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
 
     // Processar respostas do quiz
     if (['a_teste', 'b_teste', 'c_teste', 'd_teste'].includes(selectedId)) {
+        console.log(`🧠 Processando resposta do quiz: ${selectedId}`);
         if (selectedId !== QUIZ_CONFIG.respostaCorreta) {
             await sendMessage(sender, 'send-message', {
                 message: `❌ Resposta incorreta! A resposta correta é B) ${QUIZ_CONFIG.alternativas.b}.`,
@@ -213,6 +219,7 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
 
     // Confirmação de dados
     if (selectedId === 'dados_corretos_teste') {
+        console.log(`✅ Confirmando dados para certificado`);
         await sendMessage(sender, 'send-message', {
             message: '✅ Dados confirmados! Gerando seu certificado...',
         });
@@ -220,6 +227,7 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
         return true;
     }
 
+    console.log(`❌ [TREINAMENTO TESTE] Nenhuma condição atendida para selectedId: '${selectedId}' e text: '${text}'`);
     return false;
 }
 
