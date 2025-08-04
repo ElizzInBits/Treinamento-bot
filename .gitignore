@@ -43,3 +43,12 @@ Thumbs.db
 
 *QuotaManager-journal
 *DIPS-wal
+
+
+# Arquivos temporários do sistema/bot
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Default/
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/GrShaderCache/
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Local State
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Singleton*
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Variations
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/segmentation_platform/
