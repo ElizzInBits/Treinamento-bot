@@ -270,7 +270,6 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     console.log(`❌ [TREINAMENTO TESTE] Nenhuma condição atendida para selectedId: '${selectedId}' e text: '${text}'`);
     return false;
 }
-}
 
 /**
  * Gera e envia certificado do Treinamento de Teste
@@ -342,4 +341,4 @@ async function obterUltimaInteracao(sender) {
     });
 }
 
-module.exports = { executarTreinamento, processarRespostaTeste };
+module.exports = { executarTreinamento, processarRespostaTeste };, processarRespostaTeste };
