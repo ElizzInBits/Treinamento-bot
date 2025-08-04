@@ -489,7 +489,8 @@ async function gerarEEnviarCertificado(contato, sender) {
     const certificadoPath = await gerarCertificadoBanco(contato.id);
     
     console.log('📧 Enviando e-mail para:', contato.email);
-    await enviarEmail(contato.email, certificadoPath);
+    const treinamentoAtual = contato.treinamentoId ? await Treinamento.findByPk(contato.treinamentoId) : null;
+    await enviarEmail(contato.email, certificadoPath, treinamentoAtual);
 
     await sendMessage(sender, 'send-message', {
       message: `🎉 Seu certificado foi gerado com sucesso! \n\n📧 Ele foi enviado para: ${contato.email}\n\n📄 Também está disponível aqui:`,
@@ -600,9 +601,18 @@ async function processarMensagem(message) {
                     treinamentoId: treinamento.id 
                 });
                 
-                await sendMessage(sender, 'send-message', {
-                    message: `✅ Você selecionou: *${treinamento.nome}*\n\n📋 Modalidade: ${treinamento.modalidade}\n⏱️ Carga Horária: ${treinamento.cargaHoraria}h\n\n${treinamento.conteudo}`,
-                });
+                // Executar script específico do treinamento
+                try {
+                    const scriptPath = `./Treinamentos/${treinamento.nome}.js`;
+                    const scriptTreinamento = require(scriptPath);
+                    await scriptTreinamento.executarTreinamento(sender, contato);
+                } catch (error) {
+                    console.error(`Erro ao executar script do treinamento ${treinamento.nome}:`, error);
+                    // Fallback para mensagem padrão
+                    await sendMessage(sender, 'send-message', {
+                        message: `✅ Você selecionou: *${treinamento.nome}*\n\n📋 Modalidade: ${treinamento.modalidade}\n⏱️ Carga Horária: ${treinamento.cargaHoraria}h\n\n${treinamento.conteudo}`,
+                    });
+                }
 
                 const listMsg = {
                     title: '',
