@@ -101,9 +101,10 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     const ultimaInteracao = await obterUltimaInteracao(sender);
     console.log(`📝 [TREINAMENTO TESTE] Última interação:`, ultimaInteracao?.tipo);
     
-    // Início do treinamento
-    if (selectedId === 'começar_teste' || selectedId === 'pronto_teste') {
-        console.log(`✅ [TREINAMENTO TESTE] Iniciando treinamento com selectedId: ${selectedId}`);
+    // Início do treinamento - detectar por selectedId OU por texto
+    if (selectedId === 'começar_teste' || selectedId === 'pronto_teste' || 
+        text.toLowerCase().includes('começar agora') || RESPOSTAS_POSITIVAS.includes(text.toLowerCase())) {
+        console.log(`✅ [TREINAMENTO TESTE] Iniciando treinamento com selectedId: '${selectedId}' ou text: '${text}'`);
         await sendMessage(sender, 'send-message', {
             message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
         });
@@ -120,9 +121,10 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
         return true;
     }
 
-    // Não começar agora
-    if (selectedId === 'não_começar_teste') {
-        console.log(`⏸️ Adiando treinamento`);
+    // Não começar agora - detectar por selectedId OU por texto
+    if (selectedId === 'não_começar_teste' || text.toLowerCase().includes('não') || 
+        text.toLowerCase().includes('depois') || RESPOSTAS_NEGATIVAS.includes(text.toLowerCase())) {
+        console.log(`⏸️ Adiando treinamento com selectedId: '${selectedId}' ou text: '${text}'`);
         const listMsg = {
             title: '',
             description: 'Escolha uma opção:',
