@@ -1,6 +1,3 @@
-// ========================================
-// IMPORTAÇÕES E CONFIGURAÇÕES INICIAIS
-// ========================================
 const wppconnect = require('@wppconnect-team/wppconnect');
 const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
@@ -46,26 +43,11 @@ const saudacoesEnviadas = new Set();
 // CONSTANTES E CONFIGURAÇÕES
 // ========================================
 const TEMPO_LEMBRETE = 0.3 * 60 * 1000; // 18 segundos
-
-const RESPOSTAS_POSITIVAS = [
-    'sim',
-    'sim, os dados estão corretos',
-    'os dados estão corretos',
-    'dados corretos',
-    'confirmar',
-    'sim estão corretos'
-];
-
-const RESPOSTAS_NEGATIVAS = [
-    'não',
-    'não, preciso corrigir',
-    'não, os dados não são corretos',
-    'os dados não são corretos',
-    'dados incorretos',
-    'não estão corretos'
-];
-
 const EMAIL_REGEX = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+// Constantes básicas para confirmação de dados
+const RESPOSTAS_POSITIVAS = ['sim', 'confirmar', 'dados corretos'];
+const RESPOSTAS_NEGATIVAS = ['não', 'dados incorretos', 'corrigir'];
 
 // ========================================
 // FUNÇÕES UTILITÁRIAS
@@ -99,18 +81,7 @@ function gerarVariacoes(numeroCompleto) {
     return [var1, var2];
 }
 
-/**
- * Verifica se uma resposta está entre as opções válidas
- */
-async function verificarRespostaEsperada(sender, resposta, opcoesValidas) {
-    if (!opcoesValidas.includes(resposta)) {
-        await sendMessage(sender, 'send-message', {
-            message: '⚠️ Ops, não entendi sua resposta. Tente novamente com uma opção válida!',
-        });
-        return false;
-    }
-    return true;
-}
+
 
 // ========================================
 // FUNÇÕES DE AGENDAMENTO E INTERAÇÃO
@@ -172,27 +143,7 @@ function getMensagemListaContinuar() {
     };
 }
 
-/**
- * Retorna template do quiz inicial
- */
-function getQuizInicial() {
-    return {
-        title: '',
-        description:
-            'Qual das alternativas é uma premissa básica de SST?\n\nA) Só a Empresa é responsável\n\nB) Segurança é de responsabilidade coletiva\n\nC) Só os supervisores devem usar EPI\n\nD) Acidentes não podem ser evitados',
-        buttonText: 'Responder',
-        listType: 'SINGLE_SELECT',
-        sections: [{
-            title: '',
-            rows: [
-                { id: 'a', title: 'A', description: '' },
-                { id: 'b', title: 'B', description: '' },
-                { id: 'c', title: 'C', description: '' },
-                { id: 'd', title: 'D', description: '' },
-            ],
-        }],
-    };
-}
+
 
 /**
  * Retorna template de confirmação de dados
@@ -425,48 +376,7 @@ async function iniciarTreinamento(sender, contato) {
     agendarLembrete(sender, getMensagemListaContinuar());
 }
 
-/**
- * Processa as opções do quiz
- */
-async function processarQuiz(sender, text, selectedId, contato) {
-    // Quiz inicial - alternativas A, B, C, D
-    if (['a', 'b', 'c', 'd'].includes(text) || ['a', 'b', 'c', 'd'].includes(selectedId)) {
-        const respostaCorreta = 'b';
-        const respostaUsuario = text || selectedId;
 
-        if (respostaUsuario !== respostaCorreta) {
-            await sendMessage(sender, 'send-message', {
-                message: '❌ Resposta incorreta! A resposta correta é B) Segurança é de responsabilidade coletiva.',
-            });
-        } else {
-            await sendMessage(sender, 'send-message', {
-                message: '✅ Resposta correta! Segurança é de responsabilidade coletiva!',
-            });
-        }
-
-        await sendMessage(sender, 'send-message', {
-            message: '🎉 Parabéns, você completou o Módulo 1!'
-        });
-
-        await sendMessage(sender, 'send-file', {
-            path: '../../media/palmas.gif',
-            filename: 'palmas.gif',
-            caption: '👏 Parabéns!'
-        });
-
-        const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
-        const emailCadastrado = contato.email || 'E-mail não informado';
-        const confirmacaoList = getConfirmacaoDados(nomeCompleto, emailCadastrado);
-
-        await sendMessage(sender, 'send-list-message', confirmacaoList);
-        await salvarUltimaInteracao(sender, 'confirmacao_dados', confirmacaoList);
-        agendarLembrete(sender, getMensagemListaContinuar());
-        await contato.update({ statusTreinamento: 'concluído' });
-        return true;
-    }
-
-    return false;
-}
 
 /**
  * Gera e envia certificado para o usuário
@@ -675,64 +585,7 @@ async function processarMensagem(message) {
             return;
         }
 
-        // Opções do treinamento em andamento
-        if (text === 'não, começo assim que possível 👀 😅' || selectedId === 'não começar') {
-            const listMsg = {
-                title: '',
-                description: 'Escolha uma opção:',
-                buttonText: 'Estou pronto(a)',
-                listType: 'SINGLE_SELECT',
-                sections: [{
-                    title: '',
-                    rows: [{ id: 'pronto', title: 'Começar agora!! 😎 🔥🔥🔥', description: '' }],
-                }],
-            };
 
-            await sendMessage(sender, 'send-message', {
-                message: '😅 Sem problemas! Quando estiver pronto, é só avisar. Estamos aqui para ajudar! 👷‍♂️👷‍♀️',
-            });
-            await sendMessage(sender, 'send-list-message', listMsg);
-            await salvarUltimaInteracao(sender, 'quiz', listMsg);
-            agendarLembrete(sender, getMensagemListaContinuar());
-            return;
-        }
-
-        // Começar treinamento
-        if (text === 'começar agora!! 😎 🔥🔥🔥' || selectedId === 'começar agora' || selectedId === 'pronto') {
-            await sendMessage(sender, 'send-message', {
-                message: '🚀 Vamos começar o treinamento de SSMA! Prepare-se! 🔥🔥🔥',
-            });
-
-            await sendMessage(sender, 'send-message', {
-                message: `✅ Modulo 1️ - 📚 *Conceitos Fundamentais* \n\n1️⃣ Segurança e Saúde no Trabalho (SST) \nConjunto de medidas para previnir doenças e acidentes no trabalho. \n\n2️⃣ Premissas básicas de SST \n• Segurança é responsabilidade de todos \n• A consciência previne acidentes\n• Quem descumpre normas, se coloca em risco`,
-            });
-
-            await sendMessage(sender, 'send-message', {
-                message: '*Para continuar, digite o número 1️⃣*',
-            });
-
-            await salvarUltimaInteracao(sender, 'quiz', '*Para continuar, digite o número 1️⃣*');
-            agendarLembrete(sender, getMensagemListaContinuar());
-            return;
-        }
-
-        // Continuar para o quiz
-        if (text === '1') {
-            await sendMessage(sender, 'send-message', {
-                message: 'Vamos continuar!🚀🚀🚀 \n\nPra esquentar as coisas, vamos fazer um pequeno quiz! 😜 🔥🔥🔥',
-            });
-
-            const quizList = getQuizInicial();
-            await sendMessage(sender, 'send-list-message', quizList);
-            await salvarUltimaInteracao(sender, 'quiz', quizList);
-            agendarLembrete(sender, getMensagemListaContinuar());
-            return;
-        }
-
-        // Processar respostas do quiz
-        if (await processarQuiz(sender, text, selectedId, contato)) {
-            return;
-        }
 
         // Processar respostas de treinamentos específicos
         if (contato.treinamentoId) {
@@ -772,28 +625,7 @@ async function processarMensagem(message) {
             }
         }
 
-        // Quiz adicional para usuários em andamento
-        if (contato.statusTreinamento === 'em andamento' && ['2', '3', '4', '5'].includes(text)) {
-            const quizList = {
-                title: '',
-                description: '*Pergunta:* Qual o objetivo do treinamento SSMA?',
-                buttonText: 'Responda',
-                listType: 'SINGLE_SELECT',
-                sections: [{
-                    title: '',
-                    rows: [
-                        { id: 'a', title: 'Evitar acidentes', description: '' },
-                        { id: 'b', title: 'Apenas cumprir regras', description: '' },
-                        { id: 'c', title: 'Ignorar normas', description: '' },
-                    ],
-                }],
-            };
 
-            await sendMessage(sender, 'send-list-message', quizList);
-            await salvarUltimaInteracao(sender, 'quiz', quizList);
-            agendarLembrete(sender, getMensagemListaContinuar());
-            return;
-        }
 
         // Finalizar treinamento
         if (selectedId === 'finalizar_treinamento' || text === '✅ treinamento finalizado') {

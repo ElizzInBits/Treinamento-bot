@@ -7,6 +7,47 @@ const Treinamento = require('../../BancoDeDados/models/treinamento');
 const { Interacao } = require('../../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('../Certificados/certificados2.js');
 
+// ========================================
+// CONFIGURAÇÕES ESPECÍFICAS DO TREINAMENTO
+// ========================================
+const TEMPO_LEMBRETE = 0.3 * 60 * 1000; // 18 segundos
+
+// Respostas válidas para este treinamento
+const RESPOSTAS_POSITIVAS = [
+    'sim',
+    'sim, os dados estão corretos',
+    'os dados estão corretos',
+    'dados corretos',
+    'confirmar',
+    'sim estão corretos',
+    'começar agora',
+    'pronto'
+];
+
+const RESPOSTAS_NEGATIVAS = [
+    'não',
+    'não, preciso corrigir',
+    'não, os dados não são corretos',
+    'os dados não são corretos',
+    'dados incorretos',
+    'não estão corretos',
+    'não começar',
+    'depois'
+];
+
+// Configurações do quiz
+const QUIZ_CONFIG = {
+    pergunta: 'Qual das alternativas é uma premissa básica de SST?',
+    alternativas: {
+        a: 'Só a Empresa é responsável',
+        b: 'Segurança é de responsabilidade coletiva',
+        c: 'Só os supervisores devem usar EPI',
+        d: 'Acidentes não podem ser evitados'
+    },
+    respostaCorreta: 'b_teste',
+    explicacao: 'Segurança é de responsabilidade coletiva!'
+};
+
 /**
  * Executa o treinamento: Treinamento de Teste
  */
@@ -105,7 +146,7 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
 
         const quizList = {
             title: '',
-            description: 'Qual das alternativas é uma premissa básica de SST?\n\nA) Só a Empresa é responsável\n\nB) Segurança é de responsabilidade coletiva\n\nC) Só os supervisores devem usar EPI\n\nD) Acidentes não podem ser evitados',
+            description: `${QUIZ_CONFIG.pergunta}\n\nA) ${QUIZ_CONFIG.alternativas.a}\n\nB) ${QUIZ_CONFIG.alternativas.b}\n\nC) ${QUIZ_CONFIG.alternativas.c}\n\nD) ${QUIZ_CONFIG.alternativas.d}`,
             buttonText: 'Responder',
             listType: 'SINGLE_SELECT',
             sections: [{
@@ -126,15 +167,13 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
 
     // Processar respostas do quiz
     if (['a_teste', 'b_teste', 'c_teste', 'd_teste'].includes(selectedId)) {
-        const respostaCorreta = 'b_teste';
-        
-        if (selectedId !== respostaCorreta) {
+        if (selectedId !== QUIZ_CONFIG.respostaCorreta) {
             await sendMessage(sender, 'send-message', {
-                message: '❌ Resposta incorreta! A resposta correta é B) Segurança é de responsabilidade coletiva.',
+                message: `❌ Resposta incorreta! A resposta correta é B) ${QUIZ_CONFIG.alternativas.b}.`,
             });
         } else {
             await sendMessage(sender, 'send-message', {
-                message: '✅ Resposta correta! Segurança é de responsabilidade coletiva!',
+                message: `✅ Resposta correta! ${QUIZ_CONFIG.explicacao}`,
             });
         }
 
@@ -228,6 +267,13 @@ async function gerarEEnviarCertificadoTeste(contato, sender) {
             message: `❌ Ocorreu um erro ao gerar seu certificado:\n\n${err.message}\n\nPor favor, entre em contato com o suporte.`,
         });
     }
+}
+
+/**
+ * Agenda lembrete para o usuário
+ */
+function agendarLembrete(sender, mensagemLista, tempoMs = TEMPO_LEMBRETE) {
+    // Implementação específica do treinamento se necessário
 }
 
 /**
