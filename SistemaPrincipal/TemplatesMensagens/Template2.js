@@ -338,11 +338,7 @@ async function processarCorrecaoDados(sender, rawText, contato) {
  */
 async function buscarTreinamentosEmpresa(empresaId) {
     const treinamentosEmpresa = await EmpresaTreinamento.findAll({
-        where: { empresa_id: empresaId },
-        include: [{
-            model: sequelize.models.Treinamento,
-            as: 'treinamento'
-        }]
+        where: { empresa_id: empresaId }
     });
     
     const treinamentos = [];
@@ -459,16 +455,35 @@ async function gerarEEnviarCertificado(contato, sender) {
   try {
     const nomeParaCertificado = contato.nomeCompleto || contato.nome;
     
-    // Dados padrão para o treinamento SSMA
-    const dadosTreinamento = {
-      nome: 'Treinamento Básico de SSMA',
-      modalidade: 'EAD - Ensino à Distância',
-      cargaHoraria: '4',
-      tipo: 'Treinamento Básico',
-      emConformidade: 'Em conformidade com as normas de Segurança, Saúde e Meio Ambiente aplicáveis.',
-      documento: 'CPF: ***.***.***-**',
-      periodo: new Date().toLocaleDateString('pt-BR')
-    };
+    // Buscar dados do treinamento selecionado
+    let dadosTreinamento;
+    if (contato.treinamentoId) {
+      const treinamento = await Treinamento.findByPk(contato.treinamentoId);
+      if (treinamento) {
+        dadosTreinamento = {
+          nome: treinamento.nome,
+          modalidade: treinamento.modalidade,
+          cargaHoraria: treinamento.cargaHoraria.toString(),
+          tipo: treinamento.tipo,
+          emConformidade: treinamento.emConformidade,
+          documento: 'CPF: ***.***.***-**',
+          periodo: new Date().toLocaleDateString('pt-BR')
+        };
+      }
+    }
+    
+    // Dados padrão caso não tenha treinamento específico
+    if (!dadosTreinamento) {
+      dadosTreinamento = {
+        nome: 'Treinamento Básico de SSMA',
+        modalidade: 'EAD - Ensino à Distância',
+        cargaHoraria: '4',
+        tipo: 'Treinamento Básico',
+        emConformidade: 'Em conformidade com as normas de Segurança, Saúde e Meio Ambiente aplicáveis.',
+        documento: 'CPF: ***.***.***-**',
+        periodo: new Date().toLocaleDateString('pt-BR')
+      };
+    }
     
     console.log('📝 Gerando certificado para:', nomeParaCertificado);
     const certificadoPath = await gerarCertificadoBanco(contato.id);
@@ -482,8 +497,8 @@ async function gerarEEnviarCertificado(contato, sender) {
 
     await sendMessage(sender, 'send-file', {
       path: certificadoPath,
-      filename: 'Certificado_SSMA.pdf',
-      caption: '🎓 Seu certificado de conclusão do Treinamento SSMA'
+      filename: `Certificado_${dadosTreinamento.nome.replace(/\s+/g, '_')}.pdf`,
+      caption: `🎓 Seu certificado de conclusão do ${dadosTreinamento.nome}`
     });
 
     await sendMessage(sender, 'send-list-message', getFinalizarTreinamento());
