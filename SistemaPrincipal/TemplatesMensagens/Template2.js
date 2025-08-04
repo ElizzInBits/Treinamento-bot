@@ -5,10 +5,33 @@ const wppconnect = require('@wppconnect-team/wppconnect');
 const { sendMessage } = require('./conexao/wppConnectTemplate');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const { Op } = require('sequelize');
+const fs = require('fs');
+const path = require('path');
 const Message = require('../BancoDeDados/models/message');
 const { Contato, Interacao, Empresa, EmpresaTreinamento } = require('../BancoDeDados/models');
 const Treinamento = require('../BancoDeDados/models/treinamento');
 const { gerarCertificadoBanco, enviarEmail } = require('./Certificados/certificados2.js');
+
+// Carregar todos os scripts de treinamento dinamicamente
+const scriptsTreinamento = {};
+function carregarScriptsTreinamento() {
+    const pastaScripts = path.join(__dirname, 'Treinamentos');
+    if (fs.existsSync(pastaScripts)) {
+        const arquivos = fs.readdirSync(pastaScripts).filter(arquivo => arquivo.endsWith('.js'));
+        arquivos.forEach(arquivo => {
+            const nomeScript = arquivo.replace('.js', '');
+            try {
+                scriptsTreinamento[nomeScript] = require(`./Treinamentos/${arquivo}`);
+                console.log(`📝 Script carregado: ${nomeScript}`);
+            } catch (error) {
+                console.error(`❌ Erro ao carregar script ${arquivo}:`, error);
+            }
+        });
+    }
+}
+
+// Carregar scripts na inicialização
+carregarScriptsTreinamento();
 
 
 
@@ -611,28 +634,31 @@ async function processarMensagem(message) {
                     treinamentoId: treinamento.id 
                 });
                 
-                try {
-                    // Converter nome do banco para nome do arquivo
-                    const nomeArquivo = treinamento.nome
-                        .toLowerCase()
-                        .split(' ')
-                        .map((palavra, index) => {
-                            // Manter preposições em minúsculo
-                            if (['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para'].includes(palavra)) {
-                                return palavra;
-                            }
-                            return palavra.charAt(0).toUpperCase() + palavra.slice(1);
-                        })
-                        .join(' ');
-                    
-                    const scriptPath = `./Treinamentos/${nomeArquivo}.js`;
-                    console.log(`🔍 Carregando script:`, scriptPath);
-                    const scriptTreinamento = require(scriptPath);
-                    await scriptTreinamento.executarTreinamento(sender, contato);
-                    console.log(`✅ Script executado com sucesso`);
-                    return;
-                } catch (error) {
-                    console.error(`❌ Erro ao executar script:`, error);
+                // Converter nome do banco para nome do arquivo
+                const nomeArquivo = treinamento.nome
+                    .toLowerCase()
+                    .split(' ')
+                    .map((palavra) => {
+                        if (['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para'].includes(palavra)) {
+                            return palavra;
+                        }
+                        return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+                    })
+                    .join(' ');
+                
+                // Executar script dinâmico
+                const script = scriptsTreinamento[nomeArquivo];
+                if (script && script.executarTreinamento) {
+                    try {
+                        console.log(`✅ Executando script: ${nomeArquivo}`);
+                        await script.executarTreinamento(sender, contato);
+                        console.log(`✅ Script executado com sucesso`);
+                        return;
+                    } catch (error) {
+                        console.error(`❌ Erro ao executar script:`, error);
+                    }
+                } else {
+                    console.log(`❌ Script não encontrado: ${nomeArquivo}`);
                 }
             }
         }
@@ -712,26 +738,28 @@ async function processarMensagem(message) {
         if (contato.treinamentoId) {
             const treinamento = await Treinamento.findByPk(contato.treinamentoId);
             if (treinamento) {
-                try {
-                    // Converter nome do banco para nome do arquivo
-                    const nomeArquivo = treinamento.nome
-                        .toLowerCase()
-                        .split(' ')
-                        .map((palavra, index) => {
-                            if (['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para'].includes(palavra)) {
-                                return palavra;
-                            }
-                            return palavra.charAt(0).toUpperCase() + palavra.slice(1);
-                        })
-                        .join(' ');
-                    
-                    const scriptPath = `./Treinamentos/${nomeArquivo}.js`;
-                    const scriptTreinamento = require(scriptPath);
-                    if (scriptTreinamento.processarRespostaTeste && await scriptTreinamento.processarRespostaTeste(sender, text, selectedId, contato)) {
-                        return;
+                // Converter nome do banco para nome do arquivo
+                const nomeArquivo = treinamento.nome
+                    .toLowerCase()
+                    .split(' ')
+                    .map((palavra) => {
+                        if (['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para'].includes(palavra)) {
+                            return palavra;
+                        }
+                        return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+                    })
+                    .join(' ');
+                
+                // Tentar processar com script específico
+                const script = scriptsTreinamento[nomeArquivo];
+                if (script && script.processarRespostaTeste) {
+                    try {
+                        if (await script.processarRespostaTeste(sender, text, selectedId, contato)) {
+                            return;
+                        }
+                    } catch (error) {
+                        console.error(`Erro ao processar resposta do treinamento ${treinamento.nome}:`, error);
                     }
-                } catch (error) {
-                    console.error(`Erro ao processar resposta do treinamento ${treinamento.nome}:`, error);
                 }
             }
         }
