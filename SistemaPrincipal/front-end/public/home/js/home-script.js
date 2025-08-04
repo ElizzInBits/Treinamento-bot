@@ -9,6 +9,10 @@ let contatosEmpresaSelecionada = [];
 
 // Inicializar sistema
 document.addEventListener('DOMContentLoaded', function () {
+  // Definir aba ativa imediatamente para evitar flash
+  const activeTab = localStorage.getItem('activeTab') || 'mapeamento';
+  showTab(activeTab);
+  
   // Carregar dados em sequência para evitar problemas de timing
   carregarEmpresas()
     .then(() => {
@@ -24,10 +28,6 @@ document.addEventListener('DOMContentLoaded', function () {
       setTimeout(() => {
         atualizarEstatisticasMapeamento();
         atualizarEstatisticasEmpresas();
-
-        // Restaurar aba ativa do localStorage
-        const activeTab = localStorage.getItem('activeTab') || 'mapeamento';
-        showTab(activeTab);
       }, 500);
     })
     .catch(error => {
