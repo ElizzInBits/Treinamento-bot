@@ -182,10 +182,22 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
         return true;
     }
 
-    // Processar respostas do quiz
-    if (['a_teste', 'b_teste', 'c_teste', 'd_teste'].includes(selectedId)) {
-        console.log(`🧠 Processando resposta do quiz: ${selectedId}`);
-        if (selectedId !== QUIZ_CONFIG.respostaCorreta) {
+    // Processar respostas do quiz - por selectedId OU por texto
+    const respostasQuiz = ['a_teste', 'b_teste', 'c_teste', 'd_teste'];
+    const respostasTexto = ['a', 'b', 'c', 'd'];
+    
+    if (respostasQuiz.includes(selectedId) || respostasTexto.includes(textLower)) {
+        let respostaProcessada;
+        
+        if (selectedId && respostasQuiz.includes(selectedId)) {
+            respostaProcessada = selectedId;
+            console.log(`🧠 Processando resposta do quiz por selectedId: ${selectedId}`);
+        } else if (respostasTexto.includes(textLower)) {
+            respostaProcessada = textLower + '_teste';
+            console.log(`🧠 Processando resposta do quiz por texto: ${textLower} -> ${respostaProcessada}`);
+        }
+        
+        if (respostaProcessada !== QUIZ_CONFIG.respostaCorreta) {
             await sendMessage(sender, 'send-message', {
                 message: `❌ Resposta incorreta! A resposta correta é B) ${QUIZ_CONFIG.alternativas.b}.`,
             });
@@ -229,13 +241,24 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
         return true;
     }
 
-    // Confirmação de dados
-    if (selectedId === 'dados_corretos_teste') {
+    // Confirmação de dados - por selectedId OU por texto
+    if (selectedId === 'dados_corretos_teste' || 
+        RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase()))) {
         console.log(`✅ Confirmando dados para certificado`);
         await sendMessage(sender, 'send-message', {
             message: '✅ Dados confirmados! Gerando seu certificado...',
         });
         await gerarEEnviarCertificadoTeste(contato, sender);
+        return true;
+    }
+    
+    // Dados incorretos
+    if (selectedId === 'dados_incorretos_teste' || 
+        RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase()))) {
+        console.log(`❌ Dados incorretos, solicitando correção`);
+        await sendMessage(sender, 'send-message', {
+            message: '📝 Para corrigir seus dados, por favor, entre em contato com o suporte.',
+        });
         return true;
     }
 
