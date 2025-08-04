@@ -599,7 +599,7 @@ async function processarMensagem(message) {
             const treinamento = await Treinamento.findOne({
                 where: {
                     nome: {
-                        [Op.iLike]: `%${nomeTexto}%`
+                        [Op.like]: `%${nomeTexto}%`
                     }
                 }
             });
