@@ -752,14 +752,22 @@ async function processarMensagem(message) {
                 
                 // Tentar processar com script específico
                 const script = scriptsTreinamento[nomeArquivo];
+                console.log(`🔍 Tentando processar com script: ${nomeArquivo}`);
+                console.log(`🔍 Script encontrado:`, !!script);
+                console.log(`🔍 Função processarRespostaTeste:`, !!script?.processarRespostaTeste);
+                
                 if (script && script.processarRespostaTeste) {
                     try {
+                        console.log(`🔍 Executando processarRespostaTeste`);
                         if (await script.processarRespostaTeste(sender, text, selectedId, contato)) {
+                            console.log(`✅ Resposta processada pelo script`);
                             return;
                         }
                     } catch (error) {
                         console.error(`Erro ao processar resposta do treinamento ${treinamento.nome}:`, error);
                     }
+                } else {
+                    console.log(`❌ Script ou função não encontrada para: ${nomeArquivo}`);
                 }
             }
         }
