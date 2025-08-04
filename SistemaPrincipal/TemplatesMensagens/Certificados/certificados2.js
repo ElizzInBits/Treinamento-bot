@@ -16,7 +16,7 @@ async function gerarCertificadoBanco(contatoId) {
     }
 
     // Buscar treinamento pelo ID 
-    const treinamento = await Treinamento.findByPk(29);
+    const treinamento = await Treinamento.findByPk(38);
 
     if (!treinamento) {
       throw new Error(`❌ Treinamento não encontrado no banco de dados.`);
