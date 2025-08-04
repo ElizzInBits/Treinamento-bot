@@ -18,6 +18,10 @@ function carregarScriptsTreinamento() {
         arquivos.forEach(arquivo => {
             const nomeScript = arquivo.replace('.js', '');
             try {
+                // Limpar cache do require para recarregar o script
+                const caminhoCompleto = path.resolve(__dirname, 'Treinamentos', arquivo);
+                delete require.cache[caminhoCompleto];
+                
                 scriptsTreinamento[nomeScript] = require(`./Treinamentos/${arquivo}`);
                 console.log(`📝 Script carregado: ${nomeScript}`);
             } catch (error) {
@@ -29,6 +33,12 @@ function carregarScriptsTreinamento() {
 
 // Carregar scripts na inicialização
 carregarScriptsTreinamento();
+
+// Recarregar scripts a cada processamento (para desenvolvimento)
+function recarregarScripts() {
+    console.log('🔄 Recarregando scripts de treinamento...');
+    carregarScriptsTreinamento();
+}
 
 
 
@@ -564,6 +574,9 @@ async function processarMensagem(message) {
                     })
                     .join(' ');
                 
+                // Recarregar scripts antes de executar (para desenvolvimento)
+                recarregarScripts();
+                
                 // Executar script dinâmico
                 const script = scriptsTreinamento[nomeArquivo];
                 if (script && script.executarTreinamento) {
@@ -602,6 +615,9 @@ async function processarMensagem(message) {
                         return palavra.charAt(0).toUpperCase() + palavra.slice(1);
                     })
                     .join(' ');
+                
+                // Recarregar scripts antes de processar (para desenvolvimento)
+                recarregarScripts();
                 
                 // Tentar processar com script específico
                 const script = scriptsTreinamento[nomeArquivo];
