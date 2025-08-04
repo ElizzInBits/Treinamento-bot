@@ -52,3 +52,11 @@ SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Local State
 SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Singleton*
 SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Variations
 SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/segmentation_platform/
+
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/LOG*
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/History-journal
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/GrShaderCache/*
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/ukm_db
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/Singleton*
+SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/Local State
+
