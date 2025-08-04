@@ -590,11 +590,17 @@ async function processarMensagem(message) {
         }
 
         // Processar seleção de treinamento - detectar por texto
-        if (contato.statusTreinamento === 'não iniciado' && text.toLowerCase().includes('treinamento de teste')) {
-            console.log(`✅ Detectou seleção: TREINAMENTO DE TESTE`);
+        if (contato.statusTreinamento === 'não iniciado' && text.toLowerCase().includes('treinamento')) {
+            console.log(`✅ Detectou seleção de treinamento`);
             
+            // Buscar treinamento pelo nome no texto
+            const nomeTexto = text.split('\n')[0].trim();
             const treinamento = await Treinamento.findOne({
-                where: { nome: 'TREINAMENTO DE TESTE' }
+                where: {
+                    nome: {
+                        [sequelize.Op.iLike]: `%${nomeTexto}%`
+                    }
+                }
             });
             
             if (treinamento) {
