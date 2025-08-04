@@ -91,12 +91,12 @@ async function gerarCertificadoBanco(contatoId) {
       return linhas;
     }
 
-    // PRIMEIRA PÁGINA - Formatação baseada no código Python
+    // PRIMEIRA PÁGINA - Formatação idêntica ao código Python
     
-    // "Conferido a:" (posição ajustada)
+    // "Conferido a:" 
     page.drawText('Conferido a:', { x: 270, y: 630, size: tamanho, font: helvetica, color: cor });
 
-    // Nome da pessoa (centralizado)
+    // Nome (centralizado)
     const nomeCompleto = contato.nomeCompleto || contato.nome;
     const nomeSize = 16;
     const larguraPagina = 595.28; // A4 width in points
@@ -104,42 +104,42 @@ async function gerarCertificadoBanco(contatoId) {
     const nomeX = (larguraPagina / 2) - (larguraNome / 2);
     page.drawText(nomeCompleto, { x: nomeX, y: 600, size: nomeSize, font: helvetica, color: cor });
 
-    // Documento de Identificação (posições ajustadas conforme Python)
+    // Documento de Identificação
     page.drawText('Documento de', { x: 60, y: 519, size: tamanho, font: helvetica, color: cor });
     page.drawText('Identificação:', { x: 60, y: 506, size: tamanho, font: helvetica, color: cor });
-    page.drawText(formatarCPF(contato.cpf), { x: 166, y: 513, size: tamanho + 2, font: helvetica, color: cor });
+    page.drawText(formatarCPF(contato.cpf), { x: 166, y: 513, size: tamanho, font: helvetica, color: cor });
 
-    // Nome do Curso (posições ajustadas)
+    // Nome do Curso
     page.drawText('Nome do Curso:', { x: 60, y: 467, size: tamanho, font: helvetica, color: cor });
     page.drawText(treinamento.nome, { x: 166, y: 467, size: 10, font: helvetica, color: cor });
 
-    // Empresa (posições ajustadas)
+    // Empresa
     page.drawText('Empresa:', { x: 60, y: 429, size: tamanho, font: helvetica, color: cor });
-    page.drawText('SALUBRITÁ TREINAMENTOS LTDA', { x: 166, y: 427, size: tamanho + 2, font: helvetica, color: cor });
+    page.drawText('SALUBRITÁ TREINAMENTOS LTDA', { x: 166, y: 427, size: tamanho, font: helvetica, color: cor });
 
-    // Modalidade de treinamento (posições ajustadas)
+    // Modalidade
     page.drawText('Modalidade de', { x: 60, y: 382, size: tamanho, font: helvetica, color: cor });
     page.drawText('treinamento:', { x: 60, y: 367, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.modalidade || '', { x: 166, y: 374, size: tamanho + 2, font: helvetica, color: cor });
+    page.drawText(treinamento.modalidade || '', { x: 166, y: 374, size: tamanho, font: helvetica, color: cor });
 
-    // Tipo de Treinamento (lado direito - posições ajustadas)
+    // TIPO
     page.drawText('Tipo de', { x: 310, y: 386, size: tamanho, font: helvetica, color: cor });
     page.drawText('Treinamento:', { x: 310, y: 371, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.tipo || 'TEÓRICO E PRÁTICO', { x: 400, y: 380, size: tamanho + 2, font: helvetica, color: cor });
+    page.drawText(treinamento.tipo || 'TEÓRICO E PRÁTICO', { x: 400, y: 380, size: tamanho, font: helvetica, color: cor });
 
-    // Carga Horária (posições ajustadas)
+    // Carga Horária e Período
     page.drawText('Carga Horária', { x: 60, y: 336, size: tamanho, font: helvetica, color: cor });
     page.drawText('Realizada:', { x: 60, y: 321, size: tamanho, font: helvetica, color: cor });
-    page.drawText(`${treinamento.cargaHoraria} HORAS`, { x: 166, y: 328, size: tamanho + 2, font: helvetica, color: cor });
+    page.drawText(`${treinamento.cargaHoraria} HORAS`, { x: 166, y: 328, size: tamanho, font: helvetica, color: cor });
 
-    // Período de Treinamento (lado direito - posições ajustadas)
+    // Período de Treinamento
     const periodoFormatado = formatarDataPeriodo(treinamento.periodo || '');
     page.drawText('Período de', { x: 310, y: 336, size: tamanho, font: helvetica, color: cor });
     page.drawText('Treinamento:', { x: 310, y: 321, size: tamanho, font: helvetica, color: cor });
-    page.drawText(periodoFormatado, { x: 400, y: 328, size: tamanho + 2, font: helvetica, color: cor });
+    page.drawText(periodoFormatado, { x: 400, y: 328, size: tamanho, font: helvetica, color: cor });
 
-    // Em conformidade (posições e quebra de texto ajustadas)
-    page.drawText('Em conformidade:', { x: 60, y: 285, size: tamanho, font: helvetica, color: cor });
+    // Conformidade
+    page.drawText('Em conformidade:', { x: 60, y: 285, size: 12, font: helvetica, color: cor });
     
     const linhasConformidade = quebrarTexto(treinamento.emConformidade || '', helvetica, 10, 480);
     let yConformidade = 270;
@@ -162,40 +162,41 @@ async function gerarCertificadoBanco(contatoId) {
     }
 
     if (segundaPagina) {
-      // Conteúdo programático (posições e quebra ajustadas)
+      // Conteúdo Programático
       const linhasConteudo = quebrarTexto(treinamento.conteudo || 'Conteúdo não informado', helvetica, tamanho, 515);
-      let yConteudo = 680;
+      let yConteudo = 660;
       
       linhasConteudo.forEach(linha => {
-        if (yConteudo >= 450) { // Ajusta para não sobrepor outras informações
-          segundaPagina.drawText(linha, { x: 40, y: yConteudo, size: tamanho, font: helvetica, color: cor });
-          yConteudo -= 16;
+        if (yConteudo < 450) { // Ajusta para não sobrepor outras informações
+          return;
         }
+        segundaPagina.drawText(linha, { x: 40, y: yConteudo, size: tamanho, font: helvetica, color: cor });
+        yConteudo -= 16;
       });
 
-      // Informações dos instrutores (
+      // Instrutor
       const instrutorInfo = `${treinamento.instrutor || ''} – ${treinamento.qualificacaoInstrutor || ''}`;
-      segundaPagina.drawText(instrutorInfo, { x: 45, y: 430, size: tamanho, font: helvetica, color: cor });
+      segundaPagina.drawText(instrutorInfo, { x: 40, y: 430, size: tamanho, font: helvetica, color: cor });
       
       if (treinamento.registroInstrutor) {
         segundaPagina.drawText(`Registro: ${treinamento.registroInstrutor}`, {
-          x: 45, y: 415, size: tamanho, font: helvetica, color: cor
+          x: 40, y: 415, size: tamanho, font: helvetica, color: cor
         });
       }
 
-      // Responsável 
+      // Responsável
       const responsavelInfo = `${treinamento.responsavel || ''} – ${treinamento.cargoResponsavel || ''}`;
-      segundaPagina.drawText(responsavelInfo, { x: 45, y: 365, size: tamanho, font: helvetica, color: cor });
+      segundaPagina.drawText(responsavelInfo, { x: 40, y: 320, size: tamanho, font: helvetica, color: cor });
       
       if (treinamento.registroResponsavel) {
         segundaPagina.drawText(`Registro: ${treinamento.registroResponsavel}`, {
-          x: 45, y: 335, size: tamanho, font: helvetica, color: cor
+          x: 40, y: 305, size: tamanho, font: helvetica, color: cor
         });
       }
 
-      // Aproveitamento 
+      // Aproveitamento
       segundaPagina.drawText(treinamento.aproveitamento || 'Não há aproveitamento de conteúdo a ser considerado para esta capacitação.', {
-        x: 45, y: 220, size: tamanho, font: helvetica, color: cor, maxWidth: 500
+        x: 40, y: 220, size: tamanho, font: helvetica, color: cor, maxWidth: 500
       });
     }
 
