@@ -341,4 +341,4 @@ async function obterUltimaInteracao(sender) {
     });
 }
 
-module.exports = { executarTreinamento, processarRespostaTeste }; processarRespostaTeste };, processarRespostaTeste };
+module.exports = { executarTreinamento, processarRespostaTeste };
