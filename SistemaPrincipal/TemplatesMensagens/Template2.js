@@ -700,6 +700,22 @@ async function processarMensagem(message) {
             return;
         }
 
+        // Processar respostas de treinamentos específicos
+        if (contato.treinamentoId) {
+            const treinamento = await Treinamento.findByPk(contato.treinamentoId);
+            if (treinamento) {
+                try {
+                    const scriptPath = `./Treinamentos/${treinamento.nome}.js`;
+                    const scriptTreinamento = require(scriptPath);
+                    if (scriptTreinamento.processarRespostaTeste && await scriptTreinamento.processarRespostaTeste(sender, text, selectedId, contato)) {
+                        return;
+                    }
+                } catch (error) {
+                    console.error(`Erro ao processar resposta do treinamento ${treinamento.nome}:`, error);
+                }
+            }
+        }
+
         // Quiz adicional para usuários em andamento
         if (contato.statusTreinamento === 'em andamento' && ['2', '3', '4', '5'].includes(text)) {
             const quizList = {
