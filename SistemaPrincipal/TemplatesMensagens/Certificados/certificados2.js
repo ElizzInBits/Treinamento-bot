@@ -15,8 +15,16 @@ async function gerarCertificadoBanco(contatoId) {
       throw new Error('❌ Contato não encontrado.');
     }
 
-    // Buscar treinamento pelo ID 
-    const treinamento = await Treinamento.findByPk(38);
+    // Buscar treinamento pelo ID do contato
+    let treinamento;
+    if (contato.treinamentoId) {
+      treinamento = await Treinamento.findByPk(contato.treinamentoId);
+    }
+    
+    // Fallback para treinamento padrão se não encontrar
+    if (!treinamento) {
+      treinamento = await Treinamento.findByPk(38);
+    }
 
     if (!treinamento) {
       throw new Error(`❌ Treinamento não encontrado no banco de dados.`);
@@ -213,7 +221,7 @@ async function gerarCertificadoBanco(contatoId) {
 
     // Enviar por e-mail
     if (contato.email) {
-      await enviarEmail(contato.email, caminhoArquivo);
+      await enviarEmail(contato.email, caminhoArquivo, treinamento);
     }
 
     return caminhoArquivo;
@@ -228,7 +236,7 @@ function formatarCPF(cpf) {
   return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 }
 
-async function enviarEmail(destinatario, arquivoPath) {
+async function enviarEmail(destinatario, arquivoPath, treinamento = null) {
   try {
     if (!fs.existsSync(arquivoPath)) {
       throw new Error('❌ Arquivo de certificado não encontrado.');
@@ -245,10 +253,10 @@ async function enviarEmail(destinatario, arquivoPath) {
     const mailOptions = {
       from: process.env.EMAIL_USER || 'seu-email@gmail.com',
       to: destinatario,
-      subject: '🎓 Certificado de Conclusão - Treinamento CIPA',
+      subject: `🎓 Certificado de Conclusão - ${treinamento?.nome || 'Treinamento'}`,
       html: `
         <h2>🎉 Parabéns pela conclusão do treinamento!</h2>
-        <p>Você concluiu com sucesso o <strong>Curso de Formação de Membros de CIPA</strong>.</p>
+        <p>Você concluiu com sucesso o <strong>${treinamento?.nome || 'Treinamento'}</strong>.</p>
         <p>Seu certificado está em anexo neste e-mail.</p>
         <br>
         <p>Atenciosamente,<br>
