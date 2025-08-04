@@ -612,25 +612,25 @@ async function processarMensagem(message) {
                     await sendMessage(sender, 'send-message', {
                         message: `✅ Você selecionou: *${treinamento.nome}*\n\n📋 Modalidade: ${treinamento.modalidade}\n⏱️ Carga Horária: ${treinamento.cargaHoraria}h\n\n${treinamento.conteudo}`,
                     });
-                }
-
-                const listMsg = {
-                    title: '',
-                    description: '*Pronto para começar?* \nEscolha uma opção:',
-                    buttonText: 'Ver opções',
-                    listType: 'SINGLE_SELECT',
-                    sections: [{
+                    
+                    const listMsg = {
                         title: '',
-                        rows: [
-                            { id: 'começar agora', title: 'Começar agora!! 😎 🔥🔥🔥', description: '' },
-                            { id: 'não começar', title: 'Não, começo assim que possível 👀 😅', description: '' },
-                        ],
-                    }],
-                };
+                        description: '*Pronto para começar?* \nEscolha uma opção:',
+                        buttonText: 'Ver opções',
+                        listType: 'SINGLE_SELECT',
+                        sections: [{
+                            title: '',
+                            rows: [
+                                { id: 'começar agora', title: 'Começar agora!! 😎 🔥🔥🔥', description: '' },
+                                { id: 'não começar', title: 'Não, começo assim que possível 👀 😅', description: '' },
+                            ],
+                        }],
+                    };
 
-                await sendMessage(sender, 'send-list-message', listMsg);
-                await salvarUltimaInteracao(sender, 'quiz', listMsg);
-                agendarLembrete(sender, getMensagemListaContinuar());
+                    await sendMessage(sender, 'send-list-message', listMsg);
+                    await salvarUltimaInteracao(sender, 'quiz', listMsg);
+                    agendarLembrete(sender, getMensagemListaContinuar());
+                }
             }
             return;
         }
@@ -638,6 +638,12 @@ async function processarMensagem(message) {
         // Iniciar treinamento para novos usuários
         if (contato.statusTreinamento === 'não iniciado') {
             await iniciarTreinamento(sender, contato);
+            return;
+        }
+        
+        // Evitar loop - se já tem treinamento em andamento, não mostrar seleção novamente
+        if (contato.statusTreinamento === 'em andamento' && contato.treinamentoId) {
+            // Já processado pelos scripts específicos acima
             return;
         }
 
