@@ -25,12 +25,9 @@ document.addEventListener('DOMContentLoaded', function () {
         atualizarEstatisticasMapeamento();
         atualizarEstatisticasEmpresas();
 
-        // Verificar qual aba está ativa por padrão
-        if (document.getElementById('mapeamento').classList.contains('active')) {
-          atualizarEstatisticasMapeamento();
-        } else if (document.getElementById('empresas').classList.contains('active')) {
-          renderizarEmpresas();
-        }
+        // Restaurar aba ativa do localStorage
+        const activeTab = localStorage.getItem('activeTab') || 'mapeamento';
+        showTab(activeTab);
       }, 500);
     })
     .catch(error => {
@@ -128,6 +125,9 @@ function showTab(tabName) {
 
   document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
   document.getElementById(tabName).classList.add('active');
+
+  // Salvar aba ativa no localStorage
+  localStorage.setItem('activeTab', tabName);
 
   if (tabName === 'mapeamento') {
     atualizarEstatisticasMapeamento();
