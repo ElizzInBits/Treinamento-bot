@@ -162,7 +162,7 @@ async function gerarCertificadoBanco(contatoId) {
 
     if (segundaPagina) {
       // Conteúdo Programático
-      const linhasConteudo = quebrarTexto(treinamento.conteudo || 'Conteúdo não informado', helvetica, tamanho, 555);
+      const linhasConteudo = quebrarTexto(treinamento.conteudo || 'Conteúdo não informado', helvetica, tamanho, 520);
       let yConteudo = 660;
       
       linhasConteudo.forEach(linha => {
