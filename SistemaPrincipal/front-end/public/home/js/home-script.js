@@ -541,7 +541,7 @@ function abrirDetalhesContato(id) {
   const detalhesHTML = `
     <h4>${contato.nome}</h4>
     <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
-    <p><strong>Empresa:</strong> ${empresa ? empresa.razao_social : 'Empresa não encontrada'}</p>
+    <p><strong>Empresa:</strong> ${empresa ? (empresa.razao_social || empresa.razaoSocial || 'Nome não informado') : 'Empresa não encontrada'}</p>
     <p><strong>Treinamento Atual:</strong> ${treinamento ? treinamento.nome : 'Nenhum'}</p>
     <p><strong>Status:</strong> ${treinamento ? 'Com treinamento' : 'Sem treinamento'}</p>
   `;
@@ -2534,19 +2534,7 @@ function abrirDetalhesEmpresa(empresaId) {
             </button>
           </div>
           
-          <div class="form-section">
-            <h4>Contatos Vinculados (${contatosEmpresa.length})</h4>
-            <div class="contatos-lista">
-              ${contatosEmpresa.length > 0 ? contatosEmpresa.map(c => `
-                <div class="contato-item">
-                  <div class="contato-info">
-                    <strong>${c.nome}</strong>
-                    <p>${formatarTelefone(c.telefone)}</p>
-                  </div>
-                </div>
-              `).join('') : '<p>Nenhum contato vinculado</p>'}
-            </div>
-          </div>
+
         </div>
       `;
       
