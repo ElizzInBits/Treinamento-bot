@@ -2641,11 +2641,10 @@ function abrirModalTreinamentosEmpresa(empresaId) {
   
   // Carregar treinamentos disponíveis e da empresa
   Promise.all([
-    fetch('http://92.112.178.26:3000/api/empresas/treinamentos/disponiveis').then(r => r.json()),
-    fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/completo`).then(r => r.json())
+    fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos/disponiveis`).then(r => r.json()),
+    fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos/atribuidos`).then(r => r.json())
   ])
-  .then(([treinamentosDisponiveis, empresaCompleta]) => {
-    const treinamentosEmpresa = empresaCompleta.treinamentos || [];
+  .then(([treinamentosDisponiveis, treinamentosEmpresa]) => {
     
     document.getElementById('conteudoTreinamentosEmpresa').innerHTML = `
       <div class="treinamentos-empresa-container">
@@ -2694,24 +2693,9 @@ function abrirModalTreinamentosEmpresa(empresaId) {
 }
 
 function atribuirTreinamento(empresaId, treinamentoId) {
-  // Primeiro buscar treinamentos existentes
-  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/completo`)
-    .then(r => r.json())
-    .then(empresa => {
-      const treinamentosAtuais = empresa.treinamentos || [];
-      const idsExistentes = treinamentosAtuais.map(t => t.id);
-      
-      // Adicionar novo treinamento se não existir
-      if (!idsExistentes.includes(treinamentoId)) {
-        idsExistentes.push(treinamentoId);
-      }
-      
-      return fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ treinamentosIds: idsExistentes })
-      });
-    })
+  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
+    method: 'POST'
+  })
     .then(res => {
       if (!res.ok) throw new Error();
       return res.json();
@@ -2726,20 +2710,9 @@ function atribuirTreinamento(empresaId, treinamentoId) {
 function removerTreinamentoEmpresa(empresaId, treinamentoId) {
   if (!confirm('Tem certeza que deseja remover este treinamento da empresa?')) return;
   
-  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/completo`)
-    .then(r => r.json())
-    .then(empresa => {
-      const treinamentosAtuais = empresa.treinamentos || [];
-      const novosIds = treinamentosAtuais
-        .filter(t => t.id !== treinamentoId)
-        .map(t => t.id);
-      
-      return fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ treinamentosIds: novosIds })
-      });
-    })
+  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
+    method: 'DELETE'
+  })
     .then(res => {
       if (!res.ok) throw new Error();
       return res.json();
