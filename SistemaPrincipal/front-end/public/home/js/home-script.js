@@ -277,17 +277,25 @@ function carregarContatos() {
     })
     .then(data => {
       console.log('Contatos carregados:', data);
+      let contatosArray = [];
+      
       if (Array.isArray(data)) {
-        contatos = data.map(c => ({
-          ...c,
-          id: parseInt(c.id, 10),
-          empresaId: parseInt(c.empresaId, 10),
-          treinamentoId: c.treinamentoId ? parseInt(c.treinamentoId, 10) : null
-        }));
+        contatosArray = data;
+      } else if (data && Array.isArray(data.contatos)) {
+        contatosArray = data.contatos;
+      } else if (data && data.data && Array.isArray(data.data)) {
+        contatosArray = data.data;
       } else {
         console.error('Dados de contatos não são um array:', data);
-        contatos = [];
+        contatosArray = [];
       }
+      
+      contatos = contatosArray.map(c => ({
+        ...c,
+        id: parseInt(c.id, 10),
+        empresaId: parseInt(c.empresaId, 10),
+        treinamentoId: c.treinamentoId ? parseInt(c.treinamentoId, 10) : null
+      }));
 
       // Debug: mostrar associações
       console.log('Associações contato-empresa:', contatos.map(c => ({
@@ -589,14 +597,20 @@ function carregarTreinamentos() {
       return res.json();
     })
     .then(data => {
+      let treinamentosArray = [];
+      
       if (Array.isArray(data)) {
-        treinamentos = data;
+        treinamentosArray = data;
       } else if (data && Array.isArray(data.treinamentos)) {
-        treinamentos = data.treinamentos;
+        treinamentosArray = data.treinamentos;
+      } else if (data && data.data && Array.isArray(data.data)) {
+        treinamentosArray = data.data;
       } else {
         console.error('Dados de treinamentos inválidos:', data);
-        treinamentos = [];
+        treinamentosArray = [];
       }
+      
+      treinamentos = treinamentosArray;
       renderizarTreinamentos();
     })
     .catch(error => {
@@ -935,15 +949,23 @@ function carregarEmpresas() {
     })
     .then(data => {
       console.log('Empresas carregadas:', data);
+      let empresasArray = [];
+      
       if (Array.isArray(data)) {
-        empresas = data.map(e => ({
-          ...e,
-          id: parseInt(e.id, 10)
-        }));
+        empresasArray = data;
+      } else if (data && Array.isArray(data.empresas)) {
+        empresasArray = data.empresas;
+      } else if (data && data.data && Array.isArray(data.data)) {
+        empresasArray = data.data;
       } else {
         console.error('Dados de empresas não são um array:', data);
-        empresas = [];
+        empresasArray = [];
       }
+      
+      empresas = empresasArray.map(e => ({
+        ...e,
+        id: parseInt(e.id, 10)
+      }));
 
       // Debug: mostrar empresas carregadas
       console.log('Empresas processadas:', empresas.map(e => ({

@@ -363,6 +363,12 @@ async function iniciarTreinamento(sender, contato) {
         message: '📚 Aqui estão os treinamentos disponíveis para você:',
     });
 
+    // Mostrar treinamentos disponíveis como texto simples primeiro
+    const listaTreinamentos = treinamentos.map(t => `${t.nome}\n${t.modalidade} - ${t.cargaHoraria}h`).join('\n\n');
+    await sendMessage(sender, 'send-message', {
+        message: `*Escolha qual treinamento deseja iniciar:*\n\n${listaTreinamentos}`,
+    });
+
     // Criar lista de treinamentos
     const rows = treinamentos.map((treinamento, index) => ({
         id: `treinamento_${treinamento.id}`,
@@ -372,7 +378,7 @@ async function iniciarTreinamento(sender, contato) {
 
     const listMsg = {
         title: '',
-        description: '*Escolha qual treinamento deseja iniciar:*',
+        description: 'Selecione uma opção:',
         buttonText: 'Selecionar',
         listType: 'SINGLE_SELECT',
         sections: [{
@@ -482,22 +488,7 @@ async function processarMensagem(message) {
 
         if (timeouts[sender]) clearTimeout(timeouts[sender]);
 
-        // Saudação inicial apenas uma vez
-        if (!saudacoesEnviadas.has(sender)) {
-            console.log('📤 TENTANDO ENVIAR MENSAGEM PARA:', sender);
-            const resultado = await sendMessage(sender, 'send-message', {
-                message: '👋 Olá! Eu sou um bot que vai aplicar seus treinamentos.',
-            });
-            console.log('📝 RESULTADO:', resultado);
-            saudacoesEnviadas.add(sender);
-        }
-
-        // Processar comandos continuar/pausar
-        if (await processarComandosContinuar(sender, text, selectedId)) {
-            return;
-        }
-
-        // Verificação de cadastro
+        // Verificação de cadastro primeiro
         const contato = await verificarCadastro(sender);
         if (!contato) {
             await sendMessage(sender, 'send-message', {
@@ -505,6 +496,25 @@ async function processarMensagem(message) {
             });
             return;
         }
+
+        // Saudação inicial apenas uma vez
+        if (!saudacoesEnviadas.has(sender)) {
+            console.log('📤 TENTANDO ENVIAR MENSAGEM PARA:', sender);
+            saudacoesEnviadas.add(sender);
+            
+            // Se é primeira vez, iniciar treinamento diretamente
+            if (contato.statusTreinamento === 'não iniciado') {
+                await iniciarTreinamento(sender, contato);
+                return;
+            }
+        }
+
+        // Processar comandos continuar/pausar
+        if (await processarComandosContinuar(sender, text, selectedId)) {
+            return;
+        }
+
+
 
         // ✅ Atualizar a última interação no campo do contato
         contato.ultimaInteracao = rawText.trim();
@@ -594,8 +604,8 @@ async function processarMensagem(message) {
             }
         }
 
-        // Iniciar treinamento para novos usuários
-        if (contato.statusTreinamento === 'não iniciado') {
+        // Iniciar treinamento para novos usuários (apenas se não foi feito na saudação)
+        if (contato.statusTreinamento === 'não iniciado' && saudacoesEnviadas.has(sender)) {
             await iniciarTreinamento(sender, contato);
             return;
         }

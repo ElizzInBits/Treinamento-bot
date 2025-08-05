@@ -209,7 +209,164 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     }
 
     // Processar respostas do quiz - por selectedId OU por texto
-    const respostasQuiz = ['a_teste2', 'b_teste2', 'c_teste2', 'd_teste2'];
+    if (ultimaInteracao?.tipo === 'quiz_teste2') {
+        let respostaSelecionada = null;
+        
+        // Detectar resposta por selectedId
+        if (['a_teste2', 'b_teste2', 'c_teste2', 'd_teste2'].includes(selectedId)) {
+            respostaSelecionada = selectedId;
+        }
+        // Detectar resposta por texto
+        else if (['a', 'b', 'c', 'd'].includes(textLower)) {
+            respostaSelecionada = textLower + '_teste2';
+        }
+        
+        if (respostaSelecionada) {
+            console.log(`📝 Resposta do quiz: ${respostaSelecionada}`);
+            
+            if (respostaSelecionada === QUIZ_CONFIG.respostaCorreta) {
+                await sendMessage(sender, 'send-message', {
+                    message: `🎉 Parabéns! Resposta correta! \n\n${QUIZ_CONFIG.explicacao}`,
+                });
+                
+                await sendMessage(sender, 'send-message', {
+                    message: '✅ Treinamento concluído com sucesso! 🎓\n\nVamos confirmar seus dados para gerar o certificado:',
+                });
+                
+                await confirmarDadosCertificado(sender, contato);
+            } else {
+                await sendMessage(sender, 'send-message', {
+                    message: `❌ Resposta incorreta. A resposta correta é: ${QUIZ_CONFIG.alternativas.b}\n\n${QUIZ_CONFIG.explicacao}`,
+                });
+                
+                await sendMessage(sender, 'send-message', {
+                    message: '📚 Mas não se preocupe! O importante é aprender. Treinamento concluído! 🎓',
+                });
+                
+                await confirmarDadosCertificado(sender, contato);
+            }
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+/**
+ * Confirma dados do contato para certificado
+ */
+async function confirmarDadosCertificado(sender, contato) {
+    const empresa = await Empresa.findByPk(contato.empresaId);
+    const nomeEmpresa = empresa ? empresa.razao_social : 'Empresa não encontrada';
+    
+    const confirmacaoMsg = {
+        title: '',
+        description: `📋 *Confirme seus dados:*\n\n👤 Nome: ${contato.nome}\n🏢 Empresa: ${nomeEmpresa}\n\nOs dados estão corretos?`,
+        buttonText: 'Confirmar',
+        listType: 'SINGLE_SELECT',
+        sections: [{
+            title: '',
+            rows: [
+                { id: 'dados_corretos_teste2', title: '✅ Sim, estão corretos', description: '' },
+                { id: 'dados_incorretos_teste2', title: '❌ Não, preciso corrigir', description: '' },
+            ],
+        }],
+    };
+    
+    await sendMessage(sender, 'send-list-message', confirmacaoMsg);
+    await salvarInteracao(sender, 'confirmacao_dados_teste2', JSON.stringify(confirmacaoMsg));
+}
+
+/**
+ * Gera e envia certificado para o teste2
+ */
+async function gerarEEnviarCertificadoTeste2(contato, sender) {
+    try {
+        const treinamento = await Treinamento.findByPk(38);
+        const empresa = await Empresa.findByPk(contato.empresaId);
+        
+        if (!treinamento || !empresa) {
+            await sendMessage(sender, 'send-message', {
+                message: '❌ Erro ao gerar certificado. Dados não encontrados.',
+            });
+            return;
+        }
+        
+        const certificadoPath = await gerarCertificadoBanco({
+            nome: contato.nome,
+            treinamento: treinamento.nome,
+            empresa: empresa.razao_social,
+            cargaHoraria: treinamento.cargaHoraria || '20',
+            instrutor: treinamento.instrutor || 'Instrutor Certificado',
+            registroInstrutor: treinamento.registroInstrutor || 'REG-001'
+        });
+        
+        if (certificadoPath) {
+            await sendMessage(sender, 'send-file', {
+                path: certificadoPath,
+                filename: `Certificado_${contato.nome.replace(/\s+/g, '_')}.pdf`,
+                caption: '🎓 Seu certificado foi gerado com sucesso!',
+            });
+            
+            // Enviar por email se disponível
+            if (contato.email) {
+                await enviarEmail(contato.email, certificadoPath, {
+                    nome: contato.nome,
+                    treinamento: treinamento.nome
+                });
+            }
+            
+            await sendMessage(sender, 'send-message', {
+                message: '🎉 Parabéns por concluir o treinamento! Seu certificado foi enviado. 🏆',
+            });
+        } else {
+            await sendMessage(sender, 'send-message', {
+                message: '❌ Erro ao gerar certificado. Tente novamente mais tarde.',
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao gerar certificado:', error);
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Erro interno ao gerar certificado.',
+        });
+    }
+}
+
+/**
+ * Salva interação no banco
+ */
+async function salvarInteracao(sender, tipo, conteudo) {
+    try {
+        await Interacao.create({
+            telefone: sender,
+            tipo: tipo,
+            conteudo: conteudo,
+            timestamp: new Date()
+        });
+    } catch (error) {
+        console.error('Erro ao salvar interação:', error);
+    }
+}
+
+/**
+ * Obtém última interação do usuário
+ */
+async function obterUltimaInteracao(sender) {
+    try {
+        return await Interacao.findOne({
+            where: { telefone: sender },
+            order: [['timestamp', 'DESC']]
+        });
+    } catch (error) {
+        console.error('Erro ao obter interação:', error);
+        return null;
+    }
+}
+
+module.exports = {
+    executarTreinamento,
+    processarRespostaTeste
+};nst respostasQuiz = ['a_teste2', 'b_teste2', 'c_teste2', 'd_teste2'];
     const respostasTexto = ['a', 'b', 'c', 'd'];
     
     if (respostasQuiz.includes(selectedId) || respostasTexto.includes(textLower)) {
