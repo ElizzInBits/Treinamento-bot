@@ -98,9 +98,12 @@ function gerarVariacoes(numeroCompleto) {
 // ========================================
 
 /**
- * Agenda um lembrete para o usuário
+ * Agenda um lembrete para o usuário (DESABILITADO para evitar duplicações)
  */
 function agendarLembrete(sender, mensagemLista, tempoMs = TEMPO_LEMBRETE) {
+    // Desabilitado temporariamente para evitar mensagens duplicadas
+    return;
+    
     if (timeouts[sender]) clearTimeout(timeouts[sender]);
 
     timeouts[sender] = setTimeout(async () => {
@@ -389,7 +392,8 @@ async function iniciarTreinamento(sender, contato) {
 
     await sendMessage(sender, 'send-list-message', listMsg);
     await salvarUltimaInteracao(sender, 'selecionar_treinamento', JSON.stringify(listMsg));
-    agendarLembrete(sender, getMensagemListaContinuar());
+    // Remover lembrete para evitar duplicações
+    // agendarLembrete(sender, getMensagemListaContinuar());
 }
 
 
@@ -499,13 +503,16 @@ async function processarMensagem(message) {
 
         // Saudação inicial apenas uma vez
         if (!saudacoesEnviadas.has(sender)) {
-            console.log('📤 TENTANDO ENVIAR MENSAGEM PARA:', sender);
+            console.log('📤 PRIMEIRA INTERAÇÃO COM:', sender);
             saudacoesEnviadas.add(sender);
             
-            // Se é primeira vez, iniciar treinamento diretamente
+            // Se é primeira vez E não há interação anterior, iniciar treinamento
             if (contato.statusTreinamento === 'não iniciado') {
-                await iniciarTreinamento(sender, contato);
-                return;
+                const ultimaInteracao = await obterUltimaInteracao(sender);
+                if (!ultimaInteracao || ultimaInteracao.tipo === 'resposta') {
+                    await iniciarTreinamento(sender, contato);
+                    return;
+                }
             }
         }
 
@@ -604,10 +611,14 @@ async function processarMensagem(message) {
             }
         }
 
-        // Iniciar treinamento para novos usuários (apenas se não foi feito na saudação)
-        if (contato.statusTreinamento === 'não iniciado' && saudacoesEnviadas.has(sender)) {
-            await iniciarTreinamento(sender, contato);
-            return;
+        // Evitar reinicialização desnecessária
+        if (contato.statusTreinamento === 'não iniciado' && !selectedId.startsWith('treinamento_')) {
+            // Só reiniciar se não há interação recente
+            const ultimaInteracao = await obterUltimaInteracao(sender);
+            if (!ultimaInteracao || ultimaInteracao.tipo !== 'selecionar_treinamento') {
+                await iniciarTreinamento(sender, contato);
+                return;
+            }
         }
         
         // Processar respostas de treinamentos específicos PRIMEIRO
