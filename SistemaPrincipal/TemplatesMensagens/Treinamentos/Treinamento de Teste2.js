@@ -3,7 +3,7 @@
 // Gerado automaticamente em: 05/08/2025, 11:40:00
 
 const { sendMessage } = require('../conexao/wppConnectTemplate');
-const Treinamento = require('../../BancoDeDados/models/treinamento');
+const { Treinamento } = require('../../BancoDeDados/models');
 const { Interacao, Empresa } = require('../../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('../Certificados/certificados2.js');
 
