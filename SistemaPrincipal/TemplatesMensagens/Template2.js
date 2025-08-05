@@ -551,7 +551,7 @@ async function processarMensagem(message) {
         }
 
         // Processar seleção de treinamento - detectar por selectedId ou texto
-        if (contato.statusTreinamento === 'não iniciado' && (selectedId.startsWith('treinamento_') || text.toLowerCase().includes('treinamento'))) {
+        if (contato.statusTreinamento === 'não iniciado' && (selectedId.startsWith('treinamento_') || text.toLowerCase().includes('treinamento') || text.toLowerCase().includes('curso') || text.toLowerCase().includes('cipa'))) {
             console.log(`✅ Detectou seleção de treinamento`);
             
             let treinamento;
