@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const Message = require('../BancoDeDados/models/message');
 const { Contato, Interacao, Empresa, EmpresaTreinamento } = require('../BancoDeDados/models');
-const Treinamento = require('../BancoDeDados/models/treinamento');
+const { Treinamento } = require('../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('./Certificados/certificados2.js');
 
 // Carregar todos os scripts de treinamento dinamicamente
