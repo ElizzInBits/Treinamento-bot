@@ -1982,3 +1982,249 @@ body.modal-open {
 .company-card:nth-child(3n+3) {
   animation-delay: 0.3s;
 }
+
+/* Estilos para Insights Avançados */
+.insights-section {
+  padding: 2rem;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.insights-section h3 {
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(15, 76, 92, 0.08);
+  border: 1px solid var(--gray-200);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.insight-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.insight-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(15, 76, 92, 0.15);
+}
+
+.insight-card:hover::before {
+  transform: scaleX(1);
+}
+
+.insight-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.insight-content h4 {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.top-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.top-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--white);
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+  transition: all 0.2s ease;
+}
+
+.top-item:hover {
+  background: var(--gray-50);
+  transform: translateX(5px);
+}
+
+.top-item .rank {
+  font-weight: 700;
+  color: var(--accent-color);
+  min-width: 30px;
+}
+
+.top-item .name {
+  flex: 1;
+  margin: 0 1rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-item .value {
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.metric-value {
+  text-align: center;
+}
+
+.metric-main {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.metric-sub {
+  font-size: 0.9rem;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.metric-value.positive .metric-main {
+  color: var(--success);
+}
+
+.metric-value.negative .metric-main {
+  color: var(--error);
+}
+
+.metric-value.excellent .metric-main {
+  color: var(--success);
+}
+
+.metric-value.good .metric-main {
+  color: var(--info);
+}
+
+.metric-value.average .metric-main {
+  color: var(--warning);
+}
+
+.metric-value.poor .metric-main {
+  color: var(--error);
+}
+
+/* Cabeçalhos dos gráficos com botões de refresh */
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.chart-header h4 {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.refresh-btn {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.refresh-btn:hover {
+  background: var(--primary-color);
+  color: var(--white);
+  transform: rotate(180deg);
+}
+
+/* Indicador de carregamento dos gráficos */
+.chart-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--gray-600);
+}
+
+.chart-loader .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--gray-200);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.chart-loader p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Responsividade para insights */
+@media (max-width: 768px) {
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .insight-card {
+    padding: 1.5rem;
+  }
+  
+  .insight-icon {
+    font-size: 2rem;
+  }
+  
+  .metric-main {
+    font-size: 2rem;
+  }
+  
+  .top-item .name {
+    font-size: 0.9rem;
+  }
+  
+  .chart-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .refresh-btn {
+    align-self: flex-end;
+  }
+}

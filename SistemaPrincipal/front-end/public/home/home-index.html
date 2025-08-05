@@ -90,25 +90,65 @@
             </div>
           </div>
 
+          <!-- Insights Avançados -->
+          <div class="insights-section">
+            <h3>Insights e Análises</h3>
+            <div class="insights-grid">
+              <div class="insight-card">
+                <div class="insight-icon">🏆</div>
+                <div class="insight-content">
+                  <h4>Top Empresas por Engajamento</h4>
+                  <div id="topEmpresas" class="top-list">Carregando...</div>
+                </div>
+              </div>
+              <div class="insight-card">
+                <div class="insight-icon">📈</div>
+                <div class="insight-content">
+                  <h4>Tendência de Crescimento</h4>
+                  <div id="tendenciaCrescimento" class="metric-value">Carregando...</div>
+                </div>
+              </div>
+              <div class="insight-card">
+                <div class="insight-icon">⚡</div>
+                <div class="insight-content">
+                  <h4>Eficiência do Sistema</h4>
+                  <div id="eficienciaSistema" class="metric-value">Carregando...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Gráficos -->
           <div class="charts-container">
             <div class="chart-row">
               <div class="chart-item">
-                <h4>Contatos por Empresa</h4>
+                <div class="chart-header">
+                  <h4>Contatos por Empresa</h4>
+                  <button class="refresh-btn" onclick="criarGraficoEmpresas()" title="Atualizar">🔄</button>
+                </div>
                 <canvas id="graficoEmpresas" width="400" height="200"></canvas>
               </div>
               <div class="chart-item">
-                <h4>Status de Treinamento</h4>
+                <div class="chart-header">
+                  <h4>Status de Treinamento</h4>
+                  <button class="refresh-btn" onclick="criarGraficoStatus()" title="Atualizar">🔄</button>
+                </div>
                 <canvas id="graficoStatus" width="400" height="200"></canvas>
               </div>
             </div>
             <div class="chart-row">
               <div class="chart-item">
-                <h4>Treinamentos por Modalidade</h4>
+                <div class="chart-header">
+                  <h4>Treinamentos por Modalidade</h4>
+                  <button class="refresh-btn" onclick="criarGraficoModalidades()" title="Atualizar">🔄</button>
+                </div>
                 <canvas id="graficoModalidades" width="400" height="200"></canvas>
               </div>
               <div class="chart-item">
-                <h4>Evolução Mensal</h4>
+                <div class="chart-header">
+                  <h4>Evolução Mensal</h4>
+                  <button class="refresh-btn" onclick="criarGraficoEvolucao()" title="Atualizar">🔄</button>
+                </div>
                 <canvas id="graficoEvolucao" width="400" height="200"></canvas>
               </div>
             </div>

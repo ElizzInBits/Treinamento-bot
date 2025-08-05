@@ -84,11 +84,26 @@ try {
     });
 }
 
+// 📊 Dashboard
+let dashboardRoutes;
+try {
+    console.log('📊 Carregando rota de dashboard...');
+    dashboardRoutes = require('./routes/dashboard.js');
+    console.log('✅ Rota de dashboard carregada com sucesso');
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de dashboard:', error.message);
+    dashboardRoutes = express.Router();
+    dashboardRoutes.get('/', (req, res) => {
+        res.json({ error: 'Rota de dashboard não pôde ser carregada', message: error.message });
+    });
+}
+
 // ✅ 6. Registrar rotas da API
 console.log('🔗 Registrando rotas da API...');
 app.use('/api/contatos', contatosRoutes);
 app.use('/api/treinamentos', treinamentosRoutes);
 app.use('/api/empresas', empresasRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // ✅ 7. Servir mídia (uploads) estáticos
 const midiaPath = path.join(__dirname, '..', 'media', 'treinamentos');
