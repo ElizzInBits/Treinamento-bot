@@ -227,12 +227,17 @@ router.get('/:id/treinamentos/disponiveis', async (req, res) => {
     const idsAtribuidos = treinamentosAtribuidos.map(t => t.treinamento_id);
     
     // Buscar treinamentos não atribuídos
-    const treinamentosDisponiveis = await Treinamento.findAll({
-      where: {
+    let whereClause = {};
+    if (idsAtribuidos.length > 0) {
+      whereClause = {
         id: {
           [Op.notIn]: idsAtribuidos
         }
-      },
+      };
+    }
+    
+    const treinamentosDisponiveis = await Treinamento.findAll({
+      where: whereClause,
       order: [['nome', 'ASC']]
     });
     
@@ -248,12 +253,25 @@ router.get('/:id/treinamentos/atribuidos', async (req, res) => {
   try {
     const empresaId = req.params.id;
     
+    // Buscar IDs dos treinamentos atribuídos
+    const empresaTreinamentos = await EmpresaTreinamento.findAll({
+      where: { empresa_id: empresaId },
+      attributes: ['treinamento_id']
+    });
+    
+    const idsAtribuidos = empresaTreinamentos.map(et => et.treinamento_id);
+    
+    if (idsAtribuidos.length === 0) {
+      return res.json([]);
+    }
+    
+    // Buscar os treinamentos pelos IDs
     const treinamentosAtribuidos = await Treinamento.findAll({
-      include: [{
-        model: EmpresaTreinamento,
-        where: { empresa_id: empresaId },
-        attributes: []
-      }],
+      where: {
+        id: {
+          [Op.in]: idsAtribuidos
+        }
+      },
       order: [['nome', 'ASC']]
     });
     
