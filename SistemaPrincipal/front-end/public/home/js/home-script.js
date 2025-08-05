@@ -61,18 +61,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 let graficoStatusInstance = null;
 
-function criarGraficoStatus() {
+async function criarGraficoStatus() {
   if (typeof Chart === 'undefined') {
     console.error('Chart.js não está carregado para gráfico de status');
     return;
   }
   
-  const totalContatos = contatos.length;
-  const comTreinamento = contatos.filter(c => c.treinamentoId).length;
-  const semTreinamento = totalContatos - comTreinamento;
-
-  const ctx2 = document.getElementById("graficoStatus");
-  if (!ctx2) {
+  const ctx = document.getElementById("graficoStatus");
+  if (!ctx) {
     console.log('Elemento graficoStatus não encontrado');
     return;
   }
@@ -82,35 +78,62 @@ function criarGraficoStatus() {
     graficoStatusInstance.destroy();
   }
   
-  const context = ctx2.getContext("2d");
-
-  graficoStatusInstance = new Chart(context, {
-    type: 'doughnut',
-    data: {
-      labels: ['Com Treinamento', 'Sem Treinamento'],
-      datasets: [{
-        data: [comTreinamento, semTreinamento],
-        backgroundColor: [
-          'rgba(110, 198, 202, 0.8)',
-          'rgba(254, 178, 0, 0.8)'
-        ],
-        borderColor: [
-          'rgba(110, 198, 202, 1)',
-          'rgba(254, 178, 0, 1)'
-        ],
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom'
-        }
-      }
+  try {
+    const response = await fetch('http://92.112.178.26:3000/api/dashboard/status-treinamento');
+    const dados = await response.json();
+    
+    if (dados.length === 0) {
+      ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+      return;
     }
-  });
+    
+    const labels = dados.map(d => d.status);
+    const valores = dados.map(d => parseInt(d.total));
+    const total = valores.reduce((a, b) => a + b, 0);
+    
+    graficoStatusInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: valores,
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.8)',  // Verde para "Com Treinamento"
+            'rgba(239, 68, 68, 0.8)'    // Vermelho para "Sem Treinamento"
+          ],
+          borderColor: [
+            'rgba(16, 185, 129, 1)',
+            'rgba(239, 68, 68, 1)'
+          ],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 20,
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                return `${context.label}: ${context.parsed} (${percentage}%)`;
+              }
+            }
+          }
+        },
+        cutout: '60%'
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao carregar dados do gráfico de status:', error);
+  }
 }
 
 
@@ -180,38 +203,136 @@ function mostrarAlerta(mensagem, tipo = 'success') {
   }, 5000);
 }
 
-// Atualizar estatísticas da aba Mapeamento (nova aba principal)
-function atualizarEstatisticasMapeamento() {
+// Atualizar estatísticas da aba Mapeamento com dados da API
+async function atualizarEstatisticasMapeamento() {
   try {
-    const totalContatos = contatos.length;
-    const contatosComTreinamento = contatos.filter(c => c.treinamentoId).length;
-    const empresasAtivas = empresas.length;
-    const treinamentosDisponiveis = treinamentos.length;
-    const percentualTreinados = totalContatos > 0 ? Math.round((contatosComTreinamento / totalContatos) * 100) : 0;
-    const mediaContatosPorEmpresa = empresasAtivas > 0 ? Math.round(totalContatos / empresasAtivas) : 0;
-    const empresasComContatos = empresas.filter(e => contatos.some(c => c.empresaId === e.id)).length;
-
+    const response = await fetch('http://92.112.178.26:3000/api/dashboard/stats');
+    const stats = await response.json();
+    
     // Atualizar os elementos da aba Mapeamento
     const elementos = {
-      'mapTotalContatos': totalContatos,
-      'mapContatosComTreinamento': contatosComTreinamento,
-      'mapEmpresasAtivas': empresasAtivas,
-      'mapTreinamentosDisponiveis': treinamentosDisponiveis,
-      'mapPercentualTreinados': percentualTreinados + '%',
-      'mapMediaContatos': mediaContatosPorEmpresa
+      'mapTotalContatos': stats.totalContatos || 0,
+      'mapContatosComTreinamento': stats.contatosComTreinamento || 0,
+      'mapEmpresasAtivas': stats.empresasAtivas || 0,
+      'mapTreinamentosDisponiveis': stats.totalTreinamentos || 0,
+      'mapPercentualTreinados': (stats.taxaTreinamento || 0) + '%',
+      'mapMediaContatos': stats.mediaContatosPorEmpresa || 0
     };
     
     Object.entries(elementos).forEach(([id, valor]) => {
       const elemento = document.getElementById(id);
       if (elemento) {
         elemento.textContent = valor;
-      } else {
-        console.log(`Elemento ${id} não encontrado`);
+        // Adicionar animação de atualização
+        elemento.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+          elemento.style.transform = 'scale(1)';
+        }, 200);
       }
     });
+    
+    // Atualizar gráficos e insights com dados reais
+    await Promise.all([
+      atualizarGraficos(),
+      carregarInsights()
+    ]);
+    
   } catch (error) {
     console.error('Erro ao atualizar estatísticas:', error);
+    // Fallback para dados locais se a API falhar
+    atualizarEstatisticasLocal();
   }
+}
+
+// Carregar insights avançados
+async function carregarInsights() {
+  try {
+    // Top empresas por engajamento
+    const topEmpresasResponse = await fetch('http://92.112.178.26:3000/api/dashboard/top-empresas');
+    const topEmpresas = await topEmpresasResponse.json();
+    
+    const topEmpresasElement = document.getElementById('topEmpresas');
+    if (topEmpresasElement && topEmpresas.length > 0) {
+      topEmpresasElement.innerHTML = topEmpresas.map((empresa, index) => `
+        <div class="top-item">
+          <span class="rank">#${index + 1}</span>
+          <span class="name">${empresa.razao_social}</span>
+          <span class="value">${empresa.taxaEngajamento}%</span>
+        </div>
+      `).join('');
+    }
+    
+    // Calcular tendência de crescimento
+    const evolucaoResponse = await fetch('http://92.112.178.26:3000/api/dashboard/evolucao-mensal');
+    const evolucao = await evolucaoResponse.json();
+    
+    const tendenciaElement = document.getElementById('tendenciaCrescimento');
+    if (tendenciaElement && evolucao.contatos.length >= 2) {
+      const ultimoMes = evolucao.contatos[evolucao.contatos.length - 1];
+      const penultimoMes = evolucao.contatos[evolucao.contatos.length - 2];
+      const crescimento = ultimoMes.total - penultimoMes.total;
+      const percentual = penultimoMes.total > 0 ? ((crescimento / penultimoMes.total) * 100).toFixed(1) : 0;
+      
+      tendenciaElement.innerHTML = `
+        <div class="metric-main">${crescimento > 0 ? '+' : ''}${crescimento}</div>
+        <div class="metric-sub">${percentual}% vs mês anterior</div>
+      `;
+      tendenciaElement.className = `metric-value ${crescimento >= 0 ? 'positive' : 'negative'}`;
+    }
+    
+    // Calcular eficiência do sistema
+    const statsResponse = await fetch('http://92.112.178.26:3000/api/dashboard/stats');
+    const stats = await statsResponse.json();
+    
+    const eficienciaElement = document.getElementById('eficienciaSistema');
+    if (eficienciaElement) {
+      const eficiencia = stats.totalContatos > 0 ? 
+        ((stats.contatosComTreinamento / stats.totalContatos) * 100).toFixed(1) : 0;
+      
+      eficienciaElement.innerHTML = `
+        <div class="metric-main">${eficiencia}%</div>
+        <div class="metric-sub">Taxa de conclusão</div>
+      `;
+      
+      // Definir cor baseada na eficiência
+      let className = 'metric-value ';
+      if (eficiencia >= 80) className += 'excellent';
+      else if (eficiencia >= 60) className += 'good';
+      else if (eficiencia >= 40) className += 'average';
+      else className += 'poor';
+      
+      eficienciaElement.className = className;
+    }
+    
+  } catch (error) {
+    console.error('Erro ao carregar insights:', error);
+  }
+}
+
+// Função de fallback com dados locais
+function atualizarEstatisticasLocal() {
+  const totalContatos = contatos.length;
+  const contatosComTreinamento = contatos.filter(c => c.treinamentoId).length;
+  const empresasAtivas = empresas.length;
+  const treinamentosDisponiveis = treinamentos.length;
+  const percentualTreinados = totalContatos > 0 ? Math.round((contatosComTreinamento / totalContatos) * 100) : 0;
+  const mediaContatosPorEmpresa = empresasAtivas > 0 ? Math.round(totalContatos / empresasAtivas) : 0;
+
+  const elementos = {
+    'mapTotalContatos': totalContatos,
+    'mapContatosComTreinamento': contatosComTreinamento,
+    'mapEmpresasAtivas': empresasAtivas,
+    'mapTreinamentosDisponiveis': treinamentosDisponiveis,
+    'mapPercentualTreinados': percentualTreinados + '%',
+    'mapMediaContatos': mediaContatosPorEmpresa
+  };
+  
+  Object.entries(elementos).forEach(([id, valor]) => {
+    const elemento = document.getElementById(id);
+    if (elemento) {
+      elemento.textContent = valor;
+    }
+  });
 }
 
 
@@ -2177,10 +2298,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Gráfico de Empresas
+// Gráfico de Empresas com dados da API
 let graficoEmpresasInstance = null;
 
-function criarGraficoEmpresas() {
+async function criarGraficoEmpresas() {
   if (typeof Chart === 'undefined') return;
   
   const ctx = document.getElementById('graficoEmpresas');
@@ -2190,65 +2311,88 @@ function criarGraficoEmpresas() {
     graficoEmpresasInstance.destroy();
   }
   
-  // Usar dados locais
-  const dadosEmpresas = empresas.map(empresa => {
-    const contatosEmpresa = contatos.filter(c => c.empresaId === empresa.id);
-    return {
-      nome: empresa.razao_social,
-      total: contatosEmpresa.length
-    };
-  }).filter(e => e.total > 0);
-  
-  if (dadosEmpresas.length === 0) {
-    console.log('Nenhuma empresa com contatos');
-    return;
-  }
-  
-  const labels = dadosEmpresas.map(e => e.nome);
-  const valores = dadosEmpresas.map(e => e.total);
-  
-  graficoEmpresasInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Contatos',
-        data: valores,
-        backgroundColor: 'rgba(15, 76, 92, 0.8)',
-        borderColor: 'rgba(15, 76, 92, 1)',
-        borderWidth: 2,
-        borderRadius: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        }
+  try {
+    const response = await fetch('http://92.112.178.26:3000/api/dashboard/empresas-contatos');
+    const dadosEmpresas = await response.json();
+    
+    if (dadosEmpresas.length === 0) {
+      ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+      return;
+    }
+    
+    const labels = dadosEmpresas.map(e => e.razao_social.length > 20 ? e.razao_social.substring(0, 20) + '...' : e.razao_social);
+    const valores = dadosEmpresas.map(e => parseInt(e.totalContatos));
+    const valoresComTreinamento = dadosEmpresas.map(e => parseInt(e.contatosComTreinamento));
+    
+    graficoEmpresasInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total de Contatos',
+          data: valores,
+          backgroundColor: 'rgba(15, 76, 92, 0.8)',
+          borderColor: 'rgba(15, 76, 92, 1)',
+          borderWidth: 2,
+          borderRadius: 4
+        }, {
+          label: 'Com Treinamento',
+          data: valoresComTreinamento,
+          backgroundColor: 'rgba(110, 198, 202, 0.8)',
+          borderColor: 'rgba(110, 198, 202, 1)',
+          borderWidth: 2,
+          borderRadius: 4
+        }]
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(0,0,0,0.1)'
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            callbacks: {
+              afterLabel: function(context) {
+                const empresa = dadosEmpresas[context.dataIndex];
+                const taxa = empresa.totalContatos > 0 ? 
+                  Math.round((empresa.contatosComTreinamento / empresa.totalContatos) * 100) : 0;
+                return `Taxa de treinamento: ${taxa}%`;
+              }
+            }
           }
         },
-        x: {
-          grid: {
-            display: false
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0,0,0,0.1)'
+            },
+            ticks: {
+              stepSize: 1
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              maxRotation: 45
+            }
           }
         }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error('Erro ao carregar dados do gráfico de empresas:', error);
+  }
 }
 
-// Gráfico de Modalidades
+// Gráfico de Modalidades com dados da API
 let graficoModalidadesInstance = null;
 
-function criarGraficoModalidades() {
+async function criarGraficoModalidades() {
   if (typeof Chart === 'undefined') return;
   
   const ctx = document.getElementById('graficoModalidades');
@@ -2258,45 +2402,70 @@ function criarGraficoModalidades() {
     graficoModalidadesInstance.destroy();
   }
   
-  const modalidades = {};
-  treinamentos.forEach(t => {
-    const modalidade = t.modalidade || 'Não informado';
-    modalidades[modalidade] = (modalidades[modalidade] || 0) + 1;
-  });
-  
-  const labels = Object.keys(modalidades);
-  const dados = Object.values(modalidades);
-  
-  graficoModalidadesInstance = new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: dados,
-        backgroundColor: [
-          'rgba(15, 76, 92, 0.8)',
-          'rgba(110, 198, 202, 0.8)',
-          'rgba(230, 165, 0, 0.8)',
-          'rgba(16, 185, 129, 0.8)'
-        ]
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom'
+  try {
+    const response = await fetch('http://92.112.178.26:3000/api/dashboard/modalidades');
+    const modalidades = await response.json();
+    
+    if (modalidades.length === 0) {
+      ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+      return;
+    }
+    
+    const labels = modalidades.map(m => m.modalidade);
+    const dados = modalidades.map(m => parseInt(m.total));
+    
+    const cores = [
+      'rgba(15, 76, 92, 0.8)',
+      'rgba(110, 198, 202, 0.8)',
+      'rgba(230, 165, 0, 0.8)',
+      'rgba(16, 185, 129, 0.8)',
+      'rgba(239, 68, 68, 0.8)',
+      'rgba(139, 92, 246, 0.8)'
+    ];
+    
+    graficoModalidadesInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: dados,
+          backgroundColor: cores.slice(0, labels.length),
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 20,
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const total = dados.reduce((a, b) => a + b, 0);
+                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                return `${context.label}: ${context.parsed} (${percentage}%)`;
+              }
+            }
+          }
         }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error('Erro ao carregar dados do gráfico de modalidades:', error);
+  }
 }
 
-// Gráfico de Evolução
+// Gráfico de Evolução com dados da API
 let graficoEvolucaoInstance = null;
 
-function criarGraficoEvolucao() {
+async function criarGraficoEvolucao() {
   if (typeof Chart === 'undefined') return;
   
   const ctx = document.getElementById('graficoEvolucao');
@@ -2306,54 +2475,161 @@ function criarGraficoEvolucao() {
     graficoEvolucaoInstance.destroy();
   }
   
-  // Simular dados de evolução mensal
-  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
-  const contatosData = [10, 25, 40, 65, 80, contatos.length];
-  const treinamentosData = [2, 4, 6, 8, 10, treinamentos.length];
-  
-  graficoEvolucaoInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: meses,
-      datasets: [{
-        label: 'Contatos',
-        data: contatosData,
-        borderColor: 'rgba(15, 76, 92, 1)',
-        backgroundColor: 'rgba(15, 76, 92, 0.1)',
-        tension: 0.4
-      }, {
-        label: 'Treinamentos',
-        data: treinamentosData,
-        borderColor: 'rgba(110, 198, 202, 1)',
-        backgroundColor: 'rgba(110, 198, 202, 0.1)',
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true
-        }
+  try {
+    const response = await fetch('http://92.112.178.26:3000/api/dashboard/evolucao-mensal');
+    const dados = await response.json();
+    
+    // Processar dados para o gráfico
+    const mesesMap = new Map();
+    
+    // Adicionar dados de contatos
+    dados.contatos.forEach(item => {
+      const mesFormatado = formatarMes(item.mes);
+      if (!mesesMap.has(mesFormatado)) {
+        mesesMap.set(mesFormatado, { contatos: 0, treinamentos: 0 });
+      }
+      mesesMap.get(mesFormatado).contatos = parseInt(item.total);
+    });
+    
+    // Adicionar dados de treinamentos
+    dados.treinamentos.forEach(item => {
+      const mesFormatado = formatarMes(item.mes);
+      if (!mesesMap.has(mesFormatado)) {
+        mesesMap.set(mesFormatado, { contatos: 0, treinamentos: 0 });
+      }
+      mesesMap.get(mesFormatado).treinamentos = parseInt(item.total);
+    });
+    
+    // Converter para arrays ordenados
+    const mesesOrdenados = Array.from(mesesMap.keys()).sort();
+    const contatosData = mesesOrdenados.map(mes => mesesMap.get(mes).contatos);
+    const treinamentosData = mesesOrdenados.map(mes => mesesMap.get(mes).treinamentos);
+    
+    graficoEvolucaoInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: mesesOrdenados,
+        datasets: [{
+          label: 'Novos Contatos',
+          data: contatosData,
+          borderColor: 'rgba(15, 76, 92, 1)',
+          backgroundColor: 'rgba(15, 76, 92, 0.1)',
+          tension: 0.4,
+          fill: true
+        }, {
+          label: 'Novos Treinamentos',
+          data: treinamentosData,
+          borderColor: 'rgba(110, 198, 202, 1)',
+          backgroundColor: 'rgba(110, 198, 202, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
       },
-      plugins: {
-        legend: {
-          position: 'top'
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0,0,0,0.1)'
+            },
+            ticks: {
+              stepSize: 1
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top'
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            titleColor: 'white',
+            bodyColor: 'white'
+          }
         }
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao carregar dados do gráfico de evolução:', error);
+  }
+}
+
+// Função auxiliar para formatar mês
+function formatarMes(mesAno) {
+  const [ano, mes] = mesAno.split('-');
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  return `${meses[parseInt(mes) - 1]} ${ano.slice(-2)}`;
+}
+
+// Atualizar todos os gráficos com dados da API
+async function atualizarGraficos() {
+  try {
+    // Mostrar indicador de carregamento
+    mostrarCarregandoGraficos(true);
+    
+    // Atualizar todos os gráficos em paralelo
+    await Promise.all([
+      criarGraficoEmpresas(),
+      criarGraficoStatus(),
+      criarGraficoModalidades(),
+      criarGraficoEvolucao()
+    ]);
+    
+    // Ocultar indicador de carregamento
+    mostrarCarregandoGraficos(false);
+    
+  } catch (error) {
+    console.error('Erro ao atualizar gráficos:', error);
+    mostrarCarregandoGraficos(false);
+  }
+}
+
+// Função para mostrar/ocultar indicador de carregamento dos gráficos
+function mostrarCarregandoGraficos(mostrar) {
+  const graficos = ['graficoEmpresas', 'graficoStatus', 'graficoModalidades', 'graficoEvolucao'];
+  
+  graficos.forEach(id => {
+    const canvas = document.getElementById(id);
+    if (canvas) {
+      const container = canvas.parentElement;
+      let loader = container.querySelector('.chart-loader');
+      
+      if (mostrar) {
+        if (!loader) {
+          loader = document.createElement('div');
+          loader.className = 'chart-loader';
+          loader.innerHTML = '<div class="loading-spinner"></div><p>Carregando dados...</p>';
+          loader.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+          `;
+          container.style.position = 'relative';
+          container.appendChild(loader);
+        }
+        canvas.style.opacity = '0.3';
+      } else {
+        if (loader) {
+          loader.remove();
+        }
+        canvas.style.opacity = '1';
       }
     }
   });
-}
-
-// Atualizar gráfico de status quando dados mudarem
-function atualizarGraficos() {
-  setTimeout(() => {
-    criarGraficoEmpresas();
-    criarGraficoStatus();
-    criarGraficoModalidades();
-    criarGraficoEvolucao();
-  }, 500);
 }
 
 // Funções para gerenciar treinamentos das empresas
