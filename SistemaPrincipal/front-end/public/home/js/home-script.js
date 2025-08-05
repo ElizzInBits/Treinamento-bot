@@ -474,11 +474,14 @@ function renderizarEmpresas() {
           </div>
         </div>
         <div class="company-actions">
-          <button class="btn-primary" onclick="visualizarContatosEmpresa(${empresa.id})">
-            Ver Contatos
+          <button class="btn-primary" onclick="visualizarContatosEmpresa(${empresa.id})" title="Visualizar contatos da empresa">
+            👥 Contatos
           </button>
-          <button class="btn-info" onclick="abrirDetalhesEmpresa(${empresa.id})">
-            Detalhes/Editar
+          <button class="btn-secondary" onclick="abrirModalTreinamentosEmpresa(${empresa.id})" title="Gerenciar treinamentos da empresa">
+            📚 Treinamentos
+          </button>
+          <button class="btn-info" onclick="abrirDetalhesEmpresa(${empresa.id})" title="Ver detalhes e editar empresa">
+            ⚙️ Detalhes
           </button>
         </div>
       </div>
@@ -2751,6 +2754,13 @@ function abrirModalTreinamentosEmpresa(empresaId) {
 }
 
 function atribuirTreinamento(empresaId, treinamentoId) {
+  // Feedback visual imediato
+  const button = event.target;
+  const originalText = button.innerHTML;
+  button.innerHTML = '⏳ Atribuindo...';
+  button.disabled = true;
+  button.style.opacity = '0.7';
+  
   fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
     method: 'POST'
   })
@@ -2759,14 +2769,33 @@ function atribuirTreinamento(empresaId, treinamentoId) {
       return res.json();
     })
     .then(() => {
-      mostrarAlerta('Treinamento atribuído com sucesso!');
-      abrirModalTreinamentosEmpresa(empresaId);
+      // Animação de sucesso
+      button.innerHTML = '✅ Atribuído!';
+      button.style.background = 'linear-gradient(135deg, var(--success), #059669)';
+      
+      setTimeout(() => {
+        mostrarAlerta('🎉 Treinamento atribuído com sucesso!', 'success');
+        abrirModalTreinamentosEmpresa(empresaId);
+      }, 800);
     })
-    .catch(() => mostrarAlerta('Erro ao atribuir treinamento.', 'error'));
+    .catch(() => {
+      // Restaurar estado original em caso de erro
+      button.innerHTML = originalText;
+      button.disabled = false;
+      button.style.opacity = '1';
+      mostrarAlerta('❌ Erro ao atribuir treinamento.', 'error');
+    });
 }
 
 function removerTreinamentoEmpresa(empresaId, treinamentoId) {
-  if (!confirm('Tem certeza que deseja remover este treinamento da empresa?')) return;
+  if (!confirm('⚠️ Tem certeza que deseja remover este treinamento da empresa?\n\nEsta ação não pode ser desfeita.')) return;
+  
+  // Feedback visual imediato
+  const button = event.target;
+  const originalText = button.innerHTML;
+  button.innerHTML = '⏳ Removendo...';
+  button.disabled = true;
+  button.style.opacity = '0.7';
   
   fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
     method: 'DELETE'
@@ -2776,10 +2805,22 @@ function removerTreinamentoEmpresa(empresaId, treinamentoId) {
       return res.json();
     })
     .then(() => {
-      mostrarAlerta('Treinamento removido da empresa!');
-      abrirModalTreinamentosEmpresa(empresaId);
+      // Animação de sucesso
+      button.innerHTML = '✅ Removido!';
+      button.style.background = 'linear-gradient(135deg, var(--warning), #d97706)';
+      
+      setTimeout(() => {
+        mostrarAlerta('🗑️ Treinamento removido da empresa!', 'success');
+        abrirModalTreinamentosEmpresa(empresaId);
+      }, 800);
     })
-    .catch(() => mostrarAlerta('Erro ao remover treinamento.', 'error'));
+    .catch(() => {
+      // Restaurar estado original em caso de erro
+      button.innerHTML = originalText;
+      button.disabled = false;
+      button.style.opacity = '1';
+      mostrarAlerta('❌ Erro ao remover treinamento.', 'error');
+    });
 }
 
 function fecharModalTreinamentosEmpresa() {
@@ -2791,7 +2832,17 @@ function abrirDetalhesEmpresa(empresaId) {
   const empresa = empresas.find(e => e.id === empresaId);
   if (!empresa) return;
 
-  document.getElementById('modalTituloDetalhesEmpresa').textContent = `Detalhes - ${empresa.razao_social || empresa.razaoSocial || 'Empresa'}`;
+  document.getElementById('modalTituloDetalhesEmpresa').textContent = `🏢 Detalhes - ${empresa.razao_social || empresa.razaoSocial || 'Empresa'}`;
+  
+  // Mostrar loading
+  document.getElementById('conteudoDetalhesEmpresa').innerHTML = `
+    <div class="treinamentos-loading">
+      <div class="loading-spinner"></div>
+      <p>Carregando detalhes da empresa...</p>
+    </div>
+  `;
+  
+  document.getElementById('modalDetalhesEmpresa').style.display = 'block';
   
   // Carregar dados completos da empresa
   fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/completo`)
@@ -2799,78 +2850,141 @@ function abrirDetalhesEmpresa(empresaId) {
     .then(empresaCompleta => {
       const treinamentosEmpresa = empresaCompleta.treinamentos || [];
       const contatosEmpresa = empresaCompleta.contatos || [];
+      const contatosComTreinamento = contatosEmpresa.filter(c => c.treinamentoId);
       
       document.getElementById('conteudoDetalhesEmpresa').innerHTML = `
         <div class="empresa-detalhes">
+          <!-- Estatísticas da empresa -->
+          <div class="empresa-stats-visual">
+            <div class="stat-card">
+              <span class="stat-number">${contatosEmpresa.length}</span>
+              <span class="stat-label">👥 Contatos</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number">${treinamentosEmpresa.length}</span>
+              <span class="stat-label">📚 Treinamentos</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number">${contatosComTreinamento.length}</span>
+              <span class="stat-label">🎓 Treinados</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number">${contatosEmpresa.length > 0 ? Math.round((contatosComTreinamento.length / contatosEmpresa.length) * 100) : 0}%</span>
+              <span class="stat-label">📈 Taxa</span>
+            </div>
+          </div>
+          
           <form id="editarEmpresaForm" class="professional-form">
             <div class="form-section">
-              <h4>Dados da Empresa</h4>
+              <h4 data-section="dados">🏢 Dados da Empresa</h4>
               <div class="form-row">
                 <div class="form-group">
-                  <label>Razão Social</label>
-                  <input type="text" id="editRazaoSocial" value="${empresa.razao_social || empresa.razaoSocial || ''}" class="form-control" />
+                  <label>📋 Razão Social <span class="required">*</span></label>
+                  <input type="text" id="editRazaoSocial" value="${empresa.razao_social || empresa.razaoSocial || ''}" class="form-control" required />
                 </div>
                 <div class="form-group">
-                  <label>CNPJ</label>
-                  <input type="text" id="editCnpj" value="${empresa.cnpj || ''}" class="form-control" />
+                  <label>🏛️ CNPJ</label>
+                  <input type="text" id="editCnpj" value="${empresa.cnpj || ''}" class="form-control" placeholder="00.000.000/0000-00" />
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label>Email</label>
-                  <input type="email" id="editEmail" value="${empresa.email || ''}" class="form-control" />
+                  <label>📧 Email</label>
+                  <input type="email" id="editEmail" value="${empresa.email || ''}" class="form-control" placeholder="empresa@exemplo.com" />
                 </div>
                 <div class="form-group">
-                  <label>Telefone</label>
-                  <input type="text" id="editTelefone" value="${empresa.contato || ''}" class="form-control" />
+                  <label>📞 Telefone</label>
+                  <input type="text" id="editTelefone" value="${empresa.contato || ''}" class="form-control" placeholder="(00) 00000-0000" />
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label>Endereço</label>
-                  <input type="text" id="editEndereco" value="${empresa.endereco || ''}" class="form-control" />
+                  <label>🏠 Endereço</label>
+                  <input type="text" id="editEndereco" value="${empresa.endereco || ''}" class="form-control" placeholder="Rua, número, bairro" />
                 </div>
                 <div class="form-group">
-                  <label>CEP</label>
-                  <input type="text" id="editCep" value="${empresa.cep || ''}" class="form-control" />
+                  <label>📮 CEP</label>
+                  <input type="text" id="editCep" value="${empresa.cep || ''}" class="form-control" placeholder="00000-000" />
                 </div>
               </div>
               <div class="form-actions">
                 <button type="button" class="btn-primary" onclick="salvarEmpresa(${empresaId})">
-                  Salvar Alterações
+                  💾 Salvar Alterações
                 </button>
               </div>
             </div>
           </form>
           
           <div class="form-section">
-            <h4>Treinamentos Atribuídos (${treinamentosEmpresa.length})</h4>
+            <h4 data-section="treinamentos">📚 Treinamentos Atribuídos</h4>
+            <div class="contador-itens">
+              <span class="contador-texto">Total de treinamentos:</span>
+              <span class="contador-numero">${treinamentosEmpresa.length}</span>
+            </div>
+            
             <div class="treinamentos-atribuidos">
-              ${treinamentosEmpresa.length > 0 ? treinamentosEmpresa.map(t => `
-                <div class="treinamento-item">
+              ${treinamentosEmpresa.length > 0 ? treinamentosEmpresa.map((t, index) => `
+                <div class="treinamento-item" style="animation-delay: ${index * 0.1}s">
                   <div class="treinamento-info">
                     <strong>${t.nome}</strong>
-                    <p>${t.modalidade} - ${t.cargaHoraria}h</p>
+                    <p>🎯 ${t.modalidade} - ⏱️ ${t.cargaHoraria}h</p>
+                    ${t.instrutor ? `<small style="color: var(--gray-500); margin-top: 0.25rem; display: block;">👨‍🏫 ${t.instrutor}</small>` : ''}
+                    <div class="status-badge ativo" style="margin-top: 0.5rem;">
+                      <span>🟢</span> Ativo
+                    </div>
                   </div>
-                  <button class="btn-error btn-small" onclick="removerTreinamentoEmpresa(${empresaId}, ${t.id})">
-                    Remover
+                  <button class="btn-error btn-small" onclick="removerTreinamentoEmpresa(${empresaId}, ${t.id})" title="Remover treinamento da empresa">
+                    ❌ Remover
                   </button>
                 </div>
-              `).join('') : '<p>Nenhum treinamento atribuído</p>'}
+              `).join('') : `
+                <div style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                  <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+                  <p>Nenhum treinamento atribuído ainda</p>
+                  <p style="font-size: 0.9rem; margin-top: 0.5rem;">Use o botão abaixo para gerenciar treinamentos</p>
+                </div>
+              `}
             </div>
-            <button class="btn-secondary" onclick="fecharModalDetalhesEmpresa(); abrirModalTreinamentosEmpresa(${empresaId})">
-              Gerenciar Treinamentos
-            </button>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+              <button class="btn-secondary" onclick="fecharModalDetalhesEmpresa(); abrirModalTreinamentosEmpresa(${empresaId})" style="flex: 1;">
+                ⚙️ Gerenciar Treinamentos
+              </button>
+              <button class="btn-info" onclick="fecharModalDetalhesEmpresa(); visualizarContatosEmpresa(${empresaId})" style="flex: 1;">
+                👥 Ver Contatos
+              </button>
+            </div>
+            
+            <!-- Progresso visual -->
+            <div class="progress-indicator" style="margin-top: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-weight: 500; color: var(--gray-700);">📊 Taxa de Treinamento</span>
+                <span style="font-weight: 600; color: var(--primary-color);">${contatosEmpresa.length > 0 ? Math.round((contatosComTreinamento.length / contatosEmpresa.length) * 100) : 0}%</span>
+              </div>
+              <div class="progress-bar-custom">
+                <div class="progress-fill-custom" style="width: ${contatosEmpresa.length > 0 ? Math.round((contatosComTreinamento.length / contatosEmpresa.length) * 100) : 0}%"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--gray-500); margin-top: 0.25rem;">
+                <span>${contatosComTreinamento.length} treinados</span>
+                <span>${contatosEmpresa.length - contatosComTreinamento.length} pendentes</span>
+              </div>
+            </div>
           </div>
-          
-
         </div>
       `;
-      
-      document.getElementById('modalDetalhesEmpresa').style.display = 'block';
     })
     .catch(error => {
       console.error('Erro ao carregar detalhes:', error);
+      document.getElementById('conteudoDetalhesEmpresa').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">⚠️</div>
+          <h3>Erro ao carregar dados</h3>
+          <p>Não foi possível carregar os detalhes da empresa. Tente novamente.</p>
+          <button class="btn-primary" onclick="abrirDetalhesEmpresa(${empresaId})">
+            🔄 Tentar Novamente
+          </button>
+        </div>
+      `;
       mostrarAlerta('Erro ao carregar detalhes da empresa.', 'error');
     });
 }
