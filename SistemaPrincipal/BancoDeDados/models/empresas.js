@@ -55,6 +55,12 @@ module.exports = (sequelize) => {
 
   Empresa.associate = (models) => {
     Empresa.hasMany(models.Contato, { foreignKey: 'empresaId', as: 'contatos' });
+    Empresa.belongsToMany(models.Treinamento, {
+      through: models.EmpresaTreinamento,
+      foreignKey: 'empresa_id',
+      otherKey: 'treinamento_id',
+      as: 'treinamentos'
+    });
   };
 
   return Empresa;

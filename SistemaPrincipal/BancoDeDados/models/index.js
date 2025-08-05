@@ -5,13 +5,15 @@ const { sequelize } = require('../database');
 const EmpresaModel = require('./empresas');
 const ContatoModel = require('./contato');
 const InteracaoModel = require('./interacao');
-const EmpresaTreinamentoModel = require('./empresaTreinamento'); 
+const EmpresaTreinamentoModel = require('./empresaTreinamento');
+const TreinamentoModel = require('./treinamento');
 
 // Inicializa os modelos
 const Empresa = EmpresaModel(sequelize, Sequelize.DataTypes);
 const Contato = ContatoModel(sequelize, Sequelize.DataTypes);
 const Interacao = InteracaoModel(sequelize, Sequelize.DataTypes);
 const EmpresaTreinamento = EmpresaTreinamentoModel(sequelize, Sequelize.DataTypes);
+const Treinamento = TreinamentoModel(sequelize, Sequelize.DataTypes);
 
 // Cria o objeto com todos os modelos
 const models = {
@@ -19,6 +21,7 @@ const models = {
   Contato,
   Interacao,
   EmpresaTreinamento,
+  Treinamento,
 };
 
 // Faz as associações

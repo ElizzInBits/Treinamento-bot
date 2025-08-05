@@ -1,5 +1,5 @@
-const { Empresa, Contato, sequelize } = require('../../BancoDeDados/models');
-const { fn, col } = require('sequelize');
+const { Empresa, Contato, Treinamento, EmpresaTreinamento, sequelize } = require('../../BancoDeDados/models');
+const { fn, col, Op } = require('sequelize');
 const express = require('express');
 const router = express.Router();
 
@@ -182,6 +182,81 @@ router.get('/select/options', async (req, res) => {
   } catch (error) {
     console.error('Erro ao buscar empresas:', error);
     res.status(500).json({ error: 'Erro ao carregar empresas' });
+  }
+});
+
+// Buscar empresa completa com treinamentos e contatos
+router.get('/:id/completo', async (req, res) => {
+  try {
+    const empresa = await Empresa.findByPk(req.params.id, {
+      include: [
+        {
+          model: Contato,
+          as: 'contatos'
+        },
+        {
+          model: Treinamento,
+          as: 'treinamentos',
+          through: { attributes: [] }
+        }
+      ]
+    });
+    
+    if (!empresa) {
+      return res.status(404).json({ error: 'Empresa não encontrada' });
+    }
+    
+    res.json(empresa);
+  } catch (error) {
+    console.error('Erro ao buscar empresa completa:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Listar treinamentos disponíveis
+router.get('/treinamentos/disponiveis', async (req, res) => {
+  try {
+    const treinamentos = await Treinamento.findAll({
+      order: [['nome', 'ASC']]
+    });
+    res.json(treinamentos);
+  } catch (error) {
+    console.error('Erro ao buscar treinamentos disponíveis:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Atribuir treinamentos à empresa
+router.post('/:id/treinamentos', async (req, res) => {
+  try {
+    const { treinamentosIds } = req.body;
+    const empresaId = req.params.id;
+    
+    // Verificar se empresa existe
+    const empresa = await Empresa.findByPk(empresaId);
+    if (!empresa) {
+      return res.status(404).json({ error: 'Empresa não encontrada' });
+    }
+    
+    // Remover associações existentes
+    await EmpresaTreinamento.destroy({
+      where: { empresa_id: empresaId }
+    });
+    
+    // Criar novas associações
+    if (treinamentosIds && treinamentosIds.length > 0) {
+      const associacoes = treinamentosIds.map(treinamentoId => ({
+        empresa_id: empresaId,
+        treinamento_id: treinamentoId
+      }));
+      
+      await EmpresaTreinamento.bulkCreate(associacoes);
+    }
+    
+    res.json({ message: 'Treinamentos atualizados com sucesso' });
+  } catch (error) {
+    console.error('Erro ao atribuir treinamentos:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 

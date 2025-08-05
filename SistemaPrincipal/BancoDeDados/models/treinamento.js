@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../database');
 
-const Treinamento = sequelize.define('Treinamento', {
+module.exports = (sequelize) => {
+  const Treinamento = sequelize.define('Treinamento', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -70,18 +70,25 @@ const Treinamento = sequelize.define('Treinamento', {
     type: DataTypes.TEXT, 
     allowNull: true,
   }
-}, {
-  tableName: 'treinamento',
-  timestamps: true,
-  underscored: true,
-});
-
-Treinamento.associate = (models) => {
-  Treinamento.belongsToMany(models.Contato, {
-    through: 'ContatoTreinamentos',
-    foreignKey: 'treinamentoId',
-    otherKey: 'contatoId'
+  }, {
+    tableName: 'treinamento',
+    timestamps: true,
+    underscored: true,
   });
-};
 
-module.exports = Treinamento;
+  Treinamento.associate = (models) => {
+    Treinamento.belongsToMany(models.Contato, {
+      through: 'ContatoTreinamentos',
+      foreignKey: 'treinamentoId',
+      otherKey: 'contatoId'
+    });
+    Treinamento.belongsToMany(models.Empresa, {
+      through: models.EmpresaTreinamento,
+      foreignKey: 'treinamento_id',
+      otherKey: 'empresa_id',
+      as: 'empresas'
+    });
+  };
+
+  return Treinamento;
+};
