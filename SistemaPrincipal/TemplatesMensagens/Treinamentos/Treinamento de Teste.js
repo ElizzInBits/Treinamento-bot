@@ -108,7 +108,8 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     
     // PRIMEIRO: Confirmação de dados - por selectedId OU por texto
     if (selectedId === 'dados_corretos_teste' || 
-        (ultimaInteracao?.tipo === 'confirmacao_dados_teste' && RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
+        (ultimaInteracao?.tipo === 'confirmacao_dados_teste' && RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase()))) ||
+        (contato.statusTreinamento === 'concluído' && RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
         console.log(`✅ Confirmando dados para certificado`);
         await sendMessage(sender, 'send-message', {
             message: '✅ Dados confirmados! Gerando seu certificado...',
@@ -119,7 +120,8 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     
     // Dados incorretos
     if (selectedId === 'dados_incorretos_teste' || 
-        (ultimaInteracao?.tipo === 'confirmacao_dados_teste' && RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
+        (ultimaInteracao?.tipo === 'confirmacao_dados_teste' && RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase()))) ||
+        (contato.statusTreinamento === 'concluído' && RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
         console.log(`❌ Dados incorretos, solicitando correção`);
         await sendMessage(sender, 'send-message', {
             message: '📝 Para corrigir seus dados, por favor, entre em contato com o suporte.',
