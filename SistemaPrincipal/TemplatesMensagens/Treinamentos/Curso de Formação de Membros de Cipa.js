@@ -157,7 +157,9 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     }
 
     // Continuar para o quiz
-    if (text === '1' && ultimaInteracao?.tipo === 'aguardando_numero_cipa') {
+    console.log(`🔍 [DEBUG CIPA] Verificando número 1 - text: '${text}', textLower: '${textLower}', ultimaInteracao.tipo: '${ultimaInteracao?.tipo}'`);
+    if ((text === '1' || textLower === '1') && ultimaInteracao?.tipo === 'aguardando_numero_cipa') {
+        console.log(`➡️ Continuando para o quiz CIPA`);
         await sendMessage(sender, 'send-message', {
             message: 'Perfeito! 🎯\n\nAgora vamos testar seus conhecimentos! 🧠 💡',
         });
