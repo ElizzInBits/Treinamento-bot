@@ -246,8 +246,42 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
     if (selectedId === 'dados_incorretos_cipa' || 
         (ultimaInteracao?.tipo === 'confirmacao_dados_cipa' && RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
         await sendMessage(sender, 'send-message', {
-            message: '📝 Para corrigir seus dados, por favor, entre em contato com o suporte.',
+            message: '📝 Para corrigir seus dados, me envie seu nome completo correto:',
         });
+        await salvarInteracao(sender, 'corrigir_nome_cipa', 'Por favor, me envie seu nome completo correto.');
+        return true;
+    }
+
+    // Correção de nome
+    if (ultimaInteracao?.tipo === 'corrigir_nome_cipa') {
+        contato.nomeCompleto = text.trim();
+        await contato.save();
+
+        await sendMessage(sender, 'send-message', {
+            message: '👍 Nome atualizado! Agora, me envie seu e-mail correto:',
+        });
+        await salvarInteracao(sender, 'corrigir_email_cipa', 'Por favor, me envie seu e-mail correto.');
+        return true;
+    }
+
+    // Correção de email
+    if (ultimaInteracao?.tipo === 'corrigir_email_cipa') {
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(text.trim())) {
+            await sendMessage(sender, 'send-message', {
+                message: '⚠️ E-mail inválido! Por favor, insira um e-mail válido:',
+            });
+            await salvarInteracao(sender, 'corrigir_email_cipa', 'Por favor, me envie seu e-mail correto.');
+            return true;
+        }
+
+        contato.email = text.trim();
+        await contato.save();
+
+        await sendMessage(sender, 'send-message', {
+            message: '✅ E-mail atualizado! Gerando seu certificado...',
+        });
+        await gerarEEnviarCertificadoCipa(contato, sender);
         return true;
     }
 
