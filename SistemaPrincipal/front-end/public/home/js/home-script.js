@@ -2876,7 +2876,7 @@ function abrirDetalhesEmpresa(empresaId) {
           
           <form id="editarEmpresaForm" class="professional-form">
             <div class="form-section">
-              <h4 data-section="dados">🏢 Dados da Empresa</h4>
+              <h4 data-section="dados"> Dados da Empresa</h4>
               <div class="form-row">
                 <div class="form-group">
                   <label>📋 Razão Social <span class="required">*</span></label>
