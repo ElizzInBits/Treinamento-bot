@@ -80,6 +80,37 @@
         </button>
       </form>
     </div>
+
+    <!-- Seção de Gerenciamento de Treinamentos -->
+    <div class="training-management-section" id="trainingSection" style="display: none;">
+      <h2><span>🎓</span> Gerenciar Treinamentos</h2>
+      
+      <div class="training-container">
+        <!-- Treinamentos Atribuídos -->
+        <div class="training-column assigned-trainings">
+          <h3>📝 Treinamentos Atribuídos</h3>
+          <div class="training-list" id="assignedTrainingsList">
+            <div class="loading">Carregando...</div>
+          </div>
+        </div>
+
+        <!-- Treinamentos Disponíveis -->
+        <div class="training-column available-trainings">
+          <h3>➕ Treinamentos Disponíveis</h3>
+          <div class="training-list" id="availableTrainingsList">
+            <div class="loading">Carregando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Empresas -->
+    <div class="companies-list-section">
+      <h2><span>🏢</span> Empresas Cadastradas</h2>
+      <div class="companies-grid" id="companiesGrid">
+        <div class="loading">Carregando empresas...</div>
+      </div>
+    </div>
   </div>
 
   <script src="/empreCadastro/js/empre-script.js" defer></script>
