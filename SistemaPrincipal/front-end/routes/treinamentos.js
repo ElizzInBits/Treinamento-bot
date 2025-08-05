@@ -77,9 +77,11 @@ router.post('/', (req, res) => {
         conteudoProgramatico,
         instrutor,
         qualificacaoInstrutor = '',
+        registroInstrutor = '',
         instrutoresAdicionais = '',
         responsavel,
         cargoResponsavel = '',
+        registroResponsavel = '',
         areaResponsavel,
         observacoes = ''
       } = req.body;
@@ -113,9 +115,11 @@ router.post('/', (req, res) => {
         conteudo: conteudoProgramatico,
         instrutor,
         qualificacaoInstrutor,
+        registroInstrutor: registroInstrutor || 'N/A',
         instrutoresAdicionais,
         responsavel,
         cargoResponsavel,
+        registroResponsavel: registroResponsavel || 'N/A',
         areaResponsavel,
         observacoes,
         midias: JSON.stringify(midias)
@@ -146,9 +150,11 @@ router.put('/:id', upload.array('midias', 10), async (req, res) => {
       conteudoProgramatico,
       instrutor,
       qualificacaoInstrutor = '',
+      registroInstrutor = '',
       instrutoresAdicionais = '',
       responsavel,
       cargoResponsavel = '',
+      registroResponsavel = '',
       areaResponsavel,
       observacoes = ''
     } = req.body;
@@ -179,9 +185,11 @@ router.put('/:id', upload.array('midias', 10), async (req, res) => {
     treinamento.conteudo = conteudoProgramatico;
     treinamento.instrutor = instrutor;
     treinamento.qualificacaoInstrutor = qualificacaoInstrutor;
+    treinamento.registroInstrutor = registroInstrutor || 'N/A';
     treinamento.instrutoresAdicionais = instrutoresAdicionais;
     treinamento.responsavel = responsavel;
     treinamento.cargoResponsavel = cargoResponsavel;
+    treinamento.registroResponsavel = registroResponsavel || 'N/A';
     treinamento.areaResponsavel = areaResponsavel;
     treinamento.observacoes = observacoes;
 

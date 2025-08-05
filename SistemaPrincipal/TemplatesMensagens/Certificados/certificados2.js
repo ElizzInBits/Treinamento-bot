@@ -108,8 +108,8 @@ async function gerarCertificadoBanco(contatoId) {
     // "Conferido a:" 
     page.drawText('Conferido a:', { x: 270, y: 630, size: tamanho, font: helvetica, color: cor });
 
-    // Nome (centralizado automaticamente)
-    const nomeCompleto = contato.nomeCompleto || contato.nome;
+    // Nome (centralizado automaticamente) - EM MAIÚSCULAS
+    const nomeCompleto = (contato.nomeCompleto || contato.nome).toUpperCase();
     const nomeSize = 16;
     const larguraPagina = 595.28; // A4 width in points
     const larguraNome = helvetica.widthOfTextAtSize(nomeCompleto, nomeSize);
