@@ -4,7 +4,7 @@
 
 const { sendMessage } = require('../conexao/wppConnectTemplate');
 const Treinamento = require('../../BancoDeDados/models/treinamento');
-const { Interacao } = require('../../BancoDeDados/models');
+const { Interacao, Empresa } = require('../../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('../Certificados/certificados2.js');
 
 // ========================================

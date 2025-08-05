@@ -3,16 +3,22 @@ const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
-const { Contato } = require('../../BancoDeDados/models');
+const { Contato, Empresa } = require('../../BancoDeDados/models');
 const Treinamento = require('../../BancoDeDados/models/treinamento');
 
 async function gerarCertificadoBanco(contatoId) {
   try {
-    // Buscar apenas o contato
+    // Buscar contato e empresa
     const contato = await Contato.findByPk(contatoId);
 
     if (!contato) {
       throw new Error('❌ Contato não encontrado.');
+    }
+
+    // Buscar empresa do contato
+    let empresa = null;
+    if (contato.empresaId) {
+      empresa = await Empresa.findByPk(contato.empresaId);
     }
 
     // Buscar treinamento pelo ID do contato
@@ -122,7 +128,8 @@ async function gerarCertificadoBanco(contatoId) {
 
     // Empresa
     page.drawText('Empresa:', { x: 60, y: 429, size: tamanho, font: helvetica, color: cor });
-    page.drawText('SALUBRITÁ TREINAMENTOS LTDA', { x: 166, y: 427, size: tamanho, font: helvetica, color: cor });
+    const nomeEmpresa = empresa ? empresa.razaoSocial : 'SALUBRITÁ TREINAMENTOS LTDA';
+    page.drawText(nomeEmpresa, { x: 166, y: 427, size: tamanho, font: helvetica, color: cor });
 
     // Modalidade
     page.drawText('Modalidade de', { x: 60, y: 382, size: tamanho, font: helvetica, color: cor });
