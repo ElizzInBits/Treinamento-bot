@@ -488,8 +488,6 @@ async function processarMensagem(message) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        await salvarUltimaInteracao(sender, 'resposta', rawText.trim());
-
         if (timeouts[sender]) clearTimeout(timeouts[sender]);
 
         // Verificação de cadastro primeiro
@@ -666,11 +664,8 @@ async function processarMensagem(message) {
             }
         }
 
-
-
-
-
-
+        // Salvar interação como resposta apenas se não foi processada pelos scripts
+        await salvarUltimaInteracao(sender, 'resposta', rawText.trim());
 
         // Finalizar treinamento
         if (selectedId === 'finalizar_treinamento' || text === '✅ treinamento finalizado') {
