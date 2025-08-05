@@ -973,9 +973,10 @@ body {
 #modalTreinamentosEmpresa .modal-container,
 #modalDetalhesEmpresa .modal-container,
 #modalContatosEmpresa .modal-container {
-  max-width: 1200px;
-  width: 95%;
-  max-height: 85vh;
+  max-width: 1400px;
+  width: 98%;
+  max-height: 95vh;
+  overflow: hidden;
 }
 
 /* Cabeçalho do Modal */
@@ -1052,8 +1053,11 @@ body.modal-open {
 #modalTreinamentosEmpresa .modal-content,
 #modalDetalhesEmpresa .modal-content,
 #modalContatosEmpresa .modal-content {
-  padding: 2.5rem;
-  max-height: 80vh;
+  padding: 2rem;
+  max-height: calc(95vh - 120px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Animação */
@@ -1589,15 +1593,17 @@ body.modal-open {
   #modalTreinamentosEmpresa .modal-container,
   #modalDetalhesEmpresa .modal-container,
   #modalContatosEmpresa .modal-container {
-    max-width: 95%;
-    width: 95%;
-    margin: 10px;
+    max-width: 98%;
+    width: 98%;
+    margin: 5px;
+    max-height: 98vh;
   }
   
   #modalTreinamentosEmpresa .modal-content,
   #modalDetalhesEmpresa .modal-content,
   #modalContatosEmpresa .modal-content {
-    padding: 1.5rem;
+    padding: 1rem;
+    max-height: calc(98vh - 80px);
   }
 }
 
