@@ -2637,7 +2637,17 @@ function abrirModalTreinamentosEmpresa(empresaId) {
   const empresa = empresas.find(e => e.id === empresaId);
   if (!empresa) return;
 
-  document.getElementById('modalTituloTreinamentosEmpresa').textContent = `Treinamentos - ${empresa.razao_social || empresa.razaoSocial || 'Empresa'}`;
+  document.getElementById('modalTituloTreinamentosEmpresa').textContent = `Gestão de Treinamentos - ${empresa.razao_social || empresa.razaoSocial || 'Empresa'}`;
+  
+  // Mostrar loading
+  document.getElementById('conteudoTreinamentosEmpresa').innerHTML = `
+    <div class="treinamentos-loading">
+      <div class="loading-spinner"></div>
+      <p>Carregando treinamentos...</p>
+    </div>
+  `;
+  
+  document.getElementById('modalTreinamentosEmpresa').style.display = 'block';
   
   // Carregar treinamentos disponíveis e da empresa
   Promise.all([
@@ -2647,47 +2657,95 @@ function abrirModalTreinamentosEmpresa(empresaId) {
   .then(([treinamentosDisponiveis, treinamentosEmpresa]) => {
     
     document.getElementById('conteudoTreinamentosEmpresa').innerHTML = `
+      <!-- Estatísticas visuais -->
+      <div class="empresa-stats-visual">
+        <div class="stat-card">
+          <span class="stat-number">${treinamentosDisponiveis.length}</span>
+          <span class="stat-label">Disponíveis</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">${treinamentosEmpresa.length}</span>
+          <span class="stat-label">Atribuídos</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">${Math.round((treinamentosEmpresa.length / (treinamentosDisponiveis.length + treinamentosEmpresa.length)) * 100) || 0}%</span>
+          <span class="stat-label">Taxa de Cobertura</span>
+        </div>
+      </div>
+      
       <div class="treinamentos-empresa-container">
         <div class="treinamentos-disponiveis">
-          <h4>Treinamentos Disponíveis</h4>
+          <h4>📚 Treinamentos Disponíveis</h4>
+          <div class="contador-itens">
+            <span class="contador-texto">Total disponível:</span>
+            <span class="contador-numero">${treinamentosDisponiveis.length}</span>
+          </div>
           <div class="treinamentos-list">
-            ${treinamentosDisponiveis.map(t => `
-              <div class="treinamento-item">
+            ${treinamentosDisponiveis.length > 0 ? treinamentosDisponiveis.map((t, index) => `
+              <div class="treinamento-item" style="animation-delay: ${index * 0.1}s">
                 <div class="treinamento-info">
                   <strong>${t.nome}</strong>
                   <p>${t.modalidade} - ${t.cargaHoraria}h</p>
+                  ${t.instrutor ? `<small style="color: var(--gray-500); margin-top: 0.25rem; display: block;">👨‍🏫 ${t.instrutor}</small>` : ''}
                 </div>
-                <button class="btn-primary btn-small" onclick="atribuirTreinamento(${empresaId}, ${t.id})">
-                  Atribuir
+                <button class="btn-primary btn-small" onclick="atribuirTreinamento(${empresaId}, ${t.id})" title="Atribuir este treinamento à empresa">
+                  ➕ Atribuir
                 </button>
               </div>
-            `).join('')}
+            `).join('') : '<p>📭 Nenhum treinamento disponível para atribuição</p>'}
           </div>
         </div>
         
         <div class="treinamentos-atribuidos">
-          <h4>Treinamentos Atribuídos</h4>
+          <h4>✅ Treinamentos Atribuídos</h4>
+          <div class="contador-itens">
+            <span class="contador-texto">Total atribuído:</span>
+            <span class="contador-numero">${treinamentosEmpresa.length}</span>
+          </div>
           <div class="treinamentos-list">
-            ${treinamentosEmpresa.length > 0 ? treinamentosEmpresa.map(t => `
-              <div class="treinamento-item">
+            ${treinamentosEmpresa.length > 0 ? treinamentosEmpresa.map((t, index) => `
+              <div class="treinamento-item" style="animation-delay: ${index * 0.1}s">
                 <div class="treinamento-info">
                   <strong>${t.nome}</strong>
                   <p>${t.modalidade} - ${t.cargaHoraria}h</p>
+                  ${t.instrutor ? `<small style="color: var(--gray-500); margin-top: 0.25rem; display: block;">👨‍🏫 ${t.instrutor}</small>` : ''}
+                  <div class="status-badge ativo" style="margin-top: 0.5rem;">
+                    <span>🟢</span> Ativo
+                  </div>
                 </div>
-                <button class="btn-error btn-small" onclick="removerTreinamentoEmpresa(${empresaId}, ${t.id})">
-                  Remover
+                <button class="btn-error btn-small" onclick="removerTreinamentoEmpresa(${empresaId}, ${t.id})" title="Remover este treinamento da empresa">
+                  ❌ Remover
                 </button>
               </div>
-            `).join('') : '<p>Nenhum treinamento atribuído</p>'}
+            `).join('') : '<p>📋 Nenhum treinamento atribuído ainda</p>'}
           </div>
         </div>
       </div>
+      
+      <!-- Barra de progresso -->
+      <div class="progress-indicator">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <span style="font-weight: 500; color: var(--gray-700);">Progresso de Atribuição</span>
+          <span style="font-weight: 600; color: var(--primary-color);">${Math.round((treinamentosEmpresa.length / (treinamentosDisponiveis.length + treinamentosEmpresa.length)) * 100) || 0}%</span>
+        </div>
+        <div class="progress-bar-custom">
+          <div class="progress-fill-custom" style="width: ${Math.round((treinamentosEmpresa.length / (treinamentosDisponiveis.length + treinamentosEmpresa.length)) * 100) || 0}%"></div>
+        </div>
+      </div>
     `;
-    
-    document.getElementById('modalTreinamentosEmpresa').style.display = 'block';
   })
   .catch(error => {
     console.error('Erro ao carregar treinamentos:', error);
+    document.getElementById('conteudoTreinamentosEmpresa').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">⚠️</div>
+        <h3>Erro ao carregar dados</h3>
+        <p>Não foi possível carregar os treinamentos. Tente novamente.</p>
+        <button class="btn-primary" onclick="abrirModalTreinamentosEmpresa(${empresaId})">
+          🔄 Tentar Novamente
+        </button>
+      </div>
+    `;
     mostrarAlerta('Erro ao carregar treinamentos da empresa.', 'error');
   });
 }
