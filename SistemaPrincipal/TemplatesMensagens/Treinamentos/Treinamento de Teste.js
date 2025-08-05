@@ -63,7 +63,7 @@ async function executarTreinamento(sender, contato) {
     }
 
     await sendMessage(sender, 'send-message', {
-        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) ao ${treinamento.nome}! 💼`,
+        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) ao treinamento: ${treinamento.nome}! 💼`,
     });
 
     await sendMessage(sender, 'send-message', {
