@@ -243,7 +243,8 @@ async function processarRespostaTeste(sender, text, selectedId, contato) {
         return true;
     }
 
-    if (selectedId === 'dados_incorretos_cipa') {
+    if (selectedId === 'dados_incorretos_cipa' || 
+        (ultimaInteracao?.tipo === 'confirmacao_dados_cipa' && RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
         await sendMessage(sender, 'send-message', {
             message: '📝 Para corrigir seus dados, por favor, entre em contato com o suporte.',
         });
