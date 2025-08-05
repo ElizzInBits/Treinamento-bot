@@ -349,7 +349,7 @@ async function iniciarTreinamento(sender, contato) {
     const nomeEmpresa = empresa ? empresa.razaoSocial : 'sua empresa';
     
     await sendMessage(sender, 'send-message', {
-        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) à ${nomeEmpresa}! 💼`,
+        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`,
     });
 
     // Buscar treinamentos da empresa
@@ -363,7 +363,7 @@ async function iniciarTreinamento(sender, contato) {
     }
 
     await sendMessage(sender, 'send-message', {
-        message: '📚 Aqui estão os treinamentos disponíveis para você:',
+        message: '📚 Aqui estão os treinamentos disponíveis',
     });
 
     // Mostrar treinamentos disponíveis como texto simples primeiro
