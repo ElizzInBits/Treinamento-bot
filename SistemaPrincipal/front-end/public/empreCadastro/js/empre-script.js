@@ -102,4 +102,228 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Erro: ' + error.message);
       });
   });
+
+  // Carregar empresas ao inicializar
+  loadCompanies();
 });
+
+// Variável global para empresa selecionada
+let selectedCompanyId = null;
+
+// Função para carregar empresas
+async function loadCompanies() {
+  try {
+    const response = await fetch('http://92.112.178.26:3000/api/empresas');
+    const companies = await response.json();
+    
+    const companiesGrid = document.getElementById('companiesGrid');
+    
+    if (companies.length === 0) {
+      companiesGrid.innerHTML = '<div class="loading">Nenhuma empresa cadastrada</div>';
+      return;
+    }
+    
+    companiesGrid.innerHTML = companies.map(company => `
+      <div class="company-card">
+        <h3>${company.razao_social}</h3>
+        <p><strong>CNPJ:</strong> ${formatCNPJ(company.cnpj)}</p>
+        <p><strong>Porte:</strong> ${company.porte_empresa}</p>
+        <p><strong>Email:</strong> ${company.email}</p>
+        <div class="company-actions">
+          <button class="btn-manage" onclick="manageTrainings(${company.id}, '${company.razao_social}')">
+            🎓 Gerenciar Treinamentos
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('Erro ao carregar empresas:', error);
+    document.getElementById('companiesGrid').innerHTML = '<div class="loading">Erro ao carregar empresas</div>';
+  }
+}
+
+// Função para gerenciar treinamentos de uma empresa
+async function manageTrainings(companyId, companyName) {
+  selectedCompanyId = companyId;
+  
+  // Mostrar seção de gerenciamento
+  const trainingSection = document.getElementById('trainingSection');
+  trainingSection.style.display = 'block';
+  
+  // Atualizar título
+  const title = trainingSection.querySelector('h2');
+  title.innerHTML = `<span>🎓</span> Gerenciar Treinamentos - ${companyName}`;
+  
+  // Carregar treinamentos
+  await loadAssignedTrainings(companyId);
+  await loadAvailableTrainings(companyId);
+  
+  // Scroll para a seção
+  trainingSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Função para carregar treinamentos atribuídos
+async function loadAssignedTrainings(companyId) {
+  try {
+    const response = await fetch(`http://92.112.178.26:3000/api/empresas/${companyId}/treinamentos/atribuidos`);
+    const trainings = await response.json();
+    
+    const assignedList = document.getElementById('assignedTrainingsList');
+    
+    if (trainings.length === 0) {
+      assignedList.innerHTML = '<div class="loading">Nenhum treinamento atribuído</div>';
+      return;
+    }
+    
+    assignedList.innerHTML = trainings.map(training => `
+      <div class="training-item">
+        <h4>${training.nome}</h4>
+        <p><strong>Modalidade:</strong> ${training.modalidade}</p>
+        <p><strong>Carga Horária:</strong> ${training.cargaHoraria}h</p>
+        <div class="training-actions">
+          <button class="btn-remove" onclick="removeTraining(${companyId}, ${training.id})">
+            ❌ Remover
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('Erro ao carregar treinamentos atribuídos:', error);
+    document.getElementById('assignedTrainingsList').innerHTML = '<div class="loading">Erro ao carregar</div>';
+  }
+}
+
+// Função para carregar treinamentos disponíveis
+async function loadAvailableTrainings(companyId) {
+  try {
+    const response = await fetch(`http://92.112.178.26:3000/api/empresas/${companyId}/treinamentos/disponiveis`);
+    const trainings = await response.json();
+    
+    const availableList = document.getElementById('availableTrainingsList');
+    
+    if (trainings.length === 0) {
+      availableList.innerHTML = '<div class="loading">Todos os treinamentos já foram atribuídos</div>';
+      return;
+    }
+    
+    availableList.innerHTML = trainings.map(training => `
+      <div class="training-item">
+        <h4>${training.nome}</h4>
+        <p><strong>Modalidade:</strong> ${training.modalidade}</p>
+        <p><strong>Carga Horária:</strong> ${training.cargaHoraria}h</p>
+        <div class="training-actions">
+          <button class="btn-assign" onclick="assignTraining(${companyId}, ${training.id})">
+            ➕ Atribuir
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('Erro ao carregar treinamentos disponíveis:', error);
+    document.getElementById('availableTrainingsList').innerHTML = '<div class="loading">Erro ao carregar</div>';
+  }
+}
+
+// Função para atribuir treinamento
+async function assignTraining(companyId, trainingId) {
+  try {
+    const response = await fetch(`http://92.112.178.26:3000/api/empresas/${companyId}/treinamentos/${trainingId}`, {
+      method: 'POST'
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error);
+    }
+    
+    // Recarregar listas
+    await loadAssignedTrainings(companyId);
+    await loadAvailableTrainings(companyId);
+    
+    // Feedback visual
+    showNotification('Treinamento atribuído com sucesso!', 'success');
+  } catch (error) {
+    console.error('Erro ao atribuir treinamento:', error);
+    showNotification('Erro ao atribuir treinamento: ' + error.message, 'error');
+  }
+}
+
+// Função para remover treinamento
+async function removeTraining(companyId, trainingId) {
+  if (!confirm('Tem certeza que deseja remover este treinamento?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`http://92.112.178.26:3000/api/empresas/${companyId}/treinamentos/${trainingId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error);
+    }
+    
+    // Recarregar listas
+    await loadAssignedTrainings(companyId);
+    await loadAvailableTrainings(companyId);
+    
+    // Feedback visual
+    showNotification('Treinamento removido com sucesso!', 'success');
+  } catch (error) {
+    console.error('Erro ao remover treinamento:', error);
+    showNotification('Erro ao remover treinamento: ' + error.message, 'error');
+  }
+}
+
+// Função para formatar CNPJ
+function formatCNPJ(cnpj) {
+  return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+}
+
+// Função para mostrar notificações
+function showNotification(message, type) {
+  // Criar elemento de notificação
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+  
+  // Estilos da notificação
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+    ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+  `;
+  
+  // Adicionar ao DOM
+  document.body.appendChild(notification);
+  
+  // Remover após 3 segundos
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 300);
+  }, 3000);
+}
+
+// Adicionar estilos de animação
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+`;
+document.head.appendChild(style);

@@ -213,24 +213,80 @@ router.get('/:id/completo', async (req, res) => {
   }
 });
 
-// Listar treinamentos disponíveis
-router.get('/treinamentos/disponiveis', async (req, res) => {
+// Listar treinamentos disponíveis para uma empresa específica
+router.get('/:id/treinamentos/disponiveis', async (req, res) => {
   try {
-    const treinamentos = await Treinamento.findAll({
+    const empresaId = req.params.id;
+    
+    // Buscar IDs dos treinamentos já atribuídos à empresa
+    const treinamentosAtribuidos = await EmpresaTreinamento.findAll({
+      where: { empresa_id: empresaId },
+      attributes: ['treinamento_id']
+    });
+    
+    const idsAtribuidos = treinamentosAtribuidos.map(t => t.treinamento_id);
+    
+    // Buscar treinamentos não atribuídos
+    const treinamentosDisponiveis = await Treinamento.findAll({
+      where: {
+        id: {
+          [Op.notIn]: idsAtribuidos
+        }
+      },
       order: [['nome', 'ASC']]
     });
-    res.json(treinamentos);
+    
+    res.json(treinamentosDisponiveis);
   } catch (error) {
     console.error('Erro ao buscar treinamentos disponíveis:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
-// Atribuir treinamentos à empresa
-router.post('/:id/treinamentos', async (req, res) => {
+// Listar treinamentos já atribuídos à empresa
+router.get('/:id/treinamentos/atribuidos', async (req, res) => {
   try {
-    const { treinamentosIds } = req.body;
     const empresaId = req.params.id;
+    
+    const treinamentosAtribuidos = await Treinamento.findAll({
+      include: [{
+        model: EmpresaTreinamento,
+        where: { empresa_id: empresaId },
+        attributes: []
+      }],
+      order: [['nome', 'ASC']]
+    });
+    
+    res.json(treinamentosAtribuidos);
+  } catch (error) {
+    console.error('Erro ao buscar treinamentos atribuídos:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Remover treinamento específico da empresa
+router.delete('/:empresaId/treinamentos/:treinamentoId', async (req, res) => {
+  try {
+    const { empresaId, treinamentoId } = req.params;
+    
+    await EmpresaTreinamento.destroy({
+      where: {
+        empresa_id: empresaId,
+        treinamento_id: treinamentoId
+      }
+    });
+    
+    res.json({ message: 'Treinamento removido com sucesso' });
+  } catch (error) {
+    console.error('Erro ao remover treinamento:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Atribuir treinamento específico à empresa
+router.post('/:empresaId/treinamentos/:treinamentoId', async (req, res) => {
+  try {
+    const { empresaId, treinamentoId } = req.params;
     
     // Verificar se empresa existe
     const empresa = await Empresa.findByPk(empresaId);
@@ -238,24 +294,33 @@ router.post('/:id/treinamentos', async (req, res) => {
       return res.status(404).json({ error: 'Empresa não encontrada' });
     }
     
-    // Remover associações existentes
-    await EmpresaTreinamento.destroy({
-      where: { empresa_id: empresaId }
-    });
-    
-    // Criar novas associações
-    if (treinamentosIds && treinamentosIds.length > 0) {
-      const associacoes = treinamentosIds.map(treinamentoId => ({
-        empresa_id: empresaId,
-        treinamento_id: treinamentoId
-      }));
-      
-      await EmpresaTreinamento.bulkCreate(associacoes);
+    // Verificar se treinamento existe
+    const treinamento = await Treinamento.findByPk(treinamentoId);
+    if (!treinamento) {
+      return res.status(404).json({ error: 'Treinamento não encontrado' });
     }
     
-    res.json({ message: 'Treinamentos atualizados com sucesso' });
+    // Verificar se já está atribuído
+    const jaAtribuido = await EmpresaTreinamento.findOne({
+      where: {
+        empresa_id: empresaId,
+        treinamento_id: treinamentoId
+      }
+    });
+    
+    if (jaAtribuido) {
+      return res.status(400).json({ error: 'Treinamento já atribuído a esta empresa' });
+    }
+    
+    // Criar associação
+    await EmpresaTreinamento.create({
+      empresa_id: empresaId,
+      treinamento_id: treinamentoId
+    });
+    
+    res.json({ message: 'Treinamento atribuído com sucesso' });
   } catch (error) {
-    console.error('Erro ao atribuir treinamentos:', error);
+    console.error('Erro ao atribuir treinamento:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
