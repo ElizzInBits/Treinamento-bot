@@ -444,7 +444,48 @@
   }
   
   .empresa-stats-visual {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-number {
+    font-size: 1.5rem;
+  }
+  
+  .company-actions {
+    flex-direction: column;
+  }
+  
+  .company-actions .btn-primary,
+  .company-actions .btn-secondary,
+  .company-actions .btn-info {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .empresa-stats-visual {
     grid-template-columns: 1fr;
+  }
+  
+  .contador-itens {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .filtros-treinamentos {
+    flex-direction: column;
+  }
+  
+  .treinamentos-disponiveis h4,
+  .treinamentos-atribuidos h4 {
+    font-size: 1rem;
   }
 }
 

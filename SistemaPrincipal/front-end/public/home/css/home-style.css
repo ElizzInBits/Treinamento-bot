@@ -740,6 +740,26 @@ body {
   display: flex;
   gap: 0.5rem;
   margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.company-actions .btn-primary,
+.company-actions .btn-secondary,
+.company-actions .btn-info {
+  flex: 1;
+  min-width: 90px;
+  font-size: 0.875rem;
+  padding: 0.75rem 1rem;
+  white-space: nowrap;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.company-actions .btn-primary:hover,
+.company-actions .btn-secondary:hover,
+.company-actions .btn-info:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(15, 76, 92, 0.2);
 }
 
 .show-more {
