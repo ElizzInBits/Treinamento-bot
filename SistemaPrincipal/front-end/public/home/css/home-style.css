@@ -1052,7 +1052,8 @@ body.modal-open {
 
 /* Forçar scroll nos modais específicos */
 #modalTreinamentosEmpresa .modal-content,
-#modalDetalhesEmpresa .modal-content {
+#modalDetalhesEmpresa .modal-content,
+#modalContatosEmpresa .modal-content {
   height: calc(95vh - 120px);
   overflow-y: scroll;
 }
