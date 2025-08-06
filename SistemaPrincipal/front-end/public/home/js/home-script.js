@@ -2039,15 +2039,15 @@ function abrirDetalhesTreinamento(treinamentoId) {
       </div>
     </div>
     <div class="form-row">
-      <div class="form-group" style="flex: 1 1 100%;">
-        <label for="editarConteudoTreinamento">Conteúdo Programático</label>
-        <textarea id="editarConteudoTreinamento" rows="4" class="form-control">${treinamento.conteudoProgramatico || treinamento.conteudo || ''}</textarea>
-      </div>
-    </div>
-    <div class="form-row">
       <div class="form-group">
         <label for="editarRegistroResponsavel">Registro do Responsável</label>
         <input type="text" id="editarRegistroResponsavel" class="form-control" value="${treinamento.registroResponsavel || ''}" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label for="editarConteudoTreinamento">Conteúdo Programático</label>
+        <textarea id="editarConteudoTreinamento" rows="4" class="form-control">${treinamento.conteudoProgramatico || treinamento.conteudo || ''}</textarea>
       </div>
     </div>
     
