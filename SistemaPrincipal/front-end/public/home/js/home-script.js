@@ -1978,76 +1978,87 @@ function abrirDetalhesTreinamento(treinamentoId) {
   
   document.getElementById('conteudoModalTreinamento').innerHTML = `
   <form id="editarTreinamentoForm" class="professional-form">
-    <div class="form-row">
-      <div class="form-group">
-        <label for="editarNomeTreinamento">Nome <span class="required">*</span></label>
-        <input type="text" id="editarNomeTreinamento" class="form-control" value="${treinamento.nome}" required />
+    <!-- Informações Básicas -->
+    <div class="form-section">
+      <h4>📝 Informações Básicas</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="editarNomeTreinamento">Nome <span class="required">*</span></label>
+          <input type="text" id="editarNomeTreinamento" class="form-control" value="${treinamento.nome}" required />
+        </div>
       </div>
-      <div class="form-group">
-        <label for="editarModalidadeTreinamento">Modalidade <span class="required">*</span></label>
-        <input type="text" id="editarModalidadeTreinamento" class="form-control" value="${treinamento.modalidade || ''}" required />
+      <div class="form-row">
+        <div class="form-group">
+          <label for="editarModalidadeTreinamento">Modalidade <span class="required">*</span></label>
+          <input type="text" id="editarModalidadeTreinamento" class="form-control" value="${treinamento.modalidade || ''}" required />
+        </div>
+        <div class="form-group">
+          <label for="editarCargaHoraria">Carga Horária <span class="required">*</span></label>
+          <input type="number" id="editarCargaHoraria" class="form-control" value="${treinamento.cargaHoraria || ''}" required />
+        </div>
       </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="editarCargaHoraria">Carga Horária <span class="required">*</span></label>
-        <input type="number" id="editarCargaHoraria" class="form-control" value="${treinamento.cargaHoraria || ''}" required />
+      <div class="form-row">
+        <div class="form-group">
+          <label for="editarTipoTreinamento">Tipo <span class="required">*</span></label>
+          <input type="text" id="editarTipoTreinamento" class="form-control" value="${treinamento.tipo || ''}" required />
+        </div>
       </div>
-      <div class="form-group">
-        <label for="editarTipoTreinamento">Tipo <span class="required">*</span></label>
-        <input type="text" id="editarTipoTreinamento" class="form-control" value="${treinamento.tipo || ''}" required />
+      <div class="form-row">
+        <div class="form-group">
+          <label for="editarEmConformidade">Em Conformidade</label>
+          <input type="text" id="editarEmConformidade" class="form-control" value="${treinamento.emConformidade || ''}" />
+        </div>
+        <div class="form-group">
+          <label for="editarAproveitamento">Aproveitamento</label>
+          <input type="text" id="editarAproveitamento" class="form-control" value="${treinamento.aproveitamento || ''}" />
+        </div>
       </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="editarInstrutor">Instrutor</label>
-        <input type="text" id="editarInstrutor" class="form-control" value="${treinamento.instrutor || ''}" />
-      </div>
-      <div class="form-group">
-        <label for="editarQualificacaoInstrutor">Qualificação Instrutor</label>
-        <input type="text" id="editarQualificacaoInstrutor" class="form-control" value="${treinamento.qualificacaoInstrutor || ''}" />
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="editarRegistroInstrutor">Registro do Instrutor</label>
-        <input type="text" id="editarRegistroInstrutor" class="form-control" value="${treinamento.registroInstrutor || ''}" />
-      </div>
-      <div class="form-group">
-        <label for="editarResponsavel">Responsável</label>
-        <input type="text" id="editarResponsavel" class="form-control" value="${treinamento.responsavel || ''}" />
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="editarCargoResponsavel">Cargo Responsável</label>
-        <input type="text" id="editarCargoResponsavel" class="form-control" value="${treinamento.cargoResponsavel || ''}" />
-      </div>
-      <div class="form-group">
-        <label for="editarAreaResponsavel">Área Responsável</label>
-        <input type="text" id="editarAreaResponsavel" class="form-control" value="${treinamento.areaResponsavel || ''}" />
+      <div class="form-row">
+        <div class="form-group full-width">
+          <label for="editarConteudoTreinamento">Conteúdo Programático</label>
+          <textarea id="editarConteudoTreinamento" rows="4" class="form-control">${treinamento.conteudoProgramatico || treinamento.conteudo || ''}</textarea>
+        </div>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="editarEmConformidade">Em Conformidade</label>
-        <input type="text" id="editarEmConformidade" class="form-control" value="${treinamento.emConformidade || ''}" />
+
+    <!-- Informações do Instrutor e Responsável -->
+    <div class="form-section">
+      <h4>👨‍🏫 Instrutor e Responsável</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="editarInstrutor">Instrutor</label>
+          <input type="text" id="editarInstrutor" class="form-control" value="${treinamento.instrutor || ''}" />
+        </div>
       </div>
-      <div class="form-group">
-        <label for="editarAproveitamento">Aproveitamento</label>
-        <input type="text" id="editarAproveitamento" class="form-control" value="${treinamento.aproveitamento || ''}" />
+      <div class="form-row">
+        <div class="form-group">
+          <label for="editarQualificacaoInstrutor">Qualificação</label>
+          <input type="text" id="editarQualificacaoInstrutor" class="form-control" value="${treinamento.qualificacaoInstrutor || ''}" />
+        </div>
+        <div class="form-group">
+          <label for="editarRegistroInstrutor">Registro do Instrutor</label>
+          <input type="text" id="editarRegistroInstrutor" class="form-control" value="${treinamento.registroInstrutor || ''}" />
+        </div>
       </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="editarRegistroResponsavel">Registro do Responsável</label>
-        <input type="text" id="editarRegistroResponsavel" class="form-control" value="${treinamento.registroResponsavel || ''}" />
+      <div class="form-row">
+        <div class="form-group">
+          <label for="editarResponsavel">Responsável</label>
+          <input type="text" id="editarResponsavel" class="form-control" value="${treinamento.responsavel || ''}" />
+        </div>
+        <div class="form-group">
+          <label for="editarCargoResponsavel">Cargo</label>
+          <input type="text" id="editarCargoResponsavel" class="form-control" value="${treinamento.cargoResponsavel || ''}" />
+        </div>
       </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group full-width">
-        <label for="editarConteudoTreinamento">Conteúdo Programático</label>
-        <textarea id="editarConteudoTreinamento" rows="4" class="form-control">${treinamento.conteudoProgramatico || treinamento.conteudo || ''}</textarea>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="editarAreaResponsavel">Área Responsável</label>
+          <input type="text" id="editarAreaResponsavel" class="form-control" value="${treinamento.areaResponsavel || ''}" />
+        </div>
+        <div class="form-group">
+          <label for="editarRegistroResponsavel">Registro</label>
+          <input type="text" id="editarRegistroResponsavel" class="form-control" value="${treinamento.registroResponsavel || ''}" />
+        </div>
       </div>
     </div>
     
