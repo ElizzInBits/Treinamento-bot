@@ -2063,28 +2063,34 @@ function abrirDetalhesTreinamento(treinamentoId) {
     </div>
     
     <!-- Seção de Mídias -->
-    <div class="form-section">
-      <h4>Mídias do Treinamento</h4>
-      <div id="midiasExistentes">
-        ${midiasExistentes.length > 0 ? `
-          <div class="midias-grid">
-            ${midiasExistentes.map(midia => `
-              <div class="midia-item">
-                <div class="midia-preview">
-                  ${getMidiaPreview(midia)}
+    <div class="form-section" style="grid-column: 1 / -1;">
+      <h4>📁 Mídias do Treinamento</h4>
+      
+      <!-- Mídias Existentes -->
+      <div class="media-section">
+        <h5>Mídias Atuais</h5>
+        <div id="midiasExistentes" class="existing-media">
+          ${midiasExistentes.length > 0 ? `
+            <div class="midias-grid">
+              ${midiasExistentes.map(midia => `
+                <div class="midia-item">
+                  <div class="midia-preview">
+                    ${getMidiaPreview(midia)}
+                  </div>
+                  <div class="midia-info">
+                    <span class="midia-nome">${midia}</span>
+                    <button type="button" class="btn-error btn-small" onclick="removerMidia('${midia}', ${treinamentoId})">✕</button>
+                  </div>
                 </div>
-                <div class="midia-info">
-                  <span class="midia-nome">${midia}</span>
-                  <button type="button" class="btn-error btn-small" onclick="removerMidia('${midia}', ${treinamentoId})">Remover</button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        ` : '<p>Nenhuma mídia anexada</p>'}
+              `).join('')}
+            </div>
+          ` : '<div class="no-media"><p>📭 Nenhuma mídia anexada</p></div>'}
+        </div>
       </div>
       
-      <div class="form-group">
-        <label for="novasMidias">Adicionar Novas Mídias</label>
+      <!-- Upload de Novas Mídias -->
+      <div class="media-section">
+        <h5>Adicionar Novas Mídias</h5>
         <div class="file-upload-container">
           <div class="file-upload-area" onclick="document.getElementById('novasMidias').click()">
             <div class="upload-icon">📁</div>
