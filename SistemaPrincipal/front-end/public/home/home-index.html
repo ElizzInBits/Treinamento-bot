@@ -272,14 +272,22 @@
                 <h4 class="section-title">Mídias do Treinamento</h4>
                 <div class="form-group full-width">
                   <label for="midiasTreinamento">Anexar Mídias (Imagens, Vídeos, Áudios, PDFs)</label>
-                  <div class="file-upload-area" onclick="document.getElementById('midiasTreinamento').click()">
-                    <div class="upload-icon">📁</div>
-                    <div class="upload-text">Clique aqui ou arraste arquivos</div>
-                    <div class="upload-hint">Suporte para múltiplos arquivos (máx. 20MB cada)</div>
+                  <div class="file-upload-container">
+                    <div class="file-upload-area" onclick="document.getElementById('midiasTreinamento').click()">
+                      <div class="upload-icon">📁</div>
+                      <div class="upload-text">Clique aqui ou arraste arquivos</div>
+                      <div class="upload-hint">Suporte para múltiplos arquivos (máx. 20MB cada)</div>
+                      <div class="upload-types">
+                        <span class="type-badge">🖼️ Imagens</span>
+                        <span class="type-badge">🎥 Vídeos</span>
+                        <span class="type-badge">🎧 Áudios</span>
+                        <span class="type-badge">📄 PDFs</span>
+                      </div>
+                    </div>
+                    <input type="file" id="midiasTreinamento" name="midiasTreinamento" multiple
+                      accept="image/*,video/*,audio/*,application/pdf" class="form-control" style="display: none;" />
+                    <div id="selectedFiles" class="selected-files"></div>
                   </div>
-                  <input type="file" id="midiasTreinamento" name="midiasTreinamento" multiple
-                    accept="image/*,video/*,audio/*,application/pdf" class="form-control" style="display: none;" />
-                  <div id="selectedFiles" class="selected-files" style="display: none;"></div>
                 </div>
               </div>
 

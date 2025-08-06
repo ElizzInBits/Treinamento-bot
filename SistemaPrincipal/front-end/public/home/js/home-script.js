@@ -2257,23 +2257,42 @@ const carregarDadosComCache = {
 function mostrarArquivosSelecionados(arquivos) {
   const container = document.getElementById('selectedFiles');
   if (arquivos.length === 0) {
-    container.style.display = 'none';
+    container.classList.remove('has-files');
     return;
   }
   
-  container.style.display = 'block';
+  container.classList.add('has-files');
   container.innerHTML = `
-    <h5>Arquivos Selecionados (${arquivos.length}):</h5>
+    <h5>📎 Arquivos Selecionados (${arquivos.length}):</h5>
     ${Array.from(arquivos).map((arquivo, index) => `
-      <div class="file-item">
+      <div class="file-item" data-index="${index}">
         <div class="file-info">
           <span class="file-icon">${getFileIcon(arquivo.type)}</span>
           <span class="file-name">${arquivo.name}</span>
-          <span class="file-size">(${formatFileSize(arquivo.size)})</span>
+          <span class="file-size">${formatFileSize(arquivo.size)}</span>
         </div>
+        <button type="button" class="file-remove" onclick="removerArquivo(${index})" title="Remover arquivo">
+          ✕
+        </button>
       </div>
     `).join('')}
   `;
+}
+
+// Função para remover arquivo individual
+function removerArquivo(index) {
+  const fileInput = document.getElementById('midiasTreinamento');
+  const dt = new DataTransfer();
+  
+  // Recriar FileList sem o arquivo removido
+  Array.from(fileInput.files).forEach((file, i) => {
+    if (i !== index) {
+      dt.items.add(file);
+    }
+  });
+  
+  fileInput.files = dt.files;
+  mostrarArquivosSelecionados(fileInput.files);
 }
 
 function getFileIcon(mimeType) {
@@ -2292,36 +2311,98 @@ function formatFileSize(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Event listeners para drag and drop
+// Event listeners para drag and drop melhorado
 document.addEventListener('DOMContentLoaded', function() {
   const uploadArea = document.querySelector('.file-upload-area');
   const fileInput = document.getElementById('midiasTreinamento');
   
   if (uploadArea && fileInput) {
-    uploadArea.addEventListener('dragover', function(e) {
+    // Prevenir comportamento padrão do navegador
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, preventDefaults, false);
+      document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
       e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    // Highlight na área de drop
+    ['dragenter', 'dragover'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
       uploadArea.classList.add('dragover');
-    });
+    }
     
-    uploadArea.addEventListener('dragleave', function(e) {
-      e.preventDefault();
+    function unhighlight() {
       uploadArea.classList.remove('dragover');
-    });
+    }
     
+    // Handle drop
     uploadArea.addEventListener('drop', function(e) {
-      e.preventDefault();
-      uploadArea.classList.remove('dragover');
+      const dt = e.dataTransfer;
+      const files = dt.files;
       
-      const files = e.dataTransfer.files;
-      fileInput.files = files;
-      mostrarArquivosSelecionados(files);
+      // Combinar arquivos existentes com novos
+      const existingFiles = Array.from(fileInput.files || []);
+      const newFiles = Array.from(files);
+      const allFiles = [...existingFiles, ...newFiles];
+      
+      // Validar e filtrar arquivos
+      const validFiles = validarArquivos(allFiles);
+      
+      if (validFiles.length > 0) {
+        const dt = new DataTransfer();
+        validFiles.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+        mostrarArquivosSelecionados(fileInput.files);
+      }
     });
     
+    // Handle file input change
     fileInput.addEventListener('change', function() {
+      const validFiles = validarArquivos(Array.from(this.files));
+      if (validFiles.length !== this.files.length) {
+        const dt = new DataTransfer();
+        validFiles.forEach(file => dt.items.add(file));
+        this.files = dt.files;
+      }
       mostrarArquivosSelecionados(this.files);
     });
   }
 });
+
+// Função para validar arquivos
+function validarArquivos(arquivos) {
+  const tiposPermitidos = ['image/', 'video/', 'audio/', 'application/pdf'];
+  const tamanhoMaximo = 20 * 1024 * 1024; // 20MB
+  const validFiles = [];
+  
+  arquivos.forEach(arquivo => {
+    // Verificar tipo
+    if (!tiposPermitidos.some(tipo => arquivo.type.startsWith(tipo))) {
+      mostrarAlerta(`Arquivo "${arquivo.name}" não é suportado.`, 'error');
+      return;
+    }
+    
+    // Verificar tamanho
+    if (arquivo.size > tamanhoMaximo) {
+      mostrarAlerta(`Arquivo "${arquivo.name}" é muito grande (máx. 20MB).`, 'error');
+      return;
+    }
+    
+    validFiles.push(arquivo);
+  });
+  
+  return validFiles;
+}
 
 // Gráfico de Empresas com dados da API
 let graficoEmpresasInstance = null;
