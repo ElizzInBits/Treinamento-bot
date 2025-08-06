@@ -801,7 +801,7 @@ function renderizarTreinamentos() {
       <div class="training-card">
         <div class="training-header">
           <h4>${treinamento.nome}</h4>
-          <span class="training-count">${contatosComTreinamento.length} contatos</span>
+
         </div>
         <div class="training-content">
           <p class="training-description">${treinamento.conteudo || 'Sem descrição'}</p>
@@ -812,9 +812,7 @@ function renderizarTreinamentos() {
             <p><strong>Instrutor:</strong> ${treinamento.instrutor || 'N/A'}</p>
             <p><strong>Área Responsável:</strong> ${treinamento.areaResponsavel || 'N/A'}</p>
           </div>
-          <div class="training-stats">
-            <span class="stat-label">Participantes: ${contatosComTreinamento.length}</span>
-          </div>
+
         </div>
         <div class="training-actions">
           <button class="btn-primary" onclick="visualizarContatosTreinamento(${treinamento.id})">
