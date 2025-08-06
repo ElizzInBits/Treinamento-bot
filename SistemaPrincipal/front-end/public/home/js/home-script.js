@@ -847,7 +847,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   const registroInstrutor = document.getElementById('registroInstrutor').value.trim();
   const responsavel = document.getElementById('responsavelTreinamento').value.trim();
   const cargoResponsavel = document.getElementById('cargoResponsavel').value.trim();
-  const areaResponsavel = document.getElementById('areaResponsavel').value;
+  const areaResponsavel = document.getElementById('areaResponsavel')?.value || document.getElementById('responsavelTreinamento')?.value || '';
   const registroResponsavel = document.getElementById('registroResponsavel').value.trim();
 
   if (!nome || !modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudo || !instrutor || !registroInstrutor || !responsavel || !registroResponsavel || !areaResponsavel) {
