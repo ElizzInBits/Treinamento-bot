@@ -1039,14 +1039,22 @@ body.modal-open {
 /* Conteúdo do Modal */
 .modal-content {
   padding: 2rem;
-  max-height: 75vh;
+  max-height: 80vh;
   overflow-y: auto;
+  overflow-x: hidden;
   box-sizing: border-box;
   width: 100%;
   display: flex;
   flex-direction: column;
   border-bottom-left-radius: 16px;
   border-bottom-right-radius: 16px;
+}
+
+/* Forçar scroll nos modais específicos */
+#modalTreinamentosEmpresa .modal-content,
+#modalDetalhesEmpresa .modal-content {
+  height: calc(95vh - 120px);
+  overflow-y: scroll;
 }
 
 
