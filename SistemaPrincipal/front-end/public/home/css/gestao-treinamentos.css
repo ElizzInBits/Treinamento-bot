@@ -288,7 +288,7 @@
   width: 100%;
   box-sizing: border-box;
   flex-shrink: 0;
-  max-height: 400px; 
+
   overflow-y: auto; 
   overflow-x: hidden; 
 }
