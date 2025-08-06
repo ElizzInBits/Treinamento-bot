@@ -1049,17 +1049,7 @@ body.modal-open {
   border-bottom-right-radius: 16px;
 }
 
-/* Conteúdo específico para modais maiores */
-#modalTreinamentosEmpresa .modal-content,
-#modalDetalhesEmpresa .modal-content,
-#modalContatosEmpresa .modal-content {
-  padding: 2rem;
-  max-height: calc(95vh - 120px);
-  overflow-y: scroll !important;
-  overflow-x: hidden;
-  box-sizing: border-box;
-  -webkit-overflow-scrolling: touch;
-}
+
 
 /* Animação */
 @keyframes modalSlideIn {
@@ -1604,7 +1594,6 @@ body.modal-open {
   #modalDetalhesEmpresa .modal-content,
   #modalContatosEmpresa .modal-content {
     padding: 1rem;
-    max-height: calc(98vh - 80px);
   }
 }
 
