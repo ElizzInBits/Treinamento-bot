@@ -492,18 +492,46 @@ function renderizarEmpresas() {
 // Visualizar contatos da empresa
 function visualizarContatosEmpresa(empresaId) {
   const empresa = empresas.find(e => e.id === empresaId);
-  const contatosEmpresa = contatos.filter(c => c.empresaId === empresaId);
+  if (!empresa) return;
 
-  console.log(`Visualizando contatos da empresa ${empresaId}:`, contatosEmpresa);
-
-  empresaSelecionada = empresa;
-  contatosEmpresaSelecionada = contatosEmpresa;
-
-  document.getElementById('modalTituloEmpresa').textContent = `Contatos - ${empresa.razao_social}`;
-  document.getElementById('searchInputModal').value = '';
-
-  renderizarContatosEmpresa();
+  document.getElementById('modalTituloEmpresa').textContent = `Contatos - ${empresa.razao_social || empresa.razaoSocial || 'Empresa'}`;
+  
+  // Mostrar loading
+  document.getElementById('modalConteudoEmpresa').innerHTML = `
+    <div class="treinamentos-loading">
+      <div class="loading-spinner"></div>
+      <p>Carregando contatos...</p>
+    </div>
+  `;
+  
   document.getElementById('modalContatosEmpresa').style.display = 'block';
+  
+  // Carregar contatos da empresa via API
+  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/contatos`)
+    .then(res => {
+      if (!res.ok) throw new Error('Erro ao carregar contatos');
+      return res.json();
+    })
+    .then(contatosEmpresa => {
+      empresaSelecionada = empresa;
+      contatosEmpresaSelecionada = contatosEmpresa;
+      document.getElementById('searchInputModal').value = '';
+      renderizarContatosEmpresa();
+    })
+    .catch(error => {
+      console.error('Erro ao carregar contatos:', error);
+      document.getElementById('modalConteudoEmpresa').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">⚠️</div>
+          <h3>Erro ao carregar contatos</h3>
+          <p>Não foi possível carregar os contatos da empresa.</p>
+          <button class="btn-primary" onclick="visualizarContatosEmpresa(${empresaId})">
+            🔄 Tentar Novamente
+          </button>
+        </div>
+      `;
+      mostrarAlerta('Erro ao carregar contatos da empresa.', 'error');
+    });
 }
 
 // Renderizar contatos da empresa no modal
@@ -2678,7 +2706,7 @@ function abrirModalTreinamentosEmpresa(empresaId) {
       
       <div class="treinamentos-empresa-container">
         <div class="treinamentos-disponiveis">
-          <h4>📚 Treinamentos Disponíveis</h4>
+          <h4> Treinamentos Disponíveis</h4>
           <div class="contador-itens">
             <span class="contador-texto">Total disponível:</span>
             <span class="contador-numero">${treinamentosDisponiveis.length}</span>
@@ -2700,7 +2728,7 @@ function abrirModalTreinamentosEmpresa(empresaId) {
         </div>
         
         <div class="treinamentos-atribuidos">
-          <h4>✅ Treinamentos Atribuídos</h4>
+          <h4> Treinamentos Atribuídos</h4>
           <div class="contador-itens">
             <span class="contador-texto">Total atribuído:</span>
             <span class="contador-numero">${treinamentosEmpresa.length}</span>
@@ -2725,16 +2753,7 @@ function abrirModalTreinamentosEmpresa(empresaId) {
         </div>
       </div>
       
-      <!-- Barra de progresso -->
-      <div class="progress-indicator">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-          <span style="font-weight: 500; color: var(--gray-700);">Progresso de Atribuição</span>
-          <span style="font-weight: 600; color: var(--primary-color);">${Math.round((treinamentosEmpresa.length / (treinamentosDisponiveis.length + treinamentosEmpresa.length)) * 100) || 0}%</span>
-        </div>
-        <div class="progress-bar-custom">
-          <div class="progress-fill-custom" style="width: ${Math.round((treinamentosEmpresa.length / (treinamentosDisponiveis.length + treinamentosEmpresa.length)) * 100) || 0}%"></div>
-        </div>
-      </div>
+
     `;
   })
   .catch(error => {
