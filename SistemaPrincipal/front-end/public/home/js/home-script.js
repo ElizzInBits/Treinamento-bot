@@ -181,6 +181,16 @@ function formatarTelefone(telefone) {
   return telefone;
 }
 
+// Formatação de CNPJ
+function formatarCNPJ(cnpj) {
+  if (!cnpj) return 'N/A';
+  const cleaned = cnpj.replace(/\D/g, '');
+  if (cleaned.length === 14) {
+    return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  }
+  return cnpj;
+}
+
 // Validar telefone
 function validarTelefone(telefone) {
   const cleaned = telefone.replace(/\D/g, '');
@@ -459,19 +469,9 @@ function renderizarEmpresas() {
           <span class="company-type">${empresa.porte_empresa || empresa.tipo || empresa.porte || 'Empresa'}</span>
         </div>
         <div class="company-info">
-          <p><strong>CNPJ:</strong> ${empresa.cnpj || 'N/A'}</p>
+          <p><strong>CNPJ:</strong> ${formatarCNPJ(empresa.cnpj)}</p>
           <p><strong>Email:</strong> ${empresa.email || 'N/A'}</p>
           <p><strong>Telefone:</strong> ${formatarTelefone(empresa.contato)}</p>
-        </div>
-        <div class="company-stats">
-          <div class="stat">
-            <span class="stat-number">${contatosEmpresa.length}</span>
-            <span class="stat-label">Contatos</span>
-          </div>
-          <div class="stat">
-            <span class="stat-number">${contatosComTreinamento.length}</span>
-            <span class="stat-label">Com Treinamento</span>
-          </div>
         </div>
         <div class="company-actions">
           <button class="btn-primary" onclick="visualizarContatosEmpresa(${empresa.id})" title="Visualizar contatos da empresa">
@@ -1793,16 +1793,6 @@ function renderizarEmpresasComFiltro(contatosFiltrados) {
           <p><strong>CNPJ:</strong> ${empresa.cnpj || 'N/A'}</p>
           <p><strong>Email:</strong> ${empresa.email || 'N/A'}</p>
           <p><strong>Telefone:</strong> ${formatarTelefone(empresa.contato)}</p>
-        </div>
-        <div class="company-stats">
-          <div class="stat">
-            <span class="stat-number">${contatosEmpresa.length}</span>
-            <span class="stat-label">Contatos</span>
-          </div>
-          <div class="stat">
-            <span class="stat-number">${contatosComTreinamento.length}</span>
-            <span class="stat-label">Com Treinamento</span>
-          </div>
         </div>
         <div class="company-actions">
           <button class="btn-primary" onclick="visualizarContatosEmpresa(${empresa.id})">
