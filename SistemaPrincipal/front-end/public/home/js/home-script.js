@@ -2074,8 +2074,21 @@ function abrirDetalhesTreinamento(treinamentoId) {
       
       <div class="form-group">
         <label for="novasMidias">Adicionar Novas Mídias</label>
-        <input type="file" id="novasMidias" multiple accept="image/*,video/*,audio/*,application/pdf" class="form-control" />
-        <small>Tipos permitidos: imagens, vídeos, áudios e PDFs (máx. 20MB cada)</small>
+        <div class="file-upload-container">
+          <div class="file-upload-area" onclick="document.getElementById('novasMidias').click()">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Clique aqui ou arraste arquivos</div>
+            <div class="upload-hint">Suporte para múltiplos arquivos (máx. 20MB cada)</div>
+            <div class="upload-types">
+              <span class="type-badge">🖼️ Imagens</span>
+              <span class="type-badge">🎥 Vídeos</span>
+              <span class="type-badge">🎧 Áudios</span>
+              <span class="type-badge">📄 PDFs</span>
+            </div>
+          </div>
+          <input type="file" id="novasMidias" multiple accept="image/*,video/*,audio/*,application/pdf" class="form-control" style="display: none;" />
+          <div id="selectedNewFiles" class="selected-files"></div>
+        </div>
       </div>
     </div>
     
@@ -2086,6 +2099,30 @@ function abrirDetalhesTreinamento(treinamentoId) {
   </form>
 `;
 
+  // Configurar drag-and-drop para novas mídias
+  const uploadArea = document.querySelector('#modalDetalhesTreinamento .file-upload-area');
+  const fileInput = document.getElementById('novasMidias');
+  
+  if (uploadArea && fileInput) {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, e => e.preventDefault(), false);
+    });
+    
+    uploadArea.addEventListener('dragover', () => uploadArea.classList.add('dragover'));
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    
+    uploadArea.addEventListener('drop', function(e) {
+      uploadArea.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      fileInput.files = files;
+      mostrarArquivosSelecionados(files, 'selectedNewFiles');
+    });
+    
+    fileInput.addEventListener('change', function() {
+      mostrarArquivosSelecionados(this.files, 'selectedNewFiles');
+    });
+  }
+  
   document.getElementById('editarTreinamentoForm').onsubmit = function (e) {
     e.preventDefault();
     
@@ -2254,8 +2291,10 @@ const carregarDadosComCache = {
 };
 
 // Função para mostrar arquivos selecionados
-function mostrarArquivosSelecionados(arquivos) {
-  const container = document.getElementById('selectedFiles');
+function mostrarArquivosSelecionados(arquivos, containerId = 'selectedFiles') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
   if (arquivos.length === 0) {
     container.classList.remove('has-files');
     return;
@@ -2271,7 +2310,7 @@ function mostrarArquivosSelecionados(arquivos) {
           <span class="file-name">${arquivo.name}</span>
           <span class="file-size">${formatFileSize(arquivo.size)}</span>
         </div>
-        <button type="button" class="file-remove" onclick="removerArquivo(${index})" title="Remover arquivo">
+        <button type="button" class="file-remove" onclick="removerArquivo(${index}, '${containerId}')" title="Remover arquivo">
           ✕
         </button>
       </div>
@@ -2280,8 +2319,9 @@ function mostrarArquivosSelecionados(arquivos) {
 }
 
 // Função para remover arquivo individual
-function removerArquivo(index) {
-  const fileInput = document.getElementById('midiasTreinamento');
+function removerArquivo(index, containerId = 'selectedFiles') {
+  const inputId = containerId === 'selectedNewFiles' ? 'novasMidias' : 'midiasTreinamento';
+  const fileInput = document.getElementById(inputId);
   const dt = new DataTransfer();
   
   // Recriar FileList sem o arquivo removido
@@ -2292,7 +2332,7 @@ function removerArquivo(index) {
   });
   
   fileInput.files = dt.files;
-  mostrarArquivosSelecionados(fileInput.files);
+  mostrarArquivosSelecionados(fileInput.files, containerId);
 }
 
 function getFileIcon(mimeType) {

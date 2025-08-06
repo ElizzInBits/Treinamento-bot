@@ -1844,3 +1844,46 @@ body.modal-open {
   border-radius: 2px;
   transition: width 0.3s ease;
 }
+/* Media Grid Styles */
+.midias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.midia-item {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.midia-item:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.midia-preview {
+  margin-bottom: 0.5rem;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.midia-nome {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  margin-bottom: 0.5rem;
+  word-break: break-word;
+}
+
+.btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
