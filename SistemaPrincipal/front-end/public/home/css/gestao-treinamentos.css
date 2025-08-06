@@ -245,19 +245,38 @@
   top: 10%;
   bottom: 10%;
   width: 2px;
-  background: linear-gradient(180deg, transparent, var(--primary-color), var(--secondary-color), transparent);
-  transform: translateX(-50%);
-  opacity: 0.3;
+ 
 }
-
-/* Melhorias para o modal de detalhes da empresa */
+/* modal de detalhes da empresa */
 .empresa-detalhes {
   display: flex;
   flex-direction: column;
   gap: 2rem;
   width: 100%;
+  max-height: 70vh; 
+  overflow-y: auto; 
+  overflow-x: hidden; 
   box-sizing: border-box;
-  overflow: hidden;
+  padding-right: 0.5rem; 
+}
+
+
+.empresa-detalhes::-webkit-scrollbar {
+  width: 6px;
+}
+
+.empresa-detalhes::-webkit-scrollbar-track {
+  background: var(--gray-100, #f5f5f5);
+  border-radius: 3px;
+}
+
+.empresa-detalhes::-webkit-scrollbar-thumb {
+  background: var(--gray-300, #d1d5db);
+  border-radius: 3px;
+}
+
+.empresa-detalhes::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400, #9ca3af);
 }
 
 .form-section {
@@ -266,9 +285,31 @@
   padding: 1.5rem;
   border: 1px solid var(--gray-200);
   position: relative;
-  overflow: hidden;
   width: 100%;
   box-sizing: border-box;
+  flex-shrink: 0;
+  max-height: 400px; 
+  overflow-y: auto; 
+  overflow-x: hidden; 
+}
+
+
+.form-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.form-section::-webkit-scrollbar-track {
+  background: var(--gray-100, #f5f5f5);
+  border-radius: 3px;
+}
+
+.form-section::-webkit-scrollbar-thumb {
+  background: var(--gray-300, #d1d5db);
+  border-radius: 3px;
+}
+
+.form-section::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400, #9ca3af);
 }
 
 .form-section::before {
@@ -302,7 +343,6 @@
   content: '📚';
   font-size: 1.5rem;
 }
-
 /* Estatísticas visuais */
 .empresa-stats-visual {
   display: grid;
