@@ -45,18 +45,12 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
   
-  // Gráfico de Contatos por Empresa
+  // Aguardar dados serem carregados antes de criar gráficos
   setTimeout(() => {
-    criarGraficoEmpresas();
-  }, 1000);
-
-  // Gráficos do Dashboard
-  setTimeout(() => {
-    criarGraficoEmpresas();
-    criarGraficoStatus();
-    criarGraficoModalidades();
-    criarGraficoEvolucao();
-  }, 2000);
+    if (document.getElementById('mapeamento').classList.contains('active')) {
+      atualizarGraficos();
+    }
+  }, 3000);
 });
 
 let graficoStatusInstance = null;
@@ -112,6 +106,7 @@ async function criarGraficoStatus() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        aspectRatio: 1.5,
         plugins: {
           legend: {
             position: 'bottom',
@@ -155,6 +150,10 @@ function showTab(tabName) {
 
   if (tabName === 'mapeamento') {
     atualizarEstatisticasMapeamento();
+    // Aguardar um pouco antes de criar os gráficos
+    setTimeout(() => {
+      atualizarGraficos();
+    }, 500);
   } else if (tabName === 'empresas') {
     Promise.all([carregarEmpresas(), carregarContatos()]).then(() => {
       renderizarEmpresas();
@@ -848,7 +847,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   const registroInstrutor = document.getElementById('registroInstrutor').value.trim();
   const responsavel = document.getElementById('responsavelTreinamento').value.trim();
   const cargoResponsavel = document.getElementById('cargoResponsavel').value.trim();
-  const areaResponsavel = document.getElementById('areaResponsavel')?.value || document.getElementById('responsavelTreinamento')?.value || '';
+  const areaResponsavel = document.getElementById('areaResponsavel')?.value || '';
   const registroResponsavel = document.getElementById('registroResponsavel').value.trim();
 
   if (!nome || !modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudo || !instrutor || !registroInstrutor || !responsavel || !registroResponsavel || !areaResponsavel) {
@@ -2374,6 +2373,7 @@ async function criarGraficoEmpresas() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        aspectRatio: 2,
         plugins: {
           legend: {
             display: true,
@@ -2465,6 +2465,7 @@ async function criarGraficoModalidades() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        aspectRatio: 1.5,
         plugins: {
           legend: {
             position: 'bottom',
@@ -2557,6 +2558,7 @@ async function criarGraficoEvolucao() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        aspectRatio: 2,
         interaction: {
           intersect: false,
           mode: 'index'
