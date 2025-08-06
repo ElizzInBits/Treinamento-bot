@@ -76,6 +76,7 @@ async function criarGraficoStatus() {
   // Destruir gráfico anterior se existir
   if (graficoStatusInstance) {
     graficoStatusInstance.destroy();
+    graficoStatusInstance = null;
   }
   
   try {
@@ -2334,6 +2335,7 @@ async function criarGraficoEmpresas() {
   
   if (graficoEmpresasInstance) {
     graficoEmpresasInstance.destroy();
+    graficoEmpresasInstance = null;
   }
   
   try {
@@ -2425,6 +2427,7 @@ async function criarGraficoModalidades() {
   
   if (graficoModalidadesInstance) {
     graficoModalidadesInstance.destroy();
+    graficoModalidadesInstance = null;
   }
   
   try {
@@ -2498,6 +2501,7 @@ async function criarGraficoEvolucao() {
   
   if (graficoEvolucaoInstance) {
     graficoEvolucaoInstance.destroy();
+    graficoEvolucaoInstance = null;
   }
   
   try {
