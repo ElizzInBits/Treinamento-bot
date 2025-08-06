@@ -1055,9 +1055,10 @@ body.modal-open {
 #modalContatosEmpresa .modal-content {
   padding: 2rem;
   max-height: calc(95vh - 120px);
-  overflow-y: auto;
+  overflow-y: scroll !important;
   overflow-x: hidden;
   box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Animação */

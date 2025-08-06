@@ -506,8 +506,14 @@ function visualizarContatosEmpresa(empresaId) {
   
   document.getElementById('modalContatosEmpresa').style.display = 'block';
   
-  // Carregar contatos da empresa via API
-  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/contatos`)
+  // Usar dados locais já carregados
+  const contatosEmpresa = contatos.filter(c => c.empresaId === empresaId);
+  empresaSelecionada = empresa;
+  contatosEmpresaSelecionada = contatosEmpresa;
+  document.getElementById('searchInputModal').value = '';
+  renderizarContatosEmpresa();
+  
+  /*fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/contatos`)
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar contatos');
       return res.json();
@@ -531,7 +537,7 @@ function visualizarContatosEmpresa(empresaId) {
         </div>
       `;
       mostrarAlerta('Erro ao carregar contatos da empresa.', 'error');
-    });
+    });*/
 }
 
 // Renderizar contatos da empresa no modal
