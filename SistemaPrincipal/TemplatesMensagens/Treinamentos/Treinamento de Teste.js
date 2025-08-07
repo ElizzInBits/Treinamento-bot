@@ -2,7 +2,8 @@
 // ID do treinamento: 39
 // Gerado automaticamente em: 04/08/2025, 10:35:32
 
-const { sendMessage } = require('../conexao/wppConnectTemplate');
+// Importar função sendMessage do Template2
+const { sendMessage } = require('../Template2');
 const { Treinamento } = require('../../BancoDeDados/models');
 const { Interacao, Empresa } = require('../../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('../Certificados/certificados2.js');

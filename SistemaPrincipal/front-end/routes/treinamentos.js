@@ -41,7 +41,9 @@ const upload = multer({
 // Listar todos os treinamentos
 router.get('/', async (req, res) => {
   try {
-    const treinamentos = await Treinamento.findAll({ order: [['nome', 'ASC']] });
+    const treinamentos = await Treinamento.findAll({ 
+      order: [['nome', 'ASC']]
+    });
     res.json(treinamentos);
   } catch (err) {
     console.error('Erro ao listar treinamentos:', err);
@@ -108,21 +110,19 @@ router.post('/', (req, res) => {
         nome: nome.trim(),
         descricao,
         modalidade,
-        cargaHoraria: parseInt(cargaHoraria),
+        carga_horaria: parseInt(cargaHoraria),
         tipo,
-        emConformidade,
-        aproveitamento,
-        conteudo: conteudoProgramatico,
-        instrutor,
-        qualificacaoInstrutor,
-        registroInstrutor: registroInstrutor || 'N/A',
-        instrutoresAdicionais,
-        responsavel,
-        cargoResponsavel,
-        registroResponsavel: registroResponsavel || 'N/A',
-        areaResponsavel,
-        observacoes,
-        midias: JSON.stringify(midias)
+        em_conformidade: emConformidade,
+        aproveitamento_conteudo: aproveitamento,
+        conteudo_programatico: conteudoProgramatico,
+        instrutor_principal: instrutor,
+        qualificacao_instrutor: qualificacaoInstrutor,
+        registro_instrutor: registroInstrutor || 'N/A',
+        responsavel_treinamento: responsavel,
+        cargo_responsavel: cargoResponsavel,
+        registro_responsavel: registroResponsavel || 'N/A',
+        area_responsavel: areaResponsavel,
+        midias_treinamento: JSON.stringify(midias)
       });
 
       console.log('✅ Treinamento criado com sucesso:', novo.nome);
@@ -178,32 +178,30 @@ router.put('/:id', upload.array('midias', 10), async (req, res) => {
     // Atualiza todos os campos
     treinamento.descricao = descricao;
     treinamento.modalidade = modalidade;
-    treinamento.cargaHoraria = cargaHoraria;
+    treinamento.carga_horaria = cargaHoraria;
     treinamento.tipo = tipo;
-    treinamento.emConformidade = emConformidade;
-    treinamento.aproveitamento = aproveitamento;
-    treinamento.conteudo = conteudoProgramatico;
-    treinamento.instrutor = instrutor;
-    treinamento.qualificacaoInstrutor = qualificacaoInstrutor;
-    treinamento.registroInstrutor = registroInstrutor || 'N/A';
-    treinamento.instrutoresAdicionais = instrutoresAdicionais;
-    treinamento.responsavel = responsavel;
-    treinamento.cargoResponsavel = cargoResponsavel;
-    treinamento.registroResponsavel = registroResponsavel || 'N/A';
-    treinamento.areaResponsavel = areaResponsavel;
-    treinamento.observacoes = observacoes;
+    treinamento.em_conformidade = emConformidade;
+    treinamento.aproveitamento_conteudo = aproveitamento;
+    treinamento.conteudo_programatico = conteudoProgramatico;
+    treinamento.instrutor_principal = instrutor;
+    treinamento.qualificacao_instrutor = qualificacaoInstrutor;
+    treinamento.registro_instrutor = registroInstrutor || 'N/A';
+    treinamento.responsavel_treinamento = responsavel;
+    treinamento.cargo_responsavel = cargoResponsavel;
+    treinamento.registro_responsavel = registroResponsavel || 'N/A';
+    treinamento.area_responsavel = areaResponsavel;
 
     // Se enviou arquivos, adiciona às mídias existentes
     if (midias.length > 0) {
       let midiasExistentes = [];
       try {
-        midiasExistentes = treinamento.midias ? JSON.parse(treinamento.midias) : [];
+        midiasExistentes = treinamento.midias_treinamento ? JSON.parse(treinamento.midias_treinamento) : [];
       } catch (e) {
         midiasExistentes = [];
       }
       
       const todasMidias = [...midiasExistentes, ...midias];
-      treinamento.midias = JSON.stringify(todasMidias);
+      treinamento.midias_treinamento = JSON.stringify(todasMidias);
     }
 
     await treinamento.save();
@@ -229,7 +227,7 @@ router.delete('/:id/midia/:nomeArquivo', async (req, res) => {
     // Parse das mídias existentes
     let midias = [];
     try {
-      midias = treinamento.midias ? JSON.parse(treinamento.midias) : [];
+      midias = treinamento.midias_treinamento ? JSON.parse(treinamento.midias_treinamento) : [];
     } catch (e) {
       midias = [];
     }
@@ -238,7 +236,7 @@ router.delete('/:id/midia/:nomeArquivo', async (req, res) => {
     const novasMidias = midias.filter(m => m !== nomeArquivo);
     
     // Atualizar no banco
-    treinamento.midias = JSON.stringify(novasMidias);
+    treinamento.midias_treinamento = JSON.stringify(novasMidias);
     await treinamento.save();
     
     // Tentar remover o arquivo físico

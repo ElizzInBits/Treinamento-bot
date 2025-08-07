@@ -85,14 +85,14 @@ router.post('/', async (req, res) => {
     }
 
     const novaEmpresa = await Empresa.create({
-      razao_social: razaoSocial.trim(),
+      razaoSocial: razaoSocial.trim(),
       cnpj: cnpjLimpo,
-      porte_empresa: porte,
+      porteEmpresa: porte,
       endereco,
       cep,
       contato,
       email,
-      criado_em: new Date()
+      criadoEm: new Date()
     });
 
     res.status(201).json(novaEmpresa);

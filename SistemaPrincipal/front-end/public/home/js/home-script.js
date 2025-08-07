@@ -7,6 +7,102 @@ let empresaIdCounter = 1;
 let empresaSelecionada = null;
 let contatosEmpresaSelecionada = [];
 
+// Conectar ao WebSocket
+const socket = io();
+
+// Escutar eventos de novos contatos
+socket.on('novoContato', (data) => {
+  console.log('Novo contato recebido via WebSocket:', data.contato);
+  
+  // Adicionar contato à lista local
+  contatos.push({
+    ...data.contato,
+    id: parseInt(data.contato.id, 10),
+    empresaId: parseInt(data.contato.empresaId, 10),
+    treinamentoId: data.contato.treinamentoId ? parseInt(data.contato.treinamentoId, 10) : null
+  });
+  
+  // Atualizar estatísticas
+  atualizarEstatisticasMapeamento();
+  atualizarEstatisticasEmpresas();
+  
+  // Atualizar visualizações se estiverem ativas
+  if (document.getElementById('empresas').classList.contains('active')) {
+    renderizarEmpresas();
+  }
+  
+  // Atualizar modal de contatos da empresa se estiver aberto
+  if (empresaSelecionada && data.contato.empresaId === empresaSelecionada.id) {
+    contatosEmpresaSelecionada.push(data.contato);
+    renderizarContatosEmpresa();
+  }
+  
+  // Mostrar notificação
+  if (Notification.permission === 'granted') {
+    new Notification('Novo contato cadastrado!', {
+      body: `${data.contato.nome} foi cadastrado`,
+      icon: '/favicon.ico'
+    });
+  }
+});
+
+// Solicitar permissão para notificações
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+
+// Controle de criação de gráficos
+let graficosEmCriacao = new Set();
+
+// Função para destruir TODOS os gráficos
+function destruirTodosGraficos() {
+  try {
+    // Destruir todas as instâncias do Chart.js
+    Object.keys(Chart.instances).forEach(key => {
+      Chart.instances[key].destroy();
+    });
+    
+    // Limpar instâncias globais
+    if (graficoStatusInstance) {
+      graficoStatusInstance.destroy();
+      graficoStatusInstance = null;
+    }
+    if (graficoEmpresasInstance) {
+      graficoEmpresasInstance.destroy();
+      graficoEmpresasInstance = null;
+    }
+    if (graficoModalidadesInstance) {
+      graficoModalidadesInstance.destroy();
+      graficoModalidadesInstance = null;
+    }
+    if (graficoEvolucaoInstance) {
+      graficoEvolucaoInstance.destroy();
+      graficoEvolucaoInstance = null;
+    }
+  } catch (error) {
+    console.warn('Erro ao destruir gráficos:', error);
+  }
+}
+
+// Função para limpar canvas completamente
+function limparCanvas(canvasId) {
+  try {
+    const canvas = document.getElementById(canvasId);
+    if (canvas) {
+      const existingChart = Chart.getChart(canvas);
+      if (existingChart) {
+        existingChart.destroy();
+      }
+      
+      // Limpar o contexto do canvas
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  } catch (error) {
+    console.warn('Erro ao limpar canvas:', error);
+  }
+}
+
 // Inicializar sistema
 document.addEventListener('DOMContentLoaded', function () {
   // Definir aba ativa imediatamente para evitar flash
@@ -61,11 +157,21 @@ async function criarGraficoStatus() {
     return;
   }
   
+  // Evitar criação simultânea
+  if (graficosEmCriacao.has('graficoStatus')) {
+    return;
+  }
+  graficosEmCriacao.add('graficoStatus');
+  
   const ctx = document.getElementById("graficoStatus");
   if (!ctx) {
     console.log('Elemento graficoStatus não encontrado');
+    graficosEmCriacao.delete('graficoStatus');
     return;
   }
+  
+  // Limpar completamente o canvas
+  limparCanvas('graficoStatus');
   
   // Destruir gráfico anterior se existir
   if (graficoStatusInstance) {
@@ -74,7 +180,7 @@ async function criarGraficoStatus() {
   }
   
   try {
-    const response = await fetch('http://92.112.178.26:3000/api/dashboard/status-treinamento');
+    const response = await fetch('http://localhost:3000/api/dashboard/status-treinamento');
     const dados = await response.json();
     
     if (dados.length === 0) {
@@ -129,6 +235,8 @@ async function criarGraficoStatus() {
     });
   } catch (error) {
     console.error('Erro ao carregar dados do gráfico de status:', error);
+  } finally {
+    graficosEmCriacao.delete('graficoStatus');
   }
 }
 
@@ -216,7 +324,7 @@ function mostrarAlerta(mensagem, tipo = 'success') {
 // Atualizar estatísticas da aba Mapeamento com dados da API
 async function atualizarEstatisticasMapeamento() {
   try {
-    const response = await fetch('http://92.112.178.26:3000/api/dashboard/stats');
+    const response = await fetch('http://localhost:3000/api/dashboard/stats');
     const stats = await response.json();
     
     // Atualizar os elementos da aba Mapeamento
@@ -258,7 +366,7 @@ async function atualizarEstatisticasMapeamento() {
 async function carregarInsights() {
   try {
     // Top empresas por engajamento
-    const topEmpresasResponse = await fetch('http://92.112.178.26:3000/api/dashboard/top-empresas');
+    const topEmpresasResponse = await fetch('http://localhost:3000/api/dashboard/top-empresas');
     const topEmpresas = await topEmpresasResponse.json();
     
     const topEmpresasElement = document.getElementById('topEmpresas');
@@ -273,7 +381,7 @@ async function carregarInsights() {
     }
     
     // Calcular tendência de crescimento
-    const evolucaoResponse = await fetch('http://92.112.178.26:3000/api/dashboard/evolucao-mensal');
+    const evolucaoResponse = await fetch('http://localhost:3000/api/dashboard/evolucao-mensal');
     const evolucao = await evolucaoResponse.json();
     
     const tendenciaElement = document.getElementById('tendenciaCrescimento');
@@ -291,7 +399,7 @@ async function carregarInsights() {
     }
     
     // Calcular eficiência do sistema
-    const statsResponse = await fetch('http://92.112.178.26:3000/api/dashboard/stats');
+    const statsResponse = await fetch('http://localhost:3000/api/dashboard/stats');
     const stats = await statsResponse.json();
     
     const eficienciaElement = document.getElementById('eficienciaSistema');
@@ -401,7 +509,7 @@ function atualizarSelectTreinamento() {
 
 // Carregar contatos
 function carregarContatos() {
-  return fetch('http://92.112.178.26:3000/api/contatos')
+  return fetch('http://localhost:3000/api/contatos')
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar contatos');
       return res.json();
@@ -513,7 +621,7 @@ function visualizarContatosEmpresa(empresaId) {
   document.getElementById('searchInputModal').value = '';
   renderizarContatosEmpresa();
   
-  /*fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/contatos`)
+  /*fetch(`http://localhost:3000/api/empresas/${empresaId}/contatos`)
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar contatos');
       return res.json();
@@ -636,7 +744,7 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
     treinamentoId: treinamentoId ? parseInt(treinamentoId) : null
   };
 
-  fetch(`http://92.112.178.26:3000/api/contatos/${contatoId}`, {
+  fetch(`http://localhost:3000/api/contatos/${contatoId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dadosAtualizados)
@@ -671,7 +779,7 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
 function removerContato(id) {
   if (!confirm('Tem certeza que deseja remover este contato?')) return;
 
-  fetch(`http://92.112.178.26:3000/api/contatos/${id}`, {
+  fetch(`http://localhost:3000/api/contatos/${id}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -749,7 +857,7 @@ function carregarTreinamentos() {
   const loading = document.getElementById('loadingTreinamentos');
   if (loading) loading.style.display = 'block';
 
-  return fetch('http://92.112.178.26:3000/api/treinamentos')
+  return fetch('http://localhost:3000/api/treinamentos')
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar treinamentos');
       return res.json();
@@ -804,13 +912,13 @@ function renderizarTreinamentos() {
 
         </div>
         <div class="training-content">
-          <p class="training-description">${treinamento.conteudo || 'Sem descrição'}</p>
+          <p class="training-description">${treinamento.conteudo_programatico || 'Sem conteúdo programático'}</p>
           <div class="training-details">
             <p><strong>Modalidade:</strong> ${treinamento.modalidade || 'N/A'}</p>
-            <p><strong>Carga Horária:</strong> ${treinamento.cargaHoraria || 'N/A'} h</p>
+            <p><strong>Carga Horária:</strong> ${treinamento.carga_horaria || 'N/A'}h</p>
             <p><strong>Tipo:</strong> ${treinamento.tipo || 'N/A'}</p>
-            <p><strong>Instrutor:</strong> ${treinamento.instrutor || 'N/A'}</p>
-            <p><strong>Área Responsável:</strong> ${treinamento.areaResponsavel || 'N/A'}</p>
+            <p><strong>Instrutor:</strong> ${treinamento.instrutor_principal || 'N/A'}</p>
+            <p><strong>Área Responsável:</strong> ${treinamento.area_responsavel || 'N/A'}</p>
           </div>
 
         </div>
@@ -847,7 +955,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   const registroInstrutor = document.getElementById('registroInstrutor').value.trim();
   const responsavel = document.getElementById('responsavelTreinamento').value.trim();
   const cargoResponsavel = document.getElementById('cargoResponsavel').value.trim();
-  const areaResponsavel = document.getElementById('areaResponsavel')?.value || '';
+  const areaResponsavel = document.getElementById('areaResponsavel').value.trim();
   const registroResponsavel = document.getElementById('registroResponsavel').value.trim();
 
   if (!nome || !modalidade || !cargaHoraria || !tipo || !emConformidade || !aproveitamento || !conteudo || !instrutor || !registroInstrutor || !responsavel || !registroResponsavel || !areaResponsavel) {
@@ -863,8 +971,10 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
 
   // Validar arquivos se houver
   if (arquivos.length > 0) {
+    console.log('✅ Validando', arquivos.length, 'arquivos...');
     const tiposPermitidos = ['image/', 'video/', 'audio/', 'application/pdf'];
     const tamanhoMaximo = 20 * 1024 * 1024; // 20MB
+    let arquivosValidos = 0;
 
     for (let i = 0; i < arquivos.length; i++) {
       const arquivo = arquivos[i];
@@ -880,7 +990,11 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
         mostrarAlerta(`Arquivo "${arquivo.name}" é muito grande. Tamanho máximo: 20MB.`, 'error');
         return;
       }
+      
+      arquivosValidos++;
     }
+    
+    console.log('✅', arquivosValidos, 'arquivos válidos para upload');
   }
 
   const formData = new FormData();
@@ -900,8 +1014,12 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   formData.append('areaResponsavel', areaResponsavel);
   formData.append('registroResponsavel', registroResponsavel);
 
+  // Debug: verificar quantos arquivos foram selecionados
+  console.log('📁 Total de arquivos selecionados:', arquivos.length);
+  
   // Adiciona cada arquivo individualmente com o nome correto esperado pelo backend
   for (let i = 0; i < arquivos.length; i++) {
+    console.log(`📄 Adicionando arquivo ${i + 1}:`, arquivos[i].name);
     formData.append('midias', arquivos[i]);
   }
 
@@ -911,7 +1029,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   submitButton.textContent = 'Criando treinamento...';
   submitButton.disabled = true;
 
-  fetch('http://92.112.178.26:3000/api/treinamentos', {
+  fetch('http://localhost:3000/api/treinamentos', {
     method: 'POST',
     body: formData, // Atenção: não colocar headers 'Content-Type' com JSON aqui
   })
@@ -1010,7 +1128,7 @@ function removerTreinamento(id) {
     }
   }
 
-  fetch(`http://92.112.178.26:3000/api/treinamentos/${id}`, {
+  fetch(`http://localhost:3000/api/treinamentos/${id}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -1098,7 +1216,7 @@ function carregarEmpresas() {
   const loading = document.getElementById('loadingEmpresas');
   if (loading) loading.style.display = 'block';
 
-  return fetch('http://92.112.178.26:3000/api/empresas')
+  return fetch('http://localhost:3000/api/empresas')
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar empresas');
       return res.json();
@@ -1292,7 +1410,7 @@ window.addEventListener('error', function (e) {
 
 // Função para verificar conectividade com a API
 function verificarConectividadeAPI() {
-  return fetch('http://92.112.178.26:3000/api/health', {
+  return fetch('http://localhost:3000/api/health', {
     method: 'GET',
     timeout: 5000
   })
@@ -1348,7 +1466,7 @@ document.getElementById('empresaForm')?.addEventListener('submit', function (e) 
     porte_empresa: porte || null
   };
 
-  fetch('http://92.112.178.26:3000/api/empresas', {
+  fetch('http://localhost:3000/api/empresas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(novaEmpresa)
@@ -1419,7 +1537,7 @@ document.getElementById('contatoForm')?.addEventListener('submit', function (e) 
     statusTreinamento: treinamentoId ? 'ativo' : 'sem_treinamento'
   };
 
-  fetch('http://92.112.178.26:3000/api/contatos', {
+  fetch('http://localhost:3000/api/contatos', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(novoContato)
@@ -1966,10 +2084,10 @@ function abrirDetalhesTreinamento(treinamentoId) {
   // Parse das mídias existentes
   let midiasExistentes = [];
   try {
-    if (treinamento.midias && typeof treinamento.midias === 'string' && treinamento.midias.trim() !== '') {
-      midiasExistentes = JSON.parse(treinamento.midias);
-    } else if (Array.isArray(treinamento.midias)) {
-      midiasExistentes = treinamento.midias;
+    if (treinamento.midias_treinamento && typeof treinamento.midias_treinamento === 'string' && treinamento.midias_treinamento.trim() !== '') {
+      midiasExistentes = JSON.parse(treinamento.midias_treinamento);
+    } else if (Array.isArray(treinamento.midias_treinamento)) {
+      midiasExistentes = treinamento.midias_treinamento;
     }
   } catch (e) {
     console.error('Erro ao parsear mídias:', e);
@@ -1994,7 +2112,7 @@ function abrirDetalhesTreinamento(treinamentoId) {
         </div>
         <div class="form-group">
           <label for="editarCargaHoraria">Carga Horária <span class="required">*</span></label>
-          <input type="number" id="editarCargaHoraria" class="form-control" value="${treinamento.cargaHoraria || ''}" required />
+          <input type="number" id="editarCargaHoraria" class="form-control" value="${treinamento.carga_horaria || ''}" required />
         </div>
       </div>
       <div class="form-row">
@@ -2006,17 +2124,17 @@ function abrirDetalhesTreinamento(treinamentoId) {
       <div class="form-row">
         <div class="form-group">
           <label for="editarEmConformidade">Em Conformidade</label>
-          <input type="text" id="editarEmConformidade" class="form-control" value="${treinamento.emConformidade || ''}" />
+          <input type="text" id="editarEmConformidade" class="form-control" value="${treinamento.em_conformidade || ''}" maxlength="255" />
         </div>
         <div class="form-group">
           <label for="editarAproveitamento">Aproveitamento</label>
-          <input type="text" id="editarAproveitamento" class="form-control" value="${treinamento.aproveitamento || ''}" />
+          <input type="text" id="editarAproveitamento" class="form-control" value="${treinamento.aproveitamento_conteudo || ''}" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group full-width">
           <label for="editarConteudoTreinamento">Conteúdo Programático</label>
-          <textarea id="editarConteudoTreinamento" rows="4" class="form-control">${treinamento.conteudoProgramatico || treinamento.conteudo || ''}</textarea>
+          <textarea id="editarConteudoTreinamento" rows="4" class="form-control">${treinamento.conteudo_programatico || ''}</textarea>
         </div>
       </div>
     </div>
@@ -2027,37 +2145,37 @@ function abrirDetalhesTreinamento(treinamentoId) {
       <div class="form-row">
         <div class="form-group">
           <label for="editarInstrutor">Instrutor</label>
-          <input type="text" id="editarInstrutor" class="form-control" value="${treinamento.instrutor || ''}" />
+          <input type="text" id="editarInstrutor" class="form-control" value="${treinamento.instrutor_principal || ''}" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label for="editarQualificacaoInstrutor">Qualificação</label>
-          <input type="text" id="editarQualificacaoInstrutor" class="form-control" value="${treinamento.qualificacaoInstrutor || ''}" />
+          <input type="text" id="editarQualificacaoInstrutor" class="form-control" value="${treinamento.qualificacao_instrutor || ''}" />
         </div>
         <div class="form-group">
           <label for="editarRegistroInstrutor">Registro do Instrutor</label>
-          <input type="text" id="editarRegistroInstrutor" class="form-control" value="${treinamento.registroInstrutor || ''}" />
+          <input type="text" id="editarRegistroInstrutor" class="form-control" value="${treinamento.registro_instrutor || ''}" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label for="editarResponsavel">Responsável</label>
-          <input type="text" id="editarResponsavel" class="form-control" value="${treinamento.responsavel || ''}" />
+          <input type="text" id="editarResponsavel" class="form-control" value="${treinamento.responsavel_treinamento || ''}" />
         </div>
         <div class="form-group">
           <label for="editarCargoResponsavel">Cargo</label>
-          <input type="text" id="editarCargoResponsavel" class="form-control" value="${treinamento.cargoResponsavel || ''}" />
+          <input type="text" id="editarCargoResponsavel" class="form-control" value="${treinamento.cargo_responsavel || ''}" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label for="editarAreaResponsavel">Área Responsável</label>
-          <input type="text" id="editarAreaResponsavel" class="form-control" value="${treinamento.areaResponsavel || ''}" />
+          <input type="text" id="editarAreaResponsavel" class="form-control" value="${treinamento.area_responsavel || ''}" />
         </div>
         <div class="form-group">
           <label for="editarRegistroResponsavel">Registro</label>
-          <input type="text" id="editarRegistroResponsavel" class="form-control" value="${treinamento.registroResponsavel || ''}" />
+          <input type="text" id="editarRegistroResponsavel" class="form-control" value="${treinamento.registro_responsavel || ''}" />
         </div>
       </div>
     </div>
@@ -2094,8 +2212,8 @@ function abrirDetalhesTreinamento(treinamentoId) {
         <div class="file-upload-container">
           <div class="file-upload-area" onclick="document.getElementById('novasMidias').click()">
             <div class="upload-icon">📁</div>
-            <div class="upload-text">Clique aqui ou arraste arquivos</div>
-            <div class="upload-hint">Suporte para múltiplos arquivos (máx. 20MB cada)</div>
+            <div class="upload-text">Clique aqui ou arraste os arquivos</div>
+            <div class="upload-hint">✅ Tamanho maximo permitido (máx. 20MB cada)</div>
             <div class="upload-types">
               <span class="type-badge">🖼️ Imagens</span>
               <span class="type-badge">🎥 Vídeos</span>
@@ -2105,6 +2223,9 @@ function abrirDetalhesTreinamento(treinamentoId) {
           </div>
           <input type="file" id="novasMidias" multiple accept="image/*,video/*,audio/*,application/pdf" class="form-control" style="display: none;" />
           <div id="selectedNewFiles" class="selected-files"></div>
+          <button type="button" class="btn-secondary" onclick="document.getElementById('novasMidias').click()" style="margin-top: 10px;">
+            ➕ Adicionar Arquivos
+          </button>
         </div>
       </div>
     </div>
@@ -2135,7 +2256,18 @@ function abrirDetalhesTreinamento(treinamentoId) {
       mostrarArquivosSelecionados(files, 'selectedNewFiles');
     });
     
+    let arquivosAcumulados = [];
+    
     fileInput.addEventListener('change', function() {
+      // Adicionar novos arquivos aos já selecionados
+      const novosArquivos = Array.from(this.files || []);
+      arquivosAcumulados = [...arquivosAcumulados, ...novosArquivos];
+      
+      // Criar novo FileList com todos os arquivos
+      const dt = new DataTransfer();
+      arquivosAcumulados.forEach(file => dt.items.add(file));
+      this.files = dt.files;
+      
       mostrarArquivosSelecionados(this.files, 'selectedNewFiles');
     });
   }
@@ -2167,7 +2299,7 @@ function abrirDetalhesTreinamento(treinamentoId) {
       formData.append('midias', novasMidias[i]);
     }
 
-    fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}`, {
+    fetch(`http://localhost:3000/api/treinamentos/${treinamentoId}`, {
       method: 'PUT',
       body: formData
     })
@@ -2224,7 +2356,7 @@ function downloadMidia(nomeArquivo) {
 function removerMidia(nomeArquivo, treinamentoId) {
   if (!confirm(`Tem certeza que deseja remover a mídia "${nomeArquivo}"?`)) return;
   
-  fetch(`http://92.112.178.26:3000/api/treinamentos/${treinamentoId}/midia/${nomeArquivo}`, {
+  fetch(`http://localhost:3000/api/treinamentos/${treinamentoId}/midia/${nomeArquivo}`, {
     method: 'DELETE'
   })
   .then(res => {
@@ -2318,8 +2450,15 @@ function mostrarArquivosSelecionados(arquivos, containerId = 'selectedFiles') {
   }
   
   container.classList.add('has-files');
+  
+  // Mostrar botão de adicionar mais arquivos
+  const btnAdicionarMais = document.getElementById('btnAdicionarMais');
+  if (btnAdicionarMais) {
+    btnAdicionarMais.style.display = 'inline-block';
+  }
+  
   container.innerHTML = `
-    <h5>📎 Arquivos Selecionados (${arquivos.length}):</h5>
+    <h5>📎 ${arquivos.length} Arquivo${arquivos.length > 1 ? 's' : ''} Selecionado${arquivos.length > 1 ? 's' : ''}:</h5>
     ${Array.from(arquivos).map((arquivo, index) => `
       <div class="file-item" data-index="${index}">
         <div class="file-info">
@@ -2424,13 +2563,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Handle file input change
+    let arquivosAcumuladosMain = [];
+    
     fileInput.addEventListener('change', function() {
-      const validFiles = validarArquivos(Array.from(this.files));
-      if (validFiles.length !== this.files.length) {
-        const dt = new DataTransfer();
-        validFiles.forEach(file => dt.items.add(file));
-        this.files = dt.files;
-      }
+      const novosArquivos = Array.from(this.files || []);
+      const validFiles = validarArquivos(novosArquivos);
+      
+      // Adicionar apenas arquivos válidos aos acumulados
+      arquivosAcumuladosMain = [...arquivosAcumuladosMain, ...validFiles];
+      
+      // Criar novo FileList com todos os arquivos
+      const dt = new DataTransfer();
+      arquivosAcumuladosMain.forEach(file => dt.items.add(file));
+      this.files = dt.files;
+      
       mostrarArquivosSelecionados(this.files);
     });
   }
@@ -2470,13 +2616,16 @@ async function criarGraficoEmpresas() {
   const ctx = document.getElementById('graficoEmpresas');
   if (!ctx) return;
   
+  // Limpar completamente o canvas
+  limparCanvas('graficoEmpresas');
+  
   if (graficoEmpresasInstance) {
     graficoEmpresasInstance.destroy();
     graficoEmpresasInstance = null;
   }
   
   try {
-    const response = await fetch('http://92.112.178.26:3000/api/dashboard/empresas-contatos');
+    const response = await fetch('http://localhost:3000/api/dashboard/empresas-contatos');
     const dadosEmpresas = await response.json();
     
     if (dadosEmpresas.length === 0) {
@@ -2563,13 +2712,16 @@ async function criarGraficoModalidades() {
   const ctx = document.getElementById('graficoModalidades');
   if (!ctx) return;
   
+  // Limpar completamente o canvas
+  limparCanvas('graficoModalidades');
+  
   if (graficoModalidadesInstance) {
     graficoModalidadesInstance.destroy();
     graficoModalidadesInstance = null;
   }
   
   try {
-    const response = await fetch('http://92.112.178.26:3000/api/dashboard/modalidades');
+    const response = await fetch('http://localhost:3000/api/dashboard/modalidades');
     const modalidades = await response.json();
     
     if (modalidades.length === 0) {
@@ -2638,13 +2790,16 @@ async function criarGraficoEvolucao() {
   const ctx = document.getElementById('graficoEvolucao');
   if (!ctx) return;
   
+  // Limpar completamente o canvas
+  limparCanvas('graficoEvolucao');
+  
   if (graficoEvolucaoInstance) {
     graficoEvolucaoInstance.destroy();
     graficoEvolucaoInstance = null;
   }
   
   try {
-    const response = await fetch('http://92.112.178.26:3000/api/dashboard/evolucao-mensal');
+    const response = await fetch('http://localhost:3000/api/dashboard/evolucao-mensal');
     const dados = await response.json();
     
     // Processar dados para o gráfico
@@ -2744,8 +2899,14 @@ function formatarMes(mesAno) {
 // Atualizar todos os gráficos com dados da API
 async function atualizarGraficos() {
   try {
+    // Destruir todos os gráficos existentes primeiro
+    destruirTodosGraficos();
+    
     // Mostrar indicador de carregamento
     mostrarCarregandoGraficos(true);
+    
+    // Aguardar um pouco para garantir que tudo foi limpo
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     // Atualizar todos os gráficos em paralelo
     await Promise.all([
@@ -2820,8 +2981,8 @@ function abrirModalTreinamentosEmpresa(empresaId) {
   
   // Carregar treinamentos disponíveis e da empresa
   Promise.all([
-    fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos/disponiveis`).then(r => r.json()),
-    fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos/atribuidos`).then(r => r.json())
+    fetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/disponiveis`).then(r => r.json()),
+    fetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/atribuidos`).then(r => r.json())
   ])
   .then(([treinamentosDisponiveis, treinamentosEmpresa]) => {
     
@@ -2918,7 +3079,7 @@ function atribuirTreinamento(empresaId, treinamentoId) {
   button.disabled = true;
   button.style.opacity = '0.7';
   
-  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
+  fetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
     method: 'POST'
   })
     .then(res => {
@@ -2954,7 +3115,7 @@ function removerTreinamentoEmpresa(empresaId, treinamentoId) {
   button.disabled = true;
   button.style.opacity = '0.7';
   
-  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
+  fetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -3002,7 +3163,7 @@ function abrirDetalhesEmpresa(empresaId) {
   document.getElementById('modalDetalhesEmpresa').style.display = 'block';
   
   // Carregar dados completos da empresa
-  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}/completo`)
+  fetch(`http://localhost:3000/api/empresas/${empresaId}/completo`)
     .then(r => r.json())
     .then(empresaCompleta => {
       const treinamentosEmpresa = empresaCompleta.treinamentos || [];
@@ -3156,7 +3317,7 @@ function salvarEmpresa(empresaId) {
     cep: document.getElementById('editCep').value
   };
   
-  fetch(`http://92.112.178.26:3000/api/empresas/${empresaId}`, {
+  fetch(`http://localhost:3000/api/empresas/${empresaId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados)

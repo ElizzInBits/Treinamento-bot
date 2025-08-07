@@ -2,9 +2,30 @@ const cors = require('cors');
 const path = require('path');
 const express = require('express');
 const fs = require('fs');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 const PORT = process.env.PORT || 3000;
+
+// WebSocket para atualizações em tempo real
+io.on('connection', (socket) => {
+    console.log('🔌 Cliente conectado:', socket.id);
+    
+    socket.on('disconnect', () => {
+        console.log('🔌 Cliente desconectado:', socket.id);
+    });
+});
+
+// Exportar io para uso nas rotas
+app.set('io', io);
 
 // ✅ 1. Verificar se os arquivos de rota existem
 console.log('🔍 Verificando arquivos de rota...');
@@ -136,6 +157,11 @@ app.get('/test', (req, res) => {
     });
 });
 
+// Suprimir erro do Chrome DevTools
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
+    res.status(204).end();
+});
+
 // ✅ 9. Painéis HTML
 const homePath = path.join(publicPath, 'home', 'home-index.html');
 const autoCadastroPath = path.join(publicPath, 'autoCadastro', 'cadastro-index.html');
@@ -187,7 +213,7 @@ async function iniciarServidor() {
     try {
         console.log('🚀 Iniciando servidor...');
 
-        const server = app.listen(PORT, () => {
+        server.listen(PORT, () => {
             console.log(`✅ Servidor rodando na porta ${PORT}`);
             console.log(`🔗 Teste: http://localhost:${PORT}/test`);
             console.log(`📱 Painel 1: http://localhost:${PORT}/home`);

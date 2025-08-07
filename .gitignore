@@ -60,3 +60,22 @@ SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/ukm_db
 SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/Singleton*
 SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/Local State
 
+SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Network/Cookies-journal
+Cookies-journal
+*.journal
+
+
+SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Safe Browsing Network/Safe Browsing Cookies
+*Safe Browsing Cookies
+
+
+**/GrShaderCache/
+**/Safe Browsing Network/
+*.log
+*.lock
+*.tmp
+*.bak
+
+**/lockfile
+
+
