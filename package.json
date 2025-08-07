@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "scripts": {
     "start:wppconnect": "cd wppconnect-server && npm run dev",
-    "start:front": "cd SistemaPrincipal/front-end-cadastro && npm start",
-    "start:template": "cd SistemaPrincipal/TemplatesMensagens && node Template.js",
-    "start:all": "npm run start:wppconnect && npm run start:front && npm run start:template"
+    "start:front": "cd SistemaPrincipal/front-end && npm start",
+    "start:bot": "cd wppconnect-server/MensagensTemplates && node index.js",
+    "start:all": "npm run start:wppconnect && npm run start:front && npm run start:bot",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop all",
+    "pm2:restart": "pm2 restart all",
+    "pm2:logs": "pm2 logs",
+    "pm2:status": "pm2 status"
   },
   "description": "",
   "main": "ecosystem.config.js",

@@ -1,0 +1,21 @@
+{
+  "name": "template-mensagens",
+  "version": "1.0.0",
+  "description": "Sistema de templates para WhatsApp",
+  "main": "start-template.js",
+  "scripts": {
+    "start": "node start-template.js",
+    "dev": "nodemon start-template.js"
+  },
+  "dependencies": {
+    "@wppconnect-team/wppconnect": "^1.37.3",
+    "dotenv": "^17.2.1",
+    "mysql2": "^3.14.3",
+    "nodemailer": "^7.0.4",
+    "pdfkit": "^0.17.1",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

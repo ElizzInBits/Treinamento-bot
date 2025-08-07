@@ -67,29 +67,7 @@ async function start(client) {
     await sequelize.sync();
 })();
 
-// Inicializar WPPConnect
-wppconnect.create({
-    session: 'TREINAMENTO_BOT',
-    headless: 'new', 
-    executablePath: '/snap/bin/chromium',
-    catchQR: (base64Qr, asciiQR) => {
-        console.clear();
-        console.log('🤖 ========== QR CODE DO BOT ==========');
-        console.log('📱 Escaneie este QR Code para conectar o BOT:');
-        console.log(asciiQR);
-        console.log('========================================');
-    },
-    statusFind: (status) => {
-        console.log('🤖 [BOT] Status:', status);
-    },
-    browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
-})
-    .then((client) => {
-        console.log('🤖 [BOT] ✅ Conectado! Iniciando bot...');
-        start(client);
-    })
-    .catch((error) => {
-        console.error('❌ [BOT] Erro:', error);
-    });
+// Inicialização do WPPConnect desabilitada - usando start-template.js
+// wppconnect.create(...) - DESABILITADO
 
 module.exports = { sendMessage };

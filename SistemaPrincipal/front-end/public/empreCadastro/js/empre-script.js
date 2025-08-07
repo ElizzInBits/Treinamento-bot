@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
       email
     };
 
-    fetch('http://92.112.178.26:3000/api/empresas', {
+    fetch('http://localhost:3000/api/empresas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(novaEmpresa)
@@ -93,10 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return res.json();
       })
       .then(data => {
-        alert(`Cadastro feito com sucesso! ID: ${data.id}`);
+        alert('Cadastro realizado com sucesso!');
         document.getElementById('cadastroEmpresaForm').reset();
         ddiSelect.value = '+55';
         contatoInput.placeholder = 'Ex: 11999990000';
+        loadCompanies(); // Recarregar lista de empresas
       })
       .catch(error => {
         alert('Erro: ' + error.message);
@@ -113,7 +114,7 @@ let selectedCompanyId = null;
 // Função para carregar empresas
 async function loadCompanies() {
   try {
-    const response = await fetch('http://92.112.178.26:3000/api/empresas');
+    const response = await fetch(`http://localhost:3000/api/empresas?t=${Date.now()}`);
     const companies = await response.json();
     
     const companiesGrid = document.getElementById('companiesGrid');
@@ -165,7 +166,7 @@ async function manageTrainings(companyId, companyName) {
 // Função para carregar treinamentos atribuídos
 async function loadAssignedTrainings(companyId) {
   try {
-    const response = await fetch(`http://92.112.178.26:3000/api/empresas/${companyId}/treinamentos/atribuidos`);
+    const response = await fetch(`http://localhost:3000/api/empresas/${companyId}/treinamentos/atribuidos`);
     const trainings = await response.json();
     
     const assignedList = document.getElementById('assignedTrainingsList');
@@ -178,8 +179,8 @@ async function loadAssignedTrainings(companyId) {
     assignedList.innerHTML = trainings.map(training => `
       <div class="training-item">
         <h4>${training.nome}</h4>
-        <p><strong>Modalidade:</strong> ${training.modalidade}</p>
-        <p><strong>Carga Horária:</strong> ${training.cargaHoraria}h</p>
+        <p><strong>Modalidade:</strong> EAD - Ensino à Distância</p>
+        <p><strong>Carga Horária:</strong> 4h</p>
         <div class="training-actions">
           <button class="btn-remove" onclick="removeTraining(${companyId}, ${training.id})">
             ❌ Remover
@@ -196,7 +197,7 @@ async function loadAssignedTrainings(companyId) {
 // Função para carregar treinamentos disponíveis
 async function loadAvailableTrainings(companyId) {
   try {
-    const response = await fetch(`http://92.112.178.26:3000/api/empresas/${companyId}/treinamentos/disponiveis`);
+    const response = await fetch(`http://localhost:3000/api/empresas/${companyId}/treinamentos/disponiveis`);
     const trainings = await response.json();
     
     const availableList = document.getElementById('availableTrainingsList');
@@ -209,8 +210,8 @@ async function loadAvailableTrainings(companyId) {
     availableList.innerHTML = trainings.map(training => `
       <div class="training-item">
         <h4>${training.nome}</h4>
-        <p><strong>Modalidade:</strong> ${training.modalidade}</p>
-        <p><strong>Carga Horária:</strong> ${training.cargaHoraria}h</p>
+        <p><strong>Modalidade:</strong> EAD - Ensino à Distância</p>
+        <p><strong>Carga Horária:</strong> 4h</p>
         <div class="training-actions">
           <button class="btn-assign" onclick="assignTraining(${companyId}, ${training.id})">
             ➕ Atribuir
@@ -227,7 +228,7 @@ async function loadAvailableTrainings(companyId) {
 // Função para atribuir treinamento
 async function assignTraining(companyId, trainingId) {
   try {
-    const response = await fetch(`http://92.112.178.26:3000/api/empresas/${companyId}/treinamentos/${trainingId}`, {
+    const response = await fetch(`http://localhost:3000/api/empresas/${companyId}/treinamentos/${trainingId}`, {
       method: 'POST'
     });
     
@@ -255,7 +256,7 @@ async function removeTraining(companyId, trainingId) {
   }
   
   try {
-    const response = await fetch(`http://92.112.178.26:3000/api/empresas/${companyId}/treinamentos/${trainingId}`, {
+    const response = await fetch(`http://localhost:3000/api/empresas/${companyId}/treinamentos/${trainingId}`, {
       method: 'DELETE'
     });
     

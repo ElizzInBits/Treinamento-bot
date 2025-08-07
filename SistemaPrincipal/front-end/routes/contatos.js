@@ -171,6 +171,15 @@ router.post('/', async (req, res) => {
             statusTreinamento: 'não iniciado'
         });
 
+        // Emitir evento WebSocket para atualização em tempo real
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('novoContato', {
+                contato: novoContato,
+                empresaId: novoContato.empresaId
+            });
+        }
+
         res.status(201).json({
             message: 'Contato cadastrado com sucesso',
             contato: novoContato

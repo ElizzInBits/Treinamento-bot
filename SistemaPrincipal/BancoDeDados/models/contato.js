@@ -47,7 +47,7 @@ module.exports = (sequelize) => {
     },
 
     ultimaInteracao: {
-      type: DataTypes.TEXT,
+      type: DataTypes.DATE,
       allowNull: true,
     },
   }, {

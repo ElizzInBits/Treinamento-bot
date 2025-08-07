@@ -1,5 +1,38 @@
-const wppconnect = require('@wppconnect-team/wppconnect');
-const { sendMessage } = require('./conexao/wppConnectTemplate');
+// const wppconnect = require('@wppconnect-team/wppconnect'); // Removido para evitar conflito
+// const { sendMessage } = require('./conexao/wppConnectTemplate');
+
+// Variável global para o cliente
+let wppClient = null;
+
+// Função para definir o cliente
+function setWppClient(client) {
+  wppClient = client;
+}
+
+// Função sendMessage usando cliente direto
+async function sendMessage(phone, endpoint, body = {}) {
+  if (!wppClient) {
+    console.log('❌ Cliente WPP não conectado');
+    return { success: false, error: 'Cliente não conectado' };
+  }
+  
+  try {
+    const phoneWithSuffix = phone.includes('@c.us') ? phone : phone + '@c.us';
+    
+    if (endpoint === 'send-message') {
+      await wppClient.sendText(phoneWithSuffix, body.message);
+    } else if (endpoint === 'send-list-message') {
+      await wppClient.sendListMessage(phoneWithSuffix, body);
+    } else if (endpoint === 'send-file') {
+      await wppClient.sendFile(phoneWithSuffix, body.path, body.filename, body.caption);
+    }
+    console.log(`✅ Mensagem enviada para ${phone}`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Erro ao enviar:', error);
+    return { success: false, error: error.message };
+  }
+}
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const { Op } = require('sequelize');
 const fs = require('fs');
@@ -16,7 +49,7 @@ function carregarScriptsTreinamento() {
     if (fs.existsSync(pastaScripts)) {
         const arquivos = fs.readdirSync(pastaScripts).filter(arquivo => arquivo.endsWith('.js'));
         arquivos.forEach(arquivo => {
-            const nomeScript = arquivo.replace('.js', '');
+            const nomeScript = arquivo.replace('.js', ''); // Nome do arquivo sem extensão
             try {
                 // Limpar cache do require para recarregar o script
                 const caminhoCompleto = path.resolve(__dirname, 'Treinamentos', arquivo);
@@ -29,6 +62,7 @@ function carregarScriptsTreinamento() {
             }
         });
     }
+    console.log(`📋 Scripts disponíveis:`, Object.keys(scriptsTreinamento));
 }
 
 // Carregar scripts na inicialização
@@ -233,12 +267,13 @@ async function processarComandosContinuar(sender, text, selectedId) {
  * Verifica se o contato está cadastrado
  */
 async function verificarCadastro(sender) {
-    const senderVariacoes = gerarVariacoes(sender);
-    const contatos = await Contato.findAll();
-
-    return contatos.find((c) => {
-        const variacoesContato = gerarVariacoes(c.telefone);
-        return senderVariacoes.some((num) => variacoesContato.includes(num));
+    const limpo = limparNumero(sender);
+    return await Contato.findOne({
+        where: {
+            telefone: {
+                [Op.like]: `%${limpo.slice(-8)}%`
+            }
+        }
     });
 }
 
@@ -367,7 +402,7 @@ async function iniciarTreinamento(sender, contato) {
     });
 
     // Mostrar treinamentos disponíveis como texto simples primeiro
-    const listaTreinamentos = treinamentos.map(t => `${t.nome}\n${t.modalidade} - ${t.cargaHoraria}h`).join('\n\n');
+    const listaTreinamentos = treinamentos.map(t => `${t.nome}`).join('\n\n');
     await sendMessage(sender, 'send-message', {
         message: `*Escolha qual treinamento deseja iniciar:*\n\n${listaTreinamentos}`,
     });
@@ -376,7 +411,7 @@ async function iniciarTreinamento(sender, contato) {
     const rows = treinamentos.map((treinamento, index) => ({
         id: `treinamento_${treinamento.id}`,
         title: treinamento.nome,
-        description: `${treinamento.modalidade} - ${treinamento.cargaHoraria}h`
+        description: ''
     }));
 
     const listMsg = {
@@ -416,10 +451,10 @@ async function gerarEEnviarCertificado(contato, sender) {
       if (treinamento) {
         dadosTreinamento = {
           nome: treinamento.nome,
-          modalidade: treinamento.modalidade,
-          cargaHoraria: treinamento.cargaHoraria.toString(),
-          tipo: treinamento.tipo,
-          emConformidade: treinamento.emConformidade,
+          modalidade: 'EAD - Ensino à Distância',
+          cargaHoraria: '4',
+          tipo: 'Treinamento Básico',
+          emConformidade: 'Em conformidade com as normas de Segurança, Saúde e Meio Ambiente aplicáveis.',
           documento: 'CPF: ***.***.***-**',
           periodo: new Date().toLocaleDateString('pt-BR')
         };
@@ -473,7 +508,9 @@ async function gerarEEnviarCertificado(contato, sender) {
 // FUNÇÃO PRINCIPAL DE PROCESSAMENTO
 // ========================================
 
-async function processarMensagem(message) {
+async function processarMensagem(message, client) {
+    setWppClient(client);
+    
     const sender = message.from.replace('@c.us', '');
 
     if (emProcessamento.has(sender)) {
@@ -494,23 +531,17 @@ async function processarMensagem(message) {
         const contato = await verificarCadastro(sender);
         if (!contato) {
             await sendMessage(sender, 'send-message', {
-                message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 bit.ly/44xw45W`,
+                message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 http://localhost:3000/autoCadastro/`,
             });
             return;
         }
 
         // Saudação inicial apenas uma vez
         if (!saudacoesEnviadas.has(sender)) {
-            console.log('📤 PRIMEIRA INTERAÇÃO COM:', sender);
             saudacoesEnviadas.add(sender);
-            
-            // Se é primeira vez E não há interação anterior, iniciar treinamento
             if (contato.statusTreinamento === 'não iniciado') {
-                const ultimaInteracao = await obterUltimaInteracao(sender);
-                if (!ultimaInteracao || ultimaInteracao.tipo === 'resposta') {
-                    await iniciarTreinamento(sender, contato);
-                    return;
-                }
+                await iniciarTreinamento(sender, contato);
+                return;
             }
         }
 
@@ -518,17 +549,22 @@ async function processarMensagem(message) {
         if (await processarComandosContinuar(sender, text, selectedId)) {
             return;
         }
+        
+        // Processar comando reiniciar treinamento
+        if (text === 'reiniciar' && contato.treinamento) {
+            const script = scriptsTreinamento[contato.treinamento.nome];
+            if (script && script.executarTreinamento) {
+                await script.executarTreinamento(sender, contato);
+                return;
+            }
+        }
 
 
-
-        // ✅ Atualizar a última interação no campo do contato
-        contato.ultimaInteracao = rawText.trim();
-        await contato.save();
 
         const correuCorrecao = await processarCorrecaoDados(sender, rawText, contato);
         if (correuCorrecao) return;
 
-        console.log(`📩 Mensagem de ${sender} (${contato.nome}): ${text}`);
+
 
         // Ignorar mensagens de grupo
         if (message.isGroupMsg) {
@@ -549,8 +585,8 @@ async function processarMensagem(message) {
         }
 
         // Processar seleção de treinamento - detectar por selectedId ou texto
-        if (contato.statusTreinamento === 'não iniciado' && (selectedId.startsWith('treinamento_') || text.toLowerCase().includes('treinamento') || text.toLowerCase().includes('curso') || text.toLowerCase().includes('cipa'))) {
-            console.log(`✅ Detectou seleção de treinamento`);
+        if (contato.statusTreinamento === 'não iniciado' && (selectedId.startsWith('treinamento_') || text.toLowerCase().includes('treinamento') || text.toLowerCase().includes('curso') || text.toLowerCase().includes('cipa') || text.toLowerCase().includes('teste'))) {
+
             
             let treinamento;
             
@@ -559,8 +595,10 @@ async function processarMensagem(message) {
                 const treinamentoId = selectedId.replace('treinamento_', '');
                 treinamento = await Treinamento.findByPk(treinamentoId);
             } else {
-                // Buscar treinamento pelo nome no texto
-                const nomeTexto = text.split('\n')[0].trim();
+                // Buscar treinamento pelo nome no texto - mais flexível
+                const nomeTexto = rawText.trim(); // Usar rawText em vez de text
+
+                
                 treinamento = await Treinamento.findOne({
                     where: {
                         nome: {
@@ -568,104 +606,71 @@ async function processarMensagem(message) {
                         }
                     }
                 });
+                
+                // Se não encontrou, tentar busca mais ampla
+                if (!treinamento) {
+                    const palavrasChave = nomeTexto.toLowerCase().split(' ');
+                    for (const palavra of palavrasChave) {
+                        if (palavra.length > 3) { // Só palavras com mais de 3 caracteres
+                            treinamento = await Treinamento.findOne({
+                                where: {
+                                    nome: {
+                                        [Op.like]: `%${palavra}%`
+                                    }
+                                }
+                            });
+                            if (treinamento) break;
+                        }
+                    }
+                }
             }
             
             if (treinamento) {
-                console.log(`✅ Executando treinamento:`, treinamento.nome);
+
                 await contato.update({ 
                     statusTreinamento: 'em andamento',
                     treinamentoId: treinamento.id 
                 });
                 
-                // Converter nome do banco para nome do arquivo
-                const nomeArquivo = treinamento.nome
-                    .toLowerCase()
-                    .split(' ')
-                    .map((palavra) => {
-                        if (['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para'].includes(palavra)) {
-                            return palavra;
-                        }
-                        return palavra.charAt(0).toUpperCase() + palavra.slice(1);
-                    })
-                    .join(' ');
+                // Usar nome exato do banco como chave do script
+                const nomeArquivo = treinamento.nome;
                 
-                // Recarregar scripts antes de executar (para desenvolvimento)
-                recarregarScripts();
+                // Scripts já carregados na inicialização
                 
                 // Executar script dinâmico
                 const script = scriptsTreinamento[nomeArquivo];
                 if (script && script.executarTreinamento) {
                     try {
-                        console.log(`✅ Executando script: ${nomeArquivo}`);
-                        await script.executarTreinamento(sender, contato);
-                        console.log(`✅ Script executado com sucesso`);
+                            await script.executarTreinamento(sender, contato);
                         return;
                     } catch (error) {
                         console.error(`❌ Erro ao executar script:`, error);
                     }
-                } else {
-                    console.log(`❌ Script não encontrado: ${nomeArquivo}`);
                 }
-            }
-        }
-
-        // Evitar reinicialização desnecessária
-        if (contato.statusTreinamento === 'não iniciado' && !selectedId.startsWith('treinamento_')) {
-            // Só reiniciar se não há interação recente
-            const ultimaInteracao = await obterUltimaInteracao(sender);
-            if (!ultimaInteracao || ultimaInteracao.tipo !== 'selecionar_treinamento') {
-                await iniciarTreinamento(sender, contato);
+            } else {
+                await sendMessage(sender, 'send-message', {
+                    message: '❌ Treinamento não encontrado.',
+                });
                 return;
             }
         }
+
+
         
         // Processar respostas de treinamentos específicos PRIMEIRO
-        if (contato.treinamentoId) {
-            const treinamento = await Treinamento.findByPk(contato.treinamentoId);
-            if (treinamento) {
-                // Converter nome do banco para nome do arquivo
-                const nomeArquivo = treinamento.nome
-                    .toLowerCase()
-                    .split(' ')
-                    .map((palavra) => {
-                        if (['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para'].includes(palavra)) {
-                            return palavra;
-                        }
-                        return palavra.charAt(0).toUpperCase() + palavra.slice(1);
-                    })
-                    .join(' ');
-                
-                // Recarregar scripts antes de processar (para desenvolvimento)
-                recarregarScripts();
-                
-                // Tentar processar com script específico
-                const script = scriptsTreinamento[nomeArquivo];
-                console.log(`🔍 Tentando processar com script: ${nomeArquivo}`);
-                console.log(`🔍 Script encontrado:`, !!script);
-                console.log(`🔍 Função processarRespostaTeste:`, !!script?.processarRespostaTeste);
-                console.log(`🔍 selectedId recebido: '${selectedId}'`);
-                console.log(`🔍 text recebido: '${text}'`);
-                
-                if (script && script.processarRespostaTeste) {
-                    try {
-                        console.log(`🔍 Executando processarRespostaTeste`);
-                        const resultado = await script.processarRespostaTeste(sender, text, selectedId, contato);
-                        console.log(`🔍 Resultado do processamento:`, resultado);
-                        if (resultado) {
-                            console.log(`✅ Resposta processada pelo script`);
-                            return;
-                        }
-                    } catch (error) {
-                        console.error(`Erro ao processar resposta do treinamento ${treinamento.nome}:`, error);
-                    }
-                } else {
-                    console.log(`❌ Script ou função não encontrada para: ${nomeArquivo}`);
+        if (contato.treinamentoId && contato.treinamento) {
+            const script = scriptsTreinamento[contato.treinamento.nome];
+            if (script && script.processarRespostaTeste) {
+                try {
+                    const resultado = await script.processarRespostaTeste(sender, text, selectedId, contato);
+                    if (resultado) return;
+                } catch (error) {
+                    console.error(`Erro:`, error);
                 }
             }
         }
 
-        // Salvar interação como resposta apenas se não foi processada pelos scripts
-        await salvarUltimaInteracao(sender, 'resposta', rawText.trim());
+
 
         // Finalizar treinamento
         if (selectedId === 'finalizar_treinamento' || text === '✅ treinamento finalizado') {
@@ -676,11 +681,18 @@ async function processarMensagem(message) {
         }
 
 
+        // Se o usuário tem treinamento em andamento mas não foi processado, mostrar opções
+        if (contato.statusTreinamento === 'em andamento' && contato.treinamento) {
+            await sendMessage(sender, 'send-message', {
+                message: `🔄 Você está no meio do treinamento "${contato.treinamento.nome}". Digite *continuar* para prosseguir ou *reiniciar* para começar novamente.`,
+            });
+            return;
+        }
+        
         // Mensagem padrão para entradas não reconhecidas
         await sendMessage(sender, 'send-message', {
             message: '🤔 Não entendi sua mensagem. Por favor, use as opções fornecidas.',
         });
-        agendarLembrete(sender, getMensagemListaContinuar());
 
     } catch (error) {
         console.error('Erro no processamento da mensagem:', error);
@@ -689,5 +701,5 @@ async function processarMensagem(message) {
     }
 }
 
-// Exportar função para ser usada externamente
-module.exports = { processarMensagem };
+// Exportar funções para serem usadas externamente
+module.exports = { processarMensagem, setWppClient, sendMessage, salvarUltimaInteracao, obterUltimaInteracao };

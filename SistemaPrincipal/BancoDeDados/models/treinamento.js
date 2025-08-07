@@ -11,63 +11,64 @@ module.exports = (sequelize) => {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  modalidade: {
-    type: DataTypes.STRING,
-    allowNull: false,
+  descricao: {
+    type: DataTypes.TEXT,
+    allowNull: true,
   },
-  cargaHoraria: {
+  modalidade: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+  },
+  carga_horaria: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
   },
   tipo: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: DataTypes.STRING(100),
+    allowNull: true,
   },
-  emConformidade: {
+  em_conformidade: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
-  aproveitamento: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  conteudo: {
+  aproveitamento_conteudo: {
     type: DataTypes.TEXT,
-    allowNull: false,
+    allowNull: true,
   },
-  instrutor: {
-    type: DataTypes.STRING,
-    allowNull: false,
+  conteudo_programatico: {
+    type: DataTypes.TEXT,
+    allowNull: true,
   },
-  qualificacaoInstrutor: {
+  midias_treinamento: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
+  instrutor_principal: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  registroInstrutor: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    field: 'registro_instrutor'
+  qualificacao_instrutor: {
+    type: DataTypes.TEXT,
+    allowNull: true,
   },
-  responsavel: {
-    type: DataTypes.STRING,
-    allowNull: false,
+  registro_instrutor: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
   },
-  cargoResponsavel: {
+  responsavel_treinamento: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  areaResponsavel: {
-    type: DataTypes.STRING,
-    allowNull: false,
+  cargo_responsavel: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
   },
-  registroResponsavel: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    field: 'registro_responsavel'
+  area_responsavel: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
   },
-
-  midias: {
-    type: DataTypes.TEXT, 
+  registro_responsavel: {
+    type: DataTypes.STRING(100),
     allowNull: true,
   }
   }, {
