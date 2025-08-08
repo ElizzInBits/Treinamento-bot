@@ -3,35 +3,43 @@ const router = express.Router();
 const { Empresa, Contato, Treinamento, EmpresaTreinamento, sequelize } = require('../../BancoDeDados/models');
 const { Op, fn, col, literal } = require('sequelize');
 
+// Health check endpoint
+router.get('/health', async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    res.json({ status: 'ok', message: 'API funcionando corretamente' });
+  } catch (error) {
+    console.error('Erro no health check:', error);
+    res.status(500).json({ status: 'error', message: 'Erro de conexão com o banco' });
+  }
+});
+
+
+
 // Estatísticas gerais do dashboard
 router.get('/stats', async (req, res) => {
   try {
-    const [
-      totalEmpresas,
-      totalContatos,
-      totalTreinamentos,
-      contatosComTreinamento,
-      empresasAtivas,
-      certificadosEmitidos
-    ] = await Promise.all([
-      Empresa.count(),
-      Contato.count(),
-      Treinamento.count(),
-      Contato.count({ where: { treinamentoId: { [Op.not]: null } } }),
-      Empresa.count({
-        include: [{
-          model: Contato,
-          as: 'contatos',
-          required: true
-        }]
-      }),
-      Contato.count({ where: { statusTreinamento: 'concluído' } })
-    ]);
+    const totalEmpresas = await Empresa.count();
+    const totalContatos = await Contato.count();
+    const totalTreinamentos = await Treinamento.count();
+    const contatosComTreinamento = await Contato.count({ where: { treinamentoId: { [Op.not]: null } } });
+    
+    // Contar empresas que têm pelo menos um contato
+    const empresasComContatos = await Empresa.findAll({
+      include: [{
+        model: Contato,
+        as: 'contatos',
+        required: true
+      }]
+    });
+    const empresasAtivas = empresasComContatos.length;
+    
+    const certificadosEmitidos = await Contato.count({ where: { statusTreinamento: 'concluído' } });
 
     const taxaTreinamento = totalContatos > 0 ? ((contatosComTreinamento / totalContatos) * 100).toFixed(1) : 0;
-    const mediaContatosPorEmpresa = empresasAtivas > 0 ? (totalContatos / empresasAtivas).toFixed(1) : 0;
+    const mediaContatosPorEmpresa = totalEmpresas > 0 ? (totalContatos / totalEmpresas).toFixed(1) : 0;
 
-    res.json({
+    const stats = {
       totalEmpresas,
       totalContatos,
       totalTreinamentos,
@@ -40,7 +48,10 @@ router.get('/stats', async (req, res) => {
       certificadosEmitidos,
       taxaTreinamento: parseFloat(taxaTreinamento),
       mediaContatosPorEmpresa: parseFloat(mediaContatosPorEmpresa)
-    });
+    };
+    
+    console.log('📊 Stats calculadas:', stats);
+    res.json(stats);
   } catch (error) {
     console.error('Erro ao buscar estatísticas:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -50,21 +61,30 @@ router.get('/stats', async (req, res) => {
 // Dados para gráfico de contatos por empresa
 router.get('/empresas-contatos', async (req, res) => {
   try {
-    const dados = await sequelize.query(`
-      SELECT 
-        e.id,
-        e.razao_social,
-        COUNT(c.telefone) as totalContatos,
-        COUNT(CASE WHEN c.treinamentoId IS NOT NULL THEN 1 END) as contatosComTreinamento
-      FROM empresas e
-      LEFT JOIN contatos c ON e.id = c.empresaId
-      GROUP BY e.id, e.razao_social
-      HAVING COUNT(c.telefone) > 0
-      ORDER BY COUNT(c.telefone) DESC
-      LIMIT 10
-    `, { type: sequelize.QueryTypes.SELECT });
-
-    res.json(dados);
+    const empresas = await Empresa.findAll();
+    const dados = [];
+    
+    for (const empresa of empresas) {
+      const totalContatos = await Contato.count({ where: { empresaId: empresa.id } });
+      const contatosComTreinamento = await Contato.count({ 
+        where: { 
+          empresaId: empresa.id,
+          treinamentoId: { [Op.not]: null }
+        }
+      });
+      
+      if (totalContatos > 0) {
+        dados.push({
+          id: empresa.id,
+          razao_social: empresa.razaoSocial,
+          totalContatos,
+          contatosComTreinamento
+        });
+      }
+    }
+    
+    dados.sort((a, b) => b.totalContatos - a.totalContatos);
+    res.json(dados.slice(0, 10));
   } catch (error) {
     console.error('Erro ao buscar dados empresas-contatos:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -74,13 +94,13 @@ router.get('/empresas-contatos', async (req, res) => {
 // Dados para gráfico de status de treinamento
 router.get('/status-treinamento', async (req, res) => {
   try {
-    const dados = await sequelize.query(`
-      SELECT 
-        CASE WHEN treinamentoId IS NOT NULL THEN 'Com Treinamento' ELSE 'Sem Treinamento' END as status,
-        COUNT(telefone) as total
-      FROM contatos
-      GROUP BY CASE WHEN treinamentoId IS NOT NULL THEN 'Com Treinamento' ELSE 'Sem Treinamento' END
-    `, { type: sequelize.QueryTypes.SELECT });
+    const comTreinamento = await Contato.count({ where: { treinamentoId: { [Op.not]: null } } });
+    const semTreinamento = await Contato.count({ where: { treinamentoId: null } });
+    
+    const dados = [
+      { status: 'Com Treinamento', total: comTreinamento },
+      { status: 'Sem Treinamento', total: semTreinamento }
+    ].filter(item => item.total > 0);
 
     res.json(dados);
   } catch (error) {
@@ -92,13 +112,26 @@ router.get('/status-treinamento', async (req, res) => {
 // Dados para gráfico de treinamentos por modalidade
 router.get('/modalidades', async (req, res) => {
   try {
-    // Como o campo modalidade não existe, retornamos dados simulados
-    const dados = [
-      { modalidade: 'EAD - Ensino à Distância', total: 15 },
-      { modalidade: 'Presencial', total: 8 },
-      { modalidade: 'Híbrido', total: 5 }
-    ];
+    const treinamentos = await Treinamento.findAll({
+      attributes: ['modalidade']
+    });
+    
+    console.log('Treinamentos encontrados:', treinamentos.length);
+    console.log('Dados dos treinamentos:', treinamentos.map(t => ({ modalidade: t.modalidade })));
+    
+    const modalidadeCount = {};
+    
+    treinamentos.forEach(t => {
+      const modalidade = t.modalidade || 'Não informado';
+      modalidadeCount[modalidade] = (modalidadeCount[modalidade] || 0) + 1;
+    });
+    
+    const dados = Object.entries(modalidadeCount).map(([modalidade, total]) => ({
+      modalidade,
+      total
+    })).sort((a, b) => b.total - a.total);
 
+    console.log('Modalidades processadas:', dados);
     res.json(dados);
   } catch (error) {
     console.error('Erro ao buscar modalidades:', error);
@@ -109,25 +142,15 @@ router.get('/modalidades', async (req, res) => {
 // Evolução mensal de cadastros
 router.get('/evolucao-mensal', async (req, res) => {
   try {
-    // Como não há campo de data de criação, vamos simular dados mensais
-    const contatos = [
-      { mes: '2024-08', total: 45 },
-      { mes: '2024-09', total: 62 },
-      { mes: '2024-10', total: 78 },
-      { mes: '2024-11', total: 91 },
-      { mes: '2024-12', total: 103 },
-      { mes: '2025-01', total: 127 }
-    ];
-
-    const treinamentos = [
-      { mes: '2024-08', total: 12 },
-      { mes: '2024-09', total: 18 },
-      { mes: '2024-10', total: 25 },
-      { mes: '2024-11', total: 31 },
-      { mes: '2024-12', total: 38 },
-      { mes: '2025-01', total: 45 }
-    ];
-
+    // Dados simplificados para o mês atual
+    const totalContatos = await Contato.count();
+    const totalTreinamentos = await Treinamento.count();
+    
+    const mesAtual = new Date().toISOString().slice(0, 7); // YYYY-MM
+    
+    const contatos = [{ mes: mesAtual, total: totalContatos }];
+    const treinamentos = [{ mes: mesAtual, total: totalTreinamentos }];
+    
     res.json({ contatos, treinamentos });
   } catch (error) {
     console.error('Erro ao buscar evolução mensal:', error);
@@ -135,25 +158,49 @@ router.get('/evolucao-mensal', async (req, res) => {
   }
 });
 
+// Contatos em treinamento
+router.get('/contatos-em-treinamento', async (req, res) => {
+  try {
+    const total = await Contato.count({ 
+      where: { treinamentoId: { [Op.not]: null } } 
+    });
+    
+    res.json({ total });
+  } catch (error) {
+    console.error('Erro ao buscar contatos em treinamento:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Top empresas por engajamento
 router.get('/top-empresas', async (req, res) => {
   try {
-    const dados = await sequelize.query(`
-      SELECT 
-        e.id,
-        e.razao_social,
-        COUNT(c.telefone) as totalContatos,
-        COUNT(CASE WHEN c.treinamentoId IS NOT NULL THEN 1 END) as contatosComTreinamento,
-        ROUND((COUNT(CASE WHEN c.treinamentoId IS NOT NULL THEN 1 END) / COUNT(c.telefone)) * 100, 1) as taxaEngajamento
-      FROM empresas e
-      LEFT JOIN contatos c ON e.id = c.empresaId
-      GROUP BY e.id, e.razao_social
-      HAVING COUNT(c.telefone) > 0
-      ORDER BY taxaEngajamento DESC
-      LIMIT 5
-    `, { type: sequelize.QueryTypes.SELECT });
-
-    res.json(dados);
+    const empresas = await Empresa.findAll();
+    const dados = [];
+    
+    for (const empresa of empresas) {
+      const totalContatos = await Contato.count({ where: { empresaId: empresa.id } });
+      const contatosComTreinamento = await Contato.count({ 
+        where: { 
+          empresaId: empresa.id,
+          treinamentoId: { [Op.not]: null }
+        }
+      });
+      
+      if (totalContatos > 0) {
+        const taxaEngajamento = Math.round((contatosComTreinamento / totalContatos) * 100 * 10) / 10;
+        dados.push({
+          id: empresa.id,
+          razao_social: empresa.razaoSocial,
+          totalContatos,
+          contatosComTreinamento,
+          taxaEngajamento
+        });
+      }
+    }
+    
+    dados.sort((a, b) => b.taxaEngajamento - a.taxaEngajamento);
+    res.json(dados.slice(0, 5));
   } catch (error) {
     console.error('Erro ao buscar top empresas:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
