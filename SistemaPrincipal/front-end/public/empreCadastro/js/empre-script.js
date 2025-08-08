@@ -97,51 +97,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cadastroEmpresaForm').reset();
         ddiSelect.value = '+55';
         contatoInput.placeholder = 'Ex: 11999990000';
-        loadCompanies(); // Recarregar lista de empresas
+        // Empresa cadastrada com sucesso
       })
       .catch(error => {
         alert('Erro: ' + error.message);
       });
   });
 
-  // Carregar empresas ao inicializar
-  loadCompanies();
+  // Inicialização completa
 });
 
 // Variável global para empresa selecionada
 let selectedCompanyId = null;
 
-// Função para carregar empresas
-async function loadCompanies() {
-  try {
-    const response = await fetch(`http://localhost:3000/api/empresas?t=${Date.now()}`);
-    const companies = await response.json();
-    
-    const companiesGrid = document.getElementById('companiesGrid');
-    
-    if (companies.length === 0) {
-      companiesGrid.innerHTML = '<div class="loading">Nenhuma empresa cadastrada</div>';
-      return;
-    }
-    
-    companiesGrid.innerHTML = companies.map(company => `
-      <div class="company-card">
-        <h3>${company.razao_social}</h3>
-        <p><strong>CNPJ:</strong> ${formatCNPJ(company.cnpj)}</p>
-        <p><strong>Porte:</strong> ${company.porte_empresa}</p>
-        <p><strong>Email:</strong> ${company.email}</p>
-        <div class="company-actions">
-          <button class="btn-manage" onclick="manageTrainings(${company.id}, '${company.razao_social}')">
-            🎓 Gerenciar Treinamentos
-          </button>
-        </div>
-      </div>
-    `).join('');
-  } catch (error) {
-    console.error('Erro ao carregar empresas:', error);
-    document.getElementById('companiesGrid').innerHTML = '<div class="loading">Erro ao carregar empresas</div>';
-  }
-}
+
 
 // Função para gerenciar treinamentos de uma empresa
 async function manageTrainings(companyId, companyName) {

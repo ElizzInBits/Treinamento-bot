@@ -1,4 +1,4 @@
-‘ã;ﬂÂùƒ *)
+‚~>¬î∏ƒ *)
 Googlegoogle-ct-logs@googlegroups.com*i
 
 Cloudflarect-logs@cloudflare.commihir@cloudflare.comdkozlov@cloudflare.comleland@cloudflare.com*
@@ -7,10 +7,6 @@ Cloudflarect-logs@cloudflare.commihir@cloudflare.comdkozlov@cloudflare.com
 Let's Encryptsre@letsencrypt.org*,
 	TrustAsiatrustasia-ct-logs@trustasia.com*
 Geomysct@geomys.org2›
-Google 'Argon2025h1' log|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIIKh+WdoqOTblJji4WiH5AltIDUzODyvFKrXCBjw/Rab0/98J4LUh7dOJEY7+66+yCNSICuqRAX+VPnV8R1Fmg==,TnWjJ1yaEMM4W2zU3z9S6x3w4I4bjWnAsfpksWKaOd8= Ä£*/https://ct.googleapis.com/logs/us1/argon2025h1/2
-Äã“ªÄ å√B
-¿Êå´J
-Google¿èÍ¶Rgoogle_argon2025h1ähttps://crbug.com/889033ê2›
 Google 'Argon2025h2' log|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEr+TzlCzfpie1/rJhgxnIITojqKk9VK+8MZoc08HjtsLzD8e5yjsdeWVhIiWCVk6Y6KomKTYeKGBv6xVu93zQug==,EvFONL1TckyEBhnDjz96E/jntWKHiJxtMAWE6+WGJjo= Ä£*/https://ct.googleapis.com/logs/us1/argon2025h2/2
 Ä å√ÄÚ÷ B
 ¿Êå´J
@@ -23,10 +19,6 @@ Cloudflarect-logs@cloudflare.commihir@cloudflare.comdkozlov@cloudflare.com
 Ä±ë“ÄŸ€ŸB
 Ô«Ï∑J
 Google¿Ì≈≥Rgoogle_argon2026h2ähttps://crbug.com/41417083ê2›
-Google 'Xenon2025h1' log|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEguLOkEA/gQ7f6uEgK14uMFRGgblY7a+9/zanngtfamuRpcGY4fLN6xcgcMoqEuZUeFDc/239HKe2Oh/5JqkbvQ==,zxFW7tUufK/zh1vZaS6b6RpxZ0qwF+ysAdJbd87MOwg= Ä£*/https://ct.googleapis.com/logs/eu1/xenon2025h1/2
-Äã“ªÄ å√B
-¿Êå´J
-Google¿èÍ¶Rgoogle_xenon2025h1ähttps://crbug.com/833350ê2›
 Google 'Xenon2025h2' log|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEa+Cv7QZ8Pe/ZDuRYSwTYKkeZkIl6uTaldcgEuMviqiu1aJ2IKaKlz84rmhWboD6dlByyt0ryUexA7WJHpANJhg==,3dzKNJXX4RYF55Uy+sef+D0cUN/bADoUEnYKLKy7yCo= Ä£*/https://ct.googleapis.com/logs/eu1/xenon2025h2/2
 Ä å√ÄÚ÷ B
 ¿Êå´J
@@ -57,10 +49,6 @@ Cloudflare–˘äµRcloudflare_nimbus2026ähttps://crbug.com/355460977ê2“
 Äã“ªÄÚ÷ B
 …˚øJ
 DigiCert‘´öêRdigicert_nessie2025ähttps://crbug.com/1296635ê2◊
-DigiCert 'Wyvern2025h1' Log|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEp8uAYYYbH7WrKyB2WYNmDs6uuG87iALrQ/SHkMuL2qwOGVDg+SQOqyaTjD+eDZZYRJ07ioDFyL7hiUZrSEzWCQ==,cyAiDwgWivnzxKaLCrJqmkoA7vV3hYoITQUA1KVCRFk= Ä£*&https://wyvern.ct.digicert.com/2025h1/2
-Äã“ªÄú¨√B
-∞öˆøJ
-DigiCertÄçÄ≤Rdigicert_wyvern2025h1äcrbug.com/337076021ê2◊
 DigiCert 'Wyvern2025h2' Log|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE4NtB7+QEvctrLkzM8WzeQVh//pT2evZg7Yt2cqOiHDETMjWh8gjSaMU0p1YIHGPeleKBaZeNHqi3ZlEldU14Lg==,7TxL1ugGwqSiAFfbyyTiOAHfUS/txIbFcA8g3bc+P+A= Ä£*&https://wyvern.ct.digicert.com/2025h2/2
 Ä å√Äƒˆ B
 ˜Ãø∂J
@@ -73,10 +61,6 @@ Cloudflare–˘äµRcloudflare_nimbus2026ähttps://crbug.com/355460977ê2“
 Ä±ë“ÄŸ€ŸB
 Ä©µπJ
 DigiCert¿∂˛¥Rdigicert_wyvern2026h2ähttps://crbug.com/353924009ê2◊
-DigiCert 'Sphinx2025h1' Log|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE4y8fTYkFdSl4uyI9B2JRFHCU5zzq9e6upkiahlJOnlzjlZcou1JLKv3IyYlORTEX043y584YEViYLGBvWCA2bg==,3oWB11AkfGvNy69WN8XngcZM5G7WF2OfjzSnJsnivTc= Ä£*&https://sphinx.ct.digicert.com/2025h1/2
-Äã“ªÄú¨√B
-∞öˆøJ
-DigiCertÄçÄ≤Rdigicert_sphinx2025h1äcrbug.com/337078971ê2◊
 DigiCert 'Sphinx2025h2' Log|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEQYxQE1SxGQW3f0ogbqN1Y8o09Mx06jI7tosDFKhSfzKHXlmeD6sYnilstXJ3GidUhV3BeySoNOPNiM7UUBu+aQ==,pELFBklgYVSPD9TqnPt6LSZFTYepfy/fRVn2J086hFQ= Ä£*&https://sphinx.ct.digicert.com/2025h2/2
 Ä å√Äƒˆ B
 ˜Ãø∂J
@@ -89,18 +73,10 @@ Cloudflare–˘äµRcloudflare_nimbus2026ähttps://crbug.com/355460977ê2“
 Ä±ë“ÄŸ€ŸB
 Ä©µπJ
 DigiCert¿∂˛¥Rdigicert_sphinx2026h2ähttps://crbug.com/354025369ê2–
-Sectigo 'Sabre2025h1'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEfi858egjjrMyBK9NV/bbxXSkem07B1EMWvuAMAXGWgzEdtYGqFdN+9/kgpDCQa5wszGi4/o9XyxdBM20nVWrQQ==,4JKz/AwdyOdoNh/eYbmWTQpSeBmKctZyxLBNpW1vVAQ= Ä£*#https://sabre2025h1.ct.sectigo.com/2
-Äã“ªÄ å√B
-¿Êå´J
-Sectigo¿èÍ¶Rsectigo_sabre2025h1ähttps://crbug.com/703700ê2–
 Sectigo 'Sabre2025h2'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEhRMRLXvzk4HkuXzZZDvntYOZZnlZR2pCXta9Yy63kUuuvFbExW4JoNdkGsjBr4mL9VjYuut7g1Lp9OClzc2SzA==,GgT/SdBUHUCv9qDDv/HYxGcvTuzuI0BomGsXQC7ciX0= Ä£*#https://sabre2025h2.ct.sectigo.com/2
 Ä å√ÄÚ÷ B
 ¿Êå´J
 Sectigo¿èÍ¶Rsectigo_sabre2025h2ähttps://crbug.com/703700ê2÷
-Sectigo 'Mammoth2025h1'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEEzxBtTB9LkqhqGvSxVdrmP5+79Uh4rpdsLqFEW6U4D2ojm1WjUQCnrCDzFTfm05yYks8DDLdhvvrPmbNd1hb5Q==,E0rfGrWYQgl4DG/vTHqRpBa3I0nOWFdq367ap8Kr4CI= Ä£*%https://mammoth2025h1.ct.sectigo.com/2
-Äã“ªÄ å√B
-¿Êå´J
-Sectigo¿èÍ¶Rsectigo_mammoth2025h1ähttps://crbug.com/703699ê2÷
 Sectigo 'Mammoth2025h2'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEiOLHs9c3o5HXs8XaB1EEK4HtwkQ7daDmZeFKuhuxnKkqhDEprh2L8TOfEi6QsRVnZqB8C1tif2yaajCbaAIWbw==,rxgaKNaMo+CpikycZ6sJ+Lu8IrquvLE4o6Gd0/m2Aw0= Ä£*%https://mammoth2025h2.ct.sectigo.com/2
 Ä å√ÄÚ÷ B
 ¿Êå´J
@@ -123,23 +99,23 @@ Cloudflare–˘äµRcloudflare_nimbus2026ähttps://crbug.com/355460977ê2“
 Sectigo»ÙÒ≥Rsectigo_sabre2026h2ähttps://crbug.com/41308606ê2‹
 Sectigo 'Elephant2025h2'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE0OlLeGW2qUZGUoQERydw3GlayEO3ZK3418zThY1tDYr85ASme6ZOL/2DXyOXw8RCwVsKhRbOqMEOxW4Q2p4KQg==,DR28iUTp9QBVQtctPhRMzEMIKrbqHpTf1wZlfS6G8wE= Ä£*&https://elephant2025h2.ct.sectigo.com/2
 Ä å√ÄÚ÷ B
-‡¬ä¡J
+‡‘˚√J
 SectigoÄ≥˘ΩRsectigo_elephant2025h2ähttps://crbug.com/399134370ê2‹
 Sectigo 'Elephant2026h1'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEU0lqnPHoXuU9Fc9dJv1HQZCvssJfvxLsirwVQ/fkFyUqeu4inwPKikeT4DGyyWWH4NR/DCJa2bAumHrXJdAcaQ==,0W6ppWgHfmY1oD83pd28A6U8QRIU1IgY9ekxsyPLlQQ= Ä£*&https://elephant2026h1.ct.sectigo.com/2
 ÄÚ÷ Ä±ë“B
-‡¬ä¡J
+‡‘˚√J
 SectigoÄ≥˘ΩRsectigo_elephant2026h1ähttps://crbug.com/399134370ê2‹
 Sectigo 'Elephant2026h2'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEO/t4Uwkoou78zkCchh9tfAKbIUJmbOoUAb8szD8StnnHFKAVY5kq1Ljs8YD7CfzdD7xcVjmQYpbtNUhxRMRtmA==,r2eIO1ewTt2Pptl+9i6o64EKx3Fg8CReVdYML+eFhzo= Ä£*&https://elephant2026h2.ct.sectigo.com/2
 Ä±ë“ÄŸ€ŸB
-‡¬ä¡J
+‡‘˚√J
 SectigoÄ≥˘ΩRsectigo_elephant2026h2ähttps://crbug.com/399134370ê2‹
 Sectigo 'Elephant2027h1'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE4fu36JygUwaaVO+ddWJ97FJZlA5SjPLmT+RHwg0pavkIrbT1b5LNQrsaEw0CoGraf7BkzKZf7PC8gYAScw2woA==,YEyar3p/d18B1Ab8kg3ImesLHH34yVIb+voXdzuXi8k= Ä£*&https://elephant2027h1.ct.sectigo.com/2
 ÄŸ€ŸÄòñ·B
-‡¬ä¡J
+‡‘˚√J
 SectigoÄ≥˘ΩRsectigo_elephant2027h1ähttps://crbug.com/399134370ê2‹
 Sectigo 'Elephant2027h2'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAECTPhpJnRFroRRpP/1DdAns+PrnmUywtqIV+EeL4Jg8zKouoW7kuAkYo+kZeoHtyK7CBhflIlMk7T2Qrn4w/t8g==,okkM3NuOM6QAMhdg1tTVGiA2GR6nfZaL4mqKAPb///c= Ä£*&https://elephant2027h2.ct.sectigo.com/2
 Äòñ·Ä¿‡ËB
-‡¬ä¡J
+‡‘˚√J
 SectigoÄ≥˘ΩRsectigo_elephant2027h2ähttps://crbug.com/399134370ê2”
 Sectigo 'Tiger2025h2'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEFUl5keBbWVckXMv6WSWToTeGwi9DSNCI2WZlIENBkA/zADmmS58w33/f0JhC2KEkWS+4T7/bYOXv4dDNzzrExg==,XKV30pt/i69Bntjsq/tty67DhTcC1XRvF02tPJNKqWo= Ä£*#https://tiger2025h2.ct.sectigo.com/2
 Ä å√ÄÚ÷ B
@@ -161,10 +137,6 @@ Cloudflare–˘äµRcloudflare_nimbus2026ähttps://crbug.com/355460977ê2“
 Äòñ·Ä¿‡ËB
 –œπ√J
 SectigoÄ≥˘ΩRsectigo_tiger2027h2ähttps://crbug.com/399124609ê2ﬂ
-Let's Encrypt 'Oak2025h1'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKeBpU9ejnCaIZeX39EsdF5vDvf8ELTHdLPxikl4y4EiROIQfS4ercpnMHfh8+TxYVFs3ELGr2IP7hPGVPy4vHA==,ouMK5EXvva2bfjjtR2d3U9eCW4SU1yteGyzEuVCkR+c= Ä£*&https://oak.ct.letsencrypt.org/2025h1/2
-ÄÁíªÄ„√B
-¿Êå´J
-Let's Encrypt¿èÍ¶Rletsencrypt_oak2025h1ähttps://crbug.com/963693ê2ﬂ
 Let's Encrypt 'Oak2025h2'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtXYwB63GyNLkS9L1vqKNnP10+jrW+lldthxg090fY4eG40Xg1RvANWqrJ5GVydc9u8H3cYZp9LNfkAmqrr2NqQ==,DeHyMCvTDcFAYhIJ6lUu/Ed0fLHX6TDvDkIetH5OqjQ= Ä£*&https://oak.ct.letsencrypt.org/2025h2/2
 Ä…“¬ÄãªÀB
 ¿Êå´J
@@ -204,7 +176,15 @@ Cloudflare–˘äµRcloudflare_nimbus2026ähttps://crbug.com/355460977ê2“
 Geomys 'Tuscolo2026h2'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEaA6P0i7JTsd9XfzF1/76avRWA3XXI4NStsFO/aFtBp6SY7olDEMiPSFSxGzFQjKA1r9vgG/oFQwurlWMy9FQNw==,Rq+GPTs+5Z+ld96oJF02sNntIqIj9GF3QSKUUu6VUF8= <**https://tuscolo2026h2.sunlight.geomys.org/2
 Ä±ë“ÄŸ€ŸB
 ÄüÆ¬J
-Geomysê ˙¿Rgeomys_tuscolo2026h2Z*https://tuscolo2026h2.skylight.geomys.org/ähttps://crbug.com/416691330ê2Ì
+Geomysê ˙¿Rgeomys_tuscolo2026h2Z*https://tuscolo2026h2.skylight.geomys.org/ähttps://crbug.com/416691330ê2Ö
+Geomys 'Tuscolo2027h1'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEOYwwGoaNpZ/SQW0VNGICP7wGRQsSeEowTRl4DPSdPjSkO/+ouvFH78I8sQTR3FWPZDScALbclBqnqL0ptY8beA==,WW5sM4aUsllyolbIoOjdkEp26Ag92oc7AQg4KBQ87lk= <**https://tuscolo2027h1.sunlight.geomys.org/2
+ÄŸ€ŸÄòñ·B
+–Ï§ƒJ
+GeomysÄ”Û¡Rgeomys_tuscolo2027h1Z*https://tuscolo2027h1.skylight.geomys.org/ähttps://crbug.com/416691330ê2Ö
+Geomys 'Tuscolo2027h2'|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIAz2gOD7wIptaiLTnmR4k7AQwp5kFmqmGHY/8JmMJxaSHyAipoFA/YSBCTX7ZowxIkSKpZYGlqLtdLVcLWDS5w==,1d5V7roItgyf/BjFE75qYLoARga8WVuWu0T2LMV9Ofo= <**https://tuscolo2027h2.sunlight.geomys.org/2
+Äòñ·Ä¿‡ËB
+–Ï§ƒJ
+GeomysÄ”Û¡Rgeomys_tuscolo2027h2Z*https://tuscolo2027h2.skylight.geomys.org/ähttps://crbug.com/416691330ê2Ì
 9Bogus placeholder log to unbreak misbehaving CT libraries|MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEj4lCAxWCY6SzIthkqZhwiUVzcK62i6Fc+/YS0WHaN6jjO1ITUFuu8beOiU9PdeNmdalZcC3iWovAfApvXS33Nw==,LtakTeuPDIZGZ3acTt0EH4QjZ1X6OqymNNCTXfzVmnA= Ä£*https://ct.example.com/bogus/2
 Ä£±Ä∆∂B
 ∞Ÿ¬J

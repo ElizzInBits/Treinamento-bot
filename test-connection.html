@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Conexão - Treinamento Bot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .loading { background-color: #cce7ff; color: #004085; border: 1px solid #b3d7ff; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .info { margin: 20px 0; padding: 15px; background-color: #e9ecef; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Teste de Conexão - Sistema de Treinamentos</h1>
+        
+        <div class="info">
+            <h3>ℹ️ Informações</h3>
+            <p>Este teste verifica se o backend está rodando corretamente na porta 3000.</p>
+            <p><strong>Para iniciar o backend:</strong></p>
+            <ol>
+                <li>Abra o terminal na pasta do projeto</li>
+                <li>Execute: <code>cd SistemaPrincipal/back-end</code></li>
+                <li>Execute: <code>npm start</code> ou <code>node server.js</code></li>
+            </ol>
+        </div>
+
+        <div id="status" class="status loading">
+            🔄 Testando conexão com o backend...
+        </div>
+
+        <button onclick="testarConexao()">🔄 Testar Novamente</button>
+        <button onclick="testarEndpoints()">🧪 Testar Endpoints</button>
+
+        <div id="detalhes" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        async function testarConexao() {
+            const statusDiv = document.getElementById('status');
+            const detalhesDiv = document.getElementById('detalhes');
+            
+            statusDiv.className = 'status loading';
+            statusDiv.innerHTML = '🔄 Testando conexão com o backend...';
+            detalhesDiv.innerHTML = '';
+
+            try {
+                const response = await fetch('http://localhost:3000/api/health', {
+                    method: 'GET',
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = '✅ Backend está rodando corretamente!';
+                    
+                    const data = await response.json();
+                    detalhesDiv.innerHTML = `
+                        <div class="status success">
+                            <h4>Detalhes da Conexão:</h4>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '❌ Erro de conexão com o backend';
+                
+                detalhesDiv.innerHTML = `
+                    <div class="status error">
+                        <h4>Erro:</h4>
+                        <p><strong>Tipo:</strong> ${error.name}</p>
+                        <p><strong>Mensagem:</strong> ${error.message}</p>
+                        <h4>Possíveis soluções:</h4>
+                        <ul>
+                            <li>Verifique se o servidor backend está rodando na porta 3000</li>
+                            <li>Execute <code>npm start</code> na pasta back-end</li>
+                            <li>Verifique se não há conflitos de porta</li>
+                            <li>Verifique o firewall/antivírus</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        async function testarEndpoints() {
+            const detalhesDiv = document.getElementById('detalhes');
+            detalhesDiv.innerHTML = '<div class="status loading">🔄 Testando endpoints...</div>';
+
+            const endpoints = [
+                '/api/health',
+                '/api/empresas',
+                '/api/contatos',
+                '/api/treinamentos',
+                '/api/dashboard/stats'
+            ];
+
+            let resultados = '<h4>Teste de Endpoints:</h4>';
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`http://localhost:3000${endpoint}`);
+                    const status = response.ok ? '✅' : '❌';
+                    const statusText = response.ok ? 'OK' : `Erro ${response.status}`;
+                    resultados += `<p>${status} ${endpoint} - ${statusText}</p>`;
+                } catch (error) {
+                    resultados += `<p>❌ ${endpoint} - Erro de conexão</p>`;
+                }
+            }
+
+            detalhesDiv.innerHTML = `<div class="status">${resultados}</div>`;
+        }
+
+        // Testar automaticamente ao carregar a página
+        document.addEventListener('DOMContentLoaded', testarConexao);
+    </script>
+</body>
+</html>

@@ -7,44 +7,64 @@ let empresaIdCounter = 1;
 let empresaSelecionada = null;
 let contatosEmpresaSelecionada = [];
 
-// Conectar ao WebSocket
-const socket = io();
-
-// Escutar eventos de novos contatos
-socket.on('novoContato', (data) => {
-  console.log('Novo contato recebido via WebSocket:', data.contato);
-  
-  // Adicionar contato à lista local
-  contatos.push({
-    ...data.contato,
-    id: parseInt(data.contato.id, 10),
-    empresaId: parseInt(data.contato.empresaId, 10),
-    treinamentoId: data.contato.treinamentoId ? parseInt(data.contato.treinamentoId, 10) : null
+// Conectar ao WebSocket com tratamento de erro
+let socket;
+try {
+  socket = io({
+    timeout: 5000,
+    reconnection: true,
+    reconnectionAttempts: 3
   });
   
-  // Atualizar estatísticas
-  atualizarEstatisticasMapeamento();
-  atualizarEstatisticasEmpresas();
+  socket.on('connect_error', (error) => {
+    console.warn('Erro de conexão WebSocket:', error);
+  });
   
-  // Atualizar visualizações se estiverem ativas
-  if (document.getElementById('empresas').classList.contains('active')) {
-    renderizarEmpresas();
-  }
-  
-  // Atualizar modal de contatos da empresa se estiver aberto
-  if (empresaSelecionada && data.contato.empresaId === empresaSelecionada.id) {
-    contatosEmpresaSelecionada.push(data.contato);
-    renderizarContatosEmpresa();
-  }
-  
-  // Mostrar notificação
-  if (Notification.permission === 'granted') {
-    new Notification('Novo contato cadastrado!', {
-      body: `${data.contato.nome} foi cadastrado`,
-      icon: '/favicon.ico'
+  socket.on('disconnect', (reason) => {
+    console.warn('WebSocket desconectado:', reason);
+  });
+} catch (error) {
+  console.warn('Erro ao inicializar WebSocket:', error);
+  socket = null;
+}
+
+// Escutar eventos de novos contatos
+if (socket) {
+  socket.on('novoContato', (data) => {
+    console.log('Novo contato recebido via WebSocket:', data.contato);
+    
+    // Adicionar contato à lista local
+    contatos.push({
+      ...data.contato,
+      id: parseInt(data.contato.id, 10),
+      empresaId: parseInt(data.contato.empresaId, 10),
+      treinamentoId: data.contato.treinamentoId ? parseInt(data.contato.treinamentoId, 10) : null
     });
-  }
-});
+    
+    // Atualizar estatísticas
+    atualizarEstatisticasMapeamento();
+    atualizarEstatisticasEmpresas();
+    
+    // Atualizar visualizações se estiverem ativas
+    if (document.getElementById('empresas').classList.contains('active')) {
+      renderizarEmpresas();
+    }
+    
+    // Atualizar modal de contatos da empresa se estiver aberto
+    if (empresaSelecionada && data.contato.empresaId === empresaSelecionada.id) {
+      contatosEmpresaSelecionada.push(data.contato);
+      renderizarContatosEmpresa();
+    }
+    
+    // Mostrar notificação
+    if (Notification.permission === 'granted') {
+      new Notification('Novo contato cadastrado!', {
+        body: `${data.contato.nome} foi cadastrado`,
+        icon: '/favicon.ico'
+      });
+    }
+  });
+}
 
 // Solicitar permissão para notificações
 if ('Notification' in window && Notification.permission === 'default') {
@@ -103,11 +123,32 @@ function limparCanvas(canvasId) {
   }
 }
 
+// Função para verificar se o backend está rodando
+async function verificarBackend() {
+  try {
+    const response = await fetch('http://localhost:3000/api/health', {
+      method: 'GET',
+      timeout: 3000
+    });
+    return response.ok;
+  } catch (error) {
+    console.warn('Backend não está disponível:', error);
+    return false;
+  }
+}
+
 // Inicializar sistema
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
   // Definir aba ativa imediatamente para evitar flash
   const activeTab = localStorage.getItem('activeTab') || 'mapeamento';
   showTab(activeTab);
+  
+  // Verificar se o backend está rodando
+  const backendDisponivel = await verificarBackend();
+  
+  if (!backendDisponivel) {
+    mostrarAlerta('⚠️ Backend não está disponível. Inicie o servidor na porta 3000 para funcionalidade completa.', 'error');
+  }
   
   // Carregar dados em sequência para evitar problemas de timing
   carregarEmpresas()
@@ -319,6 +360,18 @@ function mostrarAlerta(mensagem, tipo = 'success') {
   setTimeout(() => {
     alertDiv.remove();
   }, 5000);
+}
+
+// Função específica para mapear contatos com treinamento
+async function mapContatosComTreinamento() {
+  try {
+    const response = await fetch('http://localhost:3000/api/dashboard/contatos-em-treinamento');
+    const data = await response.json();
+    return data.total || 0;
+  } catch (error) {
+    console.error('Erro ao buscar contatos em treinamento:', error);
+    return contatos.filter(c => c.treinamentoId).length;
+  }
 }
 
 // Atualizar estatísticas da aba Mapeamento com dados da API
@@ -545,7 +598,15 @@ function carregarContatos() {
     })
     .catch(error => {
       console.error('Erro ao carregar contatos:', error);
-      mostrarAlerta('Erro ao carregar contatos.', 'error');
+      
+      // Verificar se é erro de conexão
+      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+        mostrarAlerta('Servidor não está disponível. Usando dados locais.', 'error');
+        // Usar dados de exemplo para desenvolvimento
+        contatos = [];
+      } else {
+        mostrarAlerta('Erro ao carregar contatos.', 'error');
+      }
     });
 }
 
@@ -675,10 +736,13 @@ function renderizarContatosEmpresa() {
     const treinamento = treinamentos.find(t => t.id === contato.treinamentoId);
     return `
           <div class="contact-item">
+            <div class="contact-avatar">${contato.nome.charAt(0).toUpperCase()}</div>
             <div class="contact-info">
-              <h4>${contato.nome}</h4>
-              <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
-              <p><strong>Treinamento:</strong> ${treinamento ? treinamento.nome : 'Sem treinamento'}</p>
+              <div class="contact-name">${contato.nome}</div>
+              <div class="contact-phone">${formatarTelefone(contato.telefone)}</div>
+              <div class="contact-training ${treinamento ? 'has-training' : 'no-training'}">
+                ${treinamento ? treinamento.nome : 'Sem treinamento'}
+              </div>
             </div>
             <div class="contact-actions">
               <button class="btn-info" onclick="abrirDetalhesContato(${contato.id})">Detalhes</button>
@@ -814,10 +878,40 @@ function abrirDetalhesContato(id) {
 
   const detalhesHTML = `
     <h4>${contato.nome}</h4>
-    <p><strong>Telefone:</strong> ${formatarTelefone(contato.telefone)}</p>
-    <p><strong>Empresa:</strong> ${empresa ? (empresa.razao_social || empresa.razaoSocial || 'Nome não informado') : 'Empresa não encontrada'}</p>
-    <p><strong>Treinamento Atual:</strong> ${treinamento ? treinamento.nome : 'Nenhum'}</p>
-    <p><strong>Status:</strong> ${treinamento ? 'Com treinamento' : 'Sem treinamento'}</p>
+    <div class="contact-info-list">
+      <div class="info-item">
+        <div class="info-icon">📞</div>
+        <div class="info-content">
+          <div class="info-label">Telefone</div>
+          <div class="info-value">${formatarTelefone(contato.telefone)}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">🏢</div>
+        <div class="info-content">
+          <div class="info-label">Empresa</div>
+          <div class="info-value">${empresa ? (empresa.razao_social || empresa.razaoSocial || 'Nome não informado') : 'Empresa não encontrada'}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">📚</div>
+        <div class="info-content">
+          <div class="info-label">Treinamento</div>
+          <div class="info-value">${treinamento ? treinamento.nome : 'Nenhum treinamento atribuído'}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">📊</div>
+        <div class="info-content">
+          <div class="info-label">Status</div>
+          <div class="info-value">
+            <span class="status-badge ${treinamento ? 'com-treinamento' : 'sem-treinamento'}">
+              ${treinamento ? '🎓 Com treinamento' : '⚠️ Sem treinamento'}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 
   document.getElementById('detalhesContatoConteudo').innerHTML = detalhesHTML;
@@ -881,7 +975,15 @@ function carregarTreinamentos() {
     })
     .catch(error => {
       console.error('Erro ao carregar treinamentos:', error);
-      mostrarAlerta('Erro ao carregar treinamentos.', 'error');
+      
+      // Verificar se é erro de conexão
+      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+        mostrarAlerta('Servidor não está disponível. Usando dados locais.', 'error');
+        // Usar dados de exemplo para desenvolvimento
+        treinamentos = [];
+      } else {
+        mostrarAlerta('Erro ao carregar treinamentos.', 'error');
+      }
     })
     .finally(() => {
       if (loading) loading.style.display = 'none';
@@ -1249,7 +1351,17 @@ function carregarEmpresas() {
     })
     .catch(error => {
       console.error('Erro ao carregar empresas:', error);
-      mostrarAlerta('Erro ao carregar empresas.', 'error');
+      
+      // Verificar se é erro de conexão
+      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+        mostrarAlerta('Servidor não está disponível. Verifique se o backend está rodando na porta 3000.', 'error');
+        // Usar dados de exemplo para desenvolvimento
+        empresas = [
+          { id: 1, razao_social: 'Empresa Exemplo', cnpj: '12.345.678/0001-90', email: 'contato@exemplo.com' }
+        ];
+      } else {
+        mostrarAlerta('Erro ao carregar empresas.', 'error');
+      }
     })
     .finally(() => {
       if (loading) loading.style.display = 'none';
@@ -1411,11 +1523,13 @@ window.addEventListener('error', function (e) {
 // Função para verificar conectividade com a API
 function verificarConectividadeAPI() {
   return fetch('http://localhost:3000/api/health', {
-    method: 'GET',
-    timeout: 5000
+    method: 'GET'
   })
     .then(response => response.ok)
-    .catch(() => false);
+    .catch(() => {
+      console.warn('API não está disponível');
+      return false;
+    });
 }
 
 // Inicializar verificação de conectividade periodicamente
@@ -3015,8 +3129,8 @@ function abrirModalTreinamentosEmpresa(empresaId) {
               <div class="treinamento-item" style="animation-delay: ${index * 0.1}s">
                 <div class="treinamento-info">
                   <strong>${t.nome}</strong>
-                  <p>${t.modalidade} - ${t.cargaHoraria}h</p>
-                  ${t.instrutor ? `<small style="color: var(--gray-500); margin-top: 0.25rem; display: block;">👨‍🏫 ${t.instrutor}</small>` : ''}
+                  <p>${t.modalidade} - ${t.carga_horaria}h </p>
+                  ${t.instrutor_principal ? `<small style="color: var(--gray-500); margin-top: 0.25rem; display: block;">👨‍🏫 ${t.instrutor_principal}</small>` : ''}
                 </div>
                 <button class="btn-primary btn-small" onclick="atribuirTreinamento(${empresaId}, ${t.id})" title="Atribuir este treinamento à empresa">
                   ➕ Atribuir
@@ -3037,8 +3151,8 @@ function abrirModalTreinamentosEmpresa(empresaId) {
               <div class="treinamento-item" style="animation-delay: ${index * 0.1}s">
                 <div class="treinamento-info">
                   <strong>${t.nome}</strong>
-                  <p>${t.modalidade} - ${t.cargaHoraria}h</p>
-                  ${t.instrutor ? `<small style="color: var(--gray-500); margin-top: 0.25rem; display: block;">👨‍🏫 ${t.instrutor}</small>` : ''}
+                  <p>${t.modalidade} - ${t.carga_horaria}h</p>
+                  ${t.instrutor_principal ? `<small style="color: var(--gray-500); margin-top: 0.25rem; display: block;">👨‍🏫 ${t.instrutor_principal}</small>` : ''}
                   <div class="status-badge ativo" style="margin-top: 0.5rem;">
                     <span>🟢</span> Ativo
                   </div>
@@ -3234,7 +3348,7 @@ function abrirDetalhesEmpresa(empresaId) {
           </form>
           
           <div class="form-section">
-            <h4 data-section="treinamentos">📚 Treinamentos Atribuídos</h4>
+            <h4 data-section="treinamentos">Treinamentos Atribuídos</h4>
             <div class="contador-itens">
               <span class="contador-texto">Total de treinamentos:</span>
               <span class="contador-numero">${treinamentosEmpresa.length}</span>
@@ -3245,7 +3359,7 @@ function abrirDetalhesEmpresa(empresaId) {
                 <div class="treinamento-item" style="animation-delay: ${index * 0.1}s">
                   <div class="treinamento-info">
                     <strong>${t.nome}</strong>
-                    <p>🎯 ${t.modalidade} - ⏱️ ${t.cargaHoraria}h</p>
+                    <p>${t.tipo} - 🎯 ${t.modalidade} - ⏱️ ${t.carga_horaria}h</p>
                     ${t.instrutor ? `<small style="color: var(--gray-500); margin-top: 0.25rem; display: block;">👨‍🏫 ${t.instrutor}</small>` : ''}
                     <div class="status-badge ativo" style="margin-top: 0.5rem;">
                       <span>🟢</span> Ativo

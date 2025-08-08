@@ -18,12 +18,26 @@
     <header class="main-header">
       <div class="header-content">
         <div class="logo-section">
-          <h1>Gestão de Treinamentos</h1>
-          <p></p>
+          <div class="logo-icon"><img src="Imagens/image.png" alt=""></div>
+          <div class="logo-text">
+            <h1>Gestão de Treinamentos</h1>
+            <p class="subtitle">Sistema Para Gerenciamento e Aplicação de Treinamentos</p>
+          </div>
+        </div>
+        <div class="header-info">
+          <div class="system-status">
+            <span class="status-indicator online"></span>
+            <span class="status-text">Sistema Online</span>
+          </div>
+          <div class="current-time" id="currentTime"></div>
         </div>
         <div class="header-actions">
-          <button class="btn-secondary" onclick="exportarDadosXLS()">
-            Exportar
+          <button class="btn-icon" onclick="atualizarTodasEstatisticas()" title="Atualizar dados">
+            <span class="icon">🔄</span>
+          </button>
+          <button class="btn-primary" onclick="exportarDadosXLS()">
+            <span class="icon">📊</span>
+            Exportar Dados
           </button>
         </div>
       </div>
@@ -492,6 +506,24 @@
       <script src="/socket.io/socket.io.js"></script>
       <script src="js/config.js"></script>
       <script src="js/home-script.js"></script>
+      <script>
+        // Atualizar relógio no header
+        function atualizarRelogio() {
+          const agora = new Date();
+          const timeElement = document.getElementById('currentTime');
+          if (timeElement) {
+            timeElement.textContent = agora.toLocaleString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+          }
+        }
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio();
+      </script>
 
 
 </body>
