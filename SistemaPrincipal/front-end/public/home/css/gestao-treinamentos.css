@@ -708,3 +708,86 @@
   font-weight: 600;
   font-size: 0.875rem;
 }
+
+/* Modal de Detalhes do Contato - Versão Simples e Limpa */
+#detalhesContatoConteudo {
+  padding: 1.5rem;
+}
+
+#detalhesContatoConteudo h4 {
+  color: var(--primary-color);
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#detalhesContatoConteudo h4::before {
+  content: '👤';
+  font-size: 1.5rem;
+}
+
+.contact-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.info-icon {
+  font-size: 1.2rem;
+  margin-right: 0.75rem;
+  width: 24px;
+  text-align: center;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-label {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 1rem;
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-badge.com-treinamento {
+  background: #10b981;
+  color: white;
+}
+
+.status-badge.sem-treinamento {
+  background: #f59e0b;
+  color: white;
+}
