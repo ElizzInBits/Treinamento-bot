@@ -361,7 +361,7 @@ function mostrarAlerta(mensagem, tipo = 'success') {
 
   setTimeout(() => {
     alertDiv.remove();
-  }, 5000);
+  }, 1000);
 }
 
 // Função específica para mapear contatos com treinamento
@@ -387,11 +387,8 @@ async function atualizarEstatisticasMapeamento() {
     // Atualizar os elementos da aba Mapeamento
     const elementos = {
       'mapTotalContatos': stats.totalContatos || 0,
-      'mapContatosComTreinamento': stats.contatosComTreinamento || 0,
-      'mapEmpresasAtivas': stats.totalEmpresas || 0, // Corrigido: era empresasAtivas
-      'mapTreinamentosDisponiveis': stats.totalTreinamentos || 0,
-      'mapPercentualTreinados': (stats.taxaTreinamento || 0) + '%',
-      'mapMediaContatos': stats.mediaContatosPorEmpresa || 0
+      'mapEmpresasAtivas': stats.totalEmpresas || 0,
+      'mapTreinamentosDisponiveis': stats.totalTreinamentos || 0
     };
     
     console.log('📈 Elementos a serem atualizados:', elementos);
@@ -499,11 +496,8 @@ function atualizarEstatisticasLocal() {
 
   const elementos = {
     'mapTotalContatos': totalContatos,
-    'mapContatosComTreinamento': contatosComTreinamento,
     'mapEmpresasAtivas': empresasAtivas,
-    'mapTreinamentosDisponiveis': treinamentosDisponiveis,
-    'mapPercentualTreinados': percentualTreinados + '%',
-    'mapMediaContatos': mediaContatosPorEmpresa
+    'mapTreinamentosDisponiveis': treinamentosDisponiveis
   };
   
   Object.entries(elementos).forEach(([id, valor]) => {
