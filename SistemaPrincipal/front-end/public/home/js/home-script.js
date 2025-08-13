@@ -1077,7 +1077,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   if (arquivos.length > 0) {
     console.log('✅ Validando', arquivos.length, 'arquivos...');
     const tiposPermitidos = ['image/', 'video/', 'audio/', 'application/pdf'];
-    const tamanhoMaximo = 20 * 1024 * 1024; // 20MB
+    const tamanhoMaximo = 100 * 1024 * 1024; // 100MB
     let arquivosValidos = 0;
 
     for (let i = 0; i < arquivos.length; i++) {
@@ -1091,7 +1091,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
       
       // Verificar tamanho do arquivo
       if (arquivo.size > tamanhoMaximo) {
-        mostrarAlerta(`Arquivo "${arquivo.name}" é muito grande. Tamanho máximo: 20MB.`, 'error');
+        mostrarAlerta(`Arquivo "${arquivo.name}" é muito grande. Tamanho máximo: 100MB.`, 'error');
         return;
       }
       
@@ -2333,7 +2333,7 @@ function abrirDetalhesTreinamento(treinamentoId) {
           <div class="file-upload-area" onclick="document.getElementById('novasMidias').click()">
             <div class="upload-icon">📁</div>
             <div class="upload-text">Clique aqui ou arraste os arquivos</div>
-            <div class="upload-hint">✅ Tamanho maximo permitido (máx. 20MB cada)</div>
+            <div class="upload-hint">✅ Tamanho maximo permitido (máx. 100MB cada)</div>
             <div class="upload-types">
               <span class="type-badge">🖼️ Imagens</span>
               <span class="type-badge">🎥 Vídeos</span>
@@ -2757,7 +2757,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Função para validar arquivos
 function validarArquivos(arquivos) {
   const tiposPermitidos = ['image/', 'video/', 'audio/', 'application/pdf'];
-  const tamanhoMaximo = 20 * 1024 * 1024; // 20MB
+  const tamanhoMaximo = 100 * 1024 * 1024; // 100MB
   const validFiles = [];
   
   arquivos.forEach(arquivo => {
@@ -2769,7 +2769,7 @@ function validarArquivos(arquivos) {
     
     // Verificar tamanho
     if (arquivo.size > tamanhoMaximo) {
-      mostrarAlerta(`Arquivo "${arquivo.name}" é muito grande (máx. 20MB).`, 'error');
+      mostrarAlerta(`Arquivo "${arquivo.name}" é muito grande (máx. 100MB).`, 'error');
       return;
     }
     
