@@ -6,10 +6,7 @@ const { Treinamento } = require('../../../BancoDeDados/models');
 const { Interacao, Empresa } = require('../../../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('../../Certificados/certificados2.js');
 
-// ========================================
-// CONFIGURAÇÕES ESPECÍFICAS DO TREINAMENTO
-// ========================================
-const TEMPO_LEMBRETE = 0.3 * 60 * 1000; // 18 segundos
+
 
 // Respostas válidas para este treinamento
 const RESPOSTAS_POSITIVAS = [
@@ -40,7 +37,7 @@ const RESPOSTAS_NEGATIVAS = [
     'Ainda não, preciso me preparar um pouco 😅👀🛌'
 ];
 
-// Configurações do quiz
+// Configurações do quiz Módulo 1
 const QUIZ_CONFIG = {
     perguntas: [
         {
@@ -87,8 +84,107 @@ const QUIZ_CONFIG = {
             respostaCorreta: 'c',
             explicacao: 'A Segurança é IMPRESCINDÍVEL - não é opcional!'
         }
-    ],
-    perguntaAtual: 0
+    ]
+};
+
+// Configurações do quiz Módulo 2
+const QUIZ_MODULO2_CONFIG = {
+    perguntas: [
+        {
+            pergunta: '1. Uma ferramenta cai ao lado de um trabalhador, sem atingi-lo. Isso é:',
+            alternativas: {
+                a: 'Acidente pessoal',
+                b: 'Acidente material',
+                c: 'Quase acidente',
+                d: 'Não é acidente'
+            },
+            respostaCorreta: 'c',
+            explicacao: 'Correto! É um quase acidente - evento que poderia ter causado lesão mas não causou.'
+        },
+        {
+            pergunta: '2. Verdadeiro ou Falso: Acidente de trajeto só conta se acontecer indo para o trabalho.',
+            alternativas: {
+                a: 'Verdadeiro - só na ida',
+                b: 'Falso - vale para ida E volta',
+                c: 'Verdadeiro - só na volta',
+                d: 'Falso - não existe acidente de trajeto'
+            },
+            respostaCorreta: 'b',
+            explicacao: 'Falso - Acidente de trajeto vale tanto na ida quanto na volta do trabalho!'
+        },
+        {
+            pergunta: '3. Todo acidente deve ser comunicado:',
+            alternativas: {
+                a: 'Apenas se houver ferimento',
+                b: 'Só os graves',
+                c: 'Imediatamente ao SESMT',
+                d: 'Apenas no final do dia'
+            },
+            respostaCorreta: 'c',
+            explicacao: 'Correto! Todo acidente deve ser comunicado imediatamente ao SESMT!'
+        },
+        {
+            pergunta: '4. Um vazamento de óleo que contamina o solo é um acidente:',
+            alternativas: {
+                a: 'Pessoal',
+                b: 'Material',
+                c: 'Ambiental',
+                d: 'De trajeto'
+            },
+            respostaCorreta: 'c',
+            explicacao: 'Correto! É um acidente ambiental pois causa danos ao meio ambiente!'
+        }
+    ]
+};
+
+// Configurações do quiz Módulo 3
+const QUIZ_MODULO3_CONFIG = {
+    perguntas: [
+        {
+            pergunta: '1. O PCMSO é o Programa de Controle Médico e Saúde Ocupacional. Qual exame deve ser realizado na contratação?',
+            alternativas: {
+                a: 'Exame periódico',
+                b: 'Exame admissional',
+                c: 'Exame demissional',
+                d: 'Exame de retorno ao trabalho'
+            },
+            respostaCorreta: 'b',
+            explicacao: 'Correto! O exame admissional deve ser realizado na contratação do colaborador.'
+        },
+        {
+            pergunta: '2. Com que frequência deve ser realizado o exame periódico?',
+            alternativas: {
+                a: 'A cada 6 meses',
+                b: 'A cada 12 meses',
+                c: 'A cada 18 meses',
+                d: 'A cada 24 meses'
+            },
+            respostaCorreta: 'b',
+            explicacao: 'Correto! O exame periódico deve ser realizado a cada 12 meses.'
+        },
+        {
+            pergunta: '3. Sobre os treinamentos de saúde e segurança, é correto afirmar:',
+            alternativas: {
+                a: 'São opcionais para colaboradores experientes',
+                b: 'Podem ser realizados apenas verbalmente',
+                c: 'Nenhum colaborador pode trabalhar sem estar devidamente treinado',
+                d: 'São necessários apenas para atividades de risco'
+            },
+            respostaCorreta: 'c',
+            explicacao: 'Correto! Nenhum colaborador poderá desenvolver suas atividades sem estar devidamente treinado.'
+        },
+        {
+            pergunta: '4. O que deve acompanhar todo treinamento realizado?',
+            alternativas: {
+                a: 'Apenas a presença do supervisor',
+                b: 'Certificado e/ou Lista de Presença assinada',
+                c: 'Apenas avaliação teórica',
+                d: 'Somente registro fotográfico'
+            },
+            respostaCorreta: 'b',
+            explicacao: 'Correto! Todo treinamento deve ser acompanhado de Certificado e/ou Lista de Presença devidamente assinada.'
+        }
+    ]
 };
 
 // Funções auxiliares
@@ -196,21 +292,21 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         await sendMessage(sender, 'send-file', {
             path: 'C:/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/Treinamentos/LCM/Imagens/NR 06.png',
             filename: 'NR_06.png',
-            caption: 'SSMA'
+            caption: ' '
         });
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         await sendMessage(sender, 'send-file', {
             path: 'C:/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/Treinamentos/LCM/Imagens/SSMA.png',
             filename: 'SSMA.png',
-            caption: 'SSMA - Segurança, Saúde e Meio Ambiente'
+            caption: ' '
         });
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         await sendMessage(sender, 'send-file', {
             path: 'C:/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/Treinamentos/LCM/Imagens/SST.png',
             filename: 'SST.png',
-            caption: 'Saúde e Segurança no Trabalho'
+            caption: ' '
         });
         await new Promise(resolve => setTimeout(resolve, 2500));
 
@@ -244,14 +340,14 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
 
     // Quiz intro responses
-    if (selectedId === 'comecar_quiz_Modulo1' || 
+    if (selectedId === 'comecar_quiz_Modulo1' ||
         (ultimaInteracao?.tipo === 'aguardando_quiz_intro' && (textLower.includes('vamos nessa') || textLower.includes('vamos') || textLower.includes('refazer') || RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase()))))) {
-        
+
         // Resetar pontuação ao iniciar/reiniciar quiz
         await salvarInteracao(sender, 'quiz_pontuacao', '0');
-        
+
         const perguntaAtual = QUIZ_CONFIG.perguntas[0];
-        
+
         await sendMessage(sender, 'send-message', {
             message: 'Então lá vai 🧨🔥🚀\n\n' + perguntaAtual.pergunta,
         });
@@ -278,13 +374,13 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
 
     // Not ready for quiz
-    if (selectedId === 'nao_comecar_quiz_Modulo1' || 
+    if (selectedId === 'nao_comecar_quiz_Modulo1' ||
         (ultimaInteracao?.tipo === 'aguardando_quiz_intro' && textLower.includes('ainda não'))) {
-        
+
         await sendMessage(sender, 'send-message', {
             message: '😅 Sem problemas! Quando estiver pronto para o quiz, é só me avisar!',
         });
-        
+
         const listMsg = {
             title: '',
             description: 'Escolha uma opção:',
@@ -302,26 +398,26 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
 
     // Quiz Question 1
-    if (['a_q1', 'b_q1', 'c_q1', 'd_q1'].includes(selectedId) || 
+    if (['a_q1', 'b_q1', 'c_q1', 'd_q1'].includes(selectedId) ||
         (ultimaInteracao?.tipo === 'aguardando_quiz_q1' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
         const pergunta1 = QUIZ_CONFIG.perguntas[0];
-        
+
         let respostaCorreta = false;
         if (selectedId === `${pergunta1.respostaCorreta}_q1`) {
             respostaCorreta = true;
         } else if (textLower.includes(`${pergunta1.respostaCorreta})`)) {
             respostaCorreta = true;
         }
-        
+
         // Inicializar pontuação
         let pontuacao = respostaCorreta ? 1 : 0;
         await salvarInteracao(sender, 'quiz_pontuacao', pontuacao.toString());
-        
+
         await sendMessage(sender, 'send-message', {
             message: respostaCorreta ? `✅ Correto! ${pergunta1.explicacao}` : `❌ Incorreta. ${pergunta1.explicacao}`,
         });
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         // Pergunta 2
         const pergunta2 = QUIZ_CONFIG.perguntas[1];
         await sendMessage(sender, 'send-message', {
@@ -351,17 +447,17 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
 
     // Quiz Question 2
-    if (['a_q2', 'b_q2', 'c_q2', 'd_q2'].includes(selectedId) || 
+    if (['a_q2', 'b_q2', 'c_q2', 'd_q2'].includes(selectedId) ||
         (ultimaInteracao?.tipo === 'aguardando_quiz_q2' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
         const pergunta2 = QUIZ_CONFIG.perguntas[1];
-        
+
         let respostaCorreta = false;
         if (selectedId === `${pergunta2.respostaCorreta}_q2`) {
             respostaCorreta = true;
         } else if (textLower.includes(`${pergunta2.respostaCorreta})`)) {
             respostaCorreta = true;
         }
-        
+
         // Atualizar pontuação
         const pontuacaoAnterior = await Interacao.findOne({
             where: { telefone: sender, tipo: 'quiz_pontuacao' },
@@ -369,12 +465,12 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         });
         let pontuacao = parseInt(pontuacaoAnterior?.mensagem || '0') + (respostaCorreta ? 1 : 0);
         await salvarInteracao(sender, 'quiz_pontuacao', pontuacao.toString());
-        
+
         await sendMessage(sender, 'send-message', {
             message: respostaCorreta ? `✅ Correto! ${pergunta2.explicacao}` : `❌ Incorreta. ${pergunta2.explicacao}`,
         });
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         // Pergunta 3
         const pergunta3 = QUIZ_CONFIG.perguntas[2];
         await sendMessage(sender, 'send-message', {
@@ -404,17 +500,17 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
 
     // Quiz Question 3
-    if (['a_q3', 'b_q3', 'c_q3', 'd_q3'].includes(selectedId) || 
+    if (['a_q3', 'b_q3', 'c_q3', 'd_q3'].includes(selectedId) ||
         (ultimaInteracao?.tipo === 'aguardando_quiz_q3' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
         const pergunta3 = QUIZ_CONFIG.perguntas[2];
-        
+
         let respostaCorreta = false;
         if (selectedId === `${pergunta3.respostaCorreta}_q3`) {
             respostaCorreta = true;
         } else if (textLower.includes(`${pergunta3.respostaCorreta})`)) {
             respostaCorreta = true;
         }
-        
+
         // Atualizar pontuação
         const pontuacaoAnterior = await Interacao.findOne({
             where: { telefone: sender, tipo: 'quiz_pontuacao' },
@@ -422,12 +518,12 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         });
         let pontuacao = parseInt(pontuacaoAnterior?.mensagem || '0') + (respostaCorreta ? 1 : 0);
         await salvarInteracao(sender, 'quiz_pontuacao', pontuacao.toString());
-        
+
         await sendMessage(sender, 'send-message', {
             message: respostaCorreta ? `✅ Correto! ${pergunta3.explicacao}` : `❌ Incorreta. ${pergunta3.explicacao}`,
         });
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         // Pergunta 4
         const pergunta4 = QUIZ_CONFIG.perguntas[3];
         await sendMessage(sender, 'send-message', {
@@ -457,17 +553,17 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
 
     // Quiz Question 4 (Final)
-    if (['a_q4', 'b_q4', 'c_q4', 'd_q4'].includes(selectedId) || 
+    if (['a_q4', 'b_q4', 'c_q4', 'd_q4'].includes(selectedId) ||
         (ultimaInteracao?.tipo === 'aguardando_quiz_q4' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
         const pergunta4 = QUIZ_CONFIG.perguntas[3];
-        
+
         let respostaCorreta = false;
         if (selectedId === `${pergunta4.respostaCorreta}_q4`) {
             respostaCorreta = true;
         } else if (textLower.includes(`${pergunta4.respostaCorreta})`)) {
             respostaCorreta = true;
         }
-        
+
         // Calcular pontuação final
         const pontuacaoAnterior = await Interacao.findOne({
             where: { telefone: sender, tipo: 'quiz_pontuacao' },
@@ -475,24 +571,48 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         });
         let pontuacaoFinal = parseInt(pontuacaoAnterior?.mensagem || '0') + (respostaCorreta ? 1 : 0);
         const percentual = (pontuacaoFinal / 4) * 100;
-        
+
         await sendMessage(sender, 'send-message', {
             message: respostaCorreta ? `✅ Correto! ${pergunta4.explicacao}` : `❌ Incorreta. ${pergunta4.explicacao}`,
         });
         await new Promise(resolve => setTimeout(resolve, 2500));
-        
+
         // Verificar se atingiu 80%
         if (percentual >= 80) {
             await sendMessage(sender, 'send-message', {
-                message: `🎉 Parabéns! Você concluiu o quiz com ${pontuacaoFinal}/4 acertos (${percentual.toFixed(0)}%)!`,
+                message: `🎉 Parabéns! Você concluiu o Módulo 1 com ${pontuacaoFinal}/4 acertos (${percentual.toFixed(0)}%)!`,
             });
             await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Oferecer Módulo 2
+            await sendMessage(sender, 'send-message', {
+                message: '🚀 Agora vamos para o Módulo 2*',
+            });
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            const modulo2Msg = {
+                title: '',
+                description: 'Deseja iniciar o Módulo 2 agora?\nEscolha uma opção:',
+                buttonText: 'Ver opções',
+                listType: 'SINGLE_SELECT',
+                sections: [{
+                    title: '',
+                    rows: [
+                        { id: 'iniciar_modulo2', title: 'Sim, vamos para o Módulo 2! 🚀', description: '' },
+                        { id: 'pular_modulo2', title: 'Não, depois continuo 🦥 😅', description: '' },
+                    ],
+                }],
+            };
+
+            await sendMessage(sender, 'send-list-message', modulo2Msg);
+            await salvarInteracao(sender, 'aguardando_modulo2_intro', JSON.stringify(modulo2Msg));
+            return true;
         } else {
             await sendMessage(sender, 'send-message', {
                 message: `😔 Você acertou ${pontuacaoFinal}/4 questões (${percentual.toFixed(0)}%). É necessário pelo menos 80% para prosseguir.`,
             });
             await new Promise(resolve => setTimeout(resolve, 2000));
-            
+
             const retryMsg = {
                 title: '',
                 description: 'Você precisa refazer o quiz. Escolha uma opção:',
@@ -505,7 +625,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
                     ],
                 }],
             };
-            
+
             await sendMessage(sender, 'send-list-message', retryMsg);
             await salvarInteracao(sender, 'aguardando_quiz_intro', JSON.stringify(retryMsg));
             return true;
@@ -513,7 +633,729 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
 
         const listMsg = {
             title: '',
-            description: `Confirme seus dados para o certificado:\n\n👤 Nome: ${contato.nome}\n📧 Email: ${contato.email || 'Não informado'}\n🏢 Empresa: ${nome.empresa || 'Não informada'}\n\nOs dados estão corretos?`,
+            description: `Confirme seus dados para o certificado:\n\n👤 Nome: ${contato.nome}\n📧 Email: ${contato.email || 'Não informado'}\n🏢 Empresa: ${contato.empresa || 'Não informada'}\n\nOs dados estão corretos?`,
+            buttonText: 'Confirmar dados',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'dados_corretos_ssma', title: 'Sim, os dados estão corretos', description: '' },
+                    { id: 'dados_incorretos_ssma', title: 'Não, preciso corrigir', description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg);
+        await salvarInteracao(sender, 'confirmacao_dados_ssma', JSON.stringify(listMsg));
+        return true;
+    }
+
+    // Módulo 2 - Iniciar
+    if (selectedId === 'iniciar_modulo2' ||
+        (ultimaInteracao?.tipo === 'aguardando_modulo2_intro' && (textLower.includes('sim') || textLower.includes('vamos')))) {
+
+        await sendMessage(sender, 'send-message', {
+            message: '*Boaa!!* \n\nEntão vamos nessa 🦾⛑️🚀 ',
+        });
+
+        await sendMessage(sender, 'send-message', {
+            message: '🎆 *Módulo 2*\n\nNesse módulo vamos entender melhor os tipos de acidentes e o que fazer',
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        await sendMessage(sender, 'send-file', {
+            path: 'C:/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/Treinamentos/LCM/Imagens/CIPA.png',
+            filename: 'CIPA.png',
+            caption: ' '
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        await sendMessage(sender, 'send-message', {
+            message: '🚨 TIPOS DE ACIDENTES - CONHECER PARA PREVENIR ',
+        });
+
+        await sendMessage(sender, 'send-file', {
+            path: 'C:/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/Treinamentos/LCM/Imagens/LEI.png',
+            filename: 'LEI.png',
+            caption: ' '
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        await sendMessage(sender, 'send-message', {
+            message: 'Todo acidente do trabalho deve ser comunicado ao Setor da Segurança do Trabalho. Caso o acidente ocorra nas frentes de serviços e o Técnico não esteja no local, o seu Líder imediato deve ser comunicado e o mesmo deve comunicar ao SESMT de imediato. 👷🩸🩹🩼',
+        });
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        await sendMessage(sender, 'send-message', {
+            message: '🏥 *ACIDENTE PESSOAL*\nGera lesão física e/ou doença no colaborador\nPode causar morte, invalidez permanente, total ou parcial\nExemplos: cortes, fraturas, queimaduras, intoxicações',
+        });
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
+        await sendMessage(sender, 'send-message', {
+            message: '🌍 *ACIDENTE AMBIENTAL*\nEventos não planejados e indesejados que podem causar diretamente ou indiretamente danos ao meio ambiente, saúde pública, prejuízos sociais e econômicos.\nExemplos: vazamentos, contaminação do solo/água',
+        });
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
+        await sendMessage(sender, 'send-message', {
+            message: '🔧 *ACIDENTE MATERIAL*\nDanos em máquinas, equipamentos, veículos e estruturas industriais e/ou prediais.\nPode gerar paralisação de atividades',
+        });
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
+        await sendMessage(sender, 'send-message', {
+            message: '⚡ *QUASE ACIDENTE*\nEvento que PODERIA ter sido acidente, mas não foi\nExemplos: Uma ferramenta pesada cai bem ao lado de um trabalhador que estava passando por um corredor.\nImportante: São alertas para prevenção!',
+        });
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        await sendMessage(sender, 'send-message', {
+            message: '📅 *Acidentes do Trabalho com classificação por Afastamento*\n\n✅ SEM AFASTAMENTO: Retorno no mesmo dia ou dia seguinte\n❌ COM AFASTAMENTO: Impossibilita o acidentado exercer suas atividades de trabalho.\n🚗 DE TRAJETO: Acontece no percurso entre casa-trabalho, desde que não tenha sido alterado o itinerário normal diário.',
+        });
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        await sendMessage(sender, 'send-message', {
+            message: '⚠️ *TODO acidente deve ser comunicado IMEDIATAMENTE por meio da CAT, via sistema E-SOCAL usando PO.SST-02!*',
+
+        });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        await sendMessage(sender, 'send-file', {
+            path: 'C:/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/Treinamentos/LCM/Imagens/ComunicacaoDoEvento_Acidente.png',
+            filename: 'LEI.png',
+            caption: '  '
+        });
+        await sendMessage(sender, 'send-file', {
+            path: 'C:/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/Treinamentos/LCM/Imagens/ComunicacaoDoEvento_Acidente2.png',
+            filename: 'LEI.png',
+            caption: ' '
+        });
+
+
+        const quizModulo2Msg = {
+            title: '',
+            description: 'Pronto para o quiz do Módulo 2?\nEscolha uma opção:',
+            buttonText: 'Ver opções',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'comecar_quiz_Modulo2', title: 'Vamos nessa! 🚀', description: '' },
+                    { id: 'nao_comecar_quiz_Modulo2', title: 'Ainda não 😅 🦥', description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', quizModulo2Msg);
+        await salvarInteracao(sender, 'aguardando_quiz_modulo2_intro', JSON.stringify(quizModulo2Msg));
+        return true;
+    }
+
+    // Quiz Módulo 2 - Iniciar
+    if (selectedId === 'comecar_quiz_Modulo2' ||
+        (ultimaInteracao?.tipo === 'aguardando_quiz_modulo2_intro' && (textLower.includes('vamos nessa') || textLower.includes('vamos')))) {
+
+        // Resetar pontuação do Módulo 2
+        await salvarInteracao(sender, 'quiz_modulo2_pontuacao', '0');
+
+        const perguntaAtual = QUIZ_MODULO2_CONFIG.perguntas[0];
+
+        await sendMessage(sender, 'send-message', {
+            message: 'Então lá vai o quiz do Módulo 2! 🧨🔥🚀\n\n' + perguntaAtual.pergunta,
+        });
+
+        const listMsg = {
+            title: '',
+            description: 'Escolha a alternativa correta:',
+            buttonText: 'Ver alternativas',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'a_m2q1', title: `A) ${perguntaAtual.alternativas.a}`, description: '' },
+                    { id: 'b_m2q1', title: `B) ${perguntaAtual.alternativas.b}`, description: '' },
+                    { id: 'c_m2q1', title: `C) ${perguntaAtual.alternativas.c}`, description: '' },
+                    { id: 'd_m2q1', title: `D) ${perguntaAtual.alternativas.d}`, description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg);
+        await salvarInteracao(sender, 'aguardando_quiz_m2q1', JSON.stringify(listMsg));
+        return true;
+    }
+
+    // Quiz Módulo 2 - Questão 1
+    if (['a_m2q1', 'b_m2q1', 'c_m2q1', 'd_m2q1'].includes(selectedId) ||
+        (ultimaInteracao?.tipo === 'aguardando_quiz_m2q1' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
+        const pergunta1 = QUIZ_MODULO2_CONFIG.perguntas[0];
+
+        let respostaCorreta = false;
+        if (selectedId === `${pergunta1.respostaCorreta}_m2q1`) {
+            respostaCorreta = true;
+        } else if (textLower.includes(`${pergunta1.respostaCorreta})`)) {
+            respostaCorreta = true;
+        }
+
+        let pontuacao = respostaCorreta ? 1 : 0;
+        await salvarInteracao(sender, 'quiz_modulo2_pontuacao', pontuacao.toString());
+
+        await sendMessage(sender, 'send-message', {
+            message: respostaCorreta ? `✅ Correto! ${pergunta1.explicacao}` : `❌ Incorreta. ${pergunta1.explicacao}`,
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Pergunta 2
+        const pergunta2 = QUIZ_MODULO2_CONFIG.perguntas[1];
+        await sendMessage(sender, 'send-message', {
+            message: pergunta2.pergunta,
+        });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const listMsg = {
+            title: '',
+            description: 'Escolha a alternativa correta:',
+            buttonText: 'Ver alternativas',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'a_m2q2', title: `A) ${pergunta2.alternativas.a}`, description: '' },
+                    { id: 'b_m2q2', title: `B) ${pergunta2.alternativas.b}`, description: '' },
+                    { id: 'c_m2q2', title: `C) ${pergunta2.alternativas.c}`, description: '' },
+                    { id: 'd_m2q2', title: `D) ${pergunta2.alternativas.d}`, description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg);
+        await salvarInteracao(sender, 'aguardando_quiz_m2q2', JSON.stringify(listMsg));
+        return true;
+    }
+
+    // Quiz Módulo 2 - Questão 2
+    if (['a_m2q2', 'b_m2q2', 'c_m2q2', 'd_m2q2'].includes(selectedId) ||
+        (ultimaInteracao?.tipo === 'aguardando_quiz_m2q2' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
+        const pergunta2 = QUIZ_MODULO2_CONFIG.perguntas[1];
+
+        let respostaCorreta = false;
+        if (selectedId === `${pergunta2.respostaCorreta}_m2q2`) {
+            respostaCorreta = true;
+        } else if (textLower.includes(`${pergunta2.respostaCorreta})`)) {
+            respostaCorreta = true;
+        }
+
+        // Atualizar pontuação
+        const pontuacaoAnterior = await Interacao.findOne({
+            where: { telefone: sender, tipo: 'quiz_modulo2_pontuacao' },
+            order: [['createdAt', 'DESC']]
+        });
+        let pontuacao = parseInt(pontuacaoAnterior?.mensagem || '0') + (respostaCorreta ? 1 : 0);
+        await salvarInteracao(sender, 'quiz_modulo2_pontuacao', pontuacao.toString());
+
+        await sendMessage(sender, 'send-message', {
+            message: respostaCorreta ? `✅ Correto! ${pergunta2.explicacao}` : `❌ Incorreta. ${pergunta2.explicacao}`,
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Pergunta 3
+        const pergunta3 = QUIZ_MODULO2_CONFIG.perguntas[2];
+        await sendMessage(sender, 'send-message', {
+            message: pergunta3.pergunta,
+        });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const listMsg3 = {
+            title: '',
+            description: 'Escolha a alternativa correta:',
+            buttonText: 'Ver alternativas',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'a_m2q3', title: `A) ${pergunta3.alternativas.a}`, description: '' },
+                    { id: 'b_m2q3', title: `B) ${pergunta3.alternativas.b}`, description: '' },
+                    { id: 'c_m2q3', title: `C) ${pergunta3.alternativas.c}`, description: '' },
+                    { id: 'd_m2q3', title: `D) ${pergunta3.alternativas.d}`, description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg3);
+        await salvarInteracao(sender, 'aguardando_quiz_m2q3', JSON.stringify(listMsg3));
+        return true;
+    }
+
+    // Quiz Módulo 2 - Questão 3
+    if (['a_m2q3', 'b_m2q3', 'c_m2q3', 'd_m2q3'].includes(selectedId) ||
+        (ultimaInteracao?.tipo === 'aguardando_quiz_m2q3' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
+        const pergunta3 = QUIZ_MODULO2_CONFIG.perguntas[2];
+
+        let respostaCorreta = false;
+        if (selectedId === `${pergunta3.respostaCorreta}_m2q3`) {
+            respostaCorreta = true;
+        } else if (textLower.includes(`${pergunta3.respostaCorreta})`)) {
+            respostaCorreta = true;
+        }
+
+        // Atualizar pontuação
+        const pontuacaoAnterior = await Interacao.findOne({
+            where: { telefone: sender, tipo: 'quiz_modulo2_pontuacao' },
+            order: [['createdAt', 'DESC']]
+        });
+        let pontuacao = parseInt(pontuacaoAnterior?.mensagem || '0') + (respostaCorreta ? 1 : 0);
+        await salvarInteracao(sender, 'quiz_modulo2_pontuacao', pontuacao.toString());
+
+        await sendMessage(sender, 'send-message', {
+            message: respostaCorreta ? `✅ Correto! ${pergunta3.explicacao}` : `❌ Incorreta. ${pergunta3.explicacao}`,
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Pergunta 4
+        const pergunta4 = QUIZ_MODULO2_CONFIG.perguntas[3];
+        await sendMessage(sender, 'send-message', {
+            message: pergunta4.pergunta,
+        });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const listMsg4 = {
+            title: '',
+            description: 'Escolha a alternativa correta:',
+            buttonText: 'Ver alternativas',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'a_m2q4', title: `A) ${pergunta4.alternativas.a}`, description: '' },
+                    { id: 'b_m2q4', title: `B) ${pergunta4.alternativas.b}`, description: '' },
+                    { id: 'c_m2q4', title: `C) ${pergunta4.alternativas.c}`, description: '' },
+                    { id: 'd_m2q4', title: `D) ${pergunta4.alternativas.d}`, description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg4);
+        await salvarInteracao(sender, 'aguardando_quiz_m2q4', JSON.stringify(listMsg4));
+        return true;
+    }
+
+    // Quiz Módulo 2 - Questão 4 (Final)
+    if (['a_m2q4', 'b_m2q4', 'c_m2q4', 'd_m2q4'].includes(selectedId) ||
+        (ultimaInteracao?.tipo === 'aguardando_quiz_m2q4' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
+        const pergunta4 = QUIZ_MODULO2_CONFIG.perguntas[3];
+
+        let respostaCorreta = false;
+        if (selectedId === `${pergunta4.respostaCorreta}_m2q4`) {
+            respostaCorreta = true;
+        } else if (textLower.includes(`${pergunta4.respostaCorreta})`)) {
+            respostaCorreta = true;
+        }
+
+        // Calcular pontuação final do Módulo 2
+        const pontuacaoAnterior = await Interacao.findOne({
+            where: { telefone: sender, tipo: 'quiz_modulo2_pontuacao' },
+            order: [['createdAt', 'DESC']]
+        });
+        let pontuacaoFinal = parseInt(pontuacaoAnterior?.mensagem || '0') + (respostaCorreta ? 1 : 0);
+        const percentual = (pontuacaoFinal / 4) * 100;
+
+        await sendMessage(sender, 'send-message', {
+            message: respostaCorreta ? `✅ Correto! ${pergunta4.explicacao}` : `❌ Incorreta. ${pergunta4.explicacao}`,
+        });
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
+        // Verificar se atingiu 80% no Módulo 2
+        if (percentual >= 80) {
+            await sendMessage(sender, 'send-message', {
+                message: `🎉 Parabéns! Você concluiu o Módulo 2 com ${pontuacaoFinal}/4 acertos (${percentual.toFixed(0)}%)!`,
+            });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Oferecer Módulo 3
+            await sendMessage(sender, 'send-message', {
+                message: '🚀 Agora vamos para o Módulo 3!',
+            });
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            const modulo3Msg = {
+                title: '',
+                description: 'Deseja iniciar o Módulo 3 agora?\nEscolha uma opção:',
+                buttonText: 'Ver opções',
+                listType: 'SINGLE_SELECT',
+                sections: [{
+                    title: '',
+                    rows: [
+                        { id: 'iniciar_modulo3', title: 'Sim, vamos para o Módulo 3! 🚀', description: '' },
+                        { id: 'pular_modulo3', title: 'Não, Depois eu volto 🛌🦥', description: '' },
+                    ],
+                }],
+            };
+
+            await sendMessage(sender, 'send-list-message', modulo3Msg);
+            await salvarInteracao(sender, 'aguardando_modulo3_intro', JSON.stringify(modulo3Msg));
+            return true;
+        } else {
+            await sendMessage(sender, 'send-message', {
+                message: `😔 Você acertou ${pontuacaoFinal}/4 questões (${percentual.toFixed(0)}%). É necessário pelo menos 80% para prosseguir.`,
+            });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const retryMsg = {
+                title: '',
+                description: 'Você precisa refazer o quiz do Módulo 2. Escolha uma opção:',
+                buttonText: 'Tentar novamente',
+                listType: 'SINGLE_SELECT',
+                sections: [{
+                    title: '',
+                    rows: [
+                        { id: 'comecar_quiz_Modulo2', title: 'Refazer o quiz do Módulo 2 🔄', description: '' },
+                    ],
+                }],
+            };
+
+            await sendMessage(sender, 'send-list-message', retryMsg);
+            await salvarInteracao(sender, 'aguardando_quiz_modulo2_intro', JSON.stringify(retryMsg));
+            return true;
+        }
+    }
+
+    // Módulo 2 - Pular para certificado
+    if (selectedId === 'pular_modulo2' ||
+        (ultimaInteracao?.tipo === 'aguardando_modulo2_intro' && (textLower.includes('não') || textLower.includes('finalizar')))) {
+
+        const listMsg = {
+            title: '',
+            description: `Confirme seus dados para o certificado:\n\n👤 Nome: ${contato.nome}\n📧 Email: ${contato.email || 'Não informado'}\n🏢 Empresa: ${contato.empresa || 'Não informada'}\n\nOs dados estão corretos?`,
+            buttonText: 'Confirmar dados',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'dados_corretos_ssma', title: 'Sim, os dados estão corretos', description: '' },
+                    { id: 'dados_incorretos_ssma', title: 'Não, preciso corrigir', description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg);
+        await salvarInteracao(sender, 'confirmacao_dados_ssma', JSON.stringify(listMsg));
+        return true;
+    }
+
+    // Módulo 3 - Iniciar
+    if (selectedId === 'iniciar_modulo3' ||
+        (ultimaInteracao?.tipo === 'aguardando_modulo3_intro' && (textLower.includes('sim') || textLower.includes('vamos')))) {
+
+        await sendMessage(sender, 'send-message', {
+            message: '*Excelente!* \n\nEntão vamos da inicio ⚡🚀',
+        });
+
+        await sendMessage(sender, 'send-message', {
+            message: '🎆 *Módulo 3 - PROGRAMAS DE SAÚDE E SEGURANÇA DO TRABALHO*\n\nNeste módulo vamos conhecer os programas legais voltados à saúde e segurança',
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        await sendMessage(sender, 'send-message', {
+            message: 'Os programas legais são voltados à saúde e segurança do trabalhador com medidas educaitivas, preventivas e de conscientização, que apontam a eliminação ou neutralização dos riscos existentes no ambiente de trabalho, tais como físicos, químicos, biologicos, acidentes e egornômicos.',
+        });
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
+        await sendMessage(sender, 'send-file', {
+            path: 'C:/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/Treinamentos/LCM/Imagens/PCMSO.png',
+            filename: 'PCMSO.png',
+            caption: ' '
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        await sendMessage(sender, 'send-file', {
+            path: 'C:/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/Treinamentos/LCM/Imagens/PGR.png',
+            filename: 'PCMSO.png',
+            caption: ' '
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+
+
+
+
+
+        const quizModulo3Msg = {
+            title: '',
+            description: 'Pronto para o quiz do Módulo 3?\nEscolha uma opção:',
+            buttonText: 'Ver opções',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'comecar_quiz_Modulo3', title: 'Vamos nessa! 🚀', description: '' },
+                    { id: 'nao_comecar_quiz_Modulo3', title: 'Ainda não 😅', description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', quizModulo3Msg);
+        await salvarInteracao(sender, 'aguardando_quiz_modulo3_intro', JSON.stringify(quizModulo3Msg));
+        return true;
+    }
+
+    // Quiz Módulo 3 - Iniciar
+    if (selectedId === 'comecar_quiz_Modulo3' ||
+        (ultimaInteracao?.tipo === 'aguardando_quiz_modulo3_intro' && (textLower.includes('vamos nessa') || textLower.includes('vamos')))) {
+
+        await salvarInteracao(sender, 'quiz_modulo3_pontuacao', '0');
+
+        const perguntaAtual = QUIZ_MODULO3_CONFIG.perguntas[0];
+
+        await sendMessage(sender, 'send-message', {
+            message: 'Então lá vai o quiz do Módulo 3! 🧨🔥🚀\n\n' + perguntaAtual.pergunta,
+        });
+
+        const listMsg = {
+            title: '',
+            description: 'Escolha a alternativa correta:',
+            buttonText: 'Ver alternativas',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'a_m3q1', title: `A) ${perguntaAtual.alternativas.a}`, description: '' },
+                    { id: 'b_m3q1', title: `B) ${perguntaAtual.alternativas.b}`, description: '' },
+                    { id: 'c_m3q1', title: `C) ${perguntaAtual.alternativas.c}`, description: '' },
+                    { id: 'd_m3q1', title: `D) ${perguntaAtual.alternativas.d}`, description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg);
+        await salvarInteracao(sender, 'aguardando_quiz_m3q1', JSON.stringify(listMsg));
+        return true;
+    }
+
+    // Quiz Módulo 3 - Questão 1
+    if (['a_m3q1', 'b_m3q1', 'c_m3q1', 'd_m3q1'].includes(selectedId) ||
+        (ultimaInteracao?.tipo === 'aguardando_quiz_m3q1' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
+        const pergunta1 = QUIZ_MODULO3_CONFIG.perguntas[0];
+
+        let respostaCorreta = false;
+        if (selectedId === `${pergunta1.respostaCorreta}_m3q1`) {
+            respostaCorreta = true;
+        } else if (textLower.includes(`${pergunta1.respostaCorreta})`)) {
+            respostaCorreta = true;
+        }
+
+        let pontuacao = respostaCorreta ? 1 : 0;
+        await salvarInteracao(sender, 'quiz_modulo3_pontuacao', pontuacao.toString());
+
+        await sendMessage(sender, 'send-message', {
+            message: respostaCorreta ? `✅ Correto! ${pergunta1.explicacao}` : `❌ Incorreta. ${pergunta1.explicacao}`,
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const pergunta2 = QUIZ_MODULO3_CONFIG.perguntas[1];
+        await sendMessage(sender, 'send-message', {
+            message: pergunta2.pergunta,
+        });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const listMsg2 = {
+            title: '',
+            description: 'Escolha a alternativa correta:',
+            buttonText: 'Ver alternativas',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'a_m3q2', title: `A) ${pergunta2.alternativas.a}`, description: '' },
+                    { id: 'b_m3q2', title: `B) ${pergunta2.alternativas.b}`, description: '' },
+                    { id: 'c_m3q2', title: `C) ${pergunta2.alternativas.c}`, description: '' },
+                    { id: 'd_m3q2', title: `D) ${pergunta2.alternativas.d}`, description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg2);
+        await salvarInteracao(sender, 'aguardando_quiz_m3q2', JSON.stringify(listMsg2));
+        return true;
+    }
+
+    // Quiz Módulo 3 - Questão 2
+    if (['a_m3q2', 'b_m3q2', 'c_m3q2', 'd_m3q2'].includes(selectedId) ||
+        (ultimaInteracao?.tipo === 'aguardando_quiz_m3q2' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
+        const pergunta2 = QUIZ_MODULO3_CONFIG.perguntas[1];
+
+        let respostaCorreta = false;
+        if (selectedId === `${pergunta2.respostaCorreta}_m3q2`) {
+            respostaCorreta = true;
+        } else if (textLower.includes(`${pergunta2.respostaCorreta})`)) {
+            respostaCorreta = true;
+        }
+
+        const pontuacaoAnterior = await Interacao.findOne({
+            where: { telefone: sender, tipo: 'quiz_modulo3_pontuacao' },
+            order: [['createdAt', 'DESC']]
+        });
+        let pontuacao = parseInt(pontuacaoAnterior?.mensagem || '0') + (respostaCorreta ? 1 : 0);
+        await salvarInteracao(sender, 'quiz_modulo3_pontuacao', pontuacao.toString());
+
+        await sendMessage(sender, 'send-message', {
+            message: respostaCorreta ? `✅ Correto! ${pergunta2.explicacao}` : `❌ Incorreta. ${pergunta2.explicacao}`,
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const pergunta3 = QUIZ_MODULO3_CONFIG.perguntas[2];
+        await sendMessage(sender, 'send-message', {
+            message: pergunta3.pergunta,
+        });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const listMsg3 = {
+            title: '',
+            description: 'Escolha a alternativa correta:',
+            buttonText: 'Ver alternativas',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'a_m3q3', title: `A) ${pergunta3.alternativas.a}`, description: '' },
+                    { id: 'b_m3q3', title: `B) ${pergunta3.alternativas.b}`, description: '' },
+                    { id: 'c_m3q3', title: `C) ${pergunta3.alternativas.c}`, description: '' },
+                    { id: 'd_m3q3', title: `D) ${pergunta3.alternativas.d}`, description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg3);
+        await salvarInteracao(sender, 'aguardando_quiz_m3q3', JSON.stringify(listMsg3));
+        return true;
+    }
+
+    // Quiz Módulo 3 - Questão 3
+    if (['a_m3q3', 'b_m3q3', 'c_m3q3', 'd_m3q3'].includes(selectedId) ||
+        (ultimaInteracao?.tipo === 'aguardando_quiz_m3q3' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
+        const pergunta3 = QUIZ_MODULO3_CONFIG.perguntas[2];
+
+        let respostaCorreta = false;
+        if (selectedId === `${pergunta3.respostaCorreta}_m3q3`) {
+            respostaCorreta = true;
+        } else if (textLower.includes(`${pergunta3.respostaCorreta})`)) {
+            respostaCorreta = true;
+        }
+
+        const pontuacaoAnterior = await Interacao.findOne({
+            where: { telefone: sender, tipo: 'quiz_modulo3_pontuacao' },
+            order: [['createdAt', 'DESC']]
+        });
+        let pontuacao = parseInt(pontuacaoAnterior?.mensagem || '0') + (respostaCorreta ? 1 : 0);
+        await salvarInteracao(sender, 'quiz_modulo3_pontuacao', pontuacao.toString());
+
+        await sendMessage(sender, 'send-message', {
+            message: respostaCorreta ? `✅ Correto! ${pergunta3.explicacao}` : `❌ Incorreta. ${pergunta3.explicacao}`,
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const pergunta4 = QUIZ_MODULO3_CONFIG.perguntas[3];
+        await sendMessage(sender, 'send-message', {
+            message: pergunta4.pergunta,
+        });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const listMsg4 = {
+            title: '',
+            description: 'Escolha a alternativa correta:',
+            buttonText: 'Ver alternativas',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'a_m3q4', title: `A) ${pergunta4.alternativas.a}`, description: '' },
+                    { id: 'b_m3q4', title: `B) ${pergunta4.alternativas.b}`, description: '' },
+                    { id: 'c_m3q4', title: `C) ${pergunta4.alternativas.c}`, description: '' },
+                    { id: 'd_m3q4', title: `D) ${pergunta4.alternativas.d}`, description: '' },
+                ],
+            }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg4);
+        await salvarInteracao(sender, 'aguardando_quiz_m3q4', JSON.stringify(listMsg4));
+        return true;
+    }
+
+    // Quiz Módulo 3 - Questão 4 (Final)
+    if (['a_m3q4', 'b_m3q4', 'c_m3q4', 'd_m3q4'].includes(selectedId) ||
+        (ultimaInteracao?.tipo === 'aguardando_quiz_m3q4' && (textLower.includes('a)') || textLower.includes('b)') || textLower.includes('c)') || textLower.includes('d)')))) {
+        const pergunta4 = QUIZ_MODULO3_CONFIG.perguntas[3];
+
+        let respostaCorreta = false;
+        if (selectedId === `${pergunta4.respostaCorreta}_m3q4`) {
+            respostaCorreta = true;
+        } else if (textLower.includes(`${pergunta4.respostaCorreta})`)) {
+            respostaCorreta = true;
+        }
+
+        const pontuacaoAnterior = await Interacao.findOne({
+            where: { telefone: sender, tipo: 'quiz_modulo3_pontuacao' },
+            order: [['createdAt', 'DESC']]
+        });
+        let pontuacaoFinal = parseInt(pontuacaoAnterior?.mensagem || '0') + (respostaCorreta ? 1 : 0);
+        const percentual = (pontuacaoFinal / 4) * 100;
+
+        await sendMessage(sender, 'send-message', {
+            message: respostaCorreta ? `✅ Correto! ${pergunta4.explicacao}` : `❌ Incorreta. ${pergunta4.explicacao}`,
+        });
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
+        if (percentual >= 80) {
+            await sendMessage(sender, 'send-message', {
+                message: `🎉 Parabéns! Você concluiu o Módulo 3 com ${pontuacaoFinal}/4 acertos (${percentual.toFixed(0)}%)!`,
+            });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const listMsgCert = {
+                title: '',
+                description: `Confirme seus dados para o certificado:\n\n👤 Nome: ${contato.nome}\n📧 Email: ${contato.email || 'Não informado'}\n🏢 Empresa: ${contato.empresa || 'Não informada'}\n\nOs dados estão corretos?`,
+                buttonText: 'Confirmar dados',
+                listType: 'SINGLE_SELECT',
+                sections: [{
+                    title: '',
+                    rows: [
+                        { id: 'dados_corretos_ssma', title: 'Sim, os dados estão corretos', description: '' },
+                        { id: 'dados_incorretos_ssma', title: 'Não, preciso corrigir', description: '' },
+                    ],
+                }],
+            };
+
+            await sendMessage(sender, 'send-list-message', listMsgCert);
+            await salvarInteracao(sender, 'confirmacao_dados_ssma', JSON.stringify(listMsgCert));
+            return true;
+        } else {
+            await sendMessage(sender, 'send-message', {
+                message: `😔 Você acertou ${pontuacaoFinal}/4 questões (${percentual.toFixed(0)}%). É necessário pelo menos 80% para prosseguir.`,
+            });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const retryMsg = {
+                title: '',
+                description: 'Você precisa refazer o quiz do Módulo 3. Escolha uma opção:',
+                buttonText: 'Tentar novamente',
+                listType: 'SINGLE_SELECT',
+                sections: [{
+                    title: '',
+                    rows: [
+                        { id: 'comecar_quiz_Modulo3', title: 'Refazer o quiz do Módulo 3 🔄', description: '' },
+                    ],
+                }],
+            };
+
+            await sendMessage(sender, 'send-list-message', retryMsg);
+            await salvarInteracao(sender, 'aguardando_quiz_modulo3_intro', JSON.stringify(retryMsg));
+            return true;
+        }
+    }
+
+    // Módulo 3 - Pular para certificado
+    if (selectedId === 'pular_modulo3' ||
+        (ultimaInteracao?.tipo === 'aguardando_modulo3_intro' && (textLower.includes('não') || textLower.includes('finalizar')))) {
+
+        const listMsg = {
+            title: '',
+            description: `Confirme seus dados para o certificado:\n\n👤 Nome: ${contato.nome}\n📧 Email: ${contato.email || 'Não informado'}\n🏢 Empresa: ${contato.empresa || 'Não informada'}\n\nOs dados estão corretos?`,
             buttonText: 'Confirmar dados',
             listType: 'SINGLE_SELECT',
             sections: [{
@@ -531,73 +1373,27 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
 
     // Certificate confirmation (keeping existing logic)
-    if (selectedId === 'dados_corretos_ssma' || 
+    if (selectedId === 'dados_corretos_ssma' ||
         (ultimaInteracao?.tipo === 'confirmacao_dados_ssma' && RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
-        
+
         await sendMessage(sender, 'send-message', {
             message: '✅ Dados confirmados! Gerando seu certificado...',
         });
         await gerarEEnviarCertificadoSSMA(contato, sender, sendMessage);
         return true;
     }
-    
+
     // Dados incorretos
-    if (selectedId === 'dados_incorretos_ssma' || 
+    if (selectedId === 'dados_incorretos_ssma' ||
         (ultimaInteracao?.tipo === 'confirmacao_dados_ssma' && RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
-        
+
         await sendMessage(sender, 'send-message', {
             message: '📝 Para corrigir seus dados, por favor, entre em contato com o suporte.',
         });
         return true;
     }
 
-    // Old quiz logic (remove this section)
-    if (false) { // Disabled old logic
-        if (selectedId === QUIZ_CONFIG.respostaCorreta || selectedId === 'b_ssma') {
-            await sendMessage(sender, 'send-message', {
-                message: `✅ Correto! ${QUIZ_CONFIG.explicacao}\n\n🎉 Parabéns! Você concluiu o treinamento SSMA com sucesso!`,
-            });
 
-            const listMsg = {
-                title: '',
-                description: `Confirme seus dados para o certificado:\n\n👤 Nome: ${contato.nome}\n📧 Email: ${contato.email || 'Não informado'}\n🏢 Empresa: ${contato.empresa || 'Não informada'}\n\nOs dados estão corretos?`,
-                buttonText: 'Confirmar dados',
-                listType: 'SINGLE_SELECT',
-                sections: [{
-                    title: '',
-                    rows: [
-                        { id: 'dados_corretos_ssma', title: 'Sim, os dados estão corretos', description: '' },
-                        { id: 'dados_incorretos_ssma', title: 'Não, preciso corrigir', description: '' },
-                    ],
-                }],
-            };
-
-            await sendMessage(sender, 'send-list-message', listMsg);
-            await salvarInteracao(sender, 'confirmacao_dados_ssma', JSON.stringify(listMsg));
-        } else {
-            await sendMessage(sender, 'send-message', {
-                message: `❌ Resposta incorreta. A resposta correta é: B) ${QUIZ_CONFIG.alternativas.b}\n\n${QUIZ_CONFIG.explicacao}\n\n🎉 Mesmo assim, parabéns por participar do treinamento!`,
-            });
-
-            const listMsg = {
-                title: '',
-                description: `Confirme seus dados para o certificado:\n\n👤 Nome: ${contato.nome}\n📧 Email: ${contato.email || 'Não informado'}\n🏢 Empresa: ${contato.empresa || 'Não informada'}\n\nOs dados estão corretos?`,
-                buttonText: 'Confirmar dados',
-                listType: 'SINGLE_SELECT',
-                sections: [{
-                    title: '',
-                    rows: [
-                        { id: 'dados_corretos_ssma', title: 'Sim, os dados estão corretos', description: '' },
-                        { id: 'dados_incorretos_ssma', title: 'Não, preciso corrigir', description: '' },
-                    ],
-                }],
-            };
-
-            await sendMessage(sender, 'send-list-message', listMsg);
-            await salvarInteracao(sender, 'confirmacao_dados_ssma', JSON.stringify(listMsg));
-        }
-        return true;
-    }
 
     // Não começar agora
     if (selectedId === 'não_começar_ssma' ||
@@ -622,53 +1418,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         return true;
     }
 
-    // Usuário pronto para começar
-    if (selectedId === 'pronto_ssma') {
-        await sendMessage(sender, 'send-message', {
-            message: '🚀 Excelente! Vamos começar o treinamento SSMA!\n\n' + QUIZ_CONFIG.pergunta,
-        });
 
-        const listMsg = {
-            title: '',
-            description: 'Escolha a alternativa correta:',
-            buttonText: 'Ver alternativas',
-            listType: 'SINGLE_SELECT',
-            sections: [{
-                title: '',
-                rows: [
-                    { id: 'a_ssma', title: `A) ${QUIZ_CONFIG.alternativas.a}`, description: '' },
-                    { id: 'b_ssma', title: `B) ${QUIZ_CONFIG.alternativas.b}`, description: '' },
-                    { id: 'c_ssma', title: `C) ${QUIZ_CONFIG.alternativas.c}`, description: '' },
-                    { id: 'd_ssma', title: `D) ${QUIZ_CONFIG.alternativas.d}`, description: '' },
-                ],
-            }],
-        };
-
-        await sendMessage(sender, 'send-list-message', listMsg);
-        await salvarInteracao(sender, 'aguardando_quiz_ssma', JSON.stringify(listMsg));
-        return true;
-    }
-
-    // Confirmação de dados para certificado
-    if (selectedId === 'dados_corretos_ssma' ||
-        (ultimaInteracao?.tipo === 'confirmacao_dados_ssma' && RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
-
-        await sendMessage(sender, 'send-message', {
-            message: '✅ Dados confirmados! Gerando seu certificado...',
-        });
-        await gerarEEnviarCertificadoSSMA(contato, sender, sendMessage);
-        return true;
-    }
-
-    // Dados incorretos
-    if (selectedId === 'dados_incorretos_ssma' ||
-        (ultimaInteracao?.tipo === 'confirmacao_dados_ssma' && RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
-
-        await sendMessage(sender, 'send-message', {
-            message: '📝 Para corrigir seus dados, por favor, entre em contato com o suporte.',
-        });
-        return true;
-    }
 
     return false;
 }
