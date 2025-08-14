@@ -550,16 +550,28 @@ async function processarMensagem(message, client) {
         // Verificação de cadastro primeiro
         const contato = await verificarCadastro(sender);
         if (!contato) {
+            // Mensagem de saudação do bot
+            await sendMessage(sender, 'send-message', {
+                message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.`,
+            });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
             await sendMessage(sender, 'send-message', {
                 message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 http://localhost:3000/autoCadastro/`,
             });
             return;
         }
 
-        // Saudação inicial apenas uma vez
-        if (!saudacoesEnviadas.has(sender)) {
-            saudacoesEnviadas.add(sender);
-            if (contato.statusTreinamento === 'não iniciado') {
+        // Saudação inicial para usuários não iniciados
+        if (contato.statusTreinamento === 'não iniciado') {
+            // Verificar se já enviou saudação recentemente (evitar spam)
+            if (!saudacoesEnviadas.has(sender)) {
+                saudacoesEnviadas.add(sender);
+                // Remover da lista após 5 minutos para permitir nova saudação se necessário
+                setTimeout(() => {
+                    saudacoesEnviadas.delete(sender);
+                }, 5 * 60 * 1000);
+                
                 await iniciarTreinamento(sender, contato);
                 return;
             }
@@ -567,6 +579,12 @@ async function processarMensagem(message, client) {
 
         // Processar comandos continuar/pausar
         if (await processarComandosContinuar(sender, text, selectedId)) {
+            return;
+        }
+        
+        // Verificar se é um usuário recadastrado que precisa de orientação
+        if (contato.statusTreinamento === 'não iniciado' && !ultimaInteracao) {
+            await iniciarTreinamento(sender, contato);
             return;
         }
         
@@ -804,6 +822,12 @@ async function processarMensagem(message, client) {
             await sendMessage(sender, 'send-message', {
                 message: `🔄 Você está no meio do treinamento "${contato.treinamento.nome}". Digite *continuar* para prosseguir ou *reiniciar* para começar novamente.`,
             });
+            return;
+        }
+        
+        // Verificar se é usuário não iniciado que precisa de ajuda
+        if (contato.statusTreinamento === 'não iniciado') {
+            await iniciarTreinamento(sender, contato);
             return;
         }
         
