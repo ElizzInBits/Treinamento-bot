@@ -742,7 +742,14 @@ async function processarMensagem(message, client) {
         // Verificar se é resposta do SSMA mesmo sem status 'em andamento'
         if ((text.toLowerCase().includes('pode mandar') && ultimaInteracao?.tipo === 'aguardando_inicio_ssma') ||
             (ultimaInteracao?.tipo === 'aguardando_quiz_intro' && (text.toLowerCase().includes('vamos nessa') || text.toLowerCase().includes('vamos') || text.toLowerCase().includes('refazer'))) ||
-            (ultimaInteracao?.tipo && ultimaInteracao.tipo.startsWith('aguardando_quiz_q') && (text.toLowerCase().includes('a)') || text.toLowerCase().includes('b)') || text.toLowerCase().includes('c)') || text.toLowerCase().includes('d)')))) {
+            (ultimaInteracao?.tipo === 'aguardando_modulo2_intro' && (text.toLowerCase().includes('sim') || text.toLowerCase().includes('vamos') || text.toLowerCase().includes('não'))) ||
+            (ultimaInteracao?.tipo === 'aguardando_modulo3_intro' && (text.toLowerCase().includes('sim') || text.toLowerCase().includes('vamos') || text.toLowerCase().includes('não'))) ||
+            (ultimaInteracao?.tipo === 'aguardando_quiz_modulo2_intro' && (text.toLowerCase().includes('vamos nessa') || text.toLowerCase().includes('vamos'))) ||
+            (ultimaInteracao?.tipo === 'aguardando_quiz_modulo3_intro' && (text.toLowerCase().includes('vamos nessa') || text.toLowerCase().includes('vamos'))) ||
+            (ultimaInteracao?.tipo && ultimaInteracao.tipo.startsWith('aguardando_quiz_q') && (text.toLowerCase().includes('a)') || text.toLowerCase().includes('b)') || text.toLowerCase().includes('c)') || text.toLowerCase().includes('d)'))) ||
+            (ultimaInteracao?.tipo && ultimaInteracao.tipo.startsWith('aguardando_quiz_m2q') && (text.toLowerCase().includes('a)') || text.toLowerCase().includes('b)') || text.toLowerCase().includes('c)') || text.toLowerCase().includes('d)'))) ||
+            (ultimaInteracao?.tipo && ultimaInteracao.tipo.startsWith('aguardando_quiz_m3q') && (text.toLowerCase().includes('a)') || text.toLowerCase().includes('b)') || text.toLowerCase().includes('c)') || text.toLowerCase().includes('d)'))) ||
+            (selectedId && (selectedId.startsWith('comecar_quiz_Modulo') || selectedId.startsWith('iniciar_modulo') || selectedId.startsWith('pular_modulo') || selectedId.startsWith('a_m') || selectedId.startsWith('b_m') || selectedId.startsWith('c_m') || selectedId.startsWith('d_m') || selectedId === 'comecar_quiz_Modulo1' || selectedId === 'refazer' || text.toLowerCase().includes('refazer')))) {
             const script = scriptsTreinamento['treinamentoSSMA'];
             if (script && script.processarRespostaSSMA) {
                 try {
