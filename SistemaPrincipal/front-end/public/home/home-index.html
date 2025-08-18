@@ -33,15 +33,18 @@
           <div class="current-time" id="currentTime"></div>
         </div>
         <div class="header-actions">
-          <button class="btn-icon" onclick="atualizarTodasEstatisticas()" title="Atualizar dados">
-            <span class="icon">🔄</span>
-          </button>
-          <button class="btn-icon" onclick="debugTreinamentos()" title="Debug Treinamentos">
-            <span class="icon">🔍</span>
-          </button>
-          <button class="btn-primary" onclick="exportarDadosXLS()">
-            <span class="icon">📊</span>
-            Exportar Dados
+          <div class="actions-row">
+            <button class="btn-icon" onclick="atualizarTodasEstatisticas()" title="Atualizar dados">
+              <span class="icon">🔄</span>
+            </button>
+            <button class="btn-primary" onclick="exportarDadosXLS()">
+              <span class="icon">📊</span>
+              Exportar Dados
+            </button>
+          </div>
+          <button class="btn-logout" onclick="logout()" title="Sair do sistema">
+            <span class="icon">🚪</span>
+            <span class="logout-text">Log out</span>
           </button>
         </div>
       </div>
@@ -492,6 +495,7 @@
       </div>
 
       <!-- Scripts -->
+      <script src="../auth.js"></script>
       <script src="/socket.io/socket.io.js"></script>
       <script src="js/config.js"></script>
       <script src="js/home-script.js"></script>

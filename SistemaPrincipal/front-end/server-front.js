@@ -119,12 +119,60 @@ try {
     });
 }
 
-// ✅ 6. Registrar rotas da API
+// ✅ 6. Sistema de autenticação
+const jwt = require('jsonwebtoken');
+const SECRET_KEY = 'admin-secret-key-2024';
+
+// Rota de login
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    // Credenciais hardcoded para admin
+    if (username === 'Administrador' && password === 'maduroabacaxi ') {
+        const token = jwt.sign({ username: 'Administrador' }, SECRET_KEY, { expiresIn: '24h' });
+        res.json({ success: true, token });
+    } else {
+        res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+    }
+});
+
+// Middleware de autenticação
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Token de acesso requerido' });
+    }
+    
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: 'Token inválido' });
+        }
+        req.user = user;
+        next();
+    });
+}
+
+// ✅ 7. Registrar rotas da API com autenticação
 console.log('🔗 Registrando rotas da API...');
-app.use('/api/contatos', contatosRoutes);
-app.use('/api/treinamentos', treinamentosRoutes);
-app.use('/api/empresas', empresasRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+// Rotas públicas para cadastro
+app.use('/api/contatos', (req, res, next) => {
+    if (req.method === 'POST' && req.path === '/') {
+        next(); // Permitir POST público para cadastro
+    } else {
+        authenticateToken(req, res, next);
+    }
+}, contatosRoutes);
+app.use('/api/empresas', (req, res, next) => {
+    if (req.path === '/select/options' || (req.method === 'POST' && req.path === '/')) {
+        next(); // Permitir acesso público às opções de empresas e cadastro
+    } else {
+        authenticateToken(req, res, next);
+    }
+}, empresasRoutes);
+app.use('/api/treinamentos', authenticateToken, treinamentosRoutes);
+app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 
 // ✅ 7. Servir mídia (uploads) estáticos
 const midiaPath = path.join(__dirname, '..', 'media', 'treinamentos');
@@ -171,8 +219,10 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date() });
 });
 
+// Redirecionar para login
 app.get('/', (req, res) => {
-    fs.existsSync(homePath) ? res.sendFile(homePath) : res.json({ error: 'Painel 1 não encontrado', path: homePath });
+    const loginPath = path.join(publicPath, 'login', 'login.html');
+    fs.existsSync(loginPath) ? res.sendFile(loginPath) : res.json({ error: 'Página de login não encontrada' });
 });
 
 app.get('/home', (req, res) => {

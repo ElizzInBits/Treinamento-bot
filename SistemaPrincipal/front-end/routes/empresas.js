@@ -36,6 +36,20 @@ router.get('/contatos-por-empresa', async (req, res) => {
 
 
 
+// Opções para select no front-end (DEVE VIR ANTES DE /:id)
+router.get('/select/options', async (req, res) => {
+  try {
+    const empresas = await Empresa.findAll({
+      attributes: ['id', 'razao_social'],
+      order: [['razao_social', 'ASC']]
+    });
+    res.json(empresas);
+  } catch (error) {
+    console.error('Erro ao buscar empresas:', error);
+    res.status(500).json({ error: 'Erro ao carregar empresas' });
+  }
+});
+
 // Listar todas as empresas
 router.get('/', async (req, res) => {
   try {
@@ -85,14 +99,14 @@ router.post('/', async (req, res) => {
     }
 
     const novaEmpresa = await Empresa.create({
-      razaoSocial: razaoSocial.trim(),
+      razao_social: razaoSocial.trim(),
       cnpj: cnpjLimpo,
-      porteEmpresa: porte,
+      porte_empresa: porte,
       endereco,
       cep,
       contato,
       email,
-      criadoEm: new Date()
+      criado_em: new Date()
     });
 
     res.status(201).json(novaEmpresa);
@@ -171,19 +185,7 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Opções para select no front-end
-router.get('/select/options', async (req, res) => {
-  try {
-    const empresas = await Empresa.findAll({
-      attributes: ['id', 'razao_social'],
-      order: [['razao_social', 'ASC']]
-    });
-    res.json(empresas);
-  } catch (error) {
-    console.error('Erro ao buscar empresas:', error);
-    res.status(500).json({ error: 'Erro ao carregar empresas' });
-  }
-});
+
 
 // Buscar empresa completa com treinamentos e contatos
 router.get('/:id/completo', async (req, res) => {

@@ -143,7 +143,8 @@ async function gerarCertificadoBanco(contatoId) {
     // Carga Horária e Período
     page.drawText('Carga Horária', { x: 60, y: 336, size: tamanho, font: helvetica, color: cor });
     page.drawText('Realizada:', { x: 60, y: 321, size: tamanho, font: helvetica, color: cor });
-    page.drawText(`${treinamento.cargaHoraria} HORAS`, { x: 166, y: 328, size: tamanho, font: helvetica, color: cor });
+    const cargaHoraria = treinamento.carga_horaria || treinamento.cargaHoraria || '4';
+    page.drawText(`${cargaHoraria} HORAS`, { x: 166, y: 328, size: tamanho, font: helvetica, color: cor });
 
     // Período de Treinamento
     const periodoFormatado = formatarDataPeriodo(treinamento.periodo || '');
@@ -251,8 +252,8 @@ async function enviarEmail(destinatario, arquivoPath, treinamento = null) {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.EMAIL_USER || 'seu-email@gmail.com',
-        pass: process.env.EMAIL_PASS || 'sua-senha-app',
+        user: 'elizabethmirandaa302@gmail.com',
+        pass: 'gjux jpwq oqmg lpyi',
       },
     });
 
@@ -266,7 +267,7 @@ async function enviarEmail(destinatario, arquivoPath, treinamento = null) {
         <p>Seu certificado está em anexo neste e-mail.</p>
         <br>
         <p>Atenciosamente,<br>
-        <strong>Equipe LCM - Salubritá Treinamentos</strong></p>
+        <strong>Salubritá Treinamentos</strong></p>
       `,
       attachments: [
         {
