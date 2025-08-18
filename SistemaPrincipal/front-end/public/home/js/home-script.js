@@ -126,7 +126,7 @@ function limparCanvas(canvasId) {
 // Função para verificar se o backend está rodando
 async function verificarBackend() {
   try {
-    const response = await fetch('http://localhost:3000/api/health', {
+    const response = await authenticatedFetch('http://localhost:3000/api/health', {
       method: 'GET',
       timeout: 3000
     });
@@ -223,7 +223,7 @@ async function criarGraficoStatus() {
   }
   
   try {
-    const response = await fetch('http://localhost:3000/api/dashboard/status-treinamento');
+    const response = await authenticatedFetch('http://localhost:3000/api/dashboard/status-treinamento');
     const dados = await response.json();
     
     if (dados.length === 0) {
@@ -379,7 +379,7 @@ async function mapContatosComTreinamento() {
 // Atualizar estatísticas da aba Mapeamento com dados da API
 async function atualizarEstatisticasMapeamento() {
   try {
-    const response = await fetch('http://localhost:3000/api/dashboard/stats');
+    const response = await authenticatedFetch('http://localhost:3000/api/dashboard/stats');
     const stats = await response.json();
     
     console.log('📊 Stats recebidas da API:', stats);
@@ -419,7 +419,7 @@ async function atualizarEstatisticasMapeamento() {
 async function carregarInsights() {
   try {
     // Top empresas por engajamento
-    const topEmpresasResponse = await fetch('http://localhost:3000/api/dashboard/top-empresas');
+    const topEmpresasResponse = await authenticatedFetch('http://localhost:3000/api/dashboard/top-empresas');
     const topEmpresas = await topEmpresasResponse.json();
     
     const topEmpresasElement = document.getElementById('topEmpresas');
@@ -434,7 +434,7 @@ async function carregarInsights() {
     }
     
     // Calcular tendência de crescimento
-    const evolucaoResponse = await fetch('http://localhost:3000/api/dashboard/evolucao-mensal');
+    const evolucaoResponse = await authenticatedFetch('http://localhost:3000/api/dashboard/evolucao-mensal');
     const evolucao = await evolucaoResponse.json();
     
     const tendenciaElement = document.getElementById('tendenciaCrescimento');
@@ -452,7 +452,7 @@ async function carregarInsights() {
     }
     
     // Calcular eficiência do sistema
-    const statsResponse = await fetch('http://localhost:3000/api/dashboard/stats');
+    const statsResponse = await authenticatedFetch('http://localhost:3000/api/dashboard/stats');
     const stats = await statsResponse.json();
     
     const eficienciaElement = document.getElementById('eficienciaSistema');
@@ -564,7 +564,7 @@ function atualizarSelectTreinamento() {
 
 // Carregar contatos
 function carregarContatos() {
-  return fetch('http://localhost:3000/api/contatos')
+  return authenticatedFetch('http://localhost:3000/api/contatos')
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar contatos');
       return res.json();
@@ -629,7 +629,7 @@ function renderizarEmpresas() {
   empresasGrid.innerHTML = empresas.map(empresa => {
     // Debug: verificar contatos da empresa
     const contatosEmpresa = contatos.filter(c => c.empresaId === empresa.id);
-    console.log(`Empresa ${empresa.razao_social} (ID: ${empresa.id}) tem ${contatosEmpresa.length} contatos:`, contatosEmpresa);
+    console.log(`Empresa ${empresa.razao_social || empresa.razaoSocial} (ID: ${empresa.id}) tem ${contatosEmpresa.length} contatos:`, contatosEmpresa);
 
     const contatosComTreinamento = contatosEmpresa.filter(c => c.treinamentoId);
 
@@ -810,7 +810,7 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
     treinamentoId: treinamentoId ? parseInt(treinamentoId) : null
   };
 
-  fetch(`http://localhost:3000/api/contatos/${contatoId}`, {
+  authenticatedFetch(`http://localhost:3000/api/contatos/${contatoId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dadosAtualizados)
@@ -845,7 +845,7 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
 function removerContato(id) {
   if (!confirm('Tem certeza que deseja remover este contato?')) return;
 
-  fetch(`http://localhost:3000/api/contatos/${id}`, {
+  authenticatedFetch(`http://localhost:3000/api/contatos/${id}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -953,7 +953,7 @@ function carregarTreinamentos() {
   const loading = document.getElementById('loadingTreinamentos');
   if (loading) loading.style.display = 'block';
 
-  return fetch('http://localhost:3000/api/treinamentos')
+  return authenticatedFetch('http://localhost:3000/api/treinamentos')
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar treinamentos');
       return res.json();
@@ -1137,7 +1137,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   submitButton.textContent = 'Criando treinamento...';
   submitButton.disabled = true;
 
-  fetch('http://localhost:3000/api/treinamentos', {
+  authenticatedFetch('http://localhost:3000/api/treinamentos', {
     method: 'POST',
     body: formData, // Atenção: não colocar headers 'Content-Type' com JSON aqui
   })
@@ -1236,7 +1236,7 @@ function removerTreinamento(id) {
     }
   }
 
-  fetch(`http://localhost:3000/api/treinamentos/${id}`, {
+  authenticatedFetch(`http://localhost:3000/api/treinamentos/${id}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -1324,7 +1324,7 @@ function carregarEmpresas() {
   const loading = document.getElementById('loadingEmpresas');
   if (loading) loading.style.display = 'block';
 
-  return fetch('http://localhost:3000/api/empresas')
+  return authenticatedFetch('http://localhost:3000/api/empresas')
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar empresas');
       return res.json();
@@ -1528,7 +1528,7 @@ window.addEventListener('error', function (e) {
 
 // Função para verificar conectividade com a API
 function verificarConectividadeAPI() {
-  return fetch('http://localhost:3000/api/health', {
+  return authenticatedFetch('http://localhost:3000/api/health', {
     method: 'GET'
   })
     .then(response => response.ok)
@@ -1586,7 +1586,7 @@ document.getElementById('empresaForm')?.addEventListener('submit', function (e) 
     porte_empresa: porte || null
   };
 
-  fetch('http://localhost:3000/api/empresas', {
+  authenticatedFetch('http://localhost:3000/api/empresas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(novaEmpresa)
@@ -1657,7 +1657,7 @@ document.getElementById('contatoForm')?.addEventListener('submit', function (e) 
     statusTreinamento: treinamentoId ? 'ativo' : 'sem_treinamento'
   };
 
-  fetch('http://localhost:3000/api/contatos', {
+  authenticatedFetch('http://localhost:3000/api/contatos', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(novoContato)
@@ -2419,7 +2419,7 @@ function abrirDetalhesTreinamento(treinamentoId) {
       formData.append('midias', novasMidias[i]);
     }
 
-    fetch(`http://localhost:3000/api/treinamentos/${treinamentoId}`, {
+    authenticatedFetch(`http://localhost:3000/api/treinamentos/${treinamentoId}`, {
       method: 'PUT',
       body: formData
     })
@@ -2487,7 +2487,7 @@ function removerMidia(nomeArquivo, treinamentoId) {
     }
   });
   
-  fetch(`http://localhost:3000/api/treinamentos/${treinamentoId}/midia/${nomeArquivo}`, {
+  authenticatedFetch(`http://localhost:3000/api/treinamentos/${treinamentoId}/midia/${nomeArquivo}`, {
     method: 'DELETE'
   })
   .then(res => {
@@ -2800,7 +2800,7 @@ async function criarGraficoEmpresas() {
   }
   
   try {
-    const response = await fetch('http://localhost:3000/api/dashboard/empresas-contatos');
+    const response = await authenticatedFetch('http://localhost:3000/api/dashboard/empresas-contatos');
     const dadosEmpresas = await response.json();
     
     if (dadosEmpresas.length === 0) {
@@ -3191,8 +3191,8 @@ function abrirModalTreinamentosEmpresa(empresaId) {
   
   // Carregar treinamentos disponíveis e da empresa
   Promise.all([
-    fetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/disponiveis`).then(r => r.json()),
-    fetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/atribuidos`).then(r => r.json())
+    authenticatedFetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/disponiveis`).then(r => r.json()),
+    authenticatedFetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/atribuidos`).then(r => r.json())
   ])
   .then(([treinamentosDisponiveis, treinamentosEmpresa]) => {
     
@@ -3289,7 +3289,7 @@ function atribuirTreinamento(empresaId, treinamentoId) {
   button.disabled = true;
   button.style.opacity = '0.7';
   
-  fetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
+  authenticatedFetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
     method: 'POST'
   })
     .then(res => {
@@ -3325,7 +3325,7 @@ function removerTreinamentoEmpresa(empresaId, treinamentoId) {
   button.disabled = true;
   button.style.opacity = '0.7';
   
-  fetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
+  authenticatedFetch(`http://localhost:3000/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -3373,7 +3373,7 @@ function abrirDetalhesEmpresa(empresaId) {
   document.getElementById('modalDetalhesEmpresa').style.display = 'block';
   
   // Carregar dados completos da empresa
-  fetch(`http://localhost:3000/api/empresas/${empresaId}/completo`)
+  authenticatedFetch(`http://localhost:3000/api/empresas/${empresaId}/completo`)
     .then(r => r.json())
     .then(empresaCompleta => {
       const treinamentosEmpresa = empresaCompleta.treinamentos || [];
@@ -3527,7 +3527,7 @@ function salvarEmpresa(empresaId) {
     cep: document.getElementById('editCep').value
   };
   
-  fetch(`http://localhost:3000/api/empresas/${empresaId}`, {
+  authenticatedFetch(`http://localhost:3000/api/empresas/${empresaId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados)

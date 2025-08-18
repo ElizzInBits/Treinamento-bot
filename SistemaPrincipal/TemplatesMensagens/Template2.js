@@ -582,6 +582,9 @@ async function processarMensagem(message, client) {
             return;
         }
         
+        // Obter última interação
+        const ultimaInteracao = await obterUltimaInteracao(sender);
+        
         // Verificar se é um usuário recadastrado que precisa de orientação
         if (contato.statusTreinamento === 'não iniciado' && !ultimaInteracao) {
             await iniciarTreinamento(sender, contato);
@@ -612,6 +615,24 @@ async function processarMensagem(message, client) {
         const textoNormalizado = rawText.trim().toLowerCase();
         const selectedIdNormalizado = (selectedId || '').trim().toLowerCase();
 
+        // Processar confirmação de dados para certificado (qualquer status)
+        if (ultimaInteracao?.tipo === 'confirmacao_dados_ssma' || 
+            (text.toLowerCase().includes('sim') && text.toLowerCase().includes('dados')) ||
+            (text.toLowerCase().includes('confirmar') && text.toLowerCase().includes('dados')) ||
+            text.toLowerCase().includes('dados corretos') ||
+            text.toLowerCase().includes('sim, os dados estão corretos')) {
+            
+            const script = scriptsTreinamento['treinamentoSSMA'];
+            if (script && script.processarRespostaSSMA) {
+                try {
+                    const resultado = await script.processarRespostaSSMA(sender, text, selectedId, contato, sendMessage);
+                    if (resultado) return;
+                } catch (error) {
+                    console.error('Erro ao processar confirmação de dados SSMA:', error);
+                }
+            }
+        }
+        
         // Processar confirmação de dados para usuários que concluíram
         if (contato.statusTreinamento === 'concluído') {
             if (await processarConfirmacaoDados(sender, textoNormalizado, selectedIdNormalizado, contato)) {
@@ -623,7 +644,6 @@ async function processarMensagem(message, client) {
         }
 
         // Processar confirmação de seleção de treinamento PRIMEIRO
-        const ultimaInteracao = await obterUltimaInteracao(sender);
         if (ultimaInteracao?.tipo === 'confirmacao_treinamento' && ultimaInteracao.mensagem) {
             const dadosInteracao = JSON.parse(ultimaInteracao.mensagem);
             
@@ -777,6 +797,13 @@ async function processarMensagem(message, client) {
                     console.error(`Erro ao processar resposta SSMA:`, error);
                 }
             }
+        }
+
+        // Processar treinamentos pendentes
+        const script = scriptsTreinamento['treinamentoSSMA'];
+        if (script && script.processarTreinamentosPendentes) {
+            const resultadoPendentes = await script.processarTreinamentosPendentes(sender, selectedId, contato, sendMessage);
+            if (resultadoPendentes) return;
         }
 
         // Processar respostas de treinamentos específicos PRIMEIRO

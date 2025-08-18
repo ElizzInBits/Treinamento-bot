@@ -2,9 +2,10 @@
 //ID do Treinamento: 14
 
 // sendMessage will be passed as parameter to avoid circular dependency
-const { Treinamento } = require('../../../BancoDeDados/models');
+const { Treinamento, Contato } = require('../../../BancoDeDados/models');
 const { Interacao, Empresa } = require('../../../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('../../Certificados/certificados2.js');
+const { Op } = require('sequelize');
 
 // Respostas válidas para este treinamento
 const RESPOSTAS_POSITIVAS = [
@@ -870,7 +871,7 @@ async function gerarEEnviarCertificadoSSMA(contato, sender, sendMessage) {
             return;
         }
 
-        const certificadoPath = await gerarCertificadoBanco(contato, treinamento);
+        const certificadoPath = await gerarCertificadoBanco(contato.id);
 
         if (certificadoPath) {
             await sendMessage(sender, 'send-file', {
@@ -880,12 +881,18 @@ async function gerarEEnviarCertificadoSSMA(contato, sender, sendMessage) {
             });
 
             if (contato.email) {
-                await enviarEmail(contato.email, certificadoPath, treinamento.nome);
+                await enviarEmail(contato.email, certificadoPath, treinamento);
+                await sendMessage(sender, 'send-message', {
+                    message: '📧 Certificado também enviado por email!',
+                });
             }
 
             await sendMessage(sender, 'send-message', {
                 message: '✅ Treinamento concluído com sucesso! Obrigado pela participação! 🎉',
             });
+
+            // Verificar se há outros treinamentos pendentes
+            await verificarTreinamentosPendentes(contato, sender, sendMessage);
         } else {
             await sendMessage(sender, 'send-message', {
                 message: '❌ Erro ao gerar certificado. Entre em contato com o suporte.',
@@ -899,7 +906,166 @@ async function gerarEEnviarCertificadoSSMA(contato, sender, sendMessage) {
     }
 }
 
+/**
+ * Verifica se há treinamentos pendentes para o contato
+ */
+async function verificarTreinamentosPendentes(contato, sender, sendMessage) {
+    try {
+        // Buscar treinamentos da empresa do contato através da tabela de relacionamento
+        const { EmpresaTreinamento } = require('../../../BancoDeDados/models');
+        
+        const empresaTreinamentos = await EmpresaTreinamento.findAll({
+            where: { empresa_id: contato.empresaId }
+        });
+        
+        const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id).filter(id => id !== 14);
+        
+        const treinamentosPendentes = await Treinamento.findAll({
+            where: {
+                id: { [Op.in]: treinamentosIds }
+            }
+        });
+
+        if (treinamentosPendentes.length > 0) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            await sendMessage(sender, 'send-message', {
+                message: '📚 Você possui outros treinamentos disponíveis!',
+            });
+
+            const listMsg = {
+                title: '',
+                description: 'Deseja ver seus treinamentos pendentes?',
+                buttonText: 'Ver opções',
+                listType: 'SINGLE_SELECT',
+                sections: [{
+                    title: '',
+                    rows: [
+                        { id: 'ver_treinamentos_pendentes', title: 'Ver treinamentos disponíveis 📚', description: '' },
+                        { id: 'nao_ver_treinamentos', title: 'Não, obrigado 🙏', description: '' },
+                    ],
+                }],
+            };
+
+            await sendMessage(sender, 'send-list-message', listMsg);
+            await salvarInteracao(sender, 'aguardando_opcao_treinamentos', JSON.stringify(listMsg));
+        }
+    } catch (error) {
+        console.error('Erro ao verificar treinamentos pendentes:', error);
+    }
+}
+
+/**
+ * Mostra lista de treinamentos pendentes
+ */
+async function mostrarTreinamentosPendentes(contato, sender, sendMessage) {
+    try {
+        const { EmpresaTreinamento } = require('../../../BancoDeDados/models');
+        
+        const empresaTreinamentos = await EmpresaTreinamento.findAll({
+            where: { empresa_id: contato.empresaId }
+        });
+        
+        const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id).filter(id => id !== 14);
+        
+        const treinamentosPendentes = await Treinamento.findAll({
+            where: {
+                id: { [Op.in]: treinamentosIds }
+            }
+        });
+
+        if (treinamentosPendentes.length === 0) {
+            await sendMessage(sender, 'send-message', {
+                message: '✅ Você não possui treinamentos pendentes no momento.',
+            });
+            return;
+        }
+
+        const rows = treinamentosPendentes.map(treinamento => ({
+            id: `iniciar_treinamento_${treinamento.id}`,
+            title: treinamento.nome,
+            description: `Carga horária: ${treinamento.cargaHoraria || 'Não informada'}`
+        }));
+
+        // Adicionar opção para não iniciar nenhum
+        rows.push({ id: 'nao_iniciar_treinamento', title: 'Não iniciar nenhum agora', description: '' });
+
+        const listMsg = {
+            title: '',
+            description: 'Escolha um treinamento para iniciar:',
+            buttonText: 'Ver treinamentos',
+            listType: 'SINGLE_SELECT',
+            sections: [{ title: '', rows }],
+        };
+
+        await sendMessage(sender, 'send-list-message', listMsg);
+        await salvarInteracao(sender, 'escolhendo_treinamento_pendente', JSON.stringify(listMsg));
+    } catch (error) {
+        console.error('Erro ao mostrar treinamentos pendentes:', error);
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Erro ao buscar treinamentos. Tente novamente.',
+        });
+    }
+}
+
+/**
+ * Processa seleção de treinamentos pendentes
+ */
+async function processarTreinamentosPendentes(sender, selectedId, contato, sendMessage) {
+    const ultimaInteracao = await obterUltimaInteracao(sender);
+
+    // Ver treinamentos pendentes
+    if (selectedId === 'ver_treinamentos_pendentes' ||
+        ultimaInteracao?.tipo === 'aguardando_opcao_treinamentos') {
+        await mostrarTreinamentosPendentes(contato, sender, sendMessage);
+        return true;
+    }
+
+    // Não ver treinamentos
+    if (selectedId === 'nao_ver_treinamentos') {
+        await sendMessage(sender, 'send-message', {
+            message: '🙏 Sem problemas! Quando quiser iniciar um treinamento, é só entrar em contato.',
+        });
+        return true;
+    }
+
+    // Iniciar treinamento específico
+    if (selectedId?.startsWith('iniciar_treinamento_')) {
+        const treinamentoId = selectedId.replace('iniciar_treinamento_', '');
+        
+        const treinamento = await Treinamento.findByPk(treinamentoId);
+        if (treinamento) {
+            await sendMessage(sender, 'send-message', {
+                message: `🚀 Iniciando treinamento: ${treinamento.nome}`,
+            });
+            
+            // Aqui você pode chamar a função específica do treinamento
+            // Por exemplo: await executarTreinamentoEspecifico(treinamentoId, sender, contato, sendMessage);
+            
+            await sendMessage(sender, 'send-message', {
+                message: '🚧 Sistema de treinamentos em desenvolvimento. Em breve você poderá iniciar este treinamento!',
+            });
+        } else {
+            await sendMessage(sender, 'send-message', {
+                message: '❌ Treinamento não encontrado.',
+            });
+        }
+        return true;
+    }
+
+    // Não iniciar nenhum treinamento
+    if (selectedId === 'nao_iniciar_treinamento') {
+        await sendMessage(sender, 'send-message', {
+            message: '🙏 Sem problemas! Quando quiser iniciar um treinamento, é só entrar em contato.',
+        });
+        return true;
+    }
+
+    return false;
+}
+
 module.exports = {
     executarTreinamento,
-    processarRespostaSSMA
+    processarRespostaSSMA,
+    processarTreinamentosPendentes
 };
