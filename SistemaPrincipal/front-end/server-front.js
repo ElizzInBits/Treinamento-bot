@@ -122,15 +122,19 @@ try {
 // ✅ 6. Sistema de autenticação
 const jwt = require('jsonwebtoken');
 const SECRET_KEY = 'admin-secret-key-2024';
+const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 1 hora em ms
 
 // Rota de login
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     
     // Credenciais hardcoded para admin
-    if (username === 'Administrador' && password === 'maduroabacaxi ') {
-        const token = jwt.sign({ username: 'Administrador' }, SECRET_KEY, { expiresIn: '24h' });
-        res.json({ success: true, token });
+    if (username === 'Administrador' && password === 'maduroabacaxi') {
+        const token = jwt.sign({ 
+            username: 'Administrador',
+            loginTime: Date.now()
+        }, SECRET_KEY, { expiresIn: '24h' });
+        res.json({ success: true, token, inactivityTimeout: INACTIVITY_TIMEOUT });
     } else {
         res.status(401).json({ success: false, message: 'Credenciais inválidas' });
     }

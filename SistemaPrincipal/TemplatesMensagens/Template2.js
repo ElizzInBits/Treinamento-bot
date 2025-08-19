@@ -1,5 +1,4 @@
-// const wppconnect = require('@wppconnect-team/wppconnect'); // Removido para evitar conflito
-// const { sendMessage } = require('./conexao/wppConnectTemplate');
+
 
 // Variável global para o cliente
 let wppClient = null;
@@ -37,7 +36,7 @@ const { connectDB, sequelize } = require('../BancoDeDados/database');
 const { Op } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
-const Message = require('../BancoDeDados/models/message');
+
 const { Contato, Interacao, Empresa, EmpresaTreinamento } = require('../BancoDeDados/models');
 const { Treinamento } = require('../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('./Certificados/certificados2.js');
@@ -88,25 +87,19 @@ function carregarScriptsTreinamento() {
 // Carregar scripts na inicialização
 carregarScriptsTreinamento();
 
-// Recarregar scripts a cada processamento (para desenvolvimento)
-function recarregarScripts() {
-    console.log('🔄 Recarregando scripts de treinamento...');
-    carregarScriptsTreinamento();
-}
+
 
 
 
 // ========================================
 // VARIÁVEIS DE CONTROLE GLOBAIS
 // ========================================
-const timeouts = {};
 const emProcessamento = new Set();
 const saudacoesEnviadas = new Set();
 
 // ========================================
 // CONSTANTES E CONFIGURAÇÕES
 // ========================================
-const TEMPO_LEMBRETE = 0.3 * 60 * 1000; // 18 segundos
 const EMAIL_REGEX = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 // Constantes básicas para confirmação de dados
@@ -124,26 +117,7 @@ function limparNumero(numero) {
     return numero.replace(/\D/g, '').replace(/@c\.us$/, '');
 }
 
-/**
- * Gera variações de um número brasileiro (com e sem o 9)
- */
-function gerarVariacoes(numeroCompleto) {
-    const limpo = limparNumero(numeroCompleto);
-    if (!limpo.startsWith('55') || limpo.length < 10) return [limpo];
 
-    const ddd = limpo.slice(2, 4);
-    const base = limpo.slice(4);
-    let var1 = limpo;
-    let var2 = limpo;
-
-    if (base.length === 9 && base[0] === '9') {
-        var2 = '55' + ddd + base.slice(1);
-    } else if (base.length === 8) {
-        var2 = '55' + ddd + '9' + base;
-    }
-
-    return [var1, var2];
-}
 
 
 
@@ -151,38 +125,37 @@ function gerarVariacoes(numeroCompleto) {
 // FUNÇÕES DE AGENDAMENTO E INTERAÇÃO
 // ========================================
 
-/**
- * Agenda um lembrete para o usuário (DESABILITADO para evitar duplicações)
- */
-function agendarLembrete(sender, mensagemLista, tempoMs = TEMPO_LEMBRETE) {
-    // Desabilitado temporariamente para evitar mensagens duplicadas
-    return;
-    
-    if (timeouts[sender]) clearTimeout(timeouts[sender]);
 
-    timeouts[sender] = setTimeout(async () => {
-        await sendMessage(sender, 'send-message', {
-            message: '👀 Ah, parece que alguém se esqueceu de mim... Vamos continuar?',
-        });
-        await sendMessage(sender, 'send-list-message', mensagemLista);
-    }, tempoMs);
-}
 
 /**
  * Salva a última interação do usuário no banco
  */
 async function salvarUltimaInteracao(sender, tipo, mensagem) {
-    await Interacao.upsert({ telefone: sender, tipo, mensagem });
+    try {
+        await Interacao.create({
+            telefone: sender,
+            tipo: tipo,
+            mensagem: mensagem || '',
+            timestamp: new Date()
+        });
+    } catch (error) {
+        console.error('Erro ao salvar interação:', error);
+    }
 }
 
 /**
  * Obtém a última interação do usuário
  */
 async function obterUltimaInteracao(sender) {
-    return await Interacao.findOne({
-        where: { telefone: sender },
-        order: [['updatedAt', 'DESC']],
-    });
+    try {
+        return await Interacao.findOne({
+            where: { telefone: sender },
+            order: [['createdAt', 'DESC']]
+        });
+    } catch (error) {
+        console.error('Erro ao obter última interação:', error);
+        return null;
+    }
 }
 
 // ========================================
@@ -262,7 +235,7 @@ async function processarComandosContinuar(sender, text, selectedId) {
             } else {
                 await sendMessage(sender, 'send-message', { message: ultima.mensagem });
             }
-            agendarLembrete(sender, getMensagemListaContinuar());
+
         } else {
             await sendMessage(sender, 'send-message', {
                 message: '❗️Não encontrei onde você parou. Vamos começar do início?',
@@ -276,7 +249,7 @@ async function processarComandosContinuar(sender, text, selectedId) {
         await sendMessage(sender, 'send-message', {
             message: 'Sem problemas! Quando quiser continuar, é só me chamar.',
         });
-        agendarLembrete(sender, getMensagemListaContinuar());
+
         return true;
     }
 
@@ -326,7 +299,6 @@ async function processarConfirmacaoDados(sender, textoNormalizado, selectedIdNor
             message: '📝 Para corrigir seus dados, por favor, me envie seu nome completo correto.',
         });
         await salvarUltimaInteracao(sender, 'corrigir_nome', 'Por favor, me envie seu nome completo correto.');
-        agendarLembrete(sender, getMensagemListaContinuar());
         return true;
     }
 
@@ -348,7 +320,6 @@ async function processarCorrecaoDados(sender, rawText, contato) {
             message: '👍 Nome atualizado! Agora, me envie seu e-mail correto.',
         });
         await salvarUltimaInteracao(sender, 'corrigir_email', 'Por favor, me envie seu e-mail correto.');
-        agendarLembrete(sender, getMensagemListaContinuar());
         return true;
     }
 
@@ -359,7 +330,6 @@ async function processarCorrecaoDados(sender, rawText, contato) {
                 message: '⚠️ E-mail inválido! Por favor, insira um e-mail válido.',
             });
             await salvarUltimaInteracao(sender, 'corrigir_email', 'Por favor, me envie seu e-mail correto.');
-            agendarLembrete(sender, getMensagemListaContinuar());
             return true;
         }
 
@@ -447,8 +417,7 @@ async function iniciarTreinamento(sender, contato) {
 
     await sendMessage(sender, 'send-list-message', listMsg);
     await salvarUltimaInteracao(sender, 'selecionar_treinamento', JSON.stringify(listMsg));
-    // Remover lembrete para evitar duplicações
-    // agendarLembrete(sender, getMensagemListaContinuar());
+
 }
 
 
@@ -545,7 +514,7 @@ async function processarMensagem(message, client) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        if (timeouts[sender]) clearTimeout(timeouts[sender]);
+
 
         // Verificação de cadastro primeiro
         const contato = await verificarCadastro(sender);
@@ -559,6 +528,85 @@ async function processarMensagem(message, client) {
             await sendMessage(sender, 'send-message', {
                 message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 http://localhost:3000/autoCadastro/`,
             });
+            return;
+        }
+
+        // VERIFICAR SE CONVERSA FOI FINALIZADA - PRIMEIRA PRIORIDADE
+        console.log(`🔍 DEBUG: statusTreinamento = "${contato.statusTreinamento}"`);
+        if (contato.statusTreinamento === 'concluído') {
+            console.log('✅ Usuário concluído - finalizando conversa');
+            await sendMessage(sender, 'send-message', {
+                message: '🙏 Olá! Você já concluiu seu treinamento. Se precisar de algo, entre em contato com o suporte.',
+            });
+            return;
+        }
+
+        // Obter última interação para verificar continuidade
+        const ultimaInteracao = await obterUltimaInteracao(sender);
+        
+        // PROCESSAR SSMA PRIMEIRO - ANTES DA CONTINUIDADE
+        const script = scriptsTreinamento['treinamentoSSMA'];
+        if (script && script.processarRespostaSSMA) {
+            // Verificar se é uma resposta específica do SSMA (incluindo revisão de conteúdo)
+            if (selectedId === 'rever_modulo1' || selectedId === 'rever_modulo2' ||
+                text.toLowerCase().includes('rever conteúdo') ||
+                ultimaInteracao?.tipo === 'aguardando_revisao_modulo1' ||
+                ultimaInteracao?.tipo === 'aguardando_revisao_modulo2' ||
+                ultimaInteracao?.tipo?.includes('aguardando_quiz') ||
+                ultimaInteracao?.tipo?.includes('confirmacao_dados_ssma') ||
+                text.includes('a)') || text.includes('b)') || text.includes('c)') || text.includes('d)') ||
+                text.includes('exame') || selectedId?.includes('_q') || selectedId?.includes('_m2q')) {
+                
+                console.log(`🔍 Tentando processar no SSMA: "${text}"`);
+                try {
+                    const resultado = await script.processarRespostaSSMA(sender, text, selectedId, contato, sendMessage);
+                    if (resultado) {
+                        console.log(`✅ SSMA processou com sucesso`);
+                        return;
+                    }
+                    console.log(`❌ SSMA não processou`);
+                } catch (error) {
+                    console.error(`Erro ao processar resposta SSMA:`, error);
+                }
+            }
+        }
+
+        // Se há interação recente e usuário está em treinamento, oferecer continuidade (apenas se não for resposta de quiz)
+        if (ultimaInteracao && contato.statusTreinamento === 'em andamento' && 
+            !text.includes('continuar') && !selectedId && !rawText.toLowerCase().includes('exame') &&
+            !rawText.toLowerCase().includes('a)') && !rawText.toLowerCase().includes('b)') && 
+            !rawText.toLowerCase().includes('c)') && !rawText.toLowerCase().includes('d)') &&
+            !rawText.toLowerCase().includes('dados estão corretos') && !rawText.toLowerCase().includes('sim') &&
+            !rawText.toLowerCase().includes('pode mandar') && // NÃO oferecer continuidade se usuário já respondeu
+            !rawText.toLowerCase().includes('vamos nessa') && // NÃO oferecer se respondeu ao quiz
+            !rawText.toLowerCase().includes('rever conteúdo') && // NÃO oferecer se está revisando conteúdo
+            ultimaInteracao.tipo !== 'opcoes_continuidade' && ultimaInteracao.tipo !== 'confirmacao_dados_ssma' &&
+            ultimaInteracao.tipo !== 'aguardando_inicio_ssma' && // NÃO oferecer se já está aguardando resposta
+            ultimaInteracao.tipo !== 'aguardando_quiz_intro' && // NÃO oferecer se aguardando quiz
+            ultimaInteracao.tipo !== 'aguardando_revisao_modulo1' && // NÃO oferecer se aguardando revisão
+            ultimaInteracao.tipo !== 'aguardando_revisao_modulo2' && // NÃO oferecer se aguardando revisão
+            ultimaInteracao.createdAt > new Date(Date.now() - 24 * 60 * 60 * 1000)) { // Últimas 24h
+            
+            await sendMessage(sender, 'send-message', {
+                message: `👋 Olá! Vejo que você estava no meio do treinamento "${contato.treinamento?.nome || 'SSMA'}".\n\n🔄 Deseja continuar de onde parou?`,
+            });
+            
+            const continuarMsg = {
+                title: '',
+                description: 'Escolha uma opção:',
+                buttonText: 'Continuar',
+                listType: 'SINGLE_SELECT',
+                sections: [{
+                    title: '',
+                    rows: [
+                        { id: 'continuar_treinamento', title: 'Continuar de onde parei 📚', description: '' },
+                        { id: 'reiniciar_treinamento', title: 'Reiniciar do início 🔄', description: '' },
+                    ],
+                }],
+            };
+            
+            await sendMessage(sender, 'send-list-message', continuarMsg);
+            await salvarUltimaInteracao(sender, 'opcoes_continuidade', JSON.stringify(continuarMsg));
             return;
         }
 
@@ -577,13 +625,108 @@ async function processarMensagem(message, client) {
             }
         }
 
-        // Processar comandos continuar/pausar
-        if (await processarComandosContinuar(sender, text, selectedId)) {
+        // Processar opções de continuidade
+        if (selectedId === 'continuar_treinamento' || 
+            text.toLowerCase().includes('continuar de onde parei') ||
+            (ultimaInteracao?.tipo === 'opcoes_continuidade' && text.toLowerCase().includes('continuar'))) {
+            
+            await sendMessage(sender, 'send-message', {
+                message: '🔄 Continuando de onde você parou...',
+            });
+            
+            // Buscar a última interação relevante (não de continuidade)
+            const interacoesRecentes = await Interacao.findAll({
+                where: { telefone: sender },
+                order: [['createdAt', 'DESC']],
+                limit: 10
+            });
+            
+            const ultimaInteracaoRelevante = interacoesRecentes.find(i => 
+                i.tipo !== 'opcoes_continuidade' && 
+                i.tipo !== 'treinamento_iniciado' &&
+                i.mensagem && i.mensagem.trim() !== ''
+            );
+            
+            if (ultimaInteracaoRelevante) {
+                try {
+                    const mensagemData = JSON.parse(ultimaInteracaoRelevante.mensagem);
+                    if (mensagemData.sections) {
+                        await sendMessage(sender, 'send-list-message', mensagemData);
+                    } else {
+                        await sendMessage(sender, 'send-message', { message: ultimaInteracaoRelevante.mensagem });
+                    }
+                } catch {
+                    await sendMessage(sender, 'send-message', { message: ultimaInteracaoRelevante.mensagem });
+                }
+            } else {
+                // Se não encontrou interação relevante, reiniciar
+                const script = scriptsTreinamento['treinamentoSSMA'];
+                if (script && script.executarTreinamento) {
+                    await script.executarTreinamento(sender, contato, sendMessage);
+                }
+            }
             return;
         }
         
-        // Obter última interação
-        const ultimaInteracao = await obterUltimaInteracao(sender);
+        if (selectedId === 'reiniciar_treinamento' || 
+            text.toLowerCase().includes('reiniciar do início') ||
+            (ultimaInteracao?.tipo === 'opcoes_continuidade' && text.toLowerCase().includes('reiniciar'))) {
+            
+            // Reiniciar treinamento
+            const script = scriptsTreinamento['treinamentoSSMA'];
+            if (script && script.executarTreinamento) {
+                await sendMessage(sender, 'send-message', {
+                    message: '🔄 Reiniciando seu treinamento...',
+                });
+                await script.executarTreinamento(sender, contato, sendMessage);
+                return;
+            }
+        }
+        
+        // Processar confirmação de dados - AMPLIADO
+        if ((ultimaInteracao?.tipo === 'confirmacao_dados_ssma' || ultimaInteracao?.mensagem?.includes('dados para o certificado')) && 
+            (selectedId === 'dados_corretos_ssma' || text.toLowerCase().includes('sim') || text.toLowerCase().includes('dados estão corretos'))) {
+            
+            console.log('✅ Processando confirmação de dados do certificado');
+            
+            await sendMessage(sender, 'send-message', {
+                message: '✅ Dados confirmados! Gerando seu certificado...',
+            });
+            
+            // Chamar geração de certificado diretamente
+            const script = scriptsTreinamento['treinamentoSSMA'];
+            if (script && script.processarRespostaSSMA) {
+                try {
+                    await script.processarRespostaSSMA(sender, text, 'dados_corretos_ssma', contato, sendMessage);
+                } catch (error) {
+                    console.error('Erro ao gerar certificado:', error);
+                }
+            }
+            return;
+        }
+        
+        // FALLBACK - Se contém "dados estão corretos" sempre processar
+        if (text.toLowerCase().includes('dados estão corretos') || text.toLowerCase().includes('sim, os dados')) {
+            console.log('✅ FALLBACK: Processando confirmação por texto');
+            
+            await sendMessage(sender, 'send-message', {
+                message: '✅ Dados confirmados! Gerando seu certificado...',
+            });
+            
+            const script = scriptsTreinamento['treinamentoSSMA'];
+            if (script && script.processarRespostaSSMA) {
+                try {
+                    await script.processarRespostaSSMA(sender, text, 'dados_corretos_ssma', contato, sendMessage);
+                } catch (error) {
+                    console.error('Erro ao gerar certificado:', error);
+                }
+            }
+            return;
+        }
+        
+        // Processamento de quiz movido para o início da função
+        
+
         
         // Verificar se é um usuário recadastrado que precisa de orientação
         if (contato.statusTreinamento === 'não iniciado' && !ultimaInteracao) {
@@ -615,23 +758,7 @@ async function processarMensagem(message, client) {
         const textoNormalizado = rawText.trim().toLowerCase();
         const selectedIdNormalizado = (selectedId || '').trim().toLowerCase();
 
-        // Processar confirmação de dados para certificado (qualquer status)
-        if (ultimaInteracao?.tipo === 'confirmacao_dados_ssma' || 
-            (text.toLowerCase().includes('sim') && text.toLowerCase().includes('dados')) ||
-            (text.toLowerCase().includes('confirmar') && text.toLowerCase().includes('dados')) ||
-            text.toLowerCase().includes('dados corretos') ||
-            text.toLowerCase().includes('sim, os dados estão corretos')) {
-            
-            const script = scriptsTreinamento['treinamentoSSMA'];
-            if (script && script.processarRespostaSSMA) {
-                try {
-                    const resultado = await script.processarRespostaSSMA(sender, text, selectedId, contato, sendMessage);
-                    if (resultado) return;
-                } catch (error) {
-                    console.error('Erro ao processar confirmação de dados SSMA:', error);
-                }
-            }
-        }
+
         
         // Processar confirmação de dados para usuários que concluíram
         if (contato.statusTreinamento === 'concluído') {
@@ -776,34 +903,26 @@ async function processarMensagem(message, client) {
         }
 
 
-        
-        // Verificar se é resposta do SSMA mesmo sem status 'em andamento'
-        if ((text.toLowerCase().includes('pode mandar') && ultimaInteracao?.tipo === 'aguardando_inicio_ssma') ||
-            (ultimaInteracao?.tipo === 'aguardando_quiz_intro' && (text.toLowerCase().includes('vamos nessa') || text.toLowerCase().includes('vamos') || text.toLowerCase().includes('refazer'))) ||
-            (ultimaInteracao?.tipo === 'aguardando_modulo2_intro' && (text.toLowerCase().includes('sim') || text.toLowerCase().includes('vamos') || text.toLowerCase().includes('não'))) ||
-            (ultimaInteracao?.tipo === 'aguardando_modulo3_intro' && (text.toLowerCase().includes('sim') || text.toLowerCase().includes('vamos') || text.toLowerCase().includes('não'))) ||
-            (ultimaInteracao?.tipo === 'aguardando_quiz_modulo2_intro' && (text.toLowerCase().includes('vamos nessa') || text.toLowerCase().includes('vamos'))) ||
-            (ultimaInteracao?.tipo === 'aguardando_quiz_modulo3_intro' && (text.toLowerCase().includes('vamos nessa') || text.toLowerCase().includes('vamos'))) ||
-            (ultimaInteracao?.tipo && ultimaInteracao.tipo.startsWith('aguardando_quiz_q') && (text.toLowerCase().includes('a)') || text.toLowerCase().includes('b)') || text.toLowerCase().includes('c)') || text.toLowerCase().includes('d)'))) ||
-            (ultimaInteracao?.tipo && ultimaInteracao.tipo.startsWith('aguardando_quiz_m2q') && (text.toLowerCase().includes('a)') || text.toLowerCase().includes('b)') || text.toLowerCase().includes('c)') || text.toLowerCase().includes('d)'))) ||
-            (ultimaInteracao?.tipo && ultimaInteracao.tipo.startsWith('aguardando_quiz_m3q') && (text.toLowerCase().includes('a)') || text.toLowerCase().includes('b)') || text.toLowerCase().includes('c)') || text.toLowerCase().includes('d)'))) ||
-            (selectedId && (selectedId.startsWith('comecar_quiz_Modulo') || selectedId.startsWith('iniciar_modulo') || selectedId.startsWith('pular_modulo') || selectedId.startsWith('a_m') || selectedId.startsWith('b_m') || selectedId.startsWith('c_m') || selectedId.startsWith('d_m') || selectedId === 'comecar_quiz_Modulo1' || selectedId === 'refazer' || text.toLowerCase().includes('refazer')))) {
-            const script = scriptsTreinamento['treinamentoSSMA'];
-            if (script && script.processarRespostaSSMA) {
-                try {
-                    const resultado = await script.processarRespostaSSMA(sender, text, selectedId, contato, sendMessage);
-                    if (resultado) return;
-                } catch (error) {
-                    console.error(`Erro ao processar resposta SSMA:`, error);
-                }
-            }
-        }
 
-        // Processar treinamentos pendentes
-        const script = scriptsTreinamento['treinamentoSSMA'];
-        if (script && script.processarTreinamentosPendentes) {
-            const resultadoPendentes = await script.processarTreinamentosPendentes(sender, selectedId, contato, sendMessage);
-            if (resultadoPendentes) return;
+
+        // PROCESSAR TREINAMENTOS PENDENTES - MÁXIMA PRIORIDADE
+        const scriptPendentes = scriptsTreinamento['treinamentoSSMA'];
+        if (scriptPendentes && scriptPendentes.processarTreinamentosPendentes) {
+            // Verificar se é uma resposta relacionada a treinamentos pendentes
+            if (selectedId === 'ver_treinamentos_pendentes' || 
+                selectedId === 'nao_ver_treinamentos' ||
+                selectedId === 'nao_iniciar_treinamento' ||
+                selectedId?.startsWith('iniciar_treinamento_') ||
+                text.toLowerCase().includes('ver treinamentos') ||
+                text.toLowerCase().includes('não iniciar') ||
+                text.toLowerCase().includes('nenhum agora') ||
+                (ultimaInteracao?.tipo === 'aguardando_opcao_treinamentos') ||
+                (ultimaInteracao?.tipo === 'escolhendo_treinamento_pendente')) {
+                
+                console.log('🔍 PROCESSANDO TREINAMENTOS PENDENTES:', { selectedId, text, ultimaInteracao: ultimaInteracao?.tipo });
+                const resultadoPendentes = await scriptPendentes.processarTreinamentosPendentes(sender, selectedId, contato, sendMessage, text);
+                if (resultadoPendentes) return;
+            }
         }
 
         // Processar respostas de treinamentos específicos PRIMEIRO
@@ -852,6 +971,8 @@ async function processarMensagem(message, client) {
             return;
         }
         
+
+        
         // Verificar se é usuário não iniciado que precisa de ajuda
         if (contato.statusTreinamento === 'não iniciado') {
             await iniciarTreinamento(sender, contato);
@@ -871,4 +992,11 @@ async function processarMensagem(message, client) {
 }
 
 // Exportar funções para serem usadas externamente
-module.exports = { processarMensagem, setWppClient, sendMessage, salvarUltimaInteracao, obterUltimaInteracao };
+module.exports = { 
+    processarMensagem, 
+    setWppClient, 
+    sendMessage, 
+    salvarUltimaInteracao, 
+    obterUltimaInteracao,
+    salvarInteracao: salvarUltimaInteracao // Alias para compatibilidade
+};
