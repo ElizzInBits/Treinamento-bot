@@ -47,10 +47,17 @@ function authenticatedFetch(url, options = {}) {
 // Função de logout
 function logout() {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('loginTime');
+    sessionStorage.clear();
     window.location.href = '/login/login.html';
 }
 
 // Verificar autenticação ao carregar a página
 document.addEventListener('DOMContentLoaded', function() {
-    checkAuth();
+    if (checkAuth()) {
+        // Inicializar gerenciador de inatividade se estiver autenticado
+        if (typeof InactivityManager !== 'undefined') {
+            window.inactivityManager = new InactivityManager();
+        }
+    }
 });

@@ -18,6 +18,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         
         if (data.success) {
             localStorage.setItem('adminToken', data.token);
+            localStorage.setItem('loginTime', Date.now().toString());
             window.location.href = '/home/home-index.html';
         } else {
             errorMessage.textContent = data.message || 'Credenciais inválidas';
