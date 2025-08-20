@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
       empresaId: parseInt(empresaId, 10)
     };
 
-    fetch('http://localhost:3000/api/contatos', {
+    fetch('http://72.60.48.249:3000/api/contatos', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
