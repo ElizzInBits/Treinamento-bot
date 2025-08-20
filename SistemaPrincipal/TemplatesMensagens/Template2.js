@@ -526,7 +526,7 @@ async function processarMensagem(message, client) {
             await new Promise(resolve => setTimeout(resolve, 2000));
             
             await sendMessage(sender, 'send-message', {
-                message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 http://localhost:3000/autoCadastro/`,
+                message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
             return;
         }
