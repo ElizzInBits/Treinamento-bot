@@ -1,3 +1,4 @@
+require('dotenv').config();
 const cors = require('cors');
 const path = require('path');
 const express = require('express');
@@ -121,15 +122,15 @@ try {
 
 // ✅ 6. Sistema de autenticação
 const jwt = require('jsonwebtoken');
-const SECRET_KEY = 'admin-secret-key-2024';
+const SECRET_KEY = process.env.JWT_SECRET || 'admin-secret-key-2024';
 const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 1 hora em ms
 
 // Rota de login
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     
-    // Credenciais hardcoded para admin
-    if (username === 'Administrador' && password === 'maduroabacaxi') {
+    // Credenciais do admin via env
+    if (username === (process.env.ADMIN_USERNAME || 'Administrador') && password === (process.env.ADMIN_PASSWORD || 'maduroabacaxi')) {
         const token = jwt.sign({ 
             username: 'Administrador',
             loginTime: Date.now()

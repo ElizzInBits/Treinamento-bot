@@ -1,3 +1,4 @@
+require('dotenv').config();
 const wppconnect = require('@wppconnect-team/wppconnect');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const { processarMensagem } = require('./Template2');
@@ -20,7 +21,7 @@ console.log('🚀 Iniciando Template Processor...');
 
 // Conectar ao WhatsApp
 wppconnect.create({
-  session: 'NERDWHATS_AMERICA',
+  session: process.env.WHATSAPP_SESSION || 'NERDWHATS_AMERICA',
   headless: true,
   puppeteerOptions: {
     args: [
