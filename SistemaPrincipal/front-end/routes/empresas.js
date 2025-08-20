@@ -80,6 +80,7 @@ router.get('/:id', async (req, res) => {
 // Criar nova empresa
 router.post('/', async (req, res) => {
   try {
+    console.log('📥 Dados recebidos:', req.body);
     const { razaoSocial, cnpj, porte, endereco, cep, contato, email } = req.body;
 
     if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !email) {
