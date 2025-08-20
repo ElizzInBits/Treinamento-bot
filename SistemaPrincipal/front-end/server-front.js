@@ -268,15 +268,16 @@ async function iniciarServidor() {
     try {
         console.log('🚀 Iniciando servidor...');
 
-        server.listen(PORT, () => {
+        server.listen(PORT, '0.0.0.0', () => {
+            const serverIP = process.env.FRONTEND_URL || 'http://72.60.48.249:3000';
             console.log(`✅ Servidor rodando na porta ${PORT}`);
-            console.log(`🔗 Teste: http://localhost:${PORT}/test`);
-            console.log(`📱 Painel 1: http://localhost:${PORT}/home`);
-            console.log(`📱 Painel 2: http://localhost:${PORT}/autoCadastro`);
-            console.log(`📱 Painel 3: http://localhost:${PORT}/empre`);
-            console.log(`🔗 API Contatos: http://localhost:${PORT}/api/contatos`);
-            console.log(`🔗 API Treinamentos: http://localhost:${PORT}/api/treinamentos`);
-            console.log(`🔗 API Empresas: http://localhost:${PORT}/api/empresas`);
+            console.log(`🔗 Teste: ${serverIP}/test`);
+            console.log(`📱 Painel 1: ${serverIP}/home`);
+            console.log(`📱 Painel 2: ${serverIP}/autoCadastro`);
+            console.log(`📱 Painel 3: ${serverIP}/empre`);
+            console.log(`🔗 API Contatos: ${serverIP}/api/contatos`);
+            console.log(`🔗 API Treinamentos: ${serverIP}/api/treinamentos`);
+            console.log(`🔗 API Empresas: ${serverIP}/api/empresas`);
         });
 
         try {
