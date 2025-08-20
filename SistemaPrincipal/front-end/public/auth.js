@@ -3,23 +3,9 @@ function checkAuth() {
     const token = localStorage.getItem('adminToken');
     
     if (!token) {
-        window.location.href = '/login/login.html';
-        return false;
-    }
-    
-    // Verificar se o token é válido (opcional - pode fazer uma chamada para o servidor)
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const now = Date.now() / 1000;
-        
-        if (payload.exp < now) {
-            localStorage.removeItem('adminToken');
+        if (!window.location.pathname.includes('login')) {
             window.location.href = '/login/login.html';
-            return false;
         }
-    } catch (error) {
-        localStorage.removeItem('adminToken');
-        window.location.href = '/login/login.html';
         return false;
     }
     
@@ -41,7 +27,10 @@ function authenticatedFetch(url, options = {}) {
         ...options.headers
     };
     
-    return fetch(url, { ...options, headers });
+    return fetch(url, { ...options, headers }).catch(error => {
+        console.error('Erro na requisição:', error);
+        throw error;
+    });
 }
 
 // Função de logout
@@ -53,11 +42,11 @@ function logout() {
 }
 
 // Verificar autenticação ao carregar a página
-document.addEventListener('DOMContentLoaded', function() {
-    if (checkAuth()) {
-        // Inicializar gerenciador de inatividade se estiver autenticado
-        if (typeof InactivityManager !== 'undefined') {
-            window.inactivityManager = new InactivityManager();
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Só verificar auth se não estiver na página de login
+        if (!window.location.pathname.includes('login')) {
+            checkAuth();
         }
-    }
-});
+    });
+}
