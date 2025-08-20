@@ -100,14 +100,14 @@ router.post('/', async (req, res) => {
     }
 
     const novaEmpresa = await Empresa.create({
-      razao_social: razaoSocial.trim(),
+      razaoSocial: razaoSocial.trim(),
       cnpj: cnpjLimpo,
-      porte_empresa: porte,
+      porteEmpresa: porte,
       endereco,
       cep,
       contato,
       email,
-      criado_em: new Date()
+      criadoEm: new Date()
     });
 
     res.status(201).json(novaEmpresa);
@@ -154,8 +154,8 @@ router.put('/:id', async (req, res) => {
       empresa.email = email;
     }
 
-    if (razaoSocial) empresa.razao_social = razaoSocial.trim();
-    if (porte) empresa.porte_empresa = porte;
+    if (razaoSocial) empresa.razaoSocial = razaoSocial.trim();
+    if (porte) empresa.porteEmpresa = porte;
     if (endereco) empresa.endereco = endereco;
     if (cep) empresa.cep = cep;
     if (contato !== undefined) empresa.contato = contato;

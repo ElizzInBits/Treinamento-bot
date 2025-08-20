@@ -61,6 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const contato = document.getElementById('contato').value.trim();
     const ddi = document.getElementById('ddi').value;
     const email = document.getElementById('email').value.trim();
+    
+    console.log('📤 Dados do formulário:', { razaoSocial, cnpj, porte, endereco, cep, contato, ddi, email });
 
     if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !contato || !email) {
       alert('Por favor, preencha todos os campos obrigatórios.');
