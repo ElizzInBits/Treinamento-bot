@@ -22,6 +22,17 @@ console.log('🚀 Iniciando Template Processor...');
 wppconnect.create({
   session: 'NERDWHATS_AMERICA',
   headless: true,
+  puppeteerOptions: {
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--disable-gpu'
+    ]
+  },
   catchQR: (base64Qr, asciiQR) => {
     console.log('\n📱 QR CODE:');
     console.log(asciiQR);
