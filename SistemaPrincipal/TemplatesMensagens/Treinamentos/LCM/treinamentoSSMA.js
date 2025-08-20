@@ -7,7 +7,9 @@ const { Interacao, Empresa } = require('../../../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('../../Certificados/certificados2.js');
 const { Op } = require('sequelize');
 
-
+// Respostas aceitas para verificação
+const RESPOSTAS_POSITIVAS = ['sim', 'vamos', 'pode mandar', 'começar', 'iniciar', 'pronto', 'ok', 'vamos nessa'];
+const RESPOSTAS_NEGATIVAS = ['não', 'nao', 'ainda não', 'ainda nao', 'depois', 'mais tarde', 'preciso me preparar'];
 
 // Configurações do quiz Módulo 1 (SSMA + Acidentes - 8 questões)
 const QUIZ_CONFIG = {
@@ -259,10 +261,11 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     const ultimaInteracao = await obterUltimaInteracao(sender);
     const textLower = text.toLowerCase();
 
-    // Início do treinamento
+    // Início do treinamento - APENAS quando aguardando início
     if (selectedId === 'começar_ssma' ||
-        textLower.includes('pode mandar') ||
-        (ultimaInteracao?.tipo === 'aguardando_inicio_ssma' && RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
+        (ultimaInteracao?.tipo === 'aguardando_inicio_ssma' && 
+         (textLower.includes('pode mandar') || textLower.includes('😎') || textLower.includes('🔥') ||
+          RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase()))))) {
 
         await sendMessage(sender, 'send-message', {
             message: '🚀 Excelente! Vamos começar o treinamento! 📚',
@@ -383,7 +386,23 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     if (selectedId === 'comecar_quiz_Modulo1' ||
         (ultimaInteracao?.tipo === 'aguardando_quiz_intro' && (textLower.includes('vamos nessa') || textLower.includes('vamos') || textLower.includes('refazer') || textLower.includes('estou pronto')))) {
 
+        // Resetar pontuação para nova tentativa
         await salvarInteracao(sender, 'quiz_pontuacao', '0');
+        
+        // Se não é uma nova tentativa (refazer), não incrementar contador
+        if (!textLower.includes('refazer') && !selectedId.includes('refazer')) {
+            // Apenas resetar se for primeira vez ou nova sessão
+            const tentativasAnterior = await Interacao.findOne({
+                where: { telefone: sender, tipo: 'tentativas_modulo1' },
+                order: [['createdAt', 'DESC']]
+            });
+            
+            // Se não há tentativas anteriores, inicializar com 0
+            if (!tentativasAnterior) {
+                await salvarInteracao(sender, 'tentativas_modulo1', '0');
+            }
+        }
+        
         const perguntaAtual = QUIZ_CONFIG.perguntas[0];
 
         await sendMessage(sender, 'send-message', {
@@ -493,20 +512,25 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
                     await salvarInteracao(sender, 'aguardando_modulo2_intro', JSON.stringify(modulo2Msg));
                     return true;
                 } else {
-                    // Verificar tentativas do Módulo 1
+                    // Verificar tentativas do Módulo 1 - APENAS incrementar se não passou de 3
                     const tentativasAnterior = await Interacao.findOne({
                         where: { telefone: sender, tipo: 'tentativas_modulo1' },
                         order: [['createdAt', 'DESC']]
                     });
-                    let tentativas = parseInt(tentativasAnterior?.mensagem || '0') + 1;
-                    await salvarInteracao(sender, 'tentativas_modulo1', tentativas.toString());
+                    let tentativasAtual = parseInt(tentativasAnterior?.mensagem || '0');
+                    
+                    // Só incrementar se ainda não passou de 3
+                    if (tentativasAtual < 3) {
+                        tentativasAtual += 1;
+                        await salvarInteracao(sender, 'tentativas_modulo1', tentativasAtual.toString());
+                    }
 
                     await sendMessage(sender, 'send-message', {
-                        message: `😔 Você acertou ${pontuacao}/8 questões (${percentual.toFixed(0)}%). É necessário pelo menos 80% para prosseguir.\n\nTentativa ${tentativas}/3`,
+                        message: `😔 Você acertou ${pontuacao}/8 questões (${percentual.toFixed(0)}%). É necessário pelo menos 80% para prosseguir.\n\nTentativa ${tentativasAtual}/3`,
                     });
                     await new Promise(resolve => setTimeout(resolve, 300));
 
-                    if (tentativas >= 3) {
+                    if (tentativasAtual >= 3) {
                         // 3 tentativas esgotadas - rever conteúdo
                         const reviewMsg = {
                             title: '',
@@ -525,10 +549,31 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
                         await salvarInteracao(sender, 'aguardando_revisao_modulo1', JSON.stringify(reviewMsg));
                         return true;
                     } else {
-                        // Ainda tem tentativas
+                        // Ainda tem tentativas - reenviar conteúdo
+                        await sendMessage(sender, 'send-message', {
+                            message: '📚 Vamos revisar o conteúdo antes da próxima tentativa:',
+                        });
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
+                        // Reenviar conteúdo do Módulo 1
+                        await sendMessage(sender, 'send-message', {
+                            message: '🎆 *REVISÃO - Premissas Básicas da Segurança*\n\n⭐ A Segurança é IMPRESCINDÍVEL - não é opcional!\n⭐ A responsabilidade é de cada um e é INTRANSFERÍVEL\n⭐ Consciência em segurança é vital\n⭐ O único prejudicado pela falta de segurança será VOCÊ MESMO\n\n🎯 *Nossa meta é ZERO acidentes!*',
+                        });
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
+                        await sendMessage(sender, 'send-message', {
+                            message: '🚨 *TIPOS DE ACIDENTES*\n\n🏥 *ACIDENTE PESSOAL*: Danos físicos e/ou doenças no colaborador\n🌍 *ACIDENTE AMBIENTAL*: Prejuízos ao meio ambiente\n🔧 *ACIDENTE MATERIAL*: Danos a máquinas e equipamentos\n⚡ *QUASE ACIDENTE*: Poderia ter sido um acidente, mas não foi',
+                        });
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
+                        await sendMessage(sender, 'send-message', {
+                            message: '📅 *CLASSIFICAÇÃO POR AFASTAMENTO*\n\n✅ Sem afastamento: retorno no mesmo dia\n❌ Com afastamento: impossibilita o trabalho\n🚗 De trajeto: no caminho trabalho - casa - trabalho',
+                        });
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
                         const retryMsg = {
                             title: '',
-                            description: `Você ainda tem ${3 - tentativas} tentativa(s). Escolha uma opção:`,
+                            description: `Você ainda tem ${3 - tentativasAtual} tentativa(s). Escolha uma opção:`,
                             buttonText: 'Tentar novamente',
                             listType: 'SINGLE_SELECT',
                             sections: [{
@@ -825,20 +870,25 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
                     await salvarInteracao(sender, 'confirmacao_dados_ssma', JSON.stringify(listMsgCert));
                     return true;
                 } else {
-                    // Verificar tentativas do Módulo 2
+                    // Verificar tentativas do Módulo 2 - APENAS incrementar se não passou de 3
                     const tentativasAnterior = await Interacao.findOne({
                         where: { telefone: sender, tipo: 'tentativas_modulo2' },
                         order: [['createdAt', 'DESC']]
                     });
-                    let tentativas = parseInt(tentativasAnterior?.mensagem || '0') + 1;
-                    await salvarInteracao(sender, 'tentativas_modulo2', tentativas.toString());
+                    let tentativasAtual = parseInt(tentativasAnterior?.mensagem || '0');
+                    
+                    // Só incrementar se ainda não passou de 3
+                    if (tentativasAtual < 3) {
+                        tentativasAtual += 1;
+                        await salvarInteracao(sender, 'tentativas_modulo2', tentativasAtual.toString());
+                    }
 
                     await sendMessage(sender, 'send-message', {
-                        message: `😔 Você acertou ${pontuacao}/6 questões (${percentual.toFixed(0)}%). É necessário pelo menos 80% para prosseguir.\n\nTentativa ${tentativas}/3`,
+                        message: `😔 Você acertou ${pontuacao}/6 questões (${percentual.toFixed(0)}%). É necessário pelo menos 80% para prosseguir.\n\nTentativa ${tentativasAtual}/3`,
                     });
                     await new Promise(resolve => setTimeout(resolve, 300));
 
-                    if (tentativas >= 3) {
+                    if (tentativasAtual >= 3) {
                         // 3 tentativas esgotadas - rever conteúdo
                         const reviewMsg = {
                             title: '',
@@ -857,10 +907,31 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
                         await salvarInteracao(sender, 'aguardando_revisao_modulo2', JSON.stringify(reviewMsg));
                         return true;
                     } else {
-                        // Ainda tem tentativas
+                        // Ainda tem tentativas - reenviar conteúdo
+                        await sendMessage(sender, 'send-message', {
+                            message: '📚 Vamos revisar o conteúdo antes da próxima tentativa:',
+                        });
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
+                        // Reenviar conteúdo do Módulo 2
+                        await sendMessage(sender, 'send-message', {
+                            message: '🏥 *REVISÃO - PCMSO*\nPrograma de Controle Médico e Saúde Ocupacional\nExame admissional deve ser realizado na contratação\n\n🔍 *PGR*\nPrograma de Gerenciamento de Riscos\nIdentifica riscos no ambiente de trabalho',
+                        });
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
+                        await sendMessage(sender, 'send-message', {
+                            message: '🛡️ *EPC x EPI*\nEPC (Coletiva) protege todos - Ex.: guarda-corpos, ventilação\nEPI (Individual) é de uso pessoal e obrigatório\n\n💨 *PROTEÇÃO RESPIRATÓRIA*\nPFF2 para fumos e agentes biológicos\n\n🏗️ *TRABALHO EM ALTURA*\nConsiderado acima de 2 metros',
+                        });
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
+                        await sendMessage(sender, 'send-message', {
+                            message: '⚠ *PENSAMENTOS PERIGOSOS*\n❌ "Nunca vai acontecer comigo"\n❌ "Sou bom, não preciso de EPI"\n\n👂 *PERDA AUDITIVA*\nÉ irreversível - use proteção auditiva sempre!',
+                        });
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
                         const retryMsg = {
                             title: '',
-                            description: `Você ainda tem ${3 - tentativas} tentativa(s). Escolha uma opção:`,
+                            description: `Você ainda tem ${3 - tentativasAtual} tentativa(s). Escolha uma opção:`,
                             buttonText: 'Tentar novamente',
                             listType: 'SINGLE_SELECT',
                             sections: [{
@@ -1127,10 +1198,10 @@ async function processarTreinamentosPendentes(sender, selectedId, contato, sendM
         
         console.log('✅ DETECTADO: Não iniciar treinamento');
         await sendMessage(sender, 'send-message', {
-            message: '🙏 Sem problemas! Quando quiser iniciar um treinamento, é só entrar em contato.',
+            message: '🙏 Sem problemas! Quando quiser iniciar um treinamento, digite "treinamentos".',
         });
         
-        await salvarInteracao(sender, 'conversa_finalizada', 'Treinamento SSMA concluído');
+        await salvarInteracao(sender, 'conversa_finalizada', 'Usuário não quer iniciar treinamentos');
         return true;
     }
 
@@ -1147,10 +1218,10 @@ async function processarTreinamentosPendentes(sender, selectedId, contato, sendM
          (textLower.includes('não') || textLower.includes('obrigado')))) {
         
         await sendMessage(sender, 'send-message', {
-            message: '🙏 Sem problemas! Quando quiser iniciar um treinamento, é só entrar em contato.',
+            message: '🙏 Sem problemas! Quando quiser ver seus treinamentos, digite "treinamentos".',
         });
         
-        await salvarInteracao(sender, 'conversa_finalizada', 'Treinamento SSMA concluído');
+        await salvarInteracao(sender, 'conversa_finalizada', 'Usuário optou por não ver treinamentos');
         return true;
     }
 

@@ -531,27 +531,108 @@ async function processarMensagem(message, client) {
             return;
         }
 
+        // Obter última interação para verificar continuidade
+        const ultimaInteracao = await obterUltimaInteracao(sender);
+
         // VERIFICAR SE CONVERSA FOI FINALIZADA - PRIMEIRA PRIORIDADE
         console.log(`🔍 DEBUG: statusTreinamento = "${contato.statusTreinamento}"`);
         if (contato.statusTreinamento === 'concluído') {
-            console.log('✅ Usuário concluído - finalizando conversa');
-            await sendMessage(sender, 'send-message', {
-                message: '🙏 Olá! Você já concluiu seu treinamento. Se precisar de algo, entre em contato com o suporte.',
-            });
-            return;
+            console.log('✅ Usuário concluído - verificando se quer outros treinamentos');
+            
+            // Se conversa foi finalizada, verificar se usuário quer reativar
+            if (ultimaInteracao?.tipo === 'conversa_finalizada') {
+                console.log('🚫 Conversa finalizada - verificando reativação');
+                
+                if (text.toLowerCase().includes('treinamentos') || text.toLowerCase().includes('ver treinamentos')) {
+                    // Reativar oferecimento de treinamentos
+                    const treinamentos = await buscarTreinamentosEmpresa(contato.empresaId);
+                    const treinamentosDisponiveis = treinamentos.filter(t => t.id !== 14);
+                    
+                    if (treinamentosDisponiveis.length > 0) {
+                        await sendMessage(sender, 'send-message', {
+                            message: '📚 Você possui outros treinamentos disponíveis!',
+                        });
+                        
+                        const listMsg = {
+                            title: '',
+                            description: 'Deseja ver seus treinamentos disponíveis?',
+                            buttonText: 'Ver opções',
+                            listType: 'SINGLE_SELECT',
+                            sections: [{
+                                title: '',
+                                rows: [
+                                    { id: 'ver_treinamentos_pendentes', title: 'Ver treinamentos disponíveis 📚', description: '' },
+                                    { id: 'nao_ver_treinamentos', title: 'Não, obrigado 🙏', description: '' },
+                                ],
+                            }],
+                        };
+                        
+                        await sendMessage(sender, 'send-list-message', listMsg);
+                        await salvarUltimaInteracao(sender, 'aguardando_opcao_treinamentos', JSON.stringify(listMsg));
+                        return;
+                    }
+                } else {
+                    await sendMessage(sender, 'send-message', {
+                        message: '🙏 Olá! Se quiser ver seus treinamentos, digite "treinamentos".',
+                    });
+                    return;
+                }
+            }
+            
+            // Se já está aguardando opção de treinamentos, não repetir mensagem
+            if (ultimaInteracao?.tipo === 'aguardando_opcao_treinamentos') {
+                console.log('⏭️ Já aguardando opção de treinamentos - prosseguindo');
+            } else {
+                // Verificar se há outros treinamentos disponíveis
+                const treinamentos = await buscarTreinamentosEmpresa(contato.empresaId);
+                const treinamentosDisponiveis = treinamentos.filter(t => t.id !== 14); // Excluir SSMA já concluído
+                
+                if (treinamentosDisponiveis.length > 0) {
+                    await sendMessage(sender, 'send-message', {
+                        message: '👋 Olá! Você já concluiu o treinamento SSMA. 🎉\n\n📚 Você possui outros treinamentos disponíveis!',
+                    });
+                    
+                    const listMsg = {
+                        title: '',
+                        description: 'Deseja ver seus treinamentos disponíveis?',
+                        buttonText: 'Ver opções',
+                        listType: 'SINGLE_SELECT',
+                        sections: [{
+                            title: '',
+                            rows: [
+                                { id: 'ver_treinamentos_pendentes', title: 'Ver treinamentos disponíveis 📚', description: '' },
+                                { id: 'nao_ver_treinamentos', title: 'Não, obrigado 🙏', description: '' },
+                            ],
+                        }],
+                    };
+                    
+                    await sendMessage(sender, 'send-list-message', listMsg);
+                    await salvarUltimaInteracao(sender, 'aguardando_opcao_treinamentos', JSON.stringify(listMsg));
+                    return;
+                } else {
+                    await sendMessage(sender, 'send-message', {
+                        message: '🙏 Olá! Você já concluiu todos os seus treinamentos. Se precisar de algo, entre em contato com o suporte.',
+                    });
+                    return;
+                }
+            }
         }
 
-        // Obter última interação para verificar continuidade
-        const ultimaInteracao = await obterUltimaInteracao(sender);
-        
         // PROCESSAR SSMA PRIMEIRO - ANTES DA CONTINUIDADE
         const script = scriptsTreinamento['treinamentoSSMA'];
         if (script && script.processarRespostaSSMA) {
             // Verificar se é uma resposta específica do SSMA (incluindo revisão de conteúdo)
             if (selectedId === 'rever_modulo1' || selectedId === 'rever_modulo2' ||
                 text.toLowerCase().includes('rever conteúdo') ||
+                (text.toLowerCase().includes('pode mandar') && ultimaInteracao?.tipo === 'aguardando_inicio_ssma') ||
+                (text.toLowerCase().includes('vamos nessa') && ultimaInteracao?.tipo === 'aguardando_quiz_intro') ||
+                (text.toLowerCase().includes('sim') && ultimaInteracao?.tipo === 'aguardando_modulo2_intro') ||
+                (text.toLowerCase().includes('vamos') && ultimaInteracao?.tipo === 'aguardando_modulo2_intro') ||
                 ultimaInteracao?.tipo === 'aguardando_revisao_modulo1' ||
                 ultimaInteracao?.tipo === 'aguardando_revisao_modulo2' ||
+                ultimaInteracao?.tipo === 'aguardando_inicio_ssma' ||
+                ultimaInteracao?.tipo === 'aguardando_modulo2_intro' ||
+                ultimaInteracao?.tipo === 'aguardando_quiz_intro' ||
                 ultimaInteracao?.tipo?.includes('aguardando_quiz') ||
                 ultimaInteracao?.tipo?.includes('confirmacao_dados_ssma') ||
                 text.includes('a)') || text.includes('b)') || text.includes('c)') || text.includes('d)') ||
