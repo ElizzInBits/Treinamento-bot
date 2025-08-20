@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
       email
     };
 
-    fetch('http://localhost:3000/api/empresas', {
+    fetch('http://72.60.48.249:3000/api/empresas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(novaEmpresa)
@@ -135,7 +135,7 @@ async function manageTrainings(companyId, companyName) {
 // Função para carregar treinamentos atribuídos
 async function loadAssignedTrainings(companyId) {
   try {
-    const response = await fetch(`http://localhost:3000/api/empresas/${companyId}/treinamentos/atribuidos`);
+    const response = await fetch(`http://72.60.48.249:3000/api/empresas/${companyId}/treinamentos/atribuidos`);
     const trainings = await response.json();
     
     const assignedList = document.getElementById('assignedTrainingsList');
@@ -166,7 +166,7 @@ async function loadAssignedTrainings(companyId) {
 // Função para carregar treinamentos disponíveis
 async function loadAvailableTrainings(companyId) {
   try {
-    const response = await fetch(`http://localhost:3000/api/empresas/${companyId}/treinamentos/disponiveis`);
+    const response = await fetch(`http://72.60.48.249:3000/api/empresas/${companyId}/treinamentos/disponiveis`);
     const trainings = await response.json();
     
     const availableList = document.getElementById('availableTrainingsList');
@@ -197,7 +197,7 @@ async function loadAvailableTrainings(companyId) {
 // Função para atribuir treinamento
 async function assignTraining(companyId, trainingId) {
   try {
-    const response = await fetch(`http://localhost:3000/api/empresas/${companyId}/treinamentos/${trainingId}`, {
+    const response = await fetch(`http://72.60.48.249:3000/api/empresas/${companyId}/treinamentos/${trainingId}`, {
       method: 'POST'
     });
     
@@ -225,7 +225,7 @@ async function removeTraining(companyId, trainingId) {
   }
   
   try {
-    const response = await fetch(`http://localhost:3000/api/empresas/${companyId}/treinamentos/${trainingId}`, {
+    const response = await fetch(`http://72.60.48.249:3000/api/empresas/${companyId}/treinamentos/${trainingId}`, {
       method: 'DELETE'
     });
     
