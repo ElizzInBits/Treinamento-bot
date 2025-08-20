@@ -5,49 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Auto Cadastro</title>
     <link rel="stylesheet" href="css/cadastro-style.css" />
+    <link rel="stylesheet" href="style-enhancements.css" />
   </head>
-  <body>
-    <div class="container">
-      <div class="header" style="padding: 30px 0px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); overflow: hidden;">
-        <div style="background: rgba(255, 255, 255, 0.95); padding: 10px; border-radius:  6px; width: 100%; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-          <img src="../home/Imagens/logo2.png" alt="Logo" style="height: 100px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); margin-left: -20px;" />
+  <body style="background: linear-gradient(135deg, #0f4c5c 0%, #6ec6ca 100%); min-height: 100vh; margin: 0; padding: 20px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center;">
+    <div class="container" style="max-width: 500px; width: 100%; background: white; border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.15); animation: slideUp 0.8s ease-out;">
+      <div class="header" style="padding: 48px 48px 32px 48px; text-align: center; background: white; border-radius: 24px 24px 0 0;">
+        <div style="margin-bottom: 32px;">
+          <img src="../home/Imagens/logo2.png" alt="Logo" style="height: 90px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));" />
         </div>
-        <p style="font-size: 18px; font-weight: 500; text-align: center; margin: 0;">Preencha seus dados abaixo para se cadastrar e iniciar os seus treinamentos</p>
+        <h1 style="color: #374151; font-size: 32px; font-weight: 700; margin: 0 0 12px 0; letter-spacing: -0.5px;">Faça Seu Cadastro</h1>
+        <p style="color: #718096; font-size: 16px; margin: 0; font-weight: 400; line-height: 1.5;">Preencha seus dados para começar sua jornada de aprendizado</p>
       </div>
 
-      <div class="form-section">
-        <h2><span>📝</span> Formulário de Cadastro</h2>
+      <div class="form-section" style="padding: 0 48px 48px 48px; background: white; border-radius: 0 0 24px 24px;">
         <form id="autoCadastroForm">
-          <div class="form-group">
-            <label for="nomeCompleto">Nome Completo *</label>
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label for="nomeCompleto" style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">👤 Nome Completo *</label>
             <input
               type="text"
               id="nomeCompleto"
               name="nomeCompleto"
               required
-              placeholder="Digite seu nome completo"
+              placeholder="Ex: João Silva Santos"
+              style="width: 100%; padding: 16px 20px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box; background: #fafafa;"
             />
           </div>
 
-          <div class="form-group">
-            <label for="cpf">CPF *</label>
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label for="cpf" style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">🆔 CPF *</label>
             <input
               type="text"
               id="cpf"
               name="cpf"
               required
-              placeholder="Ex: 12345678900"
+              placeholder="000.000.000-00"
               maxlength="14"
+              style="width: 100%; padding: 16px 20px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box; background: #fafafa;"
             />
             <small
               style="
-                color: #666;
+                color: #9ca3af;
                 font-size: 12px;
-                margin-top: 3px;
+                margin-top: 6px;
                 display: block;
               "
             >
-              Digite apenas números, sem pontos ou traços
+              Apenas números, sem pontos ou traços
             </small>
             <div
               id="cpfError"
@@ -61,21 +64,22 @@
             ></div>
           </div>
 
-          <div class="form-group">
-            <label for="email">E-mail *</label>
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label for="email" style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">✉️ E-mail *</label>
             <input
               type="email"
               id="email"
               name="email"
               required
-              placeholder="Digite seu e-mail"
+              placeholder="seu.email@exemplo.com"
+              style="width: 100%; padding: 16px 20px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box; background: #fafafa;"
             />
           </div>
 
-          <div class="form-group">
-            <label for="telefone">Telefone *</label>
-            <div class="telefone-container" style="display: flex; gap: 10px">
-              <select id="ddi" name="ddi" required style="width: 120px">
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label for="telefone" style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">📱 Telefone *</label>
+            <div class="telefone-container" style="display: flex; gap: 12px">
+              <select id="ddi" name="ddi" required style="width: 120px; padding: 16px 12px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; background: #fafafa;">
                 <option value="+55">🇧🇷 +55</option>
                 <option value="+1">🇺🇸 +1</option>
                 <option value="+44">🇬🇧 +44</option>
@@ -126,40 +130,40 @@
                 id="telefone"
                 name="telefone"
                 required
-                placeholder="Ex: 31999990000"
-                style="flex: 1"
+                placeholder="(11) 99999-9999"
+                style="flex: 1; padding: 16px 20px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; background: #fafafa;"
               />
             </div>
             <small
               style="
-                color: #666;
+                color: #9ca3af;
                 font-size: 12px;
-                margin-top: 3px;
+                margin-top: 6px;
                 display: block;
               "
             >
-              Digite apenas números, sem parênteses, espaços ou traços
+              Apenas números, sem parênteses ou traços
             </small>
           </div>
 
-          <div class="form-group">
-            <label for="empresa">Empresa *</label>
-            <select id="empresa" name="empresa" required>
+          <div class="form-group" style="margin-bottom: 32px;">
+            <label for="empresa" style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">🏢 Empresa *</label>
+            <select id="empresa" name="empresa" required style="width: 100%; padding: 16px 20px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box; background: #fafafa;">
               <option value="">Selecione sua empresa</option>
               <!-- opções virão via JS -->
             </select>
           </div>
 
-          <div
-            class="info-message">
-            ⚠️ <strong>Atenção:</strong> Certifique-se de preencher seu
-            <strong>nome completo corretamente</strong>, pois ele será utilizado
-            na emissão do <strong>certificado</strong> após a conclusão do
-            treinamento.
+          <div class="info-message" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #f59e0b; border-radius: 16px; padding: 24px; margin: 32px 0; display: flex; align-items: flex-start; gap: 16px;">
+            <div style="font-size: 28px; line-height: 1; margin-top: 2px;">🏆</div>
+            <div style="color: #92400e; font-size: 14px; line-height: 1.6; flex: 1;">
+              <strong style="color: #78350f;">Importante para seu certificado:</strong><br>
+              Preencha seu <strong>nome completo corretamente</strong>, exatamente como consta em seus documentos. Este nome será utilizado na emissão do certificado oficial.
+            </div>
           </div>
 
-          <button type="submit" class="btn-primary">
-            <span>💾</span> Cadastrar
+          <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #0f4c5c 0%, #128c7e 100%); color: white; border: none; padding: 18px 32px; font-size: 16px; font-weight: 600; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 8px 25px rgba(15, 76, 92, 0.25); width: 100%; margin-top: 8px; letter-spacing: 0.5px;">
+            <span style="font-size: 18px;">✓</span> Finalizar Cadastro
           </button>
         </form>
       </div>
