@@ -113,6 +113,11 @@ router.get('/:id', async (req, res) => {
 // Cadastrar novo contato com validação de email
 router.post('/', async (req, res) => {
     try {
+        console.log('📝 Dados recebidos no POST /api/contatos:');
+        console.log('Headers:', req.headers);
+        console.log('Body:', req.body);
+        console.log('Body type:', typeof req.body);
+        
         const { nome, telefone, cpf, empresaId, email } = req.body;
 
         // Validação básica
