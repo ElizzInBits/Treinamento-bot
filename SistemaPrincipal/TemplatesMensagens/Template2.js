@@ -514,6 +514,13 @@ async function gerarEEnviarCertificado(contato, sender) {
 // ========================================
 
 async function processarMensagem(message, client) {
+    console.log('🔍 PROCESSANDO MENSAGEM:', {
+        from: message.from,
+        body: message.body,
+        selectedRowId: message.selectedRowId,
+        isGroupMsg: message.isGroupMsg
+    });
+    
     setWppClient(client);
     
     const sender = message.from.replace('@c.us', '');
@@ -529,6 +536,7 @@ async function processarMensagem(message, client) {
         return;
     }
 
+    console.log(`✅ Iniciando processamento para ${sender}`);
     emProcessamento.add(sender);
     
     // Timeout de segurança de 15 segundos
@@ -543,14 +551,22 @@ async function processarMensagem(message, client) {
         const rawText = message.body || '';
 
         // Verificação simples
+        console.log(`🔍 Verificando cadastro para ${sender}...`);
         const contato = await verificarCadastro(sender);
         
         if (!contato) {
+            console.log(`❌ Contato não encontrado para ${sender}`);
             await sendMessage(sender, 'send-message', {
                 message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
             return;
         }
+        
+        console.log(`✅ Contato encontrado:`, {
+            id: contato.id,
+            nome: contato.nome,
+            status: contato.statusTreinamento
+        });
 
         // Obter última interação para verificar continuidade
         const ultimaInteracao = await obterUltimaInteracao(sender);
