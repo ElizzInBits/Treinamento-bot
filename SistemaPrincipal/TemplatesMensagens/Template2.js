@@ -557,6 +557,9 @@ async function processarMensagem(message, client) {
         if (!contato) {
             console.log(`❌ Contato não encontrado para ${sender}`);
             await sendMessage(sender, 'send-message', {
+                message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.`,
+            });
+            await sendMessage(sender, 'send-message', {
                 message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
             return;
