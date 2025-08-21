@@ -289,11 +289,13 @@ async function verificarCadastro(sender) {
             include: [
                 {
                     model: Empresa,
+                    as: 'empresaRef',
                     attributes: ['id', 'razaoSocial'],
                     required: false
                 },
                 {
                     model: Treinamento,
+                    as: 'treinamento',
                     attributes: ['id', 'nome'],
                     required: false
                 }
@@ -399,13 +401,21 @@ async function buscarTreinamentosEmpresa(empresaId) {
     }
     
     try {
-        // Uma única query com JOIN em vez de múltiplas queries
+        // Busca os IDs dos treinamentos da empresa
+        const empresaTreinamentos = await EmpresaTreinamento.findAll({
+            where: { empresa_id: empresaId },
+            attributes: ['treinamento_id'],
+            logging: false
+        });
+        
+        if (empresaTreinamentos.length === 0) {
+            return [];
+        }
+        
+        // Busca os treinamentos pelos IDs
+        const treinamentoIds = empresaTreinamentos.map(et => et.treinamento_id);
         const treinamentos = await Treinamento.findAll({
-            include: [{
-                model: EmpresaTreinamento,
-                where: { empresa_id: empresaId },
-                attributes: []
-            }],
+            where: { id: treinamentoIds },
             attributes: ['id', 'nome'],
             logging: false
         });
@@ -424,7 +434,7 @@ async function buscarTreinamentosEmpresa(empresaId) {
  */
 async function iniciarTreinamento(sender, contato) {
     // Usar dados da empresa já carregados no contato (se disponível)
-    const nomeEmpresa = contato.Empresa?.razaoSocial || 'sua empresa';
+    const nomeEmpresa = contato.empresaRef?.razaoSocial || 'sua empresa';
     
     await sendMessage(sender, 'send-message', {
         message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`,
