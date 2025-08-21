@@ -99,11 +99,27 @@ async function inicializarBot() {
       }
     });
     
+    // Listener otimizado de mensagens
     client.onMessage(async (message) => {
-      try {
-        await processarMensagem(message, client);
-      } catch (error) {
-        console.error('❌ Erro no processamento:', error);
+      // Filtrar apenas mensagens relevantes
+      if (!message.body && !message.selectedRowId) return;
+      if (message.isGroupMsg) return;
+      
+      // Processar de forma assíncrona
+      setImmediate(async () => {
+        try {
+          await processarMensagem(message, client);
+        } catch (error) {
+          console.error('❌ Erro:', error.message);
+        }
+      });
+    });
+    
+    // Listener para confirmações de entrega
+    client.onAck((ack) => {
+      // Status: 1=enviado, 2=entregue, 3=lido
+      if (ack.ack === 3) {
+        console.log(`✅ Mensagem lida: ${ack.id}`);
       }
     });
   }).catch(err => {
