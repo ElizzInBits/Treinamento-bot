@@ -1,3 +1,17 @@
+// Limpar dados de sessão ao carregar a página de login
+window.addEventListener('load', function() {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('loginTime');
+});
+
+// Limpar dados quando a página é recarregada ou o usuário volta
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('loginTime');
+    }
+});
+
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
