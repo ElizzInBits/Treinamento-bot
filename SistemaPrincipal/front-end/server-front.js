@@ -54,11 +54,17 @@ app.use(cors());
 app.use((err, req, res, next) => {
     if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
         console.error('❌ Erro de parsing JSON:', err.message);
-        console.error('📝 Body recebido:', req.body);
-        return res.status(400).json({ 
-            error: 'Dados JSON inválidos',
-            message: 'Verifique se os dados estão no formato correto'
-        });
+        console.error('📝 URL:', req.url);
+        console.error('📝 Method:', req.method);
+        console.error('📝 Content-Type:', req.get('Content-Type'));
+        
+        // Apenas retornar erro se for realmente JSON
+        if (req.get('Content-Type')?.includes('application/json')) {
+            return res.status(400).json({ 
+                error: 'Dados JSON inválidos',
+                message: 'Verifique se os dados estão no formato correto'
+            });
+        }
     }
     next(err);
 });

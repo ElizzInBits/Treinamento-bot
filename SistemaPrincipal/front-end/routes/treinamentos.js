@@ -52,22 +52,39 @@ router.get('/', async (req, res) => {
 });
 
 // Criar novo treinamento com upload de arquivos
-router.post('/', (req, res) => {
-  upload.array('midias', 10)(req, res, async (err) => {
-    if (err) {
-      console.error('❌ Erro no upload:', err);
-      if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(400).json({ error: 'Arquivo muito grande. Limite: 20MB por arquivo.' });
+router.post('/', async (req, res) => {
+  console.log('📝 Dados recebidos no POST /api/treinamentos:');
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  console.log('Content-Type:', req.get('Content-Type'));
+  
+  // Se é multipart/form-data, usar multer
+  if (req.get('Content-Type')?.includes('multipart/form-data')) {
+    upload.array('midias', 10)(req, res, async (err) => {
+      if (err) {
+        console.error('❌ Erro no upload:', err);
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'Arquivo muito grande. Limite: 20MB por arquivo.' });
+          }
+          if (err.code === 'LIMIT_FILE_COUNT') {
+            return res.status(400).json({ error: 'Muitos arquivos. Limite: 10 arquivos.' });
+          }
         }
-        if (err.code === 'LIMIT_FILE_COUNT') {
-          return res.status(400).json({ error: 'Muitos arquivos. Limite: 10 arquivos.' });
-        }
+        return res.status(400).json({ error: err.message || 'Erro no upload de arquivos' });
       }
-      return res.status(400).json({ error: err.message || 'Erro no upload de arquivos' });
-    }
+      
+      return await criarTreinamento(req, res);
+    });
+  } else {
+    // Se é application/json, processar diretamente
+    return await criarTreinamento(req, res);
+  }
+});
 
-    try {
+// Função auxiliar para criar treinamento
+async function criarTreinamento(req, res) {
+  try {
       const {
         nome,
         descricao = '',
@@ -132,8 +149,7 @@ router.post('/', (req, res) => {
       console.error('❌ Erro ao criar treinamento:', err);
       return res.status(500).json({ error: 'Erro interno do servidor', details: err.message });
     }
-  });
-});
+}
 
 // Atualizar treinamento pelo ID com upload de arquivos
 router.put('/:id', upload.array('midias', 10), async (req, res) => {
