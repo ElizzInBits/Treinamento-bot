@@ -100,6 +100,17 @@ const saudacoesEnviadas = new Set();
 const cacheContatos = new Map(); // Cache para contatos
 const CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutos
 
+// Limpeza automática do cache a cada 10 minutos
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of cacheContatos.entries()) {
+        if (now - value.timestamp > CACHE_TIMEOUT) {
+            cacheContatos.delete(key);
+        }
+    }
+    console.log(`🧹 Cache limpo. Entradas ativas: ${cacheContatos.size}`);
+}, 10 * 60 * 1000);
+
 // ========================================
 // CONSTANTES E CONFIGURAÇÕES
 // ========================================
@@ -265,23 +276,37 @@ async function processarComandosContinuar(sender, text, selectedId) {
 async function verificarCadastro(sender) {
     const limpo = limparNumero(sender);
     
-    // Cache instantâneo
+    // Cache instantâneo com verificação de expiração
     const cached = cacheContatos.get(limpo);
-    if (cached) return cached.contato;
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TIMEOUT) {
+        return cached.contato;
+    }
     
     try {
-        // Busca direta sem logs
+        // Busca otimizada com JOIN para pegar dados da empresa e treinamento de uma vez
         const contato = await Contato.findOne({
             where: { telefone: { [Op.like]: `%${limpo.slice(-8)}` } },
-            attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-            raw: true,
+            include: [
+                {
+                    model: Empresa,
+                    attributes: ['id', 'razaoSocial'],
+                    required: false
+                },
+                {
+                    model: Treinamento,
+                    attributes: ['id', 'nome'],
+                    required: false
+                }
+            ],
+            attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
             logging: false
         });
         
-        // Cache por 10 minutos
+        // Cache por 5 minutos (reduzido para dados mais atualizados)
         cacheContatos.set(limpo, { contato, timestamp: Date.now() });
         return contato;
-    } catch {
+    } catch (error) {
+        console.error('Erro ao verificar cadastro:', error.message);
         return null;
     }
 }
@@ -363,37 +388,49 @@ async function processarCorrecaoDados(sender, rawText, contato) {
 }
 
 /**
- * Busca treinamentos atribuídos à empresa do usuário
+ * Busca treinamentos atribuídos à empresa do usuário - OTIMIZADO
  */
 async function buscarTreinamentosEmpresa(empresaId) {
-    const treinamentosEmpresa = await EmpresaTreinamento.findAll({
-        where: { empresa_id: empresaId }
-    });
-    
-    const treinamentos = [];
-    for (const et of treinamentosEmpresa) {
-        const treinamento = await Treinamento.findByPk(et.treinamento_id);
-        if (treinamento) {
-            treinamentos.push(treinamento);
-        }
+    // Cache para treinamentos da empresa
+    const cacheKey = `empresa_${empresaId}`;
+    const cached = cacheContatos.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TIMEOUT) {
+        return cached.contato;
     }
     
-    return treinamentos;
+    try {
+        // Uma única query com JOIN em vez de múltiplas queries
+        const treinamentos = await Treinamento.findAll({
+            include: [{
+                model: EmpresaTreinamento,
+                where: { empresa_id: empresaId },
+                attributes: []
+            }],
+            attributes: ['id', 'nome'],
+            logging: false
+        });
+        
+        // Cache resultado
+        cacheContatos.set(cacheKey, { contato: treinamentos, timestamp: Date.now() });
+        return treinamentos;
+    } catch (error) {
+        console.error('Erro ao buscar treinamentos:', error.message);
+        return [];
+    }
 }
 
 /**
- * Inicia o treinamento para novos usuários
+ * Inicia o treinamento para novos usuários - OTIMIZADO
  */
 async function iniciarTreinamento(sender, contato) {
-    // Buscar empresa do contato
-    const empresa = await Empresa.findByPk(contato.empresaId);
-    const nomeEmpresa = empresa ? empresa.razaoSocial : 'sua empresa';
+    // Usar dados da empresa já carregados no contato (se disponível)
+    const nomeEmpresa = contato.Empresa?.razaoSocial || 'sua empresa';
     
     await sendMessage(sender, 'send-message', {
         message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`,
     });
 
-    // Buscar treinamentos da empresa
+    // Buscar treinamentos da empresa (agora otimizado)
     const treinamentos = await buscarTreinamentosEmpresa(contato.empresaId);
     
     if (treinamentos.length === 0) {
@@ -551,8 +588,10 @@ async function processarMensagem(message, client) {
         const rawText = message.body || '';
 
         // Verificação simples
+        const startTime = Date.now();
         console.log(`🔍 Verificando cadastro para ${sender}...`);
         const contato = await verificarCadastro(sender);
+        console.log(`⏱️ Verificação levou: ${Date.now() - startTime}ms`);
         
         if (!contato) {
             console.log(`❌ Contato não encontrado para ${sender}`);
