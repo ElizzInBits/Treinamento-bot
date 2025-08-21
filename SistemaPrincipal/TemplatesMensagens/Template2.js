@@ -609,9 +609,11 @@ async function processarMensagem(message, client) {
             const limpo = limparNumero(sender);
             cacheContatos.delete(limpo);
             
-            await sendMessage(sender, 'send-message', {
+            console.log(`📤 Enviando mensagem de saudação para ${sender}...`);
+            const resultado = await sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
+            console.log(`📤 Resultado do envio: ${resultado ? '✅ Sucesso' : '❌ Falhou'}`);
             return;
         }
         
