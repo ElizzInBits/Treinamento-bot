@@ -51,6 +51,28 @@ wppconnect.create({
   console.log('✅ Bot conectado!');
   globalClient = client;
   
+  // Monitor de estado da conexão
+  client.onStateChange((state) => {
+    console.log('🔄 Estado mudou para:', state);
+    
+    if (state === 'CONFLICT' || state === 'UNPAIRED' || state === 'UNLAUNCHED') {
+      console.log('⚠️ Sessão desconectada! Motivo:', state);
+      globalClient = null;
+    }
+    
+    if (state === 'CONNECTED') {
+      console.log('✅ Reconectado com sucesso!');
+    }
+  });
+  
+  // Monitor de mudanças na interface
+  client.onInterfaceChange((interfaceInfo) => {
+    if (interfaceInfo.mode === 'QR') {
+      console.log('📱 QR Code necessário - sessão expirou');
+      globalClient = null;
+    }
+  });
+  
   client.onMessage(async (message) => {
     try {
       await processarMensagem(message, client);
@@ -67,8 +89,58 @@ function verificarSessaoAtiva() {
   return globalClient && globalClient.isConnected;
 }
 
+// Função para verificar status da conexão
+async function verificarStatusConexao() {
+  if (!globalClient) return 'DESCONECTADO';
+  
+  try {
+    const isConnected = await globalClient.isConnected();
+    return isConnected ? 'CONECTADO' : 'DESCONECTADO';
+  } catch (error) {
+    return 'ERRO';
+  }
+}
+
+// Sistema de reconexão automática
+let tentativasReconexao = 0;
+const MAX_TENTATIVAS = 3;
+
+function tentarReconexao() {
+  if (tentativasReconexao >= MAX_TENTATIVAS) {
+    console.log('❌ Máximo de tentativas de reconexão atingido');
+    return;
+  }
+  
+  tentativasReconexao++;
+  console.log(`🔄 Tentativa de reconexão ${tentativasReconexao}/${MAX_TENTATIVAS}...`);
+  
+  setTimeout(() => {
+    // Reiniciar o processo de conexão
+    process.exit(1); // PM2 vai reiniciar automaticamente
+  }, 5000);
+}
+
+// Verificar conexão periodicamente
+setInterval(async () => {
+  if (globalClient) {
+    try {
+      const isConnected = await globalClient.isConnected();
+      if (!isConnected) {
+        console.log('⚠️ Conexão perdida detectada!');
+        globalClient = null;
+        tentarReconexao();
+      } else {
+        tentativasReconexao = 0; // Reset contador se conectado
+      }
+    } catch (error) {
+      console.log('❌ Erro ao verificar conexão:', error.message);
+    }
+  }
+}, 30000); // Verificar a cada 30 segundos
+
 // Exportar cliente para uso no template
 module.exports = { 
   getClient: () => globalClient,
-  verificarSessaoAtiva
+  verificarSessaoAtiva,
+  verificarStatusConexao
 };
