@@ -12,6 +12,24 @@ function checkAuth() {
     return true;
 }
 
+// Verificar se o usuário voltou para a página (back/forward)
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted && !window.location.pathname.includes('login')) {
+        // Página foi carregada do cache, forçar nova autenticação
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('loginTime');
+        window.location.href = '/login/login.html';
+    }
+});
+
+// Limpar sessão quando a aba é fechada ou navegador é fechado
+window.addEventListener('beforeunload', function() {
+    if (!window.location.pathname.includes('login')) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('loginTime');
+    }
+});
+
 // Função para fazer requisições autenticadas
 function authenticatedFetch(url, options = {}) {
     const token = localStorage.getItem('adminToken');
@@ -53,4 +71,14 @@ if (typeof document !== 'undefined') {
             checkAuth();
         }
     });
+    
+    // Verificar periodicamente se o token ainda existe
+    setInterval(function() {
+        if (!window.location.pathname.includes('login')) {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = '/login/login.html';
+            }
+        }
+    }, 5000); // Verificar a cada 5 segundos
 }
