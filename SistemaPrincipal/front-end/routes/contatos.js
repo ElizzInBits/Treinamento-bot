@@ -90,7 +90,11 @@ router.get('/', async (req, res) => {
     res.json(contatos);
   } catch (error) {
     console.error('Erro ao listar contatos:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    if (error.name === 'SequelizeConnectionRefusedError') {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
   }
 });
 

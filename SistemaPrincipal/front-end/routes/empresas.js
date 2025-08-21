@@ -46,7 +46,7 @@ router.get('/select/options', async (req, res) => {
     res.json(empresas);
   } catch (error) {
     console.error('Erro ao buscar empresas:', error);
-    res.status(500).json({ error: 'Erro ao carregar empresas' });
+    res.json([]);
   }
 });
 
@@ -59,7 +59,11 @@ router.get('/', async (req, res) => {
     res.json(empresas);
   } catch (error) {
     console.error('Erro ao listar empresas:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    if (error.name === 'SequelizeConnectionRefusedError') {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
   }
 });
 
