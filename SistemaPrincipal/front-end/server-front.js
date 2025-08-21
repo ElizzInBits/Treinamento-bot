@@ -46,8 +46,22 @@ else console.log('✅ Arquivos de rota verificados com sucesso');
 
 // ✅ 2. Middlewares
 console.log('🔧 Configurando middlewares...');
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors());
+
+// Middleware para capturar erros de parsing JSON
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        console.error('❌ Erro de parsing JSON:', err.message);
+        console.error('📝 Body recebido:', req.body);
+        return res.status(400).json({ 
+            error: 'Dados JSON inválidos',
+            message: 'Verifique se os dados estão no formato correto'
+        });
+    }
+    next(err);
+});
 
 // ✅ 3. Middleware de debug
 app.use((req, res, next) => {
