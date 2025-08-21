@@ -1,5 +1,5 @@
 //Script de Treinamento SSMA
-//ID do Treinamento: 14
+//ID do Treinamento: 1
 
 // sendMessage will be passed as parameter to avoid circular dependency
 const { Treinamento, Contato } = require('../../../BancoDeDados/models');
@@ -207,7 +207,7 @@ async function obterUltimaInteracao(sender) {
  * Executa o treinamento SSMA
  */
 async function executarTreinamento(sender, contato, sendMessage) {
-    const treinamento = await Treinamento.findByPk(14);
+    const treinamento = await Treinamento.findByPk(1);
 
     if (!treinamento) {
         await sendMessage(sender, 'send-message', {
@@ -1026,7 +1026,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
  */
 async function gerarEEnviarCertificadoSSMA(contato, sender, sendMessage) {
     try {
-        const treinamento = await Treinamento.findByPk(14);
+        const treinamento = await Treinamento.findByPk(1);
 
         if (!treinamento) {
             await sendMessage(sender, 'send-message', {
@@ -1085,7 +1085,7 @@ async function verificarTreinamentosPendentes(contato, sender, sendMessage) {
             where: { empresa_id: contato.empresaId }
         });
         
-        const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id).filter(id => id !== 14);
+        const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id).filter(id => id !== 1);
         
         const treinamentosPendentes = await Treinamento.findAll({
             where: {
@@ -1139,7 +1139,7 @@ async function mostrarTreinamentosPendentes(contato, sender, sendMessage) {
             where: { empresa_id: contato.empresaId }
         });
         
-        const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id).filter(id => id !== 14);
+        const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id).filter(id => id !== 1);
         
         const treinamentosPendentes = await Treinamento.findAll({
             where: {
