@@ -19,13 +19,33 @@ console.log('🚀 Iniciando Template Processor...');
   }
 })();
 
-// Conectar ao WhatsApp
-wppconnect.create({
-  session: 'NOVA_CONEXAO_' + Date.now(),
+// Verificar se já existe sessão ativa
+const fs = require('fs');
+const path = require('path');
+
+function verificarSessaoExistente() {
+  const tokensPath = path.join(__dirname, 'tokens', 'NERDWHATS_AMERICA');
+  return fs.existsSync(tokensPath);
+}
+
+// Função para inicializar conexão
+async function inicializarBot() {
+  const sessaoExiste = verificarSessaoExistente();
+  
+  if (sessaoExiste) {
+    console.log('🔄 Sessão NERDWHATS_AMERICA encontrada, reutilizando...');
+  } else {
+    console.log('🆕 Criando nova sessão NERDWHATS_AMERICA...');
+  }
+  
+  return wppconnect.create({
+  session: 'NERDWHATS_AMERICA',
   headless: true,
   disableWelcome: true,
   updatesLog: false,
   autoClose: 0, // Não fechar automaticamente
+  createPathFileToken: true, // Criar arquivo de token
+  waitForLogin: true, // Aguardar login
   puppeteerOptions: {
     args: [
       '--no-sandbox',
@@ -46,43 +66,53 @@ wppconnect.create({
     if (status === 'isLogged') {
       console.log('✅ Sessão existente encontrada!');
     }
+    if (status === 'qrReadSuccess') {
+      console.log('✅ QR Code escaneado com sucesso!');
+    }
+    if (status === 'chatsAvailable') {
+      console.log('✅ Chats disponíveis - conectado!');
+    }
   }
-}).then(client => {
-  console.log('✅ Bot conectado!');
-  globalClient = client;
-  
-  // Monitor de estado da conexão
-  client.onStateChange((state) => {
-    console.log('🔄 Estado mudou para:', state);
+  }).then(client => {
+    console.log('✅ Bot conectado!');
+    globalClient = client;
     
-    if (state === 'CONFLICT' || state === 'UNPAIRED' || state === 'UNLAUNCHED') {
-      console.log('⚠️ Sessão desconectada! Motivo:', state);
-      globalClient = null;
-    }
+    // Monitor de estado da conexão
+    client.onStateChange((state) => {
+      console.log('🔄 Estado mudou para:', state);
+      
+      if (state === 'CONFLICT' || state === 'UNPAIRED' || state === 'UNLAUNCHED') {
+        console.log('⚠️ Sessão desconectada! Motivo:', state);
+        globalClient = null;
+      }
+      
+      if (state === 'CONNECTED') {
+        console.log('✅ Reconectado com sucesso!');
+      }
+    });
     
-    if (state === 'CONNECTED') {
-      console.log('✅ Reconectado com sucesso!');
-    }
+    // Monitor de mudanças na interface
+    client.onInterfaceChange((interfaceInfo) => {
+      if (interfaceInfo.mode === 'QR') {
+        console.log('📱 QR Code necessário - sessão expirou');
+        globalClient = null;
+      }
+    });
+    
+    client.onMessage(async (message) => {
+      try {
+        await processarMensagem(message, client);
+      } catch (error) {
+        console.error('❌ Erro no processamento:', error);
+      }
+    });
+  }).catch(err => {
+    console.error('❌ Erro ao conectar:', err);
   });
-  
-  // Monitor de mudanças na interface
-  client.onInterfaceChange((interfaceInfo) => {
-    if (interfaceInfo.mode === 'QR') {
-      console.log('📱 QR Code necessário - sessão expirou');
-      globalClient = null;
-    }
-  });
-  
-  client.onMessage(async (message) => {
-    try {
-      await processarMensagem(message, client);
-    } catch (error) {
-      console.error('❌ Erro no processamento:', error);
-    }
-  });
-}).catch(err => {
-  console.error('❌ Erro ao conectar:', err);
-});
+}
+
+// Inicializar o bot
+inicializarBot();
 
 // Função para verificar se há sessão ativa
 function verificarSessaoAtiva() {
