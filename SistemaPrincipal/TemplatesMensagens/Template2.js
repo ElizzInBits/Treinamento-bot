@@ -276,42 +276,38 @@ async function processarComandosContinuar(sender, text, selectedId) {
 async function verificarCadastro(sender) {
     const limpo = limparNumero(sender);
     
-    // Verificar cache primeiro
-    const cacheKey = limpo;
-    const cached = cacheContatos.get(cacheKey);
+    // Cache primeiro - instantâneo
+    const cached = cacheContatos.get(limpo);
     if (cached && (Date.now() - cached.timestamp) < CACHE_TIMEOUT) {
         return cached.contato;
     }
     
     try {
-        // Busca otimizada - apenas campos essenciais, sem include
+        // Busca super otimizada - apenas telefone exato primeiro
         let contato = await Contato.findOne({
             where: { telefone: limpo },
             attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-            raw: true // Retorna objeto simples, mais rápido
+            raw: true,
+            logging: false // Desabilita logs SQL para velocidade
         });
         
+        // Se não encontrou, busca rápida por sufixo
         if (!contato) {
-            // Busca por últimos 8 dígitos se não encontrou
-            const ultimosDigitos = limpo.slice(-8);
+            const sufixo = limpo.slice(-8);
             contato = await Contato.findOne({
-                where: {
-                    telefone: { [Op.like]: `%${ultimosDigitos}` }
-                },
+                where: { telefone: { [Op.like]: `%${sufixo}` } },
                 attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-                raw: true
+                raw: true,
+                logging: false
             });
         }
         
-        // Salvar no cache
-        cacheContatos.set(cacheKey, {
-            contato,
-            timestamp: Date.now()
-        });
+        // Cache agressivo
+        cacheContatos.set(limpo, { contato, timestamp: Date.now() });
         
         return contato;
     } catch (error) {
-        console.error('Erro na verificação de cadastro:', error);
+        console.error('Erro na verificação:', error);
         return null;
     }
 }
@@ -566,22 +562,9 @@ async function processarMensagem(message, client) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // Resposta imediata para melhorar experiência
-        if (!cacheContatos.has(limparNumero(sender))) {
-            await sendMessage(sender, 'send-message', {
-                message: '🔍 Verificando seu cadastro...',
-            });
-        }
-
-        // Verificação de cadastro otimizada
+        // Verificação instantânea de cadastro
         const contato = await verificarCadastro(sender);
         if (!contato) {
-            // Mensagem de saudação do bot
-            await sendMessage(sender, 'send-message', {
-                message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.`,
-            });
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
             await sendMessage(sender, 'send-message', {
                 message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
