@@ -284,30 +284,22 @@ async function verificarCadastro(sender) {
     }
     
     try {
-        // Primeira tentativa: busca exata
+        // Busca otimizada - apenas campos essenciais, sem include
         let contato = await Contato.findOne({
             where: { telefone: limpo },
             attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-            include: [{ 
-                model: Treinamento, 
-                as: 'treinamento',
-                required: false
-            }]
+            raw: true // Retorna objeto simples, mais rápido
         });
         
         if (!contato) {
-            // Segunda tentativa: últimos 9 dígitos (mais preciso)
-            const ultimosDigitos = limpo.slice(-9);
+            // Busca por últimos 8 dígitos se não encontrou
+            const ultimosDigitos = limpo.slice(-8);
             contato = await Contato.findOne({
                 where: {
                     telefone: { [Op.like]: `%${ultimosDigitos}` }
                 },
                 attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-                include: [{ 
-                    model: Treinamento, 
-                    as: 'treinamento',
-                    required: false
-                }]
+                raw: true
             });
         }
         
@@ -574,18 +566,15 @@ async function processarMensagem(message, client) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
+        // Resposta imediata para melhorar experiência
+        if (!cacheContatos.has(limparNumero(sender))) {
+            await sendMessage(sender, 'send-message', {
+                message: '🔍 Verificando seu cadastro...',
+            });
+        }
 
-
-        // Verificação de cadastro primeiro (com timeout de 3 segundos)
-        const verificacaoPromise = verificarCadastro(sender);
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout na verificação')), 3000)
-        );
-        
-        const contato = await Promise.race([verificacaoPromise, timeoutPromise]).catch(error => {
-            console.error('Erro ou timeout na verificação:', error.message);
-            return null;
-        });
+        // Verificação de cadastro otimizada
+        const contato = await verificarCadastro(sender);
         if (!contato) {
             // Mensagem de saudação do bot
             await sendMessage(sender, 'send-message', {
