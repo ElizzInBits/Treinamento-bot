@@ -6,17 +6,29 @@ async function criarIndices() {
         
         console.log('🔧 Criando índices otimizados...');
         
-        // Índice para telefone completo
-        await sequelize.query(`
-            CREATE INDEX IF NOT EXISTS idx_contatos_telefone_completo 
-            ON contatos(telefone);
-        `);
+        // Verificar e criar índice para telefone completo
+        try {
+            await sequelize.query(`CREATE INDEX idx_contatos_telefone_completo ON contatos(telefone)`);
+            console.log('✅ Índice telefone completo criado');
+        } catch (error) {
+            if (error.original?.code === 'ER_DUP_KEYNAME') {
+                console.log('ℹ️ Índice telefone completo já existe');
+            } else {
+                console.log('⚠️ Erro ao criar índice telefone:', error.message);
+            }
+        }
         
-        // Índice para últimos 8 dígitos do telefone
-        await sequelize.query(`
-            CREATE INDEX IF NOT EXISTS idx_contatos_telefone_sufixo 
-            ON contatos((RIGHT(telefone, 8)));
-        `);
+        // Verificar e criar índice para empresa
+        try {
+            await sequelize.query(`CREATE INDEX idx_contatos_empresa ON contatos(empresaId)`);
+            console.log('✅ Índice empresa criado');
+        } catch (error) {
+            if (error.original?.code === 'ER_DUP_KEYNAME') {
+                console.log('ℹ️ Índice empresa já existe');
+            } else {
+                console.log('⚠️ Erro ao criar índice empresa:', error.message);
+            }
+        }
         
         console.log('✅ Índices criados com sucesso!');
         
