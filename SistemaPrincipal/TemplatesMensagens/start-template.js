@@ -21,7 +21,7 @@ console.log('🚀 Iniciando Template Processor...');
 
 // Conectar ao WhatsApp
 wppconnect.create({
-  session: process.env.WHATSAPP_SESSION || 'NERDWHATS_AMERICA',
+  session: 'NOVA_SESSAO_' + Date.now(),
   headless: true,
   puppeteerOptions: {
     args: [
