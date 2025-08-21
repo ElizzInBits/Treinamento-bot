@@ -21,8 +21,11 @@ console.log('🚀 Iniciando Template Processor...');
 
 // Conectar ao WhatsApp
 wppconnect.create({
-  session: 'NOVA_SESSAO_' + Date.now(),
+  session: process.env.WHATSAPP_SESSION || 'NERDWHATS_AMERICA',
   headless: true,
+  disableWelcome: true,
+  updatesLog: false,
+  autoClose: 0, // Não fechar automaticamente
   puppeteerOptions: {
     args: [
       '--no-sandbox',
@@ -40,6 +43,9 @@ wppconnect.create({
   },
   statusFind: (status) => {
     console.log('📶 Status:', status);
+    if (status === 'isLogged') {
+      console.log('✅ Sessão existente encontrada!');
+    }
   }
 }).then(client => {
   console.log('✅ Bot conectado!');
@@ -56,5 +62,13 @@ wppconnect.create({
   console.error('❌ Erro ao conectar:', err);
 });
 
+// Função para verificar se há sessão ativa
+function verificarSessaoAtiva() {
+  return globalClient && globalClient.isConnected;
+}
+
 // Exportar cliente para uso no template
-module.exports = { getClient: () => globalClient };
+module.exports = { 
+  getClient: () => globalClient,
+  verificarSessaoAtiva
+};
