@@ -114,6 +114,18 @@ router.post('/', async (req, res) => {
       criadoEm: new Date()
     });
 
+    // Emitir evento para atualização em tempo real
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('nova_empresa', novaEmpresa);
+      io.emit('notificacao', {
+        tipo: 'empresa_cadastrada',
+        titulo: 'Nova Empresa Cadastrada',
+        mensagem: `${novaEmpresa.razaoSocial} foi cadastrada no sistema`,
+        timestamp: new Date()
+      });
+    }
+
     res.status(201).json(novaEmpresa);
   } catch (error) {
     console.error('Erro ao criar empresa:', error);
