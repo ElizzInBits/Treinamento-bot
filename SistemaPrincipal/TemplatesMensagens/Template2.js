@@ -8,23 +8,11 @@ function setWppClient(client) {
   wppClient = client;
 }
 
-// Função sendMessage usando cliente direto
+// Função sendMessage otimizada
 async function sendMessage(phone, endpoint, body = {}) {
   if (!wppClient) {
     console.log('❌ Cliente WPP não conectado');
     return { success: false, error: 'Cliente não conectado' };
-  }
-  
-  // Verificar se ainda está conectado
-  try {
-    const isConnected = await wppClient.isConnected();
-    if (!isConnected) {
-      console.log('⚠️ Cliente desconectado - não é possível enviar mensagem');
-      return { success: false, error: 'Cliente desconectado' };
-    }
-  } catch (error) {
-    console.log('❌ Erro ao verificar conexão:', error.message);
-    return { success: false, error: 'Erro de conexão' };
   }
   
   try {
@@ -271,43 +259,28 @@ async function processarComandosContinuar(sender, text, selectedId) {
 }
 
 /**
- * Verifica se o contato está cadastrado
+ * Verifica se o contato está cadastrado - ULTRA RÁPIDO
  */
 async function verificarCadastro(sender) {
     const limpo = limparNumero(sender);
     
-    // Cache primeiro - instantâneo
+    // Cache instantâneo
     const cached = cacheContatos.get(limpo);
-    if (cached && (Date.now() - cached.timestamp) < CACHE_TIMEOUT) {
-        return cached.contato;
-    }
+    if (cached) return cached.contato;
     
     try {
-        // Busca super otimizada - apenas telefone exato primeiro
-        let contato = await Contato.findOne({
-            where: { telefone: limpo },
+        // Busca direta sem logs
+        const contato = await Contato.findOne({
+            where: { telefone: { [Op.like]: `%${limpo.slice(-8)}` } },
             attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
             raw: true,
-            logging: false // Desabilita logs SQL para velocidade
+            logging: false
         });
         
-        // Se não encontrou, busca rápida por sufixo
-        if (!contato) {
-            const sufixo = limpo.slice(-8);
-            contato = await Contato.findOne({
-                where: { telefone: { [Op.like]: `%${sufixo}` } },
-                attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-                raw: true,
-                logging: false
-            });
-        }
-        
-        // Cache agressivo
+        // Cache por 10 minutos
         cacheContatos.set(limpo, { contato, timestamp: Date.now() });
-        
         return contato;
-    } catch (error) {
-        console.error('Erro na verificação:', error);
+    } catch {
         return null;
     }
 }
@@ -551,19 +524,20 @@ async function processarMensagem(message, client) {
 
     emProcessamento.add(sender);
     
-    // Timeout de segurança reduzido para 10 segundos
+    // Timeout de segurança de 5 segundos
     const timeoutId = setTimeout(() => {
-        console.log(`⚠️ Timeout: removendo ${sender} do processamento após 10s`);
+        console.log(`⚠️ Timeout: removendo ${sender} do processamento após 5s`);
         emProcessamento.delete(sender);
-    }, 10000);
+    }, 5000);
 
     try {
         const text = message.body?.toLowerCase() || '';
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // Verificação instantânea de cadastro
+        // Verificação instantânea
         const contato = await verificarCadastro(sender);
+        
         if (!contato) {
             await sendMessage(sender, 'send-message', {
                 message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
