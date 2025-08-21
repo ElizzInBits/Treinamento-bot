@@ -50,25 +50,6 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors());
 
-// Middleware para capturar erros de parsing JSON
-app.use((err, req, res, next) => {
-    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-        console.error('❌ Erro de parsing JSON:', err.message);
-        console.error('📝 URL:', req.url);
-        console.error('📝 Method:', req.method);
-        console.error('📝 Content-Type:', req.get('Content-Type'));
-        
-        // Apenas retornar erro se for realmente JSON
-        if (req.get('Content-Type')?.includes('application/json')) {
-            return res.status(400).json({ 
-                error: 'Dados JSON inválidos',
-                message: 'Verifique se os dados estão no formato correto'
-            });
-        }
-    }
-    next(err);
-});
-
 // ✅ 3. Middleware de debug
 app.use((req, res, next) => {
     console.log(`📡 ${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -264,6 +245,19 @@ app.get('/empre', (req, res) => {
 
 // ✅ 10. Middleware de erro
 app.use((err, req, res, next) => {
+    // Tratar erros de parsing JSON especificamente
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        console.error('❌ Erro de parsing JSON:', err.message);
+        console.error('📝 URL:', req.url);
+        console.error('📝 Method:', req.method);
+        console.error('📝 Content-Type:', req.get('Content-Type'));
+        
+        return res.status(400).json({ 
+            error: 'Dados JSON inválidos',
+            message: 'Verifique se os dados estão no formato JSON correto'
+        });
+    }
+    
     console.error('❌ Erro capturado:', err.stack);
     res.status(500).json({
         error: 'Erro interno do servidor',
