@@ -8,7 +8,7 @@ function setWppClient(client) {
   wppClient = client;
 }
 
-// Função sendMessage otimizada
+// Função sendMessage com tratamento robusto
 async function sendMessage(phone, endpoint, body = {}) {
   if (!wppClient) {
     console.log('❌ Cliente WPP não conectado');
@@ -18,17 +18,33 @@ async function sendMessage(phone, endpoint, body = {}) {
   try {
     const phoneWithSuffix = phone.includes('@c.us') ? phone : phone + '@c.us';
     
-    if (endpoint === 'send-message') {
-      await wppClient.sendText(phoneWithSuffix, body.message);
-    } else if (endpoint === 'send-list-message') {
-      await wppClient.sendListMessage(phoneWithSuffix, body);
-    } else if (endpoint === 'send-file') {
-      await wppClient.sendFile(phoneWithSuffix, body.path, body.filename, body.caption);
-    }
+    // Timeout de 5 segundos para envio
+    await Promise.race([
+      (async () => {
+        if (endpoint === 'send-message') {
+          await wppClient.sendText(phoneWithSuffix, body.message);
+        } else if (endpoint === 'send-list-message') {
+          await wppClient.sendListMessage(phoneWithSuffix, body);
+        } else if (endpoint === 'send-file') {
+          await wppClient.sendFile(phoneWithSuffix, body.path, body.filename, body.caption);
+        }
+      })(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout no envio')), 5000)
+      )
+    ]);
+    
     console.log(`✅ Mensagem enviada para ${phone}`);
     return { success: true };
   } catch (error) {
-    console.error('❌ Erro ao enviar:', error);
+    console.error('❌ Erro ao enviar:', error.message);
+    
+    // Se erro de contexto destruído, tentar reconectar
+    if (error.message.includes('Execution context was destroyed')) {
+      console.log('🔄 Contexto destruído, reiniciando...');
+      setTimeout(() => process.exit(1), 1000); // PM2 vai reiniciar
+    }
+    
     return { success: false, error: error.message };
   }
 }
@@ -517,6 +533,12 @@ async function processarMensagem(message, client) {
     
     const sender = message.from.replace('@c.us', '');
 
+    // Verificar se cliente ainda está válido
+    if (!client || !wppClient) {
+        console.log('❌ Cliente inválido, ignorando mensagem');
+        return;
+    }
+
     if (emProcessamento.has(sender)) {
         console.log(`⏳ Ignorando nova mensagem de ${sender}, já está em processamento.`);
         return;
@@ -535,8 +557,11 @@ async function processarMensagem(message, client) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // Verificação instantânea
-        const contato = await verificarCadastro(sender);
+        // Verificação instantânea com timeout
+        const contato = await Promise.race([
+            verificarCadastro(sender),
+            new Promise(resolve => setTimeout(() => resolve(null), 3000))
+        ]);
         
         if (!contato) {
             await sendMessage(sender, 'send-message', {
