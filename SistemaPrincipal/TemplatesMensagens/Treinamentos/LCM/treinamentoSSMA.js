@@ -204,9 +204,43 @@ async function obterUltimaInteracao(sender) {
 }
 
 /**
+ * Verifica se o contato está cadastrado
+ */
+function limparNumero(numero) {
+    return numero.replace(/\D/g, '').replace(/@c\.us$/, '');
+}
+
+async function verificarCadastro(sender) {
+    const limpo = limparNumero(sender);
+    return await Contato.findOne({
+        where: {
+            telefone: {
+                [Op.like]: `%${limpo.slice(-8)}%`
+            }
+        }
+    });
+}
+
+/**
  * Executa o treinamento SSMA
  */
 async function executarTreinamento(sender, contato, sendMessage) {
+    // Verificar se o contato está cadastrado
+    if (!contato) {
+        contato = await verificarCadastro(sender);
+        if (!contato) {
+            await sendMessage(sender, 'send-message', {
+                message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.`,
+            });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            await sendMessage(sender, 'send-message', {
+                message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
+            });
+            return;
+        }
+    }
+
     const treinamento = await Treinamento.findByPk(1);
 
     if (!treinamento) {
@@ -222,7 +256,12 @@ async function executarTreinamento(sender, contato, sendMessage) {
     await new Promise(resolve => setTimeout(resolve, 300));
 
     await sendMessage(sender, 'send-message', {
-        message: '🎯 *OBJETIVOS DO TREINAMENTO*\n\n📋 *Objetivo Geral:*\nCapacitar os colaboradores nos princípios básicos de SSMA, desenvolvendo consciência preventiva e comportamentos seguros.\n\n🔹 *Objetivos Específicos:*\n• Compreender a importância da segurança no trabalho\n• Conhecer tipos de acidentes e como preveni-los\n• Dominar o uso correto dos EPIs\n• Identificar riscos no ambiente de trabalho\n• Aplicar medidas de controle e hierarquia de segurança\n• Desenvolver comportamentos seguros e responsáveis\n• Conhecer procedimentos de emergência',
+        message: '🎯 *OBJETIVOS DO TREINAMENTO*\n\n📋 *Objetivo Geral:*\nCapacitar os colaboradores nos princípios básicos de SSMA, desenvolvendo consciência preventiva e comportamentos seguros.',
+    });
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    await sendMessage(sender, 'send-message', {
+        message: '🔹 *Objetivos Específicos:*\n• Compreender a importância da segurança\n• Conhecer tipos de acidentes\n• Dominar o uso correto dos EPIs\n• Identificar riscos no ambiente\n• Aplicar medidas de controle\n• Desenvolver comportamentos seguros',
     });
     await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -258,6 +297,22 @@ async function executarTreinamento(sender, contato, sendMessage) {
  * Processa as respostas do treinamento SSMA
  */
 async function processarRespostaSSMA(sender, text, selectedId, contato, sendMessage) {
+    // Verificar se o contato está cadastrado
+    if (!contato) {
+        contato = await verificarCadastro(sender);
+        if (!contato) {
+            await sendMessage(sender, 'send-message', {
+                message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.`,
+            });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            await sendMessage(sender, 'send-message', {
+                message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
+            });
+            return false;
+        }
+    }
+
     const ultimaInteracao = await obterUltimaInteracao(sender);
     const textLower = text.toLowerCase();
 
@@ -1185,6 +1240,22 @@ async function mostrarTreinamentosPendentes(contato, sender, sendMessage) {
  * Processa seleção de treinamentos pendentes
  */
 async function processarTreinamentosPendentes(sender, selectedId, contato, sendMessage, text = '') {
+    // Verificar se o contato está cadastrado
+    if (!contato) {
+        contato = await verificarCadastro(sender);
+        if (!contato) {
+            await sendMessage(sender, 'send-message', {
+                message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.`,
+            });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            await sendMessage(sender, 'send-message', {
+                message: `🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
+            });
+            return false;
+        }
+    }
+
     const ultimaInteracao = await obterUltimaInteracao(sender);
     const textLower = text.toLowerCase();
     
