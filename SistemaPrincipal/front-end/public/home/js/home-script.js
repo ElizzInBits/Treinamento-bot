@@ -28,7 +28,7 @@ try {
   socket = null;
 }
 
-// Escutar eventos de novos contatos
+// Escutar eventos de novos contatos e empresas
 if (socket) {
   socket.on('novoContato', (data) => {
     console.log('Novo contato recebido via WebSocket:', data.contato);
@@ -60,6 +60,51 @@ if (socket) {
     if (Notification.permission === 'granted') {
       new Notification('Novo contato cadastrado!', {
         body: `${data.contato.nome} foi cadastrado`,
+        icon: '/favicon.ico'
+      });
+    }
+  });
+  
+  socket.on('nova_empresa', (empresa) => {
+    console.log('Nova empresa recebida via WebSocket:', empresa);
+    
+    // Adicionar empresa à lista local
+    empresas.push({
+      ...empresa,
+      id: parseInt(empresa.id, 10)
+    });
+    
+    // Atualizar estatísticas
+    atualizarEstatisticasMapeamento();
+    atualizarEstatisticasEmpresas();
+    
+    // Atualizar select de empresas
+    atualizarSelectEmpresa();
+    
+    // Atualizar visualizações se estiverem ativas
+    if (document.getElementById('empresas').classList.contains('active')) {
+      renderizarEmpresas();
+    }
+    
+    // Mostrar notificação
+    if (Notification.permission === 'granted') {
+      new Notification('Nova empresa cadastrada!', {
+        body: `${empresa.razaoSocial || empresa.razao_social} foi cadastrada`,
+        icon: '/favicon.ico'
+      });
+    }
+  });
+  
+  socket.on('notificacao', (notificacao) => {
+    console.log('Notificação recebida:', notificacao);
+    
+    // Mostrar alerta no sistema
+    mostrarAlerta(notificacao.mensagem, 'success');
+    
+    // Mostrar notificação do navegador se permitido
+    if (Notification.permission === 'granted') {
+      new Notification(notificacao.titulo, {
+        body: notificacao.mensagem,
         icon: '/favicon.ico'
       });
     }

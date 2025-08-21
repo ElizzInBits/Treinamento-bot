@@ -187,6 +187,12 @@ router.post('/', async (req, res) => {
                 contato: novoContato,
                 empresaId: novoContato.empresaId
             });
+            io.emit('notificacao', {
+                tipo: 'contato_cadastrado',
+                titulo: 'Novo Contato Cadastrado',
+                mensagem: `${novoContato.nome} foi cadastrado no sistema`,
+                timestamp: new Date()
+            });
         }
 
         res.status(201).json({
