@@ -15,6 +15,18 @@ async function sendMessage(phone, endpoint, body = {}) {
     return { success: false, error: 'Cliente não conectado' };
   }
   
+  // Verificar se ainda está conectado
+  try {
+    const isConnected = await wppClient.isConnected();
+    if (!isConnected) {
+      console.log('⚠️ Cliente desconectado - não é possível enviar mensagem');
+      return { success: false, error: 'Cliente desconectado' };
+    }
+  } catch (error) {
+    console.log('❌ Erro ao verificar conexão:', error.message);
+    return { success: false, error: 'Erro de conexão' };
+  }
+  
   try {
     const phoneWithSuffix = phone.includes('@c.us') ? phone : phone + '@c.us';
     
