@@ -261,12 +261,15 @@ async function processarComandosContinuar(sender, text, selectedId) {
  */
 async function verificarCadastro(sender) {
     const limpo = limparNumero(sender);
+    // Busca mais rápida usando apenas os últimos 8 dígitos
+    const ultimosDigitos = limpo.slice(-8);
     return await Contato.findOne({
         where: {
             telefone: {
-                [Op.like]: `%${limpo.slice(-8)}%`
+                [Op.like]: `%${ultimosDigitos}`
             }
-        }
+        },
+        attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'] // Buscar apenas campos necessários
     });
 }
 
@@ -508,6 +511,12 @@ async function processarMensagem(message, client) {
     }
 
     emProcessamento.add(sender);
+    
+    // Timeout de segurança para remover do processamento após 30 segundos
+    const timeoutId = setTimeout(() => {
+        console.log(`⚠️ Timeout: removendo ${sender} do processamento após 30s`);
+        emProcessamento.delete(sender);
+    }, 30000);
 
     try {
         const text = message.body?.toLowerCase() || '';
@@ -1068,6 +1077,7 @@ async function processarMensagem(message, client) {
     } catch (error) {
         console.error('Erro no processamento da mensagem:', error);
     } finally {
+        clearTimeout(timeoutId);
         emProcessamento.delete(sender);
     }
 }
