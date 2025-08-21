@@ -167,22 +167,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const novoUsuario = {
       nome: nomeCompleto,
       cpf: cpf.replace(/\D/g, ''),
-      email,
+      email: email,
       telefone: telefoneCompleto,
       empresaId: parseInt(empresaId, 10)
     };
 
+    console.log('📝 Dados sendo enviados:', novoUsuario);
+
     fetch('http://72.60.48.249:3000/api/contatos', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(novoUsuario)
     })
       .then(async (res) => {
+        console.log('📝 Status da resposta:', res.status);
+        console.log('📝 Headers da resposta:', res.headers);
+        
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || 'Erro ao cadastrar usuário.');
+          const errorText = await res.text();
+          console.error('❌ Erro do servidor:', errorText);
+          
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (e) {
+            throw new Error(`Erro do servidor (${res.status}): ${errorText}`);
+          }
+          
+          throw new Error(errorData.message || errorData.error || 'Erro ao cadastrar usuário.');
         }
         return res.json();
       })
