@@ -288,7 +288,11 @@ async function verificarCadastro(sender) {
         let contato = await Contato.findOne({
             where: { telefone: limpo },
             attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-            include: [{ model: Treinamento, as: 'treinamento' }]
+            include: [{ 
+                model: Treinamento, 
+                as: 'treinamento',
+                required: false
+            }]
         });
         
         if (!contato) {
@@ -299,7 +303,11 @@ async function verificarCadastro(sender) {
                     telefone: { [Op.like]: `%${ultimosDigitos}` }
                 },
                 attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-                include: [{ model: Treinamento, as: 'treinamento' }]
+                include: [{ 
+                    model: Treinamento, 
+                    as: 'treinamento',
+                    required: false
+                }]
             });
         }
         
