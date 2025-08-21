@@ -71,6 +71,11 @@ Contato.associate = (models) => {
     foreignKey: 'empresaId',
     as: 'empresaRef' 
   });
+  
+  Contato.belongsTo(models.Treinamento, {
+    foreignKey: 'treinamentoId',
+    as: 'treinamento'
+  });
 };
 
 
