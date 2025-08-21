@@ -23,9 +23,13 @@ function authenticatedFetch(url, options = {}) {
     
     const headers = {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
         ...options.headers
     };
+    
+    // Só adicionar Content-Type se não for FormData e se body for string/objeto
+    if (options.body && !(options.body instanceof FormData) && !headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+    }
     
     return fetch(url, { ...options, headers }).catch(error => {
         console.error('Erro na requisição:', error);
