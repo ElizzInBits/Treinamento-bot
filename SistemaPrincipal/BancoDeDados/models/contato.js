@@ -53,6 +53,17 @@ module.exports = (sequelize) => {
   }, {
     timestamps: false,
     freezeTableName: true,
+    indexes: [
+      {
+        fields: ['telefone']
+      },
+      {
+        fields: ['empresaId']
+      },
+      {
+        fields: ['statusTreinamento']
+      }
+    ]
   });
 
 Contato.associate = (models) => {

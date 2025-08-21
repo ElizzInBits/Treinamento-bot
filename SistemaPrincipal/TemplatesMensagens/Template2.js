@@ -96,6 +96,8 @@ carregarScriptsTreinamento();
 // ========================================
 const emProcessamento = new Set();
 const saudacoesEnviadas = new Set();
+const cacheContatos = new Map(); // Cache para contatos
+const CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutos
 
 // ========================================
 // CONSTANTES E CONFIGURAÇÕES
@@ -261,16 +263,45 @@ async function processarComandosContinuar(sender, text, selectedId) {
  */
 async function verificarCadastro(sender) {
     const limpo = limparNumero(sender);
-    // Busca mais rápida usando apenas os últimos 8 dígitos
-    const ultimosDigitos = limpo.slice(-8);
-    return await Contato.findOne({
-        where: {
-            telefone: {
-                [Op.like]: `%${ultimosDigitos}`
-            }
-        },
-        attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'] // Buscar apenas campos necessários
-    });
+    
+    // Verificar cache primeiro
+    const cacheKey = limpo;
+    const cached = cacheContatos.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TIMEOUT) {
+        return cached.contato;
+    }
+    
+    try {
+        // Primeira tentativa: busca exata
+        let contato = await Contato.findOne({
+            where: { telefone: limpo },
+            attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
+            include: [{ model: Treinamento, as: 'treinamento' }]
+        });
+        
+        if (!contato) {
+            // Segunda tentativa: últimos 9 dígitos (mais preciso)
+            const ultimosDigitos = limpo.slice(-9);
+            contato = await Contato.findOne({
+                where: {
+                    telefone: { [Op.like]: `%${ultimosDigitos}` }
+                },
+                attributes: ['id', 'nome', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
+                include: [{ model: Treinamento, as: 'treinamento' }]
+            });
+        }
+        
+        // Salvar no cache
+        cacheContatos.set(cacheKey, {
+            contato,
+            timestamp: Date.now()
+        });
+        
+        return contato;
+    } catch (error) {
+        console.error('Erro na verificação de cadastro:', error);
+        return null;
+    }
 }
 
 /**
@@ -512,11 +543,11 @@ async function processarMensagem(message, client) {
 
     emProcessamento.add(sender);
     
-    // Timeout de segurança para remover do processamento após 30 segundos
+    // Timeout de segurança reduzido para 10 segundos
     const timeoutId = setTimeout(() => {
-        console.log(`⚠️ Timeout: removendo ${sender} do processamento após 30s`);
+        console.log(`⚠️ Timeout: removendo ${sender} do processamento após 10s`);
         emProcessamento.delete(sender);
-    }, 30000);
+    }, 10000);
 
     try {
         const text = message.body?.toLowerCase() || '';
@@ -525,8 +556,16 @@ async function processarMensagem(message, client) {
 
 
 
-        // Verificação de cadastro primeiro
-        const contato = await verificarCadastro(sender);
+        // Verificação de cadastro primeiro (com timeout de 3 segundos)
+        const verificacaoPromise = verificarCadastro(sender);
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout na verificação')), 3000)
+        );
+        
+        const contato = await Promise.race([verificacaoPromise, timeoutPromise]).catch(error => {
+            console.error('Erro ou timeout na verificação:', error.message);
+            return null;
+        });
         if (!contato) {
             // Mensagem de saudação do bot
             await sendMessage(sender, 'send-message', {
