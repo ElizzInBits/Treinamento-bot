@@ -256,7 +256,11 @@ app.get('/login-api', (req, res) => {
     <div id="result"></div>
     <div id="api" style="display:none">
         <h3>Dados da API:</h3>
-        <button onclick="getData()">Carregar Dados</button>
+        <button onclick="getData('/api/treinamentos')">Treinamentos</button>
+        <button onclick="getData('/api/contatos')">Contatos</button>
+        <button onclick="getData('/api/empresas')">Empresas</button>
+        <button onclick="getData('/api/dashboard')">Dashboard</button>
+        <button onclick="logout()" style="background:red;color:white">Sair</button>
         <pre id="data"></pre>
     </div>
     <script>
@@ -287,14 +291,23 @@ app.get('/login-api', (req, res) => {
             getData();
         }
         
-        async function getData() {
-            const endpoint = window.location.search.replace('?redirect=', '') || '/api/treinamentos';
+        async function getData(endpoint) {
+            if (!endpoint) endpoint = window.location.search.replace('?redirect=', '') || '/api/treinamentos';
             const res = await fetch(endpoint, {
                 headers: {'Authorization': 'Bearer ' + token}
             });
             const data = await res.json();
             document.getElementById('data').innerHTML = JSON.stringify(data, null, 2);
         }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            location.reload();
+        }
+        
+        window.addEventListener('beforeunload', function() {
+            localStorage.removeItem('token');
+        });
     </script>
 </body>
 </html>
