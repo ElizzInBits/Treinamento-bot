@@ -1,21 +1,10 @@
 {
-  "name": "template-mensagens",
+  "name": "whatsapp-bot",
   "version": "1.0.0",
-  "description": "Sistema de templates para WhatsApp",
+  "description": "WhatsApp Bot usando API do wppconnect-server",
   "main": "start-template.js",
-  "scripts": {
-    "start": "node start-template.js",
-    "dev": "nodemon start-template.js"
-  },
   "dependencies": {
-    "@wppconnect-team/wppconnect": "^1.37.3",
-    "dotenv": "^17.2.1",
-    "mysql2": "^3.14.3",
-    "nodemailer": "^7.0.4",
-    "pdfkit": "^0.17.1",
-    "sequelize": "^6.37.7"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.10"
+    "axios": "^1.6.0",
+    "dotenv": "^16.0.0"
   }
 }
