@@ -139,32 +139,38 @@ function limparNumero(numero) {
 
 
 /**
- * Salva a última interação do usuário no banco
+ * Salva interação - OTIMIZADO
  */
 async function salvarUltimaInteracao(sender, tipo, mensagem) {
     try {
-        await Interacao.create({
-            telefone: sender,
-            tipo: tipo,
-            mensagem: mensagem || '',
-            timestamp: new Date()
-        });
+        await sequelize.query(
+            'INSERT INTO interacoes (telefone, tipo, mensagem, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())',
+            {
+                replacements: [sender, tipo, mensagem || ''],
+                type: sequelize.QueryTypes.INSERT,
+                logging: false
+            }
+        );
     } catch (error) {
-        console.error('Erro ao salvar interação:', error);
+        // Silencioso
     }
 }
 
 /**
- * Obtém a última interação do usuário
+ * Obtém a última interação - OTIMIZADO
  */
 async function obterUltimaInteracao(sender) {
     try {
-        return await Interacao.findOne({
-            where: { telefone: sender },
-            order: [['createdAt', 'DESC']]
-        });
+        const result = await sequelize.query(
+            'SELECT tipo, mensagem, createdAt FROM interacoes WHERE telefone = ? ORDER BY createdAt DESC LIMIT 1',
+            {
+                replacements: [sender],
+                type: sequelize.QueryTypes.SELECT,
+                logging: false
+            }
+        );
+        return result[0] || null;
     } catch (error) {
-        console.error('Erro ao obter última interação:', error);
         return null;
     }
 }
@@ -268,26 +274,29 @@ async function processarComandosContinuar(sender, text, selectedId) {
 }
 
 /**
- * Verifica se o contato está cadastrado - SUPER RÁPIDO
+ * Verifica se o contato está cadastrado - ULTRA RÁPIDO
  */
 async function verificarCadastro(sender) {
     const limpo = limparNumero(sender);
     
-    // Cache com 10 minutos
+    // Cache de 15 minutos
     const cached = cacheContatos.get(limpo);
-    if (cached && (Date.now() - cached.timestamp) < 600000) {
+    if (cached && (Date.now() - cached.timestamp) < 900000) {
         return cached.contato;
     }
     
     try {
-        // Busca mínima e rápida
-        const contato = await Contato.findOne({
-            where: { telefone: { [Op.like]: `%${limpo.slice(-8)}` } },
-            attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-            logging: false,
-            raw: true
-        });
+        // Query SQL direta - mais rápida
+        const result = await sequelize.query(
+            'SELECT id, nome, nomeCompleto, email, telefone, empresaId, statusTreinamento, treinamentoId FROM contatos WHERE telefone LIKE ? LIMIT 1',
+            {
+                replacements: [`%${limpo.slice(-8)}`],
+                type: sequelize.QueryTypes.SELECT,
+                logging: false
+            }
+        );
         
+        const contato = result[0] || null;
         cacheContatos.set(limpo, { contato, timestamp: Date.now() });
         return contato;
     } catch (error) {
@@ -372,41 +381,29 @@ async function processarCorrecaoDados(sender, rawText, contato) {
 }
 
 /**
- * Busca treinamentos atribuídos à empresa do usuário - OTIMIZADO
+ * Busca treinamentos - ULTRA OTIMIZADO
  */
 async function buscarTreinamentosEmpresa(empresaId) {
-    // Cache para treinamentos da empresa
     const cacheKey = `empresa_${empresaId}`;
     const cached = cacheContatos.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp) < CACHE_TIMEOUT) {
+    if (cached && (Date.now() - cached.timestamp) < 600000) {
         return cached.contato;
     }
     
     try {
-        // Busca os IDs dos treinamentos da empresa
-        const empresaTreinamentos = await EmpresaTreinamento.findAll({
-            where: { empresa_id: empresaId },
-            attributes: ['treinamento_id'],
-            logging: false
-        });
+        // Query única com JOIN
+        const result = await sequelize.query(
+            'SELECT t.id, t.nome FROM treinamento t JOIN empresa_treinamentos et ON t.id = et.treinamento_id WHERE et.empresa_id = ?',
+            {
+                replacements: [empresaId],
+                type: sequelize.QueryTypes.SELECT,
+                logging: false
+            }
+        );
         
-        if (empresaTreinamentos.length === 0) {
-            return [];
-        }
-        
-        // Busca os treinamentos pelos IDs
-        const treinamentoIds = empresaTreinamentos.map(et => et.treinamento_id);
-        const treinamentos = await Treinamento.findAll({
-            where: { id: treinamentoIds },
-            attributes: ['id', 'nome'],
-            logging: false
-        });
-        
-        // Cache resultado
-        cacheContatos.set(cacheKey, { contato: treinamentos, timestamp: Date.now() });
-        return treinamentos;
+        cacheContatos.set(cacheKey, { contato: result, timestamp: Date.now() });
+        return result;
     } catch (error) {
-        console.error('Erro ao buscar treinamentos:', error.message);
         return [];
     }
 }
@@ -543,35 +540,16 @@ async function gerarEEnviarCertificado(contato, sender) {
 // ========================================
 
 async function processarMensagem(message, client) {
-    console.log('🔍 PROCESSANDO MENSAGEM:', {
-        from: message.from,
-        body: message.body,
-        selectedRowId: message.selectedRowId,
-        isGroupMsg: message.isGroupMsg
-    });
-    
     setWppClient(client);
-    
     const sender = message.from.replace('@c.us', '');
 
-    // Verificar cliente válido
-    if (!client) {
-        console.log('❌ Cliente inválido');
-        return;
-    }
-
-    if (emProcessamento.has(sender)) {
-        console.log(`⏳ Ignorando nova mensagem de ${sender}, já está em processamento.`);
-        return;
-    }
-
-    console.log(`✅ Iniciando processamento para ${sender}`);
+    if (!client || emProcessamento.has(sender)) return;
     emProcessamento.add(sender);
     
-    // Timeout de segurança de 5 segundos
+    // Timeout de segurança de 1 segundo
     const timeoutId = setTimeout(() => {
         emProcessamento.delete(sender);
-    }, 5000);
+    }, 1000);
 
     try {
         const text = message.body?.toLowerCase() || '';
@@ -580,49 +558,26 @@ async function processarMensagem(message, client) {
 
         // Verificação simples
         const startTime = Date.now();
-        console.log(`🔍 Verificando cadastro para ${sender}...`);
         const contato = await verificarCadastro(sender);
-        console.log(`⏱️ Verificação levou: ${Date.now() - startTime}ms`);
         
         if (!contato) {
-            console.log(`❌ Contato não encontrado para ${sender}`);
-            // Limpar cache para permitir nova busca após cadastro
-            const limpo = limparNumero(sender);
-            cacheContatos.delete(limpo);
-            
-            console.log(`📤 Enviando mensagem de saudação para ${sender}...`);
-            
-            // Envio assíncrono sem bloquear
+            cacheContatos.delete(limparNumero(sender));
             sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
-            
             return;
         }
         
-        console.log(`✅ Contato encontrado:`, {
-            id: contato.id,
-            nome: contato.nome,
-            status: contato.statusTreinamento
-        });
-        
-        // Limpar cache de empresa para forçar busca atualizada de treinamentos
-        const cacheKeyEmpresa = `empresa_${contato.empresaId}`;
         if (contato.statusTreinamento === 'não iniciado') {
-            cacheContatos.delete(cacheKeyEmpresa);
+            cacheContatos.delete(`empresa_${contato.empresaId}`);
         }
 
-        // Obter última interação para verificar continuidade
         const ultimaInteracao = await obterUltimaInteracao(sender);
 
-        // VERIFICAR SE CONVERSA FOI FINALIZADA - PRIMEIRA PRIORIDADE
-        console.log(`🔍 DEBUG: statusTreinamento = "${contato.statusTreinamento}"`);
         if (contato.statusTreinamento === 'concluído') {
-            console.log('✅ Usuário concluído - verificando se quer outros treinamentos');
             
             // Se conversa foi finalizada, verificar se usuário quer reativar
             if (ultimaInteracao?.tipo === 'conversa_finalizada') {
-                console.log('🚫 Conversa finalizada - verificando reativação');
                 
                 if (text.toLowerCase().includes('treinamentos') || text.toLowerCase().includes('ver treinamentos')) {
                     // Reativar oferecimento de treinamentos
@@ -661,9 +616,7 @@ async function processarMensagem(message, client) {
             }
             
             // Se já está aguardando opção de treinamentos, não repetir mensagem
-            if (ultimaInteracao?.tipo === 'aguardando_opcao_treinamentos') {
-                console.log('⏭️ Já aguardando opção de treinamentos - prosseguindo');
-            } else {
+            if (ultimaInteracao?.tipo !== 'aguardando_opcao_treinamentos') {
                 // Verificar se há outros treinamentos disponíveis
                 const treinamentos = await buscarTreinamentosEmpresa(contato.empresaId);
                 const treinamentosDisponiveis = treinamentos.filter(t => t.id !== 14); // Excluir SSMA já concluído

@@ -99,20 +99,23 @@ async function inicializarBot() {
       }
     });
     
-    // Listener otimizado de mensagens
-    client.onMessage(async (message) => {
-      // Filtrar apenas mensagens relevantes
+    // Listener hiper otimizado
+    const processedMessages = new Set();
+    
+    client.onMessage((message) => {
       if (!message.body && !message.selectedRowId) return;
       if (message.isGroupMsg) return;
       
-      // Processar de forma assíncrona
-      setImmediate(async () => {
-        try {
-          await processarMensagem(message, client);
-        } catch (error) {
-          console.error('❌ Erro:', error.message);
-        }
-      });
+      const msgId = `${message.from}_${message.body || message.selectedRowId}`;
+      if (processedMessages.has(msgId)) return;
+      processedMessages.add(msgId);
+      
+      if (processedMessages.size > 50) {
+        processedMessages.clear();
+      }
+      
+      // Processar sem await para não bloquear
+      processarMensagem(message, client).catch(() => {});
     });
     
     // Listener para confirmações de entrega
@@ -166,23 +169,19 @@ function tentarReconexao() {
   }, 5000);
 }
 
-// Verificar conexão periodicamente
-setInterval(async () => {
+// Verificar conexão periodicamente - reduzido
+setInterval(() => {
   if (globalClient) {
-    try {
-      const isConnected = await globalClient.isConnected();
+    globalClient.isConnected().then(isConnected => {
       if (!isConnected) {
-        console.log('⚠️ Conexão perdida detectada!');
         globalClient = null;
         tentarReconexao();
       } else {
-        tentativasReconexao = 0; // Reset contador se conectado
+        tentativasReconexao = 0;
       }
-    } catch (error) {
-      console.log('❌ Erro ao verificar conexão:', error.message);
-    }
+    }).catch(() => {});
   }
-}, 30000); // Verificar a cada 30 segundos
+}, 60000); // Verificar a cada 60 segundos
 
 // Exportar cliente para uso no template
 module.exports = { 

@@ -15,10 +15,10 @@ const sequelize = new Sequelize(
       connectTimeout: 60000
     },
     pool: {
-      max: 10,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
+      max: 5,
+      min: 1,
+      acquire: 10000,
+      idle: 5000
     }
   }
 );
