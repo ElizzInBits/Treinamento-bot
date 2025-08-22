@@ -222,7 +222,195 @@ async function executarTreinamento(sender, contato, sendMessage) {
     await new Promise(resolve => setTimeout(resolve, 300));
 
     await sendMessage(sender, 'send-message', {
-        message: '🎯 *OBJETIVOS DO TREINAMENTO*\n\n📋 *Objetivo Geral:*\nCapacitar os colaboradores nos princípios básicos de SSMA, desenvolvendo consciência preventiva e comportamentos seguros.',
+        message: '🎯 *OBJETIVOS DO TREINAMENTO*\n\n📋 *Objetivo Geral:*\nCapacitar os colaboradores nos princípios básicos de SSMA, desenvolvendo consciência sobre segurança, saúde e meio ambiente.\n\n🎯 *Objetivos Específicos:*\n• Conhecer os conceitos de SSMA\n• Identificar tipos de acidentes\n• Compreender programas de segurança\n• Utilizar EPIs corretamente',
+    });
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    await sendMessage(sender, 'send-message', {
+        message: '📚 Você está pronto para começar o treinamento?\n\nResponda *SIM* para iniciar ou *NÃO* se precisar se preparar.',
+    });
+
+    await salvarInteracao(sender, 'aguardando_confirmacao', 'treinamento_ssma');
+}
+
+/**
+ * Processa resposta do usuário durante o treinamento
+ */
+async function processarResposta(sender, message, sendMessage) {
+    const ultimaInteracao = await obterUltimaInteracao(sender);
+    if (!ultimaInteracao) return false;
+
+    const mensagem = message.toLowerCase().trim();
+
+    // Aguardando confirmação para iniciar
+    if (ultimaInteracao.tipo === 'aguardando_confirmacao') {
+        if (RESPOSTAS_POSITIVAS.some(resp => mensagem.includes(resp))) {
+            await iniciarModulo1(sender, sendMessage);
+            return true;
+        }
+        if (RESPOSTAS_NEGATIVAS.some(resp => mensagem.includes(resp))) {
+            await sendMessage(sender, 'send-message', {
+                message: '⏰ Sem problemas! Quando estiver pronto, digite *SSMA* para retomar o treinamento.',
+            });
+            return true;
+        }
+    }
+
+    // Processando quiz módulo 1
+    if (ultimaInteracao.tipo.startsWith('quiz_modulo1_')) {
+        return await processarQuizModulo1(sender, mensagem, ultimaInteracao, sendMessage);
+    }
+
+    // Processando quiz módulo 2
+    if (ultimaInteracao.tipo.startsWith('quiz_modulo2_')) {
+        return await processarQuizModulo2(sender, mensagem, ultimaInteracao, sendMessage);
+    }
+
+    return false;
+}
+
+/**
+ * Inicia o Módulo 1 do treinamento
+ */
+async function iniciarModulo1(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '📖 *MÓDULO 1: CONCEITOS BÁSICOS DE SSMA*\n\nVamos começar com os fundamentos!',
+    });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await enviarPergunta(sender, 0, QUIZ_CONFIG, 'quiz_modulo1', sendMessage);
+}
+
+/**
+ * Envia uma pergunta do quiz
+ */
+async function enviarPergunta(sender, indicePergunta, config, tipoQuiz, sendMessage) {
+    const pergunta = config.perguntas[indicePergunta];
+    
+    const mensagem = `${pergunta.pergunta}\n\n` +
+        `a) ${pergunta.alternativas.a}\n` +
+        `b) ${pergunta.alternativas.b}\n` +
+        `c) ${pergunta.alternativas.c}\n` +
+        `d) ${pergunta.alternativas.d}\n\n` +
+        `Responda com a letra da alternativa (a, b, c ou d):`;
+
+    await sendMessage(sender, 'send-message', { message: mensagem });
+    await salvarInteracao(sender, `${tipoQuiz}_pergunta_${indicePergunta}`, JSON.stringify({ acertos: 0, perguntaAtual: indicePergunta }));
+}
+
+/**
+ * Processa resposta do quiz módulo 1
+ */
+async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessage) {
+    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const perguntaAtual = dados.perguntaAtual || 0;
+    const acertos = dados.acertos || 0;
+    
+    const pergunta = QUIZ_CONFIG.perguntas[perguntaAtual];
+    const respostaCorreta = resposta === pergunta.respostaCorreta;
+    
+    // Feedback da resposta
+    await sendMessage(sender, 'send-message', {
+        message: respostaCorreta ? `✅ Correto! ${pergunta.explicacao}` : `❌ Incorreto. ${pergunta.explicacao}`,
+    });
+    
+    const novosAcertos = respostaCorreta ? acertos + 1 : acertos;
+    const proximaPergunta = perguntaAtual + 1;
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Verifica se terminou o módulo 1
+    if (proximaPergunta >= QUIZ_CONFIG.perguntas.length) {
+        await finalizarModulo1(sender, novosAcertos, sendMessage);
+        return true;
+    }
+    
+    // Próxima pergunta
+    await enviarPergunta(sender, proximaPergunta, QUIZ_CONFIG, 'quiz_modulo1', sendMessage);
+    return true;
+}
+
+/**
+ * Finaliza o módulo 1 e inicia módulo 2
+ */
+async function finalizarModulo1(sender, acertos, sendMessage) {
+    const total = QUIZ_CONFIG.perguntas.length;
+    const percentual = Math.round((acertos / total) * 100);
+    
+    await sendMessage(sender, 'send-message', {
+        message: `🎯 *MÓDULO 1 CONCLUÍDO!*\n\n📊 Resultado: ${acertos}/${total} (${percentual}%)`,
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    await sendMessage(sender, 'send-message', {
+        message: '📖 *MÓDULO 2: PROGRAMAS DE SEGURANÇA E EPIs*\n\nVamos para a segunda parte!',
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await enviarPergunta(sender, 0, QUIZ_MODULO2_CONFIG, 'quiz_modulo2', sendMessage);
+}
+
+/**
+ * Processa resposta do quiz módulo 2
+ */
+async function processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessage) {
+    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const perguntaAtual = dados.perguntaAtual || 0;
+    const acertos = dados.acertos || 0;
+    
+    const pergunta = QUIZ_MODULO2_CONFIG.perguntas[perguntaAtual];
+    const respostaCorreta = resposta === pergunta.respostaCorreta;
+    
+    await sendMessage(sender, 'send-message', {
+        message: respostaCorreta ? `✅ Correto! ${pergunta.explicacao}` : `❌ Incorreto. ${pergunta.explicacao}`,
+    });
+    
+    const novosAcertos = respostaCorreta ? acertos + 1 : acertos;
+    const proximaPergunta = perguntaAtual + 1;
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    if (proximaPergunta >= QUIZ_MODULO2_CONFIG.perguntas.length) {
+        await finalizarTreinamento(sender, novosAcertos, sendMessage);
+        return true;
+    }
+    
+    await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO2_CONFIG, 'quiz_modulo2', sendMessage);
+    return true;
+}
+
+/**
+ * Finaliza o treinamento completo
+ */
+async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
+    const total = QUIZ_MODULO2_CONFIG.perguntas.length;
+    const percentual = Math.round((acertosModulo2 / total) * 100);
+    
+    await sendMessage(sender, 'send-message', {
+        message: `🎉 *TREINAMENTO CONCLUÍDO!*\n\n📊 Módulo 2: ${acertosModulo2}/${total} (${percentual}%)\n\n🏆 Parabéns! Você completou o treinamento de SSMA.`,
+    });
+    
+    // Gerar certificado
+    try {
+        const contato = await Contato.findOne({ where: { telefone: sender } });
+        if (contato) {
+            await gerarCertificadoBanco(contato.nome, 'SSMA - Saúde, Segurança e Meio Ambiente', sender);
+            await sendMessage(sender, 'send-message', {
+                message: '📜 Seu certificado foi gerado e enviado por email!',
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao gerar certificado:', error);
+    }
+    
+    await salvarInteracao(sender, 'treinamento_concluido', 'ssma');
+}
+
+module.exports = {
+    executarTreinamento,
+    processarResposta
+};iência preventiva e comportamentos seguros.',
     });
     await new Promise(resolve => setTimeout(resolve, 300));
 
