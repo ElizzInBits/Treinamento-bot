@@ -1,12 +1,31 @@
 module.exports = {
   apps: [
     {
-      name: 'servidor-unificado',
-      script: './server-unificado.js',
+      name: 'wppconnect-server',
+      script: './wppconnect-server.js',
       instances: 1,
       autorestart: true,
       watch: false,
-      max_memory_restart: '800M',
+      max_memory_restart: '400M',
+      env: {
+        PORT: 8080
+      }
+    },
+    {
+      name: 'whatsapp-bot',
+      script: './SistemaPrincipal/TemplatesMensagens/start-template.js',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '500M'
+    },
+    {
+      name: 'frontend',
+      script: './SistemaPrincipal/front-end/server-front.js',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '300M',
       env: {
         PORT: 3000
       }
