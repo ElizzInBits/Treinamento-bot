@@ -66,7 +66,7 @@ app.get('/status', async (req, res) => {
 app.post('/api/:session/:token/generate-token', async (req, res) => {
   const { session, token } = req.params;
   
-  if (token !== 'THISISMYSECURETOKEN') {
+  if (token !== '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu') {
     return res.status(401).json({ error: 'Token inválido' });
   }
   
@@ -86,7 +86,7 @@ app.post('/api/:session/:token/generate-token', async (req, res) => {
 app.get('/api/:session/:token/status', async (req, res) => {
   const { session, token } = req.params;
   
-  if (token !== 'THISISMYSECURETOKEN') {
+  if (token !== '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu') {
     return res.status(401).json({ error: 'Token inválido' });
   }
   
@@ -115,7 +115,7 @@ app.get('/api/:session/:token/status', async (req, res) => {
 app.post('/api/:session/:token/send-message', async (req, res) => {
   const { session, token } = req.params;
   
-  if (token !== 'THISISMYSECURETOKEN') {
+  if (token !== '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu') {
     return res.status(401).json({ error: 'Token inválido' });
   }
   
