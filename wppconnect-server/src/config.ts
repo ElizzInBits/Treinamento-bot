@@ -2,7 +2,7 @@ import { ServerOptions } from './types/ServerOptions';
 
 export default {
   secretKey: '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu',
-  host: 'http://72.60.48.249',
+  host: 'http://0.0.0.0',
   port: '21465',
   deviceName: 'WppConnect',
   poweredBy: 'WPPConnect-Server',
