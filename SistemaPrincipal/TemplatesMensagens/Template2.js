@@ -8,28 +8,45 @@ function setWppClient(client) {
   wppClient = client;
 }
 
-// Função sendMessage otimizada com API nativa
+// Função sendMessage otimizada com timeout
 async function sendMessage(phone, endpoint, body = {}) {
-  if (!wppClient) return false;
+  if (!wppClient) {
+    console.error('❌ Cliente WhatsApp não disponível');
+    return false;
+  }
   
   try {
     const to = phone.includes('@c.us') ? phone : `${phone}@c.us`;
     
+    // Timeout de 10 segundos para evitar travamento
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout ao enviar mensagem')), 10000)
+    );
+    
+    let sendPromise;
     switch (endpoint) {
       case 'send-message':
-        return await wppClient.sendText(to, body.message);
+        sendPromise = wppClient.sendText(to, body.message);
+        break;
       
       case 'send-list-message':
-        return await wppClient.sendListMessage(to, body);
+        sendPromise = wppClient.sendListMessage(to, body);
+        break;
       
       case 'send-file':
-        return await wppClient.sendFile(to, body.path, body.filename, body.caption);
+        sendPromise = wppClient.sendFile(to, body.path, body.filename, body.caption);
+        break;
       
       default:
         return false;
     }
+    
+    const result = await Promise.race([sendPromise, timeoutPromise]);
+    console.log(`✅ Mensagem enviada com sucesso para ${phone}`);
+    return result;
+    
   } catch (error) {
-    console.error(`❌ Erro ${endpoint}:`, error.message);
+    console.error(`❌ Erro ${endpoint} para ${phone}:`, error.message);
     return false;
   }
 }
@@ -586,11 +603,11 @@ async function processarMensagem(message, client) {
     console.log(`✅ Iniciando processamento para ${sender}`);
     emProcessamento.add(sender);
     
-    // Timeout de segurança de 15 segundos
+    // Timeout de segurança de 8 segundos (reduzido)
     const timeoutId = setTimeout(() => {
-        console.log(`⚠️ Timeout: removendo ${sender} do processamento após 15s`);
+        console.log(`⚠️ Timeout: removendo ${sender} do processamento após 8s`);
         emProcessamento.delete(sender);
-    }, 15000);
+    }, 8000);
 
     try {
         const text = message.body?.toLowerCase() || '';
@@ -610,10 +627,16 @@ async function processarMensagem(message, client) {
             cacheContatos.delete(limpo);
             
             console.log(`📤 Enviando mensagem de saudação para ${sender}...`);
-            const resultado = await sendMessage(sender, 'send-message', {
+            
+            // Envio assíncrono sem await para não travar
+            sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
+            }).then(resultado => {
+                console.log(`📤 Resultado do envio: ${resultado ? '✅ Sucesso' : '❌ Falhou'}`);
+            }).catch(error => {
+                console.error(`📤 Erro no envio: ${error.message}`);
             });
-            console.log(`📤 Resultado do envio: ${resultado ? '✅ Sucesso' : '❌ Falhou'}`);
+            
             return;
         }
         
