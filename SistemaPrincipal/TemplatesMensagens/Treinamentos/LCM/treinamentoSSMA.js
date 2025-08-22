@@ -207,7 +207,7 @@ async function obterUltimaInteracao(sender) {
  * Executa o treinamento SSMA
  */
 async function executarTreinamento(sender, contato, sendMessage) {
-    const treinamento = await Treinamento.findByPk(1);
+    const treinamento = await Treinamento.findByPk(14);
 
     if (!treinamento) {
         await sendMessage(sender, 'send-message', {
@@ -1184,7 +1184,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
  */
 async function gerarEEnviarCertificadoSSMA(contato, sender, sendMessage) {
     try {
-        const treinamento = await Treinamento.findByPk(1);
+        const treinamento = await Treinamento.findByPk(14);
 
         if (!treinamento) {
             await sendMessage(sender, 'send-message', {
@@ -1243,7 +1243,7 @@ async function verificarTreinamentosPendentes(contato, sender, sendMessage) {
             where: { empresa_id: contato.empresaId }
         });
         
-        const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id).filter(id => id !== 1);
+        const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id).filter(id => id !== 14);
         
         const treinamentosPendentes = await Treinamento.findAll({
             where: {
@@ -1297,7 +1297,7 @@ async function mostrarTreinamentosPendentes(contato, sender, sendMessage) {
             where: { empresa_id: contato.empresaId }
         });
         
-        const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id).filter(id => id !== 1);
+        const treinamentosIds = empresaTreinamentos.map(et => et.treinamento_id).filter(id => id !== 14);
         
         const treinamentosPendentes = await Treinamento.findAll({
             where: {
