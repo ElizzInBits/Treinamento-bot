@@ -148,11 +148,18 @@ function authenticateToken(req, res, next) {
     const token = authHeader && authHeader.split(' ')[1];
     
     if (!token) {
+        // Se for requisição do navegador, redirecionar para login
+        if (req.headers.accept && req.headers.accept.includes('text/html')) {
+            return res.redirect('/login-api');
+        }
         return res.status(401).json({ error: 'Token de acesso requerido' });
     }
     
     jwt.verify(token, SECRET_KEY, (err, user) => {
         if (err) {
+            if (req.headers.accept && req.headers.accept.includes('text/html')) {
+                return res.redirect('/login-api');
+            }
             return res.status(403).json({ error: 'Token inválido' });
         }
         req.user = user;
@@ -177,7 +184,17 @@ app.use('/api/empresas', (req, res, next) => {
         authenticateToken(req, res, next);
     }
 }, empresasRoutes);
-app.use('/api/treinamentos', authenticateToken, treinamentosRoutes);
+app.use('/api/treinamentos', (req, res, next) => {
+    // Interceptar requisições do navegador sem token
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token && req.headers.accept && req.headers.accept.includes('text/html')) {
+        return res.redirect('/login-api');
+    }
+    
+    authenticateToken(req, res, next);
+}, treinamentosRoutes);
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 
 // ✅ 7. Servir mídia (uploads) estáticos
@@ -223,6 +240,41 @@ const emprePath = path.join(publicPath, 'empreCadastro', 'empre-index.html');
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date() });
+});
+
+// Página de login para API
+app.get('/login-api', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html>
+<head><title>Login API</title></head>
+<body>
+    <h2>Login para acessar API</h2>
+    <input type="text" id="user" placeholder="Usuário" value="Administrador">
+    <input type="password" id="pass" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
+    <div id="result"></div>
+    <script>
+        async function login() {
+            const user = document.getElementById('user').value;
+            const pass = document.getElementById('pass').value;
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: user, password: pass})
+            });
+            const data = await res.json();
+            if(data.token) {
+                localStorage.setItem('token', data.token);
+                window.location.reload();
+            } else {
+                document.getElementById('result').innerHTML = 'Erro: ' + data.message;
+            }
+        }
+    </script>
+</body>
+</html>
+    `);
 });
 
 // Redirecionar para login
