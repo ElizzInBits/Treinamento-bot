@@ -1,20 +1,12 @@
 module.exports = {
   apps: [
     {
-      name: 'whatsapp-bot',
-      script: './SistemaPrincipal/TemplatesMensagens/start-template.js',
+      name: 'servidor-unificado',
+      script: './server-unificado.js',
       instances: 1,
       autorestart: true,
       watch: false,
-      max_memory_restart: '500M'
-    },
-    {
-      name: 'frontend',
-      script: './SistemaPrincipal/front-end/server-front.js',
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '300M',
+      max_memory_restart: '800M',
       env: {
         PORT: 3000
       }
