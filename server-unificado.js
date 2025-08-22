@@ -32,11 +32,14 @@ console.log('🚀 Iniciando Servidor Unificado...');
 // Inicializar WhatsApp
 async function inicializarWhatsApp() {
   try {
+    console.log('🔄 Iniciando conexão WhatsApp...');
+    
     wppClient = await wppconnect.create({
       session: 'NERDWHATS_AMERICA',
       headless: true,
       disableWelcome: true,
       updatesLog: false,
+      autoClose: 0,
       puppeteerOptions: {
         args: [
           '--no-sandbox',
@@ -51,36 +54,63 @@ async function inicializarWhatsApp() {
       },
       statusFind: (status) => {
         console.log('📶 Status WhatsApp:', status);
+        if (status === 'inChat') {
+          console.log('✅ WhatsApp CONECTADO e PRONTO!');
+        }
       }
     });
 
-    console.log('✅ WhatsApp conectado!');
+    console.log('✅ Cliente WhatsApp criado!');
+    
+    // Verificar se está conectado
+    const isConnected = await wppClient.isConnected();
+    console.log(`🔍 Status de conexão: ${isConnected ? 'CONECTADO' : 'DESCONECTADO'}`);
 
     // Listener de mensagens
     wppClient.onMessage(async (message) => {
       if (!message.body && !message.selectedRowId) return;
       if (message.isGroupMsg) return;
       
+      console.log('📨 Nova mensagem recebida!');
+      
       setImmediate(async () => {
         try {
           await processarMensagem(message, wppClient);
         } catch (error) {
-          console.error('❌ Erro:', error.message);
+          console.error('❌ Erro ao processar:', error.message);
         }
       });
     });
 
   } catch (error) {
-    console.error('❌ Erro WhatsApp:', error);
+    console.error('❌ Erro ao inicializar WhatsApp:', error);
   }
 }
 
 // API Routes do WhatsApp
-app.get('/wpp/status', (req, res) => {
-  res.json({ 
-    status: wppClient ? 'connected' : 'disconnected',
-    session: 'NERDWHATS_AMERICA'
-  });
+app.get('/wpp/status', async (req, res) => {
+  if (!wppClient) {
+    return res.json({ 
+      status: 'disconnected',
+      session: 'NERDWHATS_AMERICA',
+      client: 'null'
+    });
+  }
+  
+  try {
+    const isConnected = await wppClient.isConnected();
+    res.json({ 
+      status: isConnected ? 'connected' : 'disconnected',
+      session: 'NERDWHATS_AMERICA',
+      client: 'active'
+    });
+  } catch (error) {
+    res.json({ 
+      status: 'error',
+      session: 'NERDWHATS_AMERICA',
+      error: error.message
+    });
+  }
 });
 
 app.post('/wpp/send-message', async (req, res) => {
