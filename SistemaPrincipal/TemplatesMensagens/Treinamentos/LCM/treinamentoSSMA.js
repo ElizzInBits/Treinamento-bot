@@ -410,42 +410,7 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
 module.exports = {
     executarTreinamento,
     processarResposta
-};iência preventiva e comportamentos seguros.',
-    });
-    await new Promise(resolve => setTimeout(resolve, 300));
 
-    await sendMessage(sender, 'send-message', {
-        message: '🔹 *Objetivos Específicos:*\n• Compreender a importância da segurança\n• Conhecer tipos de acidentes\n• Dominar o uso correto dos EPIs\n• Identificar riscos no ambiente\n• Aplicar medidas de controle\n• Desenvolver comportamentos seguros',
-    });
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    await sendMessage(sender, 'send-message', {
-        message: ' 👷 *Suas Responsabilidades como Colaborador*\n\n✅ Respeitar procedimentos de Saúde e Segurança da sua função.\n\n✅ Cuidar da sua segurança e dos colegas.\n\n✅ Não realizar atividades sem capacitação e autorização.\n\n✅ Manter organização do local de trabalho.',
-    });
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    await sendMessage(sender, 'send-message', {
-        message: '😉 *Lembre-se: Cada colaborador é responsável pela sua segurança e a dos colegas.* ',
-    });
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    const listMsg = {
-        title: '',
-        description: '*Pronto para iniciar o conteúdo?* \nEscolha uma opção:',
-        buttonText: 'Ver opções',
-        listType: 'SINGLE_SELECT',
-        sections: [{
-            title: '',
-            rows: [
-                { id: 'começar_ssma', title: 'Pode mandar!! 😎 🔥🔥🔥', description: '' },
-                { id: 'não_começar_ssma', title: 'Ainda não, preciso me preparar um pouco 👀 😅', description: '' },
-            ],
-        }],
-    };
-
-    await sendMessage(sender, 'send-list-message', listMsg);
-    await salvarInteracao(sender, 'aguardando_inicio_ssma', JSON.stringify(listMsg));
-}
 
 /**
  * Processa as respostas do treinamento SSMA
