@@ -1,14 +1,6 @@
 module.exports = {
   apps: [
     {
-      name: 'wppconnect-server',
-      script: './wppconnect-server.js',
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '400M'
-    },
-    {
       name: 'whatsapp-bot',
       script: './SistemaPrincipal/TemplatesMensagens/start-template.js',
       instances: 1,
