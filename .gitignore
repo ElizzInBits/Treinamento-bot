@@ -37,6 +37,12 @@
 node_modules/
 npm-debug.log*
 
+# Excluir node_modules do wppconnect-server mas permitir o resto
+wppconnect-server/node_modules/
+wppconnect-server/dist/
+wppconnect-server/userDataDir/
+wppconnect-server/wppconnect_tokens/
+
 # Ignorar arquivos de sistema
 .DS_Store
 Thumbs.db
