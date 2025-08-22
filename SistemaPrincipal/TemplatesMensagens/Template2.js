@@ -95,7 +95,7 @@ carregarScriptsTreinamento();
 const emProcessamento = new Set();
 const saudacoesEnviadas = new Set();
 const cacheContatos = new Map(); // Cache para contatos
-const CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutos
+const CACHE_TIMEOUT = 2 * 60 * 1000; // 2 minutos
 
 // Limpeza automática do cache a cada 10 minutos
 setInterval(() => {
@@ -106,7 +106,7 @@ setInterval(() => {
         }
     }
     console.log(`🧹 Cache limpo. Entradas ativas: ${cacheContatos.size}`);
-}, 10 * 60 * 1000);
+}, 5 * 60 * 1000);
 
 // ========================================
 // CONSTANTES E CONFIGURAÇÕES
@@ -530,10 +530,10 @@ async function processarMensagem(message, client) {
     
     emProcessamento.add(sender);
     
-    // Timeout de segurança de 500ms
+    // Timeout de segurança mínimo
     const timeoutId = setTimeout(() => {
         emProcessamento.delete(sender);
-    }, 500);
+    }, 50);
 
     try {
         const text = message.body?.toLowerCase() || '';
@@ -715,7 +715,7 @@ async function processarMensagem(message, client) {
                 // Remover da lista após 5 minutos para permitir nova saudação se necessário
                 setTimeout(() => {
                     saudacoesEnviadas.delete(sender);
-                }, 5 * 60 * 1000);
+                }, 2 * 60 * 1000);
                 
                 await iniciarTreinamento(sender, contato);
                 return;
