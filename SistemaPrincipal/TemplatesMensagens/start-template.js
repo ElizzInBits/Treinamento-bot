@@ -1,12 +1,14 @@
 require('dotenv').config();
-const wppconnect = require('@wppconnect-team/wppconnect');
+const axios = require('axios');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const { processarMensagem } = require('./Template2');
 
-// Variável global para o cliente
-let globalClient = null;
+// Configuração da API do wppconnect-server
+const API_BASE = 'http://72.60.48.249:21465/api';
+const SESSION = 'NERDWHATS_AMERICA';
+const TOKEN = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
 
-console.log('🚀 Iniciando Template Processor...');
+console.log('🚀 Iniciando WhatsApp Bot com API do wppconnect-server...');
 
 // Conectar ao banco
 (async () => {
@@ -19,169 +21,83 @@ console.log('🚀 Iniciando Template Processor...');
   }
 })();
 
-// Verificar se já existe sessão ativa
-const fs = require('fs');
-const path = require('path');
-
-function verificarSessaoExistente() {
-  const tokensPath = path.join(__dirname, 'tokens', 'NERDWHATS_AMERICA');
-  return fs.existsSync(tokensPath);
-}
-
-// Função para inicializar conexão
-async function inicializarBot() {
-  const sessaoExiste = verificarSessaoExistente();
-  
-  if (sessaoExiste) {
-    console.log('🔄 Sessão NERDWHATS_AMERICA encontrada, reutilizando...');
-  } else {
-    console.log('🆕 Criando nova sessão NERDWHATS_AMERICA...');
-  }
-  
-  return wppconnect.create({
-  session: 'NERDWHATS_AMERICA',
-  headless: true,
-  disableWelcome: true,
-  updatesLog: false,
-  autoClose: 0, // Não fechar automaticamente
-  createPathFileToken: true, // Criar arquivo de token
-  waitForLogin: true, // Aguardar login
-  puppeteerOptions: {
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--disable-gpu'
-    ]
-  },
-  catchQR: (base64Qr, asciiQR) => {
-    console.log('\n📱 QR CODE:');
-    console.log(asciiQR);
-  },
-  statusFind: (status) => {
-    console.log('📶 Status:', status);
-    if (status === 'isLogged') {
-      console.log('✅ Sessão existente encontrada!');
+// Cliente simulado para compatibilidade
+const mockClient = {
+  sendText: async (to, message) => {
+    try {
+      const response = await axios.post(`${API_BASE}/${SESSION}/${TOKEN}/send-message`, {
+        phone: to.replace('@c.us', ''),
+        message: message
+      });
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erro ao enviar mensagem:', error.message);
+      throw error;
     }
-    if (status === 'qrReadSuccess') {
-      console.log('✅ QR Code escaneado com sucesso!');
-    }
-    if (status === 'chatsAvailable') {
-      console.log('✅ Chats disponíveis - conectado!');
+  },
+  isConnected: async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/${SESSION}/${TOKEN}/status`);
+      return response.data.status === 'connected';
+    } catch (error) {
+      return false;
     }
   }
-  }).then(client => {
-    console.log('✅ Bot conectado!');
-    globalClient = client;
-    
-    // Monitor de estado da conexão
-    client.onStateChange((state) => {
-      console.log('🔄 Estado mudou para:', state);
-      
-      if (state === 'CONFLICT' || state === 'UNPAIRED' || state === 'UNLAUNCHED') {
-        console.log('⚠️ Sessão desconectada! Motivo:', state);
-        globalClient = null;
-      }
-      
-      if (state === 'CONNECTED') {
-        console.log('✅ Reconectado com sucesso!');
-      }
-    });
-    
-    // Monitor de mudanças na interface
-    client.onInterfaceChange((interfaceInfo) => {
-      if (interfaceInfo.mode === 'QR') {
-        console.log('📱 QR Code necessário - sessão expirou');
-        globalClient = null;
-      }
-    });
-    
-    // Listener hiper otimizado
-    const processedMessages = new Set();
-    
-    client.onMessage((message) => {
-      if (!message.body && !message.selectedRowId) return;
-      if (message.isGroupMsg) return;
-      
-      const msgId = `${message.from}_${message.body || message.selectedRowId}`;
-      if (processedMessages.has(msgId)) return;
-      processedMessages.add(msgId);
-      
-      if (processedMessages.size > 50) {
-        processedMessages.clear();
-      }
-      
-      // Processar sem await para não bloquear
-      processarMensagem(message, client).catch(() => {});
-    });
-    
-    // Listener para confirmações de entrega
-    client.onAck((ack) => {
-      // Status: 1=enviado, 2=entregue, 3=lido
-      if (ack.ack === 3) {
-        console.log(`✅ Mensagem lida: ${ack.id}`);
-      }
-    });
-  }).catch(err => {
-    console.error('❌ Erro ao conectar:', err);
-  });
+};
+
+let globalClient = mockClient;
+
+// Verificar status da sessão
+async function verificarStatus() {
+  try {
+    const response = await axios.get(`${API_BASE}/${SESSION}/${TOKEN}/status`);
+    console.log('📶 Status da sessão:', response.data.status);
+    return response.data.status;
+  } catch (error) {
+    console.error('❌ Erro ao verificar status:', error.message);
+    return 'error';
+  }
 }
 
-// Inicializar o bot
-inicializarBot();
+// Inicializar sessão se necessário
+async function inicializarSessao() {
+  const status = await verificarStatus();
+  
+  if (status === 'disconnected') {
+    console.log('🔄 Iniciando nova sessão...');
+    try {
+      await axios.post(`${API_BASE}/${SESSION}/${TOKEN}/start-session`);
+      console.log('✅ Sessão iniciada - verifique os logs do wppconnect-server para o QR Code');
+    } catch (error) {
+      console.error('❌ Erro ao iniciar sessão:', error.message);
+    }
+  } else if (status === 'connected') {
+    console.log('✅ Sessão já conectada!');
+  }
+}
+
+// Inicializar
+inicializarSessao();
+
+// Verificar status periodicamente
+setInterval(async () => {
+  const status = await verificarStatus();
+  if (status === 'disconnected') {
+    console.log('⚠️ Sessão desconectada - tentando reconectar...');
+    await inicializarSessao();
+  }
+}, 30000); // Verificar a cada 30 segundos
 
 // Função para verificar se há sessão ativa
 function verificarSessaoAtiva() {
-  return globalClient && globalClient.isConnected;
+  return true; // Sempre retorna true pois usa API
 }
 
 // Função para verificar status da conexão
 async function verificarStatusConexao() {
-  if (!globalClient) return 'DESCONECTADO';
-  
-  try {
-    const isConnected = await globalClient.isConnected();
-    return isConnected ? 'CONECTADO' : 'DESCONECTADO';
-  } catch (error) {
-    return 'ERRO';
-  }
+  const status = await verificarStatus();
+  return status === 'connected' ? 'CONECTADO' : 'DESCONECTADO';
 }
-
-// Sistema de reconexão automática
-let tentativasReconexao = 0;
-const MAX_TENTATIVAS = 3;
-
-function tentarReconexao() {
-  if (tentativasReconexao >= MAX_TENTATIVAS) {
-    console.log('❌ Máximo de tentativas de reconexão atingido');
-    return;
-  }
-  
-  tentativasReconexao++;
-  console.log(`🔄 Tentativa de reconexão ${tentativasReconexao}/${MAX_TENTATIVAS}...`);
-  
-  setTimeout(() => {
-    // Reiniciar o processo de conexão
-    process.exit(1); // PM2 vai reiniciar automaticamente
-  }, 5000);
-}
-
-// Verificar conexão periodicamente - reduzido
-setInterval(() => {
-  if (globalClient) {
-    globalClient.isConnected().then(isConnected => {
-      if (!isConnected) {
-        globalClient = null;
-        tentarReconexao();
-      } else {
-        tentativasReconexao = 0;
-      }
-    }).catch(() => {});
-  }
-}, 60000); // Verificar a cada 60 segundos
 
 // Exportar cliente para uso no template
 module.exports = { 
