@@ -259,7 +259,6 @@ app.get('/login-api', (req, res) => {
         <button onclick="getData('/api/treinamentos')">Treinamentos</button>
         <button onclick="getData('/api/contatos')">Contatos</button>
         <button onclick="getData('/api/empresas')">Empresas</button>
-        <button onclick="getData('/api/dashboard')">Dashboard</button>
         <button onclick="logout()" style="background:red;color:white">Sair</button>
         <pre id="data"></pre>
     </div>
