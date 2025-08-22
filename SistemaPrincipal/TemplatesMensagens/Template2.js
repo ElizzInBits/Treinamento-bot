@@ -540,10 +540,20 @@ async function gerarEEnviarCertificado(contato, sender) {
 // ========================================
 
 async function processarMensagem(message, client) {
+    console.log('🔍 PROCESSANDO:', message.from, message.body);
     setWppClient(client);
     const sender = message.from.replace('@c.us', '');
 
-    if (!client || emProcessamento.has(sender)) return;
+    if (!client) {
+        console.log('❌ Cliente inválido');
+        return;
+    }
+    
+    if (emProcessamento.has(sender)) {
+        console.log('⏳ Já processando:', sender);
+        return;
+    }
+    
     emProcessamento.add(sender);
     
     // Timeout de segurança de 1 segundo
@@ -558,13 +568,17 @@ async function processarMensagem(message, client) {
 
         // Verificação simples
         const startTime = Date.now();
+        console.log('🔍 Verificando cadastro:', sender);
         const contato = await verificarCadastro(sender);
+        console.log('📋 Resultado cadastro:', contato ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
         
         if (!contato) {
+            console.log('📤 Enviando mensagem de saudação para:', sender);
             cacheContatos.delete(limparNumero(sender));
-            sendMessage(sender, 'send-message', {
+            const resultado = await sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
+            console.log('📤 Resultado envio:', resultado ? 'SUCESSO' : 'FALHOU');
             return;
         }
         
@@ -1100,10 +1114,11 @@ async function processarMensagem(message, client) {
         });
 
     } catch (error) {
-        console.error('Erro no processamento da mensagem:', error);
+        console.error('❌ Erro processamento:', error.message);
     } finally {
         clearTimeout(timeoutId);
         emProcessamento.delete(sender);
+        console.log('✅ Processamento finalizado para:', sender);
     }
 }
 
