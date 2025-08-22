@@ -407,11 +407,6 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
     await salvarInteracao(sender, 'treinamento_concluido', 'ssma');
 }
 
-module.exports = {
-    executarTreinamento,
-    processarResposta
-
-
 /**
  * Processa as respostas do treinamento SSMA
  */
@@ -1486,6 +1481,7 @@ async function processarTreinamentosPendentes(sender, selectedId, contato, sendM
 
 module.exports = {
     executarTreinamento,
+    processarResposta,
     processarRespostaSSMA,
     processarTreinamentosPendentes
 };
