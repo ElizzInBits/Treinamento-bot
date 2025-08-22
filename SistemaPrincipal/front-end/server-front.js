@@ -190,7 +190,7 @@ app.use('/api/treinamentos', (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1];
     
     if (!token && req.headers.accept && req.headers.accept.includes('text/html')) {
-        return res.redirect('/login-api');
+        return res.redirect('/login-api?redirect=' + req.originalUrl);
     }
     
     authenticateToken(req, res, next);
@@ -254,7 +254,15 @@ app.get('/login-api', (req, res) => {
     <input type="password" id="pass" placeholder="Senha">
     <button onclick="login()">Entrar</button>
     <div id="result"></div>
+    <div id="api" style="display:none">
+        <h3>Dados da API:</h3>
+        <button onclick="getData()">Carregar Dados</button>
+        <pre id="data"></pre>
+    </div>
     <script>
+        let token = localStorage.getItem('token');
+        if(token) showAPI();
+        
         async function login() {
             const user = document.getElementById('user').value;
             const pass = document.getElementById('pass').value;
@@ -265,11 +273,27 @@ app.get('/login-api', (req, res) => {
             });
             const data = await res.json();
             if(data.token) {
-                localStorage.setItem('token', data.token);
-                window.location.reload();
+                token = data.token;
+                localStorage.setItem('token', token);
+                showAPI();
             } else {
                 document.getElementById('result').innerHTML = 'Erro: ' + data.message;
             }
+        }
+        
+        function showAPI() {
+            document.getElementById('api').style.display = 'block';
+            document.getElementById('result').innerHTML = 'Logado com sucesso!';
+            getData();
+        }
+        
+        async function getData() {
+            const endpoint = window.location.search.replace('?redirect=', '') || '/api/treinamentos';
+            const res = await fetch(endpoint, {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            const data = await res.json();
+            document.getElementById('data').innerHTML = JSON.stringify(data, null, 2);
         }
     </script>
 </body>
