@@ -12,10 +12,11 @@ let client = null;
 
 // Inicializar cliente
 wppconnect.create({
-  session: 'NERDWHATS_AMERICA',
+  session: 'WPPCONNECT_SERVER',
   headless: true,
   disableWelcome: true,
   updatesLog: false,
+  autoClose: 0,
   puppeteerOptions: {
     args: [
       '--no-sandbox',
@@ -23,20 +24,42 @@ wppconnect.create({
       '--disable-dev-shm-usage',
       '--disable-gpu'
     ]
+  },
+  catchQR: (base64Qr, asciiQR) => {
+    console.log('\n📱 QR CODE WppConnect Server:');
+    console.log(asciiQR);
+  },
+  statusFind: (status) => {
+    console.log('📶 WppConnect Status:', status);
   }
 }).then(c => {
   client = c;
   console.log('✅ WppConnect Server conectado!');
 }).catch(err => {
-  console.error('❌ Erro:', err);
+  console.error('❌ Erro WppConnect:', err);
 });
 
 // Rotas da API
-app.get('/status', (req, res) => {
-  res.json({ 
-    status: client ? 'connected' : 'disconnected',
-    session: 'NERDWHATS_AMERICA'
-  });
+app.get('/status', async (req, res) => {
+  if (!client) {
+    return res.json({ 
+      status: 'disconnected',
+      session: 'WPPCONNECT_SERVER'
+    });
+  }
+  
+  try {
+    const isConnected = await client.isConnected();
+    res.json({ 
+      status: isConnected ? 'connected' : 'disconnected',
+      session: 'WPPCONNECT_SERVER'
+    });
+  } catch (error) {
+    res.json({ 
+      status: 'error',
+      error: error.message
+    });
+  }
 });
 
 app.post('/send-message', async (req, res) => {
@@ -53,6 +76,7 @@ app.post('/send-message', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 WppConnect Server rodando na porta ${PORT}`);
+  console.log(`🔗 Status: http://72.60.48.249:${PORT}/status`);
 });
