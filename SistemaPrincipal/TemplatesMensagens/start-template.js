@@ -6,7 +6,21 @@ const { processarMensagem } = require('./Template2');
 // Configuração da API do wppconnect-server
 const API_BASE = 'http://72.60.48.249:21465/api';
 const SESSION = 'NERDWHATS_AMERICA';
-const TOKEN = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
+const SECRET_KEY = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
+let TOKEN = null;
+
+// Gerar token de acesso
+async function gerarToken() {
+  try {
+    const response = await axios.post(`${API_BASE}/${SESSION}/${SECRET_KEY}/generate-token`);
+    TOKEN = response.data.token;
+    console.log('✅ Token gerado:', TOKEN);
+    return TOKEN;
+  } catch (error) {
+    console.error('❌ Erro ao gerar token:', error.message);
+    return null;
+  }
+}
 
 console.log('🚀 Iniciando WhatsApp Bot com API do wppconnect-server...');
 
@@ -73,6 +87,11 @@ async function verificarStatus() {
 
 // Inicializar sessão se necessário
 async function inicializarSessao() {
+  if (!TOKEN) {
+    console.log('❌ Token não disponível');
+    return;
+  }
+  
   const status = await verificarStatus();
   
   if (status === 'CLOSED' || status === 'error') {
@@ -93,10 +112,16 @@ async function inicializarSessao() {
 }
 
 // Inicializar
-inicializarSessao();
+(async () => {
+  await gerarToken();
+  await inicializarSessao();
+})();
 
 // Verificar status periodicamente
 setInterval(async () => {
+  if (!TOKEN) {
+    await gerarToken();
+  }
   const status = await verificarStatus();
   if (status === 'CLOSED' || status === 'error') {
     console.log('⚠️ Sessão desconectada - tentando reconectar...');
