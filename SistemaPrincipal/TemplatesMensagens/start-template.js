@@ -25,9 +25,13 @@ console.log('🚀 Iniciando WhatsApp Bot com API do wppconnect-server...');
 const mockClient = {
   sendText: async (to, message) => {
     try {
-      const response = await axios.post(`${API_BASE}/${SESSION}/${TOKEN}/send-message`, {
+      const response = await axios.post(`${API_BASE}/${SESSION}/send-message`, {
         phone: to.replace('@c.us', ''),
         message: message
+      }, {
+        headers: {
+          'Authorization': `Bearer ${TOKEN}`
+        }
       });
       return response.data;
     } catch (error) {
@@ -37,8 +41,12 @@ const mockClient = {
   },
   isConnected: async () => {
     try {
-      const response = await axios.get(`${API_BASE}/${SESSION}/${TOKEN}/status`);
-      return response.data.status === 'connected';
+      const response = await axios.get(`${API_BASE}/${SESSION}/status-session`, {
+        headers: {
+          'Authorization': `Bearer ${TOKEN}`
+        }
+      });
+      return response.data.status === 'CONNECTED' || response.data.state === 'CONNECTED';
     } catch (error) {
       return false;
     }
@@ -50,9 +58,13 @@ let globalClient = mockClient;
 // Verificar status da sessão
 async function verificarStatus() {
   try {
-    const response = await axios.get(`${API_BASE}/${SESSION}/${TOKEN}/status`);
-    console.log('📶 Status da sessão:', response.data.status);
-    return response.data.status;
+    const response = await axios.get(`${API_BASE}/${SESSION}/status-session`, {
+      headers: {
+        'Authorization': `Bearer ${TOKEN}`
+      }
+    });
+    console.log('📶 Status da sessão:', response.data);
+    return response.data.status || response.data.state;
   } catch (error) {
     console.error('❌ Erro ao verificar status:', error.message);
     return 'error';
@@ -63,15 +75,19 @@ async function verificarStatus() {
 async function inicializarSessao() {
   const status = await verificarStatus();
   
-  if (status === 'disconnected') {
+  if (status === 'CLOSED' || status === 'error') {
     console.log('🔄 Iniciando nova sessão...');
     try {
-      await axios.post(`${API_BASE}/${SESSION}/${TOKEN}/start-session`);
+      await axios.post(`${API_BASE}/${SESSION}/start-session`, {}, {
+        headers: {
+          'Authorization': `Bearer ${TOKEN}`
+        }
+      });
       console.log('✅ Sessão iniciada - verifique os logs do wppconnect-server para o QR Code');
     } catch (error) {
       console.error('❌ Erro ao iniciar sessão:', error.message);
     }
-  } else if (status === 'connected') {
+  } else if (status === 'CONNECTED') {
     console.log('✅ Sessão já conectada!');
   }
 }
@@ -82,7 +98,7 @@ inicializarSessao();
 // Verificar status periodicamente
 setInterval(async () => {
   const status = await verificarStatus();
-  if (status === 'disconnected') {
+  if (status === 'CLOSED' || status === 'error') {
     console.log('⚠️ Sessão desconectada - tentando reconectar...');
     await inicializarSessao();
   }
