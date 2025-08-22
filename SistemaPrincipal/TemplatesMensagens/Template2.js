@@ -114,8 +114,27 @@ setInterval(() => {
 const EMAIL_REGEX = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 // Constantes básicas para confirmação de dados
-const RESPOSTAS_POSITIVAS = ['sim', 'confirmar', 'dados corretos'];
-const RESPOSTAS_NEGATIVAS = ['não', 'dados incorretos', 'corrigir'];
+const RESPOSTAS_POSITIVAS = ['sim', 'confirmar', 'dados corretos', 'vamos', 'começar', 'iniciar', 'pronto', 'ok', 'vamos nessa', 'vamos começar', 'sim - vamos começar'];
+const RESPOSTAS_NEGATIVAS = ['não', 'nao', 'dados incorretos', 'corrigir', 'ainda não', 'ainda nao', 'depois', 'mais tarde', 'preciso me preparar'];
+
+// Função universal para verificar se texto contém resposta positiva ou negativa
+function verificarResposta(texto, tipo = 'positiva') {
+    const textoLimpo = texto.toLowerCase().trim();
+    const respostas = tipo === 'positiva' ? RESPOSTAS_POSITIVAS : RESPOSTAS_NEGATIVAS;
+    
+    return respostas.some(resposta => 
+        textoLimpo.includes(resposta) || 
+        textoLimpo === resposta ||
+        textoLimpo.startsWith(resposta) ||
+        textoLimpo.endsWith(resposta)
+    );
+}
+
+// Função para verificar se é resposta de quiz (a, b, c, d)
+function verificarRespostaQuiz(texto) {
+    const textoLimpo = texto.toLowerCase().trim();
+    return /^[abcd]\)|\b[abcd]\)|[abcd]$/.test(textoLimpo);
+}
 
 // ========================================
 // FUNÇÕES UTILITÁRIAS
@@ -637,13 +656,12 @@ async function processarMensagem(message, client) {
         // PROCESSAR SSMA PRIMEIRO - ANTES DA CONTINUIDADE
         const script = scriptsTreinamento['treinamentoSSMA'];
         if (script && script.processarRespostaSSMA) {
-            // Verificar se é uma resposta específica do SSMA (incluindo revisão de conteúdo)
+            // Verificar se é uma resposta específica do SSMA usando funções universais
             if (selectedId === 'rever_modulo1' || selectedId === 'rever_modulo2' ||
-                text.toLowerCase().includes('rever conteúdo') ||
-                (text.toLowerCase().includes('pode mandar') && ultimaInteracao?.tipo === 'aguardando_inicio_ssma') ||
-                (text.toLowerCase().includes('vamos nessa') && ultimaInteracao?.tipo === 'aguardando_quiz_intro') ||
-                (text.toLowerCase().includes('sim') && ultimaInteracao?.tipo === 'aguardando_modulo2_intro') ||
-                (text.toLowerCase().includes('vamos') && ultimaInteracao?.tipo === 'aguardando_modulo2_intro') ||
+                selectedId === 'iniciar_ssma' || selectedId === 'nao_iniciar_ssma' ||
+                verificarResposta(text, 'positiva') || verificarResposta(text, 'negativa') ||
+                verificarRespostaQuiz(text) ||
+                ultimaInteracao?.tipo === 'aguardando_confirmacao' ||
                 ultimaInteracao?.tipo === 'aguardando_revisao_modulo1' ||
                 ultimaInteracao?.tipo === 'aguardando_revisao_modulo2' ||
                 ultimaInteracao?.tipo === 'aguardando_inicio_ssma' ||
@@ -651,8 +669,7 @@ async function processarMensagem(message, client) {
                 ultimaInteracao?.tipo === 'aguardando_quiz_intro' ||
                 ultimaInteracao?.tipo?.includes('aguardando_quiz') ||
                 ultimaInteracao?.tipo?.includes('confirmacao_dados_ssma') ||
-                text.includes('a)') || text.includes('b)') || text.includes('c)') || text.includes('d)') ||
-                text.includes('exame') || selectedId?.includes('_q') || selectedId?.includes('_m2q')) {
+                selectedId?.includes('_q') || selectedId?.includes('_m2q')) {
                 
                 console.log(`🔍 Tentando processar no SSMA: "${text}"`);
                 try {

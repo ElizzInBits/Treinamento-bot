@@ -7,9 +7,22 @@ const { Interacao, Empresa } = require('../../../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('../../Certificados/certificados2.js');
 const { Op } = require('sequelize');
 
-// Respostas aceitas para verificação
-const RESPOSTAS_POSITIVAS = ['sim', 'vamos', 'pode mandar', 'começar', 'iniciar', 'pronto', 'ok', 'vamos nessa'];
-const RESPOSTAS_NEGATIVAS = ['não', 'nao', 'ainda não', 'ainda nao', 'depois', 'mais tarde', 'preciso me preparar'];
+// Respostas aceitas para verificação - EXPANDIDAS
+const RESPOSTAS_POSITIVAS = ['sim', 'vamos', 'pode mandar', 'começar', 'iniciar', 'pronto', 'ok', 'vamos nessa', 'vamos começar', 'sim - vamos começar', 'confirmar', 'dados corretos', 'estou pronto', 'bora', 'beleza', 'certo', 'perfeito'];
+const RESPOSTAS_NEGATIVAS = ['não', 'nao', 'ainda não', 'ainda nao', 'depois', 'mais tarde', 'preciso me preparar', 'dados incorretos', 'corrigir', 'cancelar', 'parar', 'sair'];
+
+// Função universal para verificar respostas
+function verificarRespostaSSMA(texto, tipo = 'positiva') {
+    const textoLimpo = texto.toLowerCase().trim();
+    const respostas = tipo === 'positiva' ? RESPOSTAS_POSITIVAS : RESPOSTAS_NEGATIVAS;
+    
+    return respostas.some(resposta => 
+        textoLimpo.includes(resposta) || 
+        textoLimpo === resposta ||
+        textoLimpo.startsWith(resposta) ||
+        textoLimpo.endsWith(resposta)
+    );
+}
 
 // Configurações do quiz Módulo 1 (SSMA + Acidentes - 8 questões)
 const QUIZ_CONFIG = {
@@ -424,11 +437,9 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     const ultimaInteracao = await obterUltimaInteracao(sender);
     const textLower = text.toLowerCase();
 
-    // Início do treinamento - APENAS quando aguardando início
+    // Início do treinamento - USANDO FUNÇÃO UNIVERSAL
     if (selectedId === 'iniciar_ssma' || selectedId === 'começar_ssma' ||
-        (ultimaInteracao?.tipo === 'aguardando_confirmacao' && 
-         (textLower.includes('pode mandar') || textLower.includes('😎') || textLower.includes('🔥') ||
-          RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase()))))) {
+        (ultimaInteracao?.tipo === 'aguardando_confirmacao' && verificarRespostaSSMA(text, 'positiva'))) {
 
         await sendMessage(sender, 'send-message', {
             message: '🚀 Excelente! Vamos começar o treinamento! 📚',
@@ -516,12 +527,9 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         return true;
     }
 
-    // Quiz Módulo 1 - Resposta negativa
+    // Quiz Módulo 1 - Resposta negativa - USANDO FUNÇÃO UNIVERSAL
     if (selectedId === 'nao_comecar_quiz_Modulo1' ||
-        (ultimaInteracao?.tipo === 'aguardando_quiz_intro' && 
-         (textLower.includes('não') || textLower.includes('nao') || textLower.includes('ainda não') || 
-          textLower.includes('ainda nao') || textLower.includes('preciso me preparar') || 
-          textLower.includes('depois') || textLower.includes('mais tarde')))) {
+        (ultimaInteracao?.tipo === 'aguardando_quiz_intro' && verificarRespostaSSMA(text, 'negativa'))) {
         
         await sendMessage(sender, 'send-message', {
             message: '😊 Sem problemas! Quando se sentir preparado(a), é só me avisar que podemos começar o quiz do Módulo 1.',
@@ -545,9 +553,9 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         return true;
     }
 
-    // Quiz Módulo 1 - Iniciar
+    // Quiz Módulo 1 - Iniciar - USANDO FUNÇÃO UNIVERSAL
     if (selectedId === 'comecar_quiz_Modulo1' ||
-        (ultimaInteracao?.tipo === 'aguardando_quiz_intro' && (textLower.includes('vamos nessa') || textLower.includes('vamos') || textLower.includes('refazer') || textLower.includes('estou pronto')))) {
+        (ultimaInteracao?.tipo === 'aguardando_quiz_intro' && (verificarRespostaSSMA(text, 'positiva') || textLower.includes('refazer')))) {
 
         // Resetar pontuação para nova tentativa
         await salvarInteracao(sender, 'quiz_pontuacao', '0');
@@ -756,9 +764,9 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         }
     }
 
-    // Módulo 2 - Iniciar
+    // Módulo 2 - Iniciar - USANDO FUNÇÃO UNIVERSAL
     if (selectedId === 'iniciar_modulo2' ||
-        (ultimaInteracao?.tipo === 'aguardando_modulo2_intro' && (textLower.includes('sim') || textLower.includes('vamos')))) {
+        (ultimaInteracao?.tipo === 'aguardando_modulo2_intro' && verificarRespostaSSMA(text, 'positiva'))) {
 
         await sendMessage(sender, 'send-message', {
             message: '*Excelente!* \n\nVamos para o Módulo 2! ⚡🚀',
@@ -1137,9 +1145,9 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         return true;
     }
 
-    // Confirmação de dados do certificado
+    // Confirmação de dados do certificado - USANDO FUNÇÃO UNIVERSAL
     if (selectedId === 'dados_corretos_ssma' ||
-        (ultimaInteracao?.tipo === 'confirmacao_dados_ssma' && RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
+        (ultimaInteracao?.tipo === 'confirmacao_dados_ssma' && verificarRespostaSSMA(text, 'positiva'))) {
 
         await sendMessage(sender, 'send-message', {
             message: '✅ Dados confirmados! Gerando seu certificado...',
