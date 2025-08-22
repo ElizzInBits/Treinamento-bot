@@ -224,12 +224,22 @@ async function executarTreinamento(sender, contato, sendMessage) {
     await sendMessage(sender, 'send-message', {
         message: '🎯 *OBJETIVOS DO TREINAMENTO*\n\n📋 *Objetivo Geral:*\nCapacitar os colaboradores nos princípios básicos de SSMA, desenvolvendo consciência sobre segurança, saúde e meio ambiente.\n\n🎯 *Objetivos Específicos:*\n• Conhecer os conceitos de SSMA\n• Identificar tipos de acidentes\n• Compreender programas de segurança\n• Utilizar EPIs corretamente',
     });
-    await new Promise(resolve => setTimeout(resolve, 500));
 
-    await sendMessage(sender, 'send-message', {
-        message: '📚 Você está pronto para começar o treinamento?\n\nResponda *SIM* para iniciar ou *NÃO* se precisar se preparar.',
-    });
+    const iniciarMsg = {
+        title: '',
+        description: '📚 Você está pronto para começar o treinamento?',
+        buttonText: 'Escolher opção',
+        listType: 'SINGLE_SELECT',
+        sections: [{
+            title: '',
+            rows: [
+                { id: 'iniciar_ssma', title: 'SIM - Vamos começar! 🚀', description: '' },
+                { id: 'nao_iniciar_ssma', title: 'NÃO - Preciso me preparar 📖', description: '' },
+            ],
+        }],
+    };
 
+    await sendMessage(sender, 'send-list-message', iniciarMsg);
     await salvarInteracao(sender, 'aguardando_confirmacao', 'treinamento_ssma');
 }
 
@@ -244,11 +254,11 @@ async function processarResposta(sender, message, sendMessage) {
 
     // Aguardando confirmação para iniciar
     if (ultimaInteracao.tipo === 'aguardando_confirmacao') {
-        if (RESPOSTAS_POSITIVAS.some(resp => mensagem.includes(resp))) {
+        if (RESPOSTAS_POSITIVAS.some(resp => mensagem.includes(resp)) || mensagem.includes('iniciar_ssma')) {
             await iniciarModulo1(sender, sendMessage);
             return true;
         }
-        if (RESPOSTAS_NEGATIVAS.some(resp => mensagem.includes(resp))) {
+        if (RESPOSTAS_NEGATIVAS.some(resp => mensagem.includes(resp)) || mensagem.includes('nao_iniciar_ssma')) {
             await sendMessage(sender, 'send-message', {
                 message: '⏰ Sem problemas! Quando estiver pronto, digite *SSMA* para retomar o treinamento.',
             });
@@ -415,8 +425,8 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     const textLower = text.toLowerCase();
 
     // Início do treinamento - APENAS quando aguardando início
-    if (selectedId === 'começar_ssma' ||
-        (ultimaInteracao?.tipo === 'aguardando_inicio_ssma' && 
+    if (selectedId === 'iniciar_ssma' || selectedId === 'começar_ssma' ||
+        (ultimaInteracao?.tipo === 'aguardando_confirmacao' && 
          (textLower.includes('pode mandar') || textLower.includes('😎') || textLower.includes('🔥') ||
           RESPOSTAS_POSITIVAS.some(resp => textLower.includes(resp.toLowerCase()))))) {
 
@@ -1149,8 +1159,8 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
 
     // Não começar agora
-    if (selectedId === 'não_começar_ssma' ||
-        (ultimaInteracao?.tipo === 'aguardando_inicio_ssma' && RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
+    if (selectedId === 'nao_iniciar_ssma' || selectedId === 'não_começar_ssma' ||
+        (ultimaInteracao?.tipo === 'aguardando_confirmacao' && RESPOSTAS_NEGATIVAS.some(resp => textLower.includes(resp.toLowerCase())))) {
 
         const listMsg = {
             title: '',
