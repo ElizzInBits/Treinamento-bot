@@ -62,6 +62,76 @@ app.get('/status', async (req, res) => {
   }
 });
 
+// Rota para gerar token (API padrão wppconnect)
+app.post('/api/:session/:token/generate-token', async (req, res) => {
+  const { session, token } = req.params;
+  
+  if (token !== 'THISISMYSECURETOKEN') {
+    return res.status(401).json({ error: 'Token inválido' });
+  }
+  
+  try {
+    const newToken = Math.random().toString(36).substring(2, 15);
+    res.json({ 
+      success: true,
+      token: newToken,
+      session: session
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota para status da sessão (API padrão)
+app.get('/api/:session/:token/status', async (req, res) => {
+  const { session, token } = req.params;
+  
+  if (token !== 'THISISMYSECURETOKEN') {
+    return res.status(401).json({ error: 'Token inválido' });
+  }
+  
+  if (!client) {
+    return res.json({ 
+      status: 'disconnected',
+      session: session
+    });
+  }
+  
+  try {
+    const isConnected = await client.isConnected();
+    res.json({ 
+      status: isConnected ? 'connected' : 'disconnected',
+      session: session
+    });
+  } catch (error) {
+    res.json({ 
+      status: 'error',
+      error: error.message
+    });
+  }
+});
+
+// Rota para enviar mensagem (API padrão)
+app.post('/api/:session/:token/send-message', async (req, res) => {
+  const { session, token } = req.params;
+  
+  if (token !== 'THISISMYSECURETOKEN') {
+    return res.status(401).json({ error: 'Token inválido' });
+  }
+  
+  if (!client) {
+    return res.status(400).json({ error: 'Cliente não conectado' });
+  }
+  
+  try {
+    const { phone, message } = req.body;
+    const result = await client.sendText(`${phone}@c.us`, message);
+    res.json({ success: true, result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/send-message', async (req, res) => {
   if (!client) {
     return res.status(400).json({ error: 'Cliente não conectado' });
