@@ -154,7 +154,7 @@ async function verificarNovasMensagens() {
         processedMessages.add(msgId);
         
         // Limpar cache se ficar muito grande
-        if (processedMessages.size > 100) {
+        if (processedMessages.size > 50) {
           processedMessages.clear();
         }
         
@@ -171,9 +171,9 @@ async function verificarNovasMensagens() {
   }
 }
 
-// Iniciar polling a cada 2 segundos
-setInterval(verificarNovasMensagens, 2000);
-console.log('🔄 Sistema de polling iniciado - verificando mensagens a cada 2s');
+// Iniciar polling a cada 1 segundo
+setInterval(verificarNovasMensagens, 1000);
+console.log('🔄 Sistema de polling iniciado - verificando mensagens a cada 1s');
 
 // Função para verificar se há sessão ativa
 function verificarSessaoAtiva() {
@@ -204,9 +204,9 @@ setInterval(async () => {
       console.log('⚠️ Status da sessão:', response.data.status);
     }
   } catch (error) {
-    console.log('⚠️ Erro ao verificar status da API');
+    // API indisponível - usando conexão direta
   }
-}, 60000); // Verificar a cada 60 segundos
+}, 30000); // Verificar a cada 30 segundos
 
 // Exportar cliente para uso no template
 module.exports = { 
