@@ -67,7 +67,7 @@ const processedMessages = new Set();
 
 async function verificarNovasMensagens() {
   try {
-    const response = await axios.get(`${API_BASE}/${SESSION}/all-new-messages`, {
+    const response = await axios.get(`${API_BASE}/${SESSION}/all-unread-messages`, {
       headers: {
         'Authorization': `Bearer ${TOKEN}`
       }
@@ -88,7 +88,7 @@ async function verificarNovasMensagens() {
           processedMessages.clear();
         }
         
-        console.log('📨 Nova mensagem recebida:', message.body || message.selectedRowId);
+        console.log('📨 Nova mensagem recebida de', message.from, ':', message.body || message.selectedRowId);
         
         // Processar mensagem
         processarMensagem(message, globalClient).catch(err => {
