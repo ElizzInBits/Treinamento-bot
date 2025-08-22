@@ -139,38 +139,33 @@ function limparNumero(numero) {
 
 
 /**
- * Salva interação - OTIMIZADO
+ * Salva interação - SIMPLES
  */
 async function salvarUltimaInteracao(sender, tipo, mensagem) {
     try {
-        await sequelize.query(
-            'INSERT INTO interacoes (telefone, tipo, mensagem, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())',
-            {
-                replacements: [sender, tipo, mensagem || ''],
-                type: sequelize.QueryTypes.INSERT,
-                logging: false
-            }
-        );
+        await Interacao.create({
+            telefone: sender,
+            tipo: tipo,
+            mensagem: mensagem || '',
+            timestamp: new Date()
+        });
     } catch (error) {
-        // Silencioso
+        console.error('Erro salvarUltimaInteracao:', error.message);
     }
 }
 
 /**
- * Obtém a última interação - OTIMIZADO
+ * Obtém a última interação - SIMPLES
  */
 async function obterUltimaInteracao(sender) {
     try {
-        const result = await sequelize.query(
-            'SELECT tipo, mensagem, createdAt FROM interacoes WHERE telefone = ? ORDER BY createdAt DESC LIMIT 1',
-            {
-                replacements: [sender],
-                type: sequelize.QueryTypes.SELECT,
-                logging: false
-            }
-        );
-        return result[0] || null;
+        return await Interacao.findOne({
+            where: { telefone: sender },
+            order: [['createdAt', 'DESC']],
+            logging: false
+        });
     } catch (error) {
+        console.error('Erro obterUltimaInteracao:', error.message);
         return null;
     }
 }
@@ -274,32 +269,21 @@ async function processarComandosContinuar(sender, text, selectedId) {
 }
 
 /**
- * Verifica se o contato está cadastrado - ULTRA RÁPIDO
+ * Verifica se o contato está cadastrado - SIMPLES
  */
 async function verificarCadastro(sender) {
     const limpo = limparNumero(sender);
     
-    // Cache de 15 minutos
-    const cached = cacheContatos.get(limpo);
-    if (cached && (Date.now() - cached.timestamp) < 900000) {
-        return cached.contato;
-    }
-    
     try {
-        // Query SQL direta - mais rápida
-        const result = await sequelize.query(
-            'SELECT id, nome, nomeCompleto, email, telefone, empresaId, statusTreinamento, treinamentoId FROM contatos WHERE telefone LIKE ? LIMIT 1',
-            {
-                replacements: [`%${limpo.slice(-8)}`],
-                type: sequelize.QueryTypes.SELECT,
-                logging: false
-            }
-        );
+        const contato = await Contato.findOne({
+            where: { telefone: { [Op.like]: `%${limpo.slice(-8)}` } },
+            attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
+            logging: false
+        });
         
-        const contato = result[0] || null;
-        cacheContatos.set(limpo, { contato, timestamp: Date.now() });
         return contato;
     } catch (error) {
+        console.error('Erro verificarCadastro:', error.message);
         return null;
     }
 }
@@ -381,29 +365,26 @@ async function processarCorrecaoDados(sender, rawText, contato) {
 }
 
 /**
- * Busca treinamentos - ULTRA OTIMIZADO
+ * Busca treinamentos - SIMPLES
  */
 async function buscarTreinamentosEmpresa(empresaId) {
-    const cacheKey = `empresa_${empresaId}`;
-    const cached = cacheContatos.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp) < 600000) {
-        return cached.contato;
-    }
-    
     try {
-        // Query única com JOIN
-        const result = await sequelize.query(
-            'SELECT t.id, t.nome FROM treinamento t JOIN empresa_treinamentos et ON t.id = et.treinamento_id WHERE et.empresa_id = ?',
-            {
-                replacements: [empresaId],
-                type: sequelize.QueryTypes.SELECT,
-                logging: false
-            }
-        );
+        const empresaTreinamentos = await EmpresaTreinamento.findAll({
+            where: { empresa_id: empresaId },
+            attributes: ['treinamento_id'],
+            logging: false
+        });
         
-        cacheContatos.set(cacheKey, { contato: result, timestamp: Date.now() });
-        return result;
+        if (empresaTreinamentos.length === 0) return [];
+        
+        const treinamentoIds = empresaTreinamentos.map(et => et.treinamento_id);
+        return await Treinamento.findAll({
+            where: { id: treinamentoIds },
+            attributes: ['id', 'nome'],
+            logging: false
+        });
     } catch (error) {
+        console.error('Erro buscarTreinamentosEmpresa:', error.message);
         return [];
     }
 }

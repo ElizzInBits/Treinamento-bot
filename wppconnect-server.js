@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const PORT = 8080;
+const PORT = 21465;
 
 app.use(cors());
 app.use(express.json());
@@ -77,6 +77,29 @@ app.post('/send-message', async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 WppConnect Server rodando na porta ${PORT}`);
-  console.log(`🔗 Status: http://72.60.48.249:${PORT}/status`);
+  console.log(`🚀 WppConnect Server ATIVO na porta ${PORT}`);
+  console.log(`🔗 Acesse: http://72.60.48.249:${PORT}/status`);
+  console.log(`🔗 Teste: curl http://localhost:${PORT}/status`);
+});
+
+// Rota de teste simples
+app.get('/test', (req, res) => {
+  res.json({ 
+    message: 'WppConnect Server funcionando!',
+    port: PORT,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Rota raiz
+app.get('/', (req, res) => {
+  res.json({ 
+    service: 'WppConnect Server',
+    status: 'online',
+    endpoints: {
+      status: '/status',
+      test: '/test',
+      sendMessage: '/send-message'
+    }
+  });
 });

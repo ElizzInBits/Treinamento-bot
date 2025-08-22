@@ -8,7 +8,7 @@ module.exports = {
       watch: false,
       max_memory_restart: '400M',
       env: {
-        PORT: 8080
+        PORT: 21465
       }
     },
     {
