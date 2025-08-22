@@ -8,45 +8,25 @@ function setWppClient(client) {
   wppClient = client;
 }
 
-// Função sendMessage otimizada com timeout
+// Função sendMessage super rápida
 async function sendMessage(phone, endpoint, body = {}) {
-  if (!wppClient) {
-    console.error('❌ Cliente WhatsApp não disponível');
-    return false;
-  }
+  if (!wppClient) return false;
   
   try {
     const to = phone.includes('@c.us') ? phone : `${phone}@c.us`;
     
-    // Timeout de 10 segundos para evitar travamento
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout ao enviar mensagem')), 10000)
-    );
-    
-    let sendPromise;
     switch (endpoint) {
       case 'send-message':
-        sendPromise = wppClient.sendText(to, body.message);
-        break;
-      
+        return await wppClient.sendText(to, body.message);
       case 'send-list-message':
-        sendPromise = wppClient.sendListMessage(to, body);
-        break;
-      
+        return await wppClient.sendListMessage(to, body);
       case 'send-file':
-        sendPromise = wppClient.sendFile(to, body.path, body.filename, body.caption);
-        break;
-      
+        return await wppClient.sendFile(to, body.path, body.filename, body.caption);
       default:
         return false;
     }
-    
-    const result = await Promise.race([sendPromise, timeoutPromise]);
-    console.log(`✅ Mensagem enviada com sucesso para ${phone}`);
-    return result;
-    
   } catch (error) {
-    console.error(`❌ Erro ${endpoint} para ${phone}:`, error.message);
+    console.error(`❌ ${endpoint}:`, error.message);
     return false;
   }
 }
@@ -288,44 +268,29 @@ async function processarComandosContinuar(sender, text, selectedId) {
 }
 
 /**
- * Verifica se o contato está cadastrado - ULTRA RÁPIDO
+ * Verifica se o contato está cadastrado - SUPER RÁPIDO
  */
 async function verificarCadastro(sender) {
     const limpo = limparNumero(sender);
     
-    // Cache instantâneo com verificação de expiração
+    // Cache com 10 minutos
     const cached = cacheContatos.get(limpo);
-    if (cached && (Date.now() - cached.timestamp) < CACHE_TIMEOUT) {
+    if (cached && (Date.now() - cached.timestamp) < 600000) {
         return cached.contato;
     }
     
     try {
-        // Busca otimizada com JOIN para pegar dados da empresa e treinamento de uma vez
+        // Busca mínima e rápida
         const contato = await Contato.findOne({
             where: { telefone: { [Op.like]: `%${limpo.slice(-8)}` } },
-            include: [
-                {
-                    model: Empresa,
-                    as: 'empresaRef',
-                    attributes: ['id', 'razaoSocial'],
-                    required: false
-                },
-                {
-                    model: Treinamento,
-                    as: 'treinamento',
-                    attributes: ['id', 'nome'],
-                    required: false
-                }
-            ],
             attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-            logging: false
+            logging: false,
+            raw: true
         });
         
-        // Cache por 5 minutos (reduzido para dados mais atualizados)
         cacheContatos.set(limpo, { contato, timestamp: Date.now() });
         return contato;
     } catch (error) {
-        console.error('Erro ao verificar cadastro:', error.message);
         return null;
     }
 }
@@ -603,11 +568,10 @@ async function processarMensagem(message, client) {
     console.log(`✅ Iniciando processamento para ${sender}`);
     emProcessamento.add(sender);
     
-    // Timeout de segurança de 8 segundos (reduzido)
+    // Timeout de segurança de 5 segundos
     const timeoutId = setTimeout(() => {
-        console.log(`⚠️ Timeout: removendo ${sender} do processamento após 8s`);
         emProcessamento.delete(sender);
-    }, 8000);
+    }, 5000);
 
     try {
         const text = message.body?.toLowerCase() || '';
@@ -628,13 +592,9 @@ async function processarMensagem(message, client) {
             
             console.log(`📤 Enviando mensagem de saudação para ${sender}...`);
             
-            // Envio assíncrono sem await para não travar
+            // Envio assíncrono sem bloquear
             sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
-            }).then(resultado => {
-                console.log(`📤 Resultado do envio: ${resultado ? '✅ Sucesso' : '❌ Falhou'}`);
-            }).catch(error => {
-                console.error(`📤 Erro no envio: ${error.message}`);
             });
             
             return;
