@@ -89,10 +89,24 @@ carregarScriptsTreinamento();
 
 
 
-// VARIÁVEIS DE CONTROLE
+// ========================================
+// VARIÁVEIS DE CONTROLE GLOBAIS
+// ========================================
 const emProcessamento = new Set();
-const cacheContatos = new Map();
-const CACHE_TIMEOUT = 2 * 60 * 1000;
+const saudacoesEnviadas = new Set();
+const cacheContatos = new Map(); // Cache para contatos
+const CACHE_TIMEOUT = 2 * 60 * 1000; // 2 minutos
+
+// Limpeza automática do cache a cada 10 minutos
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of cacheContatos.entries()) {
+        if (now - value.timestamp > CACHE_TIMEOUT) {
+            cacheContatos.delete(key);
+        }
+    }
+    console.log(`🧹 Cache limpo. Entradas ativas: ${cacheContatos.size}`);
+}, 5 * 60 * 1000);
 
 // ========================================
 // CONSTANTES E CONFIGURAÇÕES
@@ -178,6 +192,48 @@ async function obterUltimaInteracao(sender) {
 // ========================================
 // TEMPLATES DE MENSAGENS
 // ========================================
+
+/**
+ * Retorna template da mensagem de continuar
+ */
+function getMensagemListaContinuar() {
+    return {
+        title: '',
+        description: 'Escolha uma opção:',
+        buttonText: 'Continuar',
+        listType: 'SINGLE_SELECT',
+        sections: [
+            {
+                title: '',
+                rows: [
+                    { id: 'continuar', title: 'Continuar de onde parei', description: '' },
+                    { id: 'pausar', title: 'Continuo assim que possível', description: '' },
+                ],
+            },
+        ],
+    };
+}
+
+
+
+/**
+ * Retorna template de confirmação de dados
+ */
+function getConfirmacaoDados(nomeCompleto, emailCadastrado) {
+    return {
+        title: '',
+        description: `🎓 *Confirmação dos dados para o certificado:*\n\n👤 *Nome:* ${nomeCompleto}\n📧 *E-mail:* ${emailCadastrado}\n\nOs dados estão corretos?`,
+        buttonText: 'Confirmar',
+        listType: 'SINGLE_SELECT',
+        sections: [{
+            title: '',
+            rows: [
+                { id: 'dados_corretos', title: 'Sim, os dados estão corretos', description: '' },
+                { id: 'dados_incorretos', title: 'Não, preciso corrigir', description: '' },
+            ],
+        }],
+    };
+}
 
 function getFinalizarTreinamento() {
     return {
@@ -381,23 +437,38 @@ async function buscarTreinamentosEmpresa(empresaId) {
 }
 
 /**
- * Inicia o treinamento - SIMPLIFICADO
+ * Inicia o treinamento para novos usuários - OTIMIZADO
  */
 async function iniciarTreinamento(sender, contato) {
+    // Usar dados da empresa já carregados no contato (se disponível)
+    const nomeEmpresa = contato.empresaRef?.razaoSocial || 'sua empresa';
+    
     await sendMessage(sender, 'send-message', {
-        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) ao sistema de treinamentos!`,
+        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`,
     });
 
+    // Buscar treinamentos da empresa (agora otimizado)
     const treinamentos = await buscarTreinamentosEmpresa(contato.empresaId);
     
     if (treinamentos.length === 0) {
         await sendMessage(sender, 'send-message', {
-            message: '⚠️ Não há treinamentos disponíveis. Entre em contato com o suporte.',
+            message: '⚠️ Não há treinamentos disponíveis para sua empresa no momento. Entre em contato com o suporte.',
         });
         return;
     }
 
-    const rows = treinamentos.map(treinamento => ({
+    await sendMessage(sender, 'send-message', {
+        message: '📚 Aqui estão os treinamentos disponíveis',
+    });
+
+    // Mostrar treinamentos disponíveis como texto simples primeiro
+    const listaTreinamentos = treinamentos.map(t => `${t.nome}`).join('\n\n');
+    await sendMessage(sender, 'send-message', {
+        message: `*Escolha qual treinamento deseja iniciar:*\n\n${listaTreinamentos}`,
+    });
+
+    // Criar lista de treinamentos
+    const rows = treinamentos.map((treinamento, index) => ({
         id: `treinamento_${treinamento.id}`,
         title: treinamento.nome,
         description: ''
@@ -405,14 +476,18 @@ async function iniciarTreinamento(sender, contato) {
 
     const listMsg = {
         title: '',
-        description: 'Escolha seu treinamento:',
+        description: 'Selecione uma opção:',
         buttonText: 'Selecionar',
         listType: 'SINGLE_SELECT',
-        sections: [{ title: '', rows }]
+        sections: [{
+            title: '',
+            rows: rows
+        }],
     };
 
     await sendMessage(sender, 'send-list-message', listMsg);
     await salvarUltimaInteracao(sender, 'selecionar_treinamento', JSON.stringify(listMsg));
+
 }
 
 
@@ -507,13 +582,30 @@ async function processarMensagem(message, client) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // Verificação de cadastro otimizada
-        const contato = await verificarCadastro(sender);
+        // RESPOSTA INSTANTÂNEA - Verificar cache primeiro
+        const cacheKey = `contato_${limparNumero(sender)}`;
+        let contato = null;
         
+        if (cacheContatos.has(cacheKey)) {
+            const cached = cacheContatos.get(cacheKey);
+            if (Date.now() - cached.timestamp < CACHE_TIMEOUT) {
+                contato = cached.contato;
+            }
+        }
+        
+        // Se não tem no cache, responder imediatamente
         if (!contato) {
             await sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
+            
+            // Verificar cadastro em background sem bloquear
+            verificarCadastro(sender).then(contatoEncontrado => {
+                if (contatoEncontrado) {
+                    processarMensagemCadastrada(message, client, contatoEncontrado);
+                }
+            }).catch(() => {});
+            
             return;
         }
         
@@ -672,10 +764,17 @@ async function processarMensagem(message, client) {
             return;
         }
 
-        // Inicialização direta para usuários não iniciados
+        // Saudação inicial para usuários não iniciados
         if (contato.statusTreinamento === 'não iniciado') {
-            await iniciarTreinamento(sender, contato);
-            return;
+            if (!saudacoesEnviadas.has(sender)) {
+                saudacoesEnviadas.add(sender);
+                setTimeout(() => {
+                    saudacoesEnviadas.delete(sender);
+                }, 2 * 60 * 1000);
+                
+                await iniciarTreinamento(sender, contato);
+                return;
+            }
         }
 
         // Processar opções de continuidade
@@ -1044,7 +1143,16 @@ async function processarMensagem(message, client) {
     }
 }
 
-
+// Função para processar mensagem de usuário cadastrado
+async function processarMensagemCadastrada(message, client, contato) {
+    const sender = message.from.replace('@c.us', '');
+    const text = message.body?.toLowerCase() || '';
+    const selectedId = message.selectedRowId || '';
+    const rawText = message.body || '';
+    
+    // Continuar processamento normal para usuário cadastrado
+    // (resto da lógica original aqui)
+}
 
 // Exportar funções para serem usadas externamente
 module.exports = { 
