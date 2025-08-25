@@ -304,11 +304,21 @@ async function verificarCadastro(sender) {
     }
     
     try {
-        const contato = await Contato.findOne({
-            where: { telefone: { [Op.like]: `%${limpo.slice(-8)}` } },
+        // Busca otimizada: primeiro por número exato, depois por LIKE
+        let contato = await Contato.findOne({
+            where: { telefone: limpo },
             attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
             logging: false
         });
+        
+        // Se não encontrou, buscar por LIKE (mais lento)
+        if (!contato) {
+            contato = await Contato.findOne({
+                where: { telefone: { [Op.like]: `%${limpo.slice(-8)}` } },
+                attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
+                logging: false
+            });
+        }
         
         // Salvar no cache
         if (contato) {

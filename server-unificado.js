@@ -66,20 +66,19 @@ async function inicializarWhatsApp() {
     const isConnected = await wppClient.isConnected();
     console.log(`🔍 Status de conexão: ${isConnected ? 'CONECTADO' : 'DESCONECTADO'}`);
 
-    // Listener de mensagens
+    // Listener de mensagens - OTIMIZADO
     wppClient.onMessage(async (message) => {
       if (!message.body && !message.selectedRowId) return;
       if (message.isGroupMsg) return;
       
       console.log('📨 Nova mensagem recebida!');
       
-      setImmediate(async () => {
-        try {
-          await processarMensagem(message, wppClient);
-        } catch (error) {
-          console.error('❌ Erro ao processar:', error.message);
-        }
-      });
+      // Processamento direto sem setImmediate
+      try {
+        await processarMensagem(message, wppClient);
+      } catch (error) {
+        console.error('❌ Erro ao processar:', error.message);
+      }
     });
 
   } catch (error) {
