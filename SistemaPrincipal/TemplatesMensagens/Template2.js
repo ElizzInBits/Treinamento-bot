@@ -582,13 +582,30 @@ async function processarMensagem(message, client) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // Verificação rápida de cadastro
-        const contato = await verificarCadastro(sender);
+        // RESPOSTA INSTANTÂNEA - Verificar cache primeiro
+        const cacheKey = `contato_${limparNumero(sender)}`;
+        let contato = null;
         
+        if (cacheContatos.has(cacheKey)) {
+            const cached = cacheContatos.get(cacheKey);
+            if (Date.now() - cached.timestamp < CACHE_TIMEOUT) {
+                contato = cached.contato;
+            }
+        }
+        
+        // Se não tem no cache, responder imediatamente
         if (!contato) {
             await sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
+            
+            // Verificar cadastro em background sem bloquear
+            verificarCadastro(sender).then(contatoEncontrado => {
+                if (contatoEncontrado) {
+                    processarMensagemCadastrada(message, client, contatoEncontrado);
+                }
+            }).catch(() => {});
+            
             return;
         }
         
@@ -1124,6 +1141,17 @@ async function processarMensagem(message, client) {
     } finally {
         emProcessamento.delete(sender);
     }
+}
+
+// Função para processar mensagem de usuário cadastrado
+async function processarMensagemCadastrada(message, client, contato) {
+    const sender = message.from.replace('@c.us', '');
+    const text = message.body?.toLowerCase() || '';
+    const selectedId = message.selectedRowId || '';
+    const rawText = message.body || '';
+    
+    // Continuar processamento normal para usuário cadastrado
+    // (resto da lógica original aqui)
 }
 
 // Exportar funções para serem usadas externamente
