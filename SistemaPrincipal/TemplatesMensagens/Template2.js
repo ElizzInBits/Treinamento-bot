@@ -7,6 +7,12 @@ const API_BASE = 'http://127.0.0.1:21465/api';
 const SESSION = 'NERDWHATS_AMERICA';
 const TOKEN = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
 
+// Headers padrão
+const API_HEADERS = {
+    'Authorization': `Bearer ${TOKEN}`,
+    'Content-Type': 'application/json'
+};
+
 // Função para definir cliente (compatibilidade)
 function setWppClient(client) {
     // Não usado mais
@@ -22,33 +28,33 @@ async function sendMessage(phone, endpoint, body = {}) {
         
         switch (endpoint) {
             case 'send-message':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-message`, {
+                response = await axios.post(`${API_BASE}/${SESSION}/send-text`, {
                     phone: phoneNumber,
                     message: body.message
                 }, {
-                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    headers: API_HEADERS,
                     timeout: 2000
                 });
                 break;
                 
             case 'send-list-message':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-list-message`, {
+                response = await axios.post(`${API_BASE}/${SESSION}/send-list`, {
                     phone: phoneNumber,
                     ...body
                 }, {
-                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    headers: API_HEADERS,
                     timeout: 2000
                 });
                 break;
                 
             case 'send-file':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-file`, {
+                response = await axios.post(`${API_BASE}/${SESSION}/send-file-base64`, {
                     phone: phoneNumber,
                     path: body.path,
                     filename: body.filename,
                     caption: body.caption
                 }, {
-                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    headers: API_HEADERS,
                     timeout: 5000
                 });
                 break;
