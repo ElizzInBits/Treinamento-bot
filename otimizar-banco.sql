@@ -6,14 +6,15 @@ USE listadecontatos;
 -- Verificar índices existentes
 SHOW INDEX FROM contatos;
 
--- Criar índices otimizados (se não existirem)
-CREATE INDEX IF NOT EXISTS idx_contatos_telefone ON contatos (telefone);
-CREATE INDEX IF NOT EXISTS idx_contatos_status ON contatos (statusTreinamento);
-CREATE INDEX IF NOT EXISTS idx_contatos_telefone_status ON contatos (telefone, statusTreinamento);
-CREATE INDEX IF NOT EXISTS idx_contatos_empresa ON contatos (empresaId);
+-- Criar índices otimizados (verificando se já existem)
+-- Índice para telefone já existe, pulando
+-- CREATE INDEX idx_contatos_telefone ON contatos (telefone);
+
+-- Criar índice composto telefone + status
+CREATE INDEX idx_contatos_tel_status ON contatos (telefone, statusTreinamento);
 
 -- Otimizar tabela interações
-CREATE INDEX IF NOT EXISTS idx_interacoes_telefone_data ON interacoes (telefone, createdAt DESC);
+CREATE INDEX idx_interacoes_tel_data ON interacoes (telefone, createdAt DESC);
 
 -- Otimizar tabelas
 OPTIMIZE TABLE contatos;
