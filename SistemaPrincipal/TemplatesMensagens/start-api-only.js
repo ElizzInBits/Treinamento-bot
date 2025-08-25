@@ -29,9 +29,9 @@ async function verificarAPI() {
       timeout: 2000
     });
     
-    const status = response.data.status || response.data.state;
-    console.log('📶 Status API:', status);
-    return status === 'CONNECTED' || status === 'inChat';
+    const connected = response.data.connected;
+    console.log('📶 Status API:', connected ? 'CONECTADO' : 'DESCONECTADO');
+    return connected === true;
   } catch (error) {
     console.error('❌ API indisponível:', error.message);
     return false;
@@ -43,37 +43,9 @@ const processedMessages = new Set();
 
 async function buscarMensagens() {
   try {
-    const response = await axios.get(`${API_BASE}/${SESSION}/all-chats-new-msg`, {
-      headers: { 'Authorization': `Bearer ${TOKEN}` },
-      timeout: 1500
-    });
-    
-    if (response.data && response.data.length > 0) {
-      console.log(`📨 ${response.data.length} mensagens não lidas`);
-      
-      for (const message of response.data) {
-        if (!message.body && !message.selectedRowId) continue;
-        if (message.isGroupMsg) continue;
-        if (message.fromMe) continue;
-        
-        const msgId = `${message.from}_${message.timestamp}`;
-        if (processedMessages.has(msgId)) continue;
-        
-        processedMessages.add(msgId);
-        
-        // Limpar cache
-        if (processedMessages.size > 50) {
-          processedMessages.clear();
-        }
-        
-        console.log(`📨 ${message.from}: ${message.body || message.selectedRowId}`);
-        
-        // Processar mensagem
-        processarMensagem(message).catch(err => {
-          console.error('❌ Erro processamento:', err.message);
-        });
-      }
-    }
+    // Por enquanto, desabilitar polling até encontrar endpoint correto
+    // O wppconnect-server já está recebendo mensagens (visto nos logs)
+    // Vamos usar apenas o envio por enquanto
   } catch (error) {
     // Ignorar erros de polling
   }
