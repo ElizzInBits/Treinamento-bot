@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'wppconnect-server',
-      script: './dist/server.js',
+      script: './start-server.js',
       cwd: './wppconnect-server',
       instances: 1,
       autorestart: true,
