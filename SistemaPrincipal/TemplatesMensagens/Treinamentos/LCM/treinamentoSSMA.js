@@ -236,5 +236,28 @@ async function processarResposta(sender, message, sendMessage) {
 }
 
 // -------------------------------------------
-module.exports = { executarTreinamento, processarResposta };
+// Função compatível com Template2.js
+async function processarRespostaSSMA(sender, text, selectedId, contato, sendMessage) {
+    return await processarResposta(sender, text, sendMessage);
+}
+
+// Função para treinamentos pendentes (compatibilidade)
+async function processarTreinamentosPendentes(sender, selectedId, contato, sendMessage, text = '') {
+    // Implementação básica - pode ser expandida depois
+    if (selectedId === 'nao_ver_treinamentos') {
+        await sendMessage(sender, 'send-message', {
+            message: '🙏 Sem problemas! Quando quiser ver seus treinamentos, digite "treinamentos".',
+        });
+        return true;
+    }
+    return false;
+}
+
+// -------------------------------------------
+module.exports = { 
+    executarTreinamento, 
+    processarResposta, 
+    processarRespostaSSMA,
+    processarTreinamentosPendentes 
+};
 console.log("📝 treinamentoSSMA.js RESUMIDO carregado");
