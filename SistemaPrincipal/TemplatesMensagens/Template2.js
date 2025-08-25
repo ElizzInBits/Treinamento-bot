@@ -38,6 +38,7 @@ const path = require('path');
 const { Contato, Interacao, Empresa, EmpresaTreinamento } = require('../BancoDeDados/models');
 const { Treinamento } = require('../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('./Certificados/certificados2.js');
+const cacheContatos = require('../BancoDeDados/cache-contatos');
 
 // Carregar todos os scripts de treinamento dinamicamente
 const scriptsTreinamento = {};
@@ -94,19 +95,6 @@ carregarScriptsTreinamento();
 // ========================================
 const emProcessamento = new Set();
 const saudacoesEnviadas = new Set();
-const cacheContatos = new Map(); // Cache para contatos
-const CACHE_TIMEOUT = 2 * 60 * 1000; // 2 minutos
-
-// Limpeza automática do cache a cada 10 minutos
-setInterval(() => {
-    const now = Date.now();
-    for (const [key, value] of cacheContatos.entries()) {
-        if (now - value.timestamp > CACHE_TIMEOUT) {
-            cacheContatos.delete(key);
-        }
-    }
-    console.log(`🧹 Cache limpo. Entradas ativas: ${cacheContatos.size}`);
-}, 5 * 60 * 1000);
 
 // ========================================
 // CONSTANTES E CONFIGURAÇÕES
@@ -287,44 +275,7 @@ async function processarComandosContinuar(sender, text, selectedId) {
     return false;
 }
 
-/**
- * Verifica se o contato está cadastrado - SUPER OTIMIZADO
- */
-async function verificarCadastro(sender) {
-    const limpo = limparNumero(sender);
-    
-    // Verificar cache primeiro
-    const cacheKey = `contato_${limpo}`;
-    if (cacheContatos.has(cacheKey)) {
-        const cached = cacheContatos.get(cacheKey);
-        if (Date.now() - cached.timestamp < CACHE_TIMEOUT) {
-            return cached.contato;
-        }
-        cacheContatos.delete(cacheKey);
-    }
-    
-    try {
-        // Busca APENAS por número exato - sem LIKE
-        const contato = await Contato.findOne({
-            where: { telefone: limpo },
-            attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-            logging: false
-        });
-        
-        // Salvar no cache se encontrou
-        if (contato) {
-            cacheContatos.set(cacheKey, {
-                contato: contato,
-                timestamp: Date.now()
-            });
-        }
-        
-        return contato;
-    } catch (error) {
-        console.error('Erro verificarCadastro:', error.message);
-        return null;
-    }
-}
+
 
 /**
  * Processa confirmação de dados
@@ -573,40 +524,10 @@ async function processarMensagem(message, client) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // RESPOSTA INSTANTÂNEA - Sempre responder primeiro
-        const numeroLimpo = limparNumero(sender);
-        const cacheKey = `contato_${numeroLimpo}`;
-        let contato = null;
+        // RESPOSTA INSTANTÂNEA com cache otimizado
+        const contato = await cacheContatos.buscarContato(sender);
         
-        // Verificar cache
-        if (cacheContatos.has(cacheKey)) {
-            const cached = cacheContatos.get(cacheKey);
-            if (Date.now() - cached.timestamp < CACHE_TIMEOUT) {
-                contato = cached.contato;
-            }
-        }
-        
-        // Se não tem no cache, buscar rapidamente
-        if (!contato) {
-            try {
-                contato = await Contato.findOne({
-                    where: { telefone: numeroLimpo },
-                    attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-                    logging: false
-                });
-                
-                if (contato) {
-                    cacheContatos.set(cacheKey, {
-                        contato: contato,
-                        timestamp: Date.now()
-                    });
-                }
-            } catch (error) {
-                console.error('Erro busca rápida:', error.message);
-            }
-        }
-        
-        // Se ainda não encontrou, responder mensagem de cadastro
+        // Se não encontrou contato, responder imediatamente
         if (!contato) {
             await sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
