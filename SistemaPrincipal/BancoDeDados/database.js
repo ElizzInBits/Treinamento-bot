@@ -12,13 +12,13 @@ const sequelize = new Sequelize(
     dialect: 'mysql',
     logging: false,
     dialectOptions: {
-      connectTimeout: 60000
+      connectTimeout: 5000
     },
     pool: {
-      max: 5,
-      min: 1,
-      acquire: 10000,
-      idle: 5000
+      max: 10,
+      min: 2,
+      acquire: 3000,
+      idle: 1000
     }
   }
 );
