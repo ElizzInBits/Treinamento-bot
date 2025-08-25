@@ -30,16 +30,25 @@ console.log('🚀 Iniciando WhatsApp Bot com API do wppconnect-server...');
 // Cliente híbrido (direto + API backup)
 const hybridClient = {
   sendText: async (to, message) => {
-    // Tentar conexão direta primeiro
+    // Timeout para conexão direta
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout cliente direto')), 5000);
+    });
+    
+    // Tentar conexão direta primeiro com timeout
     if (globalClient && globalClient.sendText) {
       try {
-        return await globalClient.sendText(to, message);
+        const result = await Promise.race([
+          globalClient.sendText(to, message),
+          timeoutPromise
+        ]);
+        return result;
       } catch (error) {
-        console.log('⚠️ Conexão direta falhou, usando API backup');
+        console.log('⚠️ Conexão direta falhou/timeout, usando API backup');
       }
     }
     
-    // Usar API backup
+    // Usar API backup com timeout
     try {
       const response = await axios.post(`${API_BASE}/${SESSION}/send-message`, {
         phone: to.replace('@c.us', ''),
@@ -47,7 +56,8 @@ const hybridClient = {
       }, {
         headers: {
           'Authorization': `Bearer ${TOKEN}`
-        }
+        },
+        timeout: 8000
       });
       return response.data;
     } catch (error) {
@@ -86,13 +96,21 @@ async function inicializarWhatsApp() {
       disableWelcome: true,
       updatesLog: false,
       autoClose: 0,
+      browserWS: '',
+      disableSpins: true,
+      logQR: false,
       puppeteerOptions: {
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
-          '--disable-gpu'
-        ]
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--no-first-run',
+          '--disable-extensions'
+        ],
+        timeout: 30000
       },
       catchQR: (base64Qr, asciiQR, attempts, urlCode) => {
         console.log('\n📱 QR CODE WhatsApp Bot:');
