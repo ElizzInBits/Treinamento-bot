@@ -1,70 +1,80 @@
 
 
-const axios = require('axios');
+// Variável global para o cliente
+let wppClient = null;
 
-// Configuração da API do wppconnect-server
-const API_BASE = 'http://72.60.48.249:21465/api';
-const SESSION = 'NERDWHATS_AMERICA';
-const TOKEN = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
-
-// Função sendMessage usando API do servidor
-async function sendMessage(phone, endpoint, body = {}) {
-    const sendStart = Date.now();
-    const phoneNumber = phone.replace('@c.us', '');
-    
-    try {
-        let response;
-        
-        switch (endpoint) {
-            case 'send-message':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-message`, {
-                    phone: phoneNumber,
-                    message: body.message
-                }, {
-                    headers: { 'Authorization': `Bearer ${TOKEN}` },
-                    timeout: 5000
-                });
-                break;
-                
-            case 'send-list-message':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-list-message`, {
-                    phone: phoneNumber,
-                    ...body
-                }, {
-                    headers: { 'Authorization': `Bearer ${TOKEN}` },
-                    timeout: 5000
-                });
-                break;
-                
-            case 'send-file':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-file`, {
-                    phone: phoneNumber,
-                    path: body.path,
-                    filename: body.filename,
-                    caption: body.caption
-                }, {
-                    headers: { 'Authorization': `Bearer ${TOKEN}` },
-                    timeout: 10000
-                });
-                break;
-                
-            default:
-                return false;
-        }
-        
-        console.log(`✅ ${endpoint}: ${Date.now() - sendStart}ms`);
-        return response.data;
-        
-    } catch (error) {
-        const duration = Date.now() - sendStart;
-        console.error(`❌ ${endpoint} (${duration}ms):`, error.message);
-        return false;
-    }
+// Função para definir o cliente
+function setWppClient(client) {
+    wppClient = client;
 }
 
-// Função para definir cliente (compatibilidade)
-function setWppClient(client) {
-    // Não usado mais, mantido para compatibilidade
+// Função sendMessage com fallback e retry
+async function sendMessage(phone, endpoint, body = {}, maxRetries = 2) {
+    const sendStart = Date.now();
+    
+    if (!wppClient) {
+        console.error('❌ wppClient não disponível');
+        return false;
+    }
+
+    const to = phone.includes('@c.us') ? phone : `${phone}@c.us`;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`🔄 Tentativa ${attempt}/${maxRetries} - ${endpoint}`);
+            
+            // Verificar conexão antes de enviar
+            if (wppClient.isConnected) {
+                try {
+                    const connected = await wppClient.isConnected();
+                    if (!connected) {
+                        console.log('⚠️ Cliente não conectado, pulando tentativa');
+                        throw new Error('Cliente desconectado');
+                    }
+                } catch (e) {
+                    console.log('⚠️ Não foi possível verificar conexão');
+                }
+            }
+            
+            // Timeout de 3 segundos por tentativa
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Timeout 3s')), 3000);
+            });
+            
+            let sendPromise;
+            switch (endpoint) {
+                case 'send-message':
+                    sendPromise = wppClient.sendText(to, body.message);
+                    break;
+                case 'send-list-message':
+                    sendPromise = wppClient.sendListMessage(to, body);
+                    break;
+                case 'send-file':
+                    sendPromise = wppClient.sendFile(to, body.path, body.filename, body.caption);
+                    break;
+                default:
+                    return false;
+            }
+            
+            const result = await Promise.race([sendPromise, timeoutPromise]);
+            console.log(`✅ ${endpoint}: ${Date.now() - sendStart}ms (tentativa ${attempt})`);
+            return result;
+            
+        } catch (error) {
+            const duration = Date.now() - sendStart;
+            console.error(`❌ ${endpoint} tentativa ${attempt} (${duration}ms):`, error.message);
+            
+            if (attempt === maxRetries) {
+                console.error(`❌ Todas as tentativas falharam para ${endpoint}`);
+                return false;
+            }
+            
+            // Aguardar 1 segundo antes da próxima tentativa
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    
+    return false;
 }
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const { Op } = require('sequelize');
@@ -554,14 +564,14 @@ async function gerarEEnviarCertificado(contato, sender) {
 // FUNÇÃO PRINCIPAL DE PROCESSAMENTO
 // ========================================
 
-async function processarMensagem(message, client = null) {
+async function processarMensagem(message, client) {
     const startTime = Date.now();
     console.log(`⏱️ [${new Date().toISOString()}] INÍCIO processamento: ${message.from}`);
     
+    setWppClient(client);
     const sender = message.from.replace('@c.us', '');
-    
-    if (emProcessamento.has(sender)) {
-        console.log(`⏸️ Usuário ${sender} já em processamento`);
+
+    if (!client || emProcessamento.has(sender)) {
         return;
     }
 

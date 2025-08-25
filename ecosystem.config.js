@@ -14,11 +14,11 @@ module.exports = {
     },
     {
       name: 'whatsapp-bot',
-      script: './SistemaPrincipal/TemplatesMensagens/start-server-only.js',
+      script: './SistemaPrincipal/TemplatesMensagens/start-template.js',
       instances: 1,
       autorestart: true,
       watch: false,
-      max_memory_restart: '300M'
+      max_memory_restart: '500M'
     },
     {
       name: 'frontend',
