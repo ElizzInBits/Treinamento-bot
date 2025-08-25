@@ -10,23 +10,35 @@ function setWppClient(client) {
 
 // Função sendMessage super rápida
 async function sendMessage(phone, endpoint, body = {}) {
-    if (!wppClient) return false;
+    const sendStart = Date.now();
+    
+    if (!wppClient) {
+        console.error('❌ wppClient não disponível');
+        return false;
+    }
 
     try {
         const to = phone.includes('@c.us') ? phone : `${phone}@c.us`;
 
+        let result;
         switch (endpoint) {
             case 'send-message':
-                return await wppClient.sendText(to, body.message);
+                result = await wppClient.sendText(to, body.message);
+                break;
             case 'send-list-message':
-                return await wppClient.sendListMessage(to, body);
+                result = await wppClient.sendListMessage(to, body);
+                break;
             case 'send-file':
-                return await wppClient.sendFile(to, body.path, body.filename, body.caption);
+                result = await wppClient.sendFile(to, body.path, body.filename, body.caption);
+                break;
             default:
                 return false;
         }
+        
+        console.log(`✅ ${endpoint}: ${Date.now() - sendStart}ms`);
+        return result;
     } catch (error) {
-        console.error(`❌ ${endpoint}:`, error.message);
+        console.error(`❌ ${endpoint} (${Date.now() - sendStart}ms):`, error.message);
         return false;
     }
 }
@@ -381,15 +393,22 @@ async function buscarTreinamentosEmpresa(empresaId) {
  * Inicia o treinamento para novos usuários - OTIMIZADO
  */
 async function iniciarTreinamento(sender, contato) {
+    const funcStart = Date.now();
+    console.log(`🚀 Iniciando treinamento para ${contato.nome}`);
+    
     // Usar dados da empresa já carregados no contato (se disponível)
     const nomeEmpresa = contato.empresaRef?.razaoSocial || 'sua empresa';
 
+    const msg1Start = Date.now();
     await sendMessage(sender, 'send-message', {
         message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`,
     });
+    console.log(`📤 Mensagem saudação: ${Date.now() - msg1Start}ms`);
 
     // Buscar treinamentos da empresa (agora otimizado)
+    const dbStart = Date.now();
     const treinamentos = await buscarTreinamentosEmpresa(contato.empresaId);
+    console.log(`🔍 Busca treinamentos: ${Date.now() - dbStart}ms`);
 
     if (treinamentos.length === 0) {
         await sendMessage(sender, 'send-message', {
@@ -426,9 +445,12 @@ async function iniciarTreinamento(sender, contato) {
         }],
     };
 
+    const msg3Start = Date.now();
     await sendMessage(sender, 'send-list-message', listMsg);
+    console.log(`📤 Mensagem lista: ${Date.now() - msg3Start}ms`);
+    
     await salvarUltimaInteracao(sender, 'selecionar_treinamento', JSON.stringify(listMsg));
-
+    console.log(`✅ TOTAL iniciarTreinamento: ${Date.now() - funcStart}ms`);
 }
 
 
@@ -509,10 +531,20 @@ async function gerarEEnviarCertificado(contato, sender) {
 // ========================================
 
 async function processarMensagem(message, client) {
+    const startTime = Date.now();
+    console.log(`⏱️ [${new Date().toISOString()}] INÍCIO processamento: ${message.from}`);
+    
     setWppClient(client);
     const sender = message.from.replace('@c.us', '');
 
-    if (!client || emProcessamento.has(sender)) {
+    // Verificar estado do cliente
+    if (!client) {
+        console.log(`❌ Cliente WhatsApp não disponível para ${sender}`);
+        return;
+    }
+    
+    if (emProcessamento.has(sender)) {
+        console.log(`⏸️ Usuário ${sender} já em processamento`);
         return;
     }
 
@@ -524,13 +556,18 @@ async function processarMensagem(message, client) {
         const rawText = message.body || '';
 
         // RESPOSTA INSTANTÂNEA com cache otimizado
+        const dbStart = Date.now();
         const contato = await cacheContatos.buscarContato(sender);
+        console.log(`🔍 Busca contato: ${Date.now() - dbStart}ms`);
 
         // Se não encontrou contato, responder imediatamente
         if (!contato) {
+            const msgStart = Date.now();
             await sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
+            console.log(`📤 Envio mensagem não cadastrado: ${Date.now() - msgStart}ms`);
+            console.log(`⏱️ TOTAL processamento não cadastrado: ${Date.now() - startTime}ms`);
             return;
         }
 
@@ -691,7 +728,10 @@ async function processarMensagem(message, client) {
 
         // Saudação inicial para usuários não iniciados
         if (contato.statusTreinamento === 'não iniciado') {
+            const inicioStart = Date.now();
             await iniciarTreinamento(sender, contato);
+            console.log(`🚀 Iniciar treinamento: ${Date.now() - inicioStart}ms`);
+            console.log(`⏱️ TOTAL processamento não iniciado: ${Date.now() - startTime}ms`);
             return;
         }
 
@@ -1060,6 +1100,7 @@ async function processarMensagem(message, client) {
         console.error('❌ Erro processamento:', error.message);
     } finally {
         emProcessamento.delete(sender);
+        console.log(`⏱️ TOTAL processamento completo: ${Date.now() - startTime}ms`);
     }
 }
 
