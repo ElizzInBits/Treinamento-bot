@@ -288,10 +288,20 @@ async function processarComandosContinuar(sender, text, selectedId) {
 }
 
 /**
- * Verifica se o contato está cadastrado - SIMPLES
+ * Verifica se o contato está cadastrado - OTIMIZADO COM CACHE
  */
 async function verificarCadastro(sender) {
     const limpo = limparNumero(sender);
+    
+    // Verificar cache primeiro
+    const cacheKey = `contato_${limpo}`;
+    if (cacheContatos.has(cacheKey)) {
+        const cached = cacheContatos.get(cacheKey);
+        if (Date.now() - cached.timestamp < CACHE_TIMEOUT) {
+            return cached.contato;
+        }
+        cacheContatos.delete(cacheKey);
+    }
     
     try {
         const contato = await Contato.findOne({
@@ -299,6 +309,14 @@ async function verificarCadastro(sender) {
             attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
             logging: false
         });
+        
+        // Salvar no cache
+        if (contato) {
+            cacheContatos.set(cacheKey, {
+                contato: contato,
+                timestamp: Date.now()
+            });
+        }
         
         return contato;
     } catch (error) {
@@ -549,22 +567,25 @@ async function processarMensagem(message, client) {
     
     emProcessamento.add(sender);
     
-    // Timeout de segurança mínimo
+    // Timeout de segurança otimizado
     const timeoutId = setTimeout(() => {
         emProcessamento.delete(sender);
-    }, 50);
+    }, 30000); // 30 segundos
 
     try {
         const text = message.body?.toLowerCase() || '';
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // Verificação rápida
+        // Verificação rápida com resposta imediata para não cadastrados
         const contato = await verificarCadastro(sender);
         
         if (!contato) {
-            await sendMessage(sender, 'send-message', {
-                message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
+            // Resposta imediata para usuários não cadastrados
+            setImmediate(async () => {
+                await sendMessage(sender, 'send-message', {
+                    message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
+                });
             });
             return;
         }
@@ -724,17 +745,20 @@ async function processarMensagem(message, client) {
             return;
         }
 
-        // Saudação inicial para usuários não iniciados
+        // Saudação inicial para usuários não iniciados - OTIMIZADA
         if (contato.statusTreinamento === 'não iniciado') {
             // Verificar se já enviou saudação recentemente (evitar spam)
             if (!saudacoesEnviadas.has(sender)) {
                 saudacoesEnviadas.add(sender);
-                // Remover da lista após 5 minutos para permitir nova saudação se necessário
+                // Remover da lista após 2 minutos
                 setTimeout(() => {
                     saudacoesEnviadas.delete(sender);
                 }, 2 * 60 * 1000);
                 
-                await iniciarTreinamento(sender, contato);
+                // Usar setImmediate para resposta mais rápida
+                setImmediate(async () => {
+                    await iniciarTreinamento(sender, contato);
+                });
                 return;
             }
         }
