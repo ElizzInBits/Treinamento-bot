@@ -24,14 +24,14 @@ console.log('🚀 Bot usando APENAS API do wppconnect-server');
 // Verificar status da API
 async function verificarAPI() {
   try {
-    const response = await axios.get(`${API_BASE}/${SESSION}/status-session`, {
+    const response = await axios.get(`${API_BASE}/${SESSION}/status`, {
       headers: { 'Authorization': `Bearer ${TOKEN}` },
       timeout: 2000
     });
     
     const status = response.data.status || response.data.state;
     console.log('📶 Status API:', status);
-    return status === 'CONNECTED';
+    return status === 'CONNECTED' || status === 'inChat';
   } catch (error) {
     console.error('❌ API indisponível:', error.message);
     return false;
@@ -43,7 +43,7 @@ const processedMessages = new Set();
 
 async function buscarMensagens() {
   try {
-    const response = await axios.get(`${API_BASE}/${SESSION}/all-unread-messages`, {
+    const response = await axios.get(`${API_BASE}/${SESSION}/all-chats-new-msg`, {
       headers: { 'Authorization': `Bearer ${TOKEN}` },
       timeout: 1500
     });
