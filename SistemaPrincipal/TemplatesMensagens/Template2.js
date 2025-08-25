@@ -28,7 +28,7 @@ async function sendMessage(phone, endpoint, body = {}) {
         
         switch (endpoint) {
             case 'send-message':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-text`, {
+                response = await axios.post(`${API_BASE}/${SESSION}/send-message`, {
                     phone: phoneNumber,
                     message: body.message
                 }, {
@@ -38,7 +38,7 @@ async function sendMessage(phone, endpoint, body = {}) {
                 break;
                 
             case 'send-list-message':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-list`, {
+                response = await axios.post(`${API_BASE}/${SESSION}/send-list-message`, {
                     phone: phoneNumber,
                     ...body
                 }, {
