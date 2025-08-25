@@ -94,12 +94,24 @@ async function inicializarWhatsApp() {
           '--disable-gpu'
         ]
       },
-      catchQR: (base64Qr, asciiQR) => {
+      catchQR: (base64Qr, asciiQR, attempts, urlCode) => {
         console.log('\n📱 QR CODE WhatsApp Bot:');
         console.log(asciiQR);
+        console.log('\n🔗 QR Code URL:', urlCode);
+        console.log('📱 Escaneie o QR Code acima com seu WhatsApp');
+        console.log('🔄 Tentativa:', attempts);
       },
       statusFind: (status) => {
         console.log('📶 Status WhatsApp Bot:', status);
+        if (status === 'inChat') {
+          console.log('✅ WhatsApp Bot CONECTADO e PRONTO!');
+        }
+        if (status === 'qrReadSuccess') {
+          console.log('✅ QR Code escaneado com sucesso!');
+        }
+        if (status === 'chatsAvailable') {
+          console.log('✅ Chats carregados - Bot operacional!');
+        }
       }
     });
     
