@@ -89,24 +89,10 @@ carregarScriptsTreinamento();
 
 
 
-// ========================================
-// VARIÁVEIS DE CONTROLE GLOBAIS
-// ========================================
+// VARIÁVEIS DE CONTROLE
 const emProcessamento = new Set();
-const saudacoesEnviadas = new Set();
-const cacheContatos = new Map(); // Cache para contatos
-const CACHE_TIMEOUT = 2 * 60 * 1000; // 2 minutos
-
-// Limpeza automática do cache a cada 10 minutos
-setInterval(() => {
-    const now = Date.now();
-    for (const [key, value] of cacheContatos.entries()) {
-        if (now - value.timestamp > CACHE_TIMEOUT) {
-            cacheContatos.delete(key);
-        }
-    }
-    console.log(`🧹 Cache limpo. Entradas ativas: ${cacheContatos.size}`);
-}, 5 * 60 * 1000);
+const cacheContatos = new Map();
+const CACHE_TIMEOUT = 2 * 60 * 1000;
 
 // ========================================
 // CONSTANTES E CONFIGURAÇÕES
@@ -192,48 +178,6 @@ async function obterUltimaInteracao(sender) {
 // ========================================
 // TEMPLATES DE MENSAGENS
 // ========================================
-
-/**
- * Retorna template da mensagem de continuar
- */
-function getMensagemListaContinuar() {
-    return {
-        title: '',
-        description: 'Escolha uma opção:',
-        buttonText: 'Continuar',
-        listType: 'SINGLE_SELECT',
-        sections: [
-            {
-                title: '',
-                rows: [
-                    { id: 'continuar', title: 'Continuar de onde parei', description: '' },
-                    { id: 'pausar', title: 'Continuo assim que possível', description: '' },
-                ],
-            },
-        ],
-    };
-}
-
-
-
-/**
- * Retorna template de confirmação de dados
- */
-function getConfirmacaoDados(nomeCompleto, emailCadastrado) {
-    return {
-        title: '',
-        description: `🎓 *Confirmação dos dados para o certificado:*\n\n👤 *Nome:* ${nomeCompleto}\n📧 *E-mail:* ${emailCadastrado}\n\nOs dados estão corretos?`,
-        buttonText: 'Confirmar',
-        listType: 'SINGLE_SELECT',
-        sections: [{
-            title: '',
-            rows: [
-                { id: 'dados_corretos', title: 'Sim, os dados estão corretos', description: '' },
-                { id: 'dados_incorretos', title: 'Não, preciso corrigir', description: '' },
-            ],
-        }],
-    };
-}
 
 function getFinalizarTreinamento() {
     return {
