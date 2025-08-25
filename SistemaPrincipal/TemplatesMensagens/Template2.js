@@ -94,7 +94,6 @@ carregarScriptsTreinamento();
 // VARIÁVEIS DE CONTROLE GLOBAIS
 // ========================================
 const emProcessamento = new Set();
-const saudacoesEnviadas = new Set();
 
 // ========================================
 // CONSTANTES E CONFIGURAÇÕES
@@ -692,16 +691,11 @@ async function processarMensagem(message, client) {
 
         // Saudação inicial para usuários não iniciados
         if (contato.statusTreinamento === 'não iniciado') {
-            if (!saudacoesEnviadas.has(sender)) {
-                saudacoesEnviadas.add(sender);
-                setTimeout(() => {
-                    saudacoesEnviadas.delete(sender);
-                }, 5 * 1000); // 5 segundos
-
-                await iniciarTreinamento(sender, contato);
-                return;
-            }
+            await iniciarTreinamento(sender, contato);
+            return;
         }
+
+
 
         // Processar opções de continuidade
         if (selectedId === 'continuar_treinamento' ||
