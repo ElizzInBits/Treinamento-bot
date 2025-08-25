@@ -154,27 +154,38 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // Verificar se já existe contato com este telefone
+        // Verificar duplicatas de telefone e CPF
         const variacoesTelefone = gerarVariacoes(telefoneLimpo);
+        const cpfLimpo = cpf ? cpf.replace(/\D/g, '') : null;
+        
         const contatosExistentes = await Contato.findAll();
 
-        const jaExiste = contatosExistentes.some(contato => {
+        const telefoneExiste = contatosExistentes.some(contato => {
             const variacoesContato = gerarVariacoes(contato.telefone);
             return variacoesTelefone.some(num => variacoesContato.includes(num));
         });
 
-        if (jaExiste) {
+        if (telefoneExiste) {
             return res.status(400).json({
                 error: 'Já existe um contato com este telefone'
             });
         }
 
-        // Criar novo contato incluindo email
+        // Verificar CPF duplicado se fornecido
+        if (cpfLimpo) {
+            const cpfExiste = await Contato.findOne({ where: { cpf: cpfLimpo } });
+            if (cpfExiste) {
+                return res.status(400).json({
+                    error: 'Já existe um contato com este CPF'
+                });
+            }
+        }
+
+        // Criar novo contato
         const novoContato = await Contato.create({
             nome: nome.trim(),
             telefone: telefoneLimpo,
-            cpf: cpf ? cpf.replace(/\D/g, '') : null,
-            //empresa: (typeof empresa === 'string' && empresa.trim()) || null,
+            cpf: cpfLimpo,
             empresaId: empresaId ? parseInt(empresaId, 10) : null,
             email: email.trim(),
             statusTreinamento: 'não iniciado'
@@ -202,6 +213,19 @@ router.post('/', async (req, res) => {
 
     } catch (error) {
         console.error('Erro ao cadastrar contato:', error);
+        
+        // Tratar erros específicos de duplicata
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            const campo = error.errors[0]?.path;
+            if (campo === 'cpf') {
+                return res.status(400).json({ error: 'Já existe um contato com este CPF' });
+            }
+            if (campo === 'telefone') {
+                return res.status(400).json({ error: 'Já existe um contato com este telefone' });
+            }
+            return res.status(400).json({ error: 'Dados já existem no sistema' });
+        }
+        
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
