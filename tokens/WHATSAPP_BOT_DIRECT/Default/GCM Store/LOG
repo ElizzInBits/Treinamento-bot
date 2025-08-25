@@ -1,3 +1,2 @@
-2025/08/25-13:22:45.205 79e7 Reusing MANIFEST /root/Treinamento-bot/tokens/WHATSAPP_BOT_DIRECT/Default/GCM Store/MANIFEST-000001
-2025/08/25-13:22:45.205 79e7 Recovering log #3
-2025/08/25-13:22:45.205 79e7 Reusing old log /root/Treinamento-bot/tokens/WHATSAPP_BOT_DIRECT/Default/GCM Store/000003.log 
+2025/08/25-11:45:37.610 55d8 Creating DB c:\Treinamento-bot\tokens\WHATSAPP_BOT_DIRECT\Default\GCM Store since it was missing.
+2025/08/25-11:45:37.647 55d8 Reusing MANIFEST c:\Treinamento-bot\tokens\WHATSAPP_BOT_DIRECT\Default\GCM Store/MANIFEST-000001
