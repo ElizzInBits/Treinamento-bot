@@ -437,38 +437,23 @@ async function buscarTreinamentosEmpresa(empresaId) {
 }
 
 /**
- * Inicia o treinamento para novos usuários - OTIMIZADO
+ * Inicia o treinamento - SIMPLIFICADO
  */
 async function iniciarTreinamento(sender, contato) {
-    // Usar dados da empresa já carregados no contato (se disponível)
-    const nomeEmpresa = contato.empresaRef?.razaoSocial || 'sua empresa';
-    
     await sendMessage(sender, 'send-message', {
-        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`,
+        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) ao sistema de treinamentos!`,
     });
 
-    // Buscar treinamentos da empresa (agora otimizado)
     const treinamentos = await buscarTreinamentosEmpresa(contato.empresaId);
     
     if (treinamentos.length === 0) {
         await sendMessage(sender, 'send-message', {
-            message: '⚠️ Não há treinamentos disponíveis para sua empresa no momento. Entre em contato com o suporte.',
+            message: '⚠️ Não há treinamentos disponíveis. Entre em contato com o suporte.',
         });
         return;
     }
 
-    await sendMessage(sender, 'send-message', {
-        message: '📚 Aqui estão os treinamentos disponíveis',
-    });
-
-    // Mostrar treinamentos disponíveis como texto simples primeiro
-    const listaTreinamentos = treinamentos.map(t => `${t.nome}`).join('\n\n');
-    await sendMessage(sender, 'send-message', {
-        message: `*Escolha qual treinamento deseja iniciar:*\n\n${listaTreinamentos}`,
-    });
-
-    // Criar lista de treinamentos
-    const rows = treinamentos.map((treinamento, index) => ({
+    const rows = treinamentos.map(treinamento => ({
         id: `treinamento_${treinamento.id}`,
         title: treinamento.nome,
         description: ''
@@ -476,18 +461,14 @@ async function iniciarTreinamento(sender, contato) {
 
     const listMsg = {
         title: '',
-        description: 'Selecione uma opção:',
+        description: 'Escolha seu treinamento:',
         buttonText: 'Selecionar',
         listType: 'SINGLE_SELECT',
-        sections: [{
-            title: '',
-            rows: rows
-        }],
+        sections: [{ title: '', rows }]
     };
 
     await sendMessage(sender, 'send-list-message', listMsg);
     await salvarUltimaInteracao(sender, 'selecionar_treinamento', JSON.stringify(listMsg));
-
 }
 
 
@@ -582,30 +563,13 @@ async function processarMensagem(message, client) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // RESPOSTA INSTANTÂNEA - Verificar cache primeiro
-        const cacheKey = `contato_${limparNumero(sender)}`;
-        let contato = null;
+        // Verificação de cadastro otimizada
+        const contato = await verificarCadastro(sender);
         
-        if (cacheContatos.has(cacheKey)) {
-            const cached = cacheContatos.get(cacheKey);
-            if (Date.now() - cached.timestamp < CACHE_TIMEOUT) {
-                contato = cached.contato;
-            }
-        }
-        
-        // Se não tem no cache, responder imediatamente
         if (!contato) {
             await sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
-            
-            // Verificar cadastro em background sem bloquear
-            verificarCadastro(sender).then(contatoEncontrado => {
-                if (contatoEncontrado) {
-                    processarMensagemCadastrada(message, client, contatoEncontrado);
-                }
-            }).catch(() => {});
-            
             return;
         }
         
@@ -764,17 +728,10 @@ async function processarMensagem(message, client) {
             return;
         }
 
-        // Saudação inicial para usuários não iniciados
+        // Inicialização direta para usuários não iniciados
         if (contato.statusTreinamento === 'não iniciado') {
-            if (!saudacoesEnviadas.has(sender)) {
-                saudacoesEnviadas.add(sender);
-                setTimeout(() => {
-                    saudacoesEnviadas.delete(sender);
-                }, 2 * 60 * 1000);
-                
-                await iniciarTreinamento(sender, contato);
-                return;
-            }
+            await iniciarTreinamento(sender, contato);
+            return;
         }
 
         // Processar opções de continuidade
@@ -1143,16 +1100,7 @@ async function processarMensagem(message, client) {
     }
 }
 
-// Função para processar mensagem de usuário cadastrado
-async function processarMensagemCadastrada(message, client, contato) {
-    const sender = message.from.replace('@c.us', '');
-    const text = message.body?.toLowerCase() || '';
-    const selectedId = message.selectedRowId || '';
-    const rawText = message.body || '';
-    
-    // Continuar processamento normal para usuário cadastrado
-    // (resto da lógica original aqui)
-}
+
 
 // Exportar funções para serem usadas externamente
 module.exports = { 
