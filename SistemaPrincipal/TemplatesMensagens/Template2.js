@@ -3,7 +3,7 @@
 const axios = require('axios');
 
 // Configuração da API do wppconnect-server
-const API_BASE = 'http://localhost:21465/api';
+const API_BASE = 'http://72.60.48.249:21465/api';
 const SESSION = 'NERDWHATS_AMERICA';
 const TOKEN = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
 
