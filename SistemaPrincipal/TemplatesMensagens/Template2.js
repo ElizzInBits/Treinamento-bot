@@ -572,17 +572,8 @@ async function processarMensagem(message, client) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // RESPOSTA IMEDIATA - Verificar cadastro em paralelo
-        const verificacaoPromise = verificarCadastro(sender);
-        
-        // Resposta instantânea para primeira mensagem
-        if (!cacheContatos.has(`contato_${limparNumero(sender)}`)) {
-            await sendMessage(sender, 'send-message', {
-                message: '⏳ Verificando seus dados...'
-            });
-        }
-        
-        const contato = await verificacaoPromise;
+        // Verificação rápida de cadastro
+        const contato = await verificarCadastro(sender);
         
         if (!contato) {
             await sendMessage(sender, 'send-message', {
