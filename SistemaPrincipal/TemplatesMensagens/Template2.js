@@ -567,25 +567,26 @@ async function processarMensagem(message, client) {
     
     emProcessamento.add(sender);
     
-    // Timeout de segurança otimizado
-    const timeoutId = setTimeout(() => {
-        emProcessamento.delete(sender);
-    }, 30000); // 30 segundos
-
     try {
         const text = message.body?.toLowerCase() || '';
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // Verificação rápida com resposta imediata para não cadastrados
-        const contato = await verificarCadastro(sender);
+        // RESPOSTA IMEDIATA - Verificar cadastro em paralelo
+        const verificacaoPromise = verificarCadastro(sender);
+        
+        // Resposta instantânea para primeira mensagem
+        if (!cacheContatos.has(`contato_${limparNumero(sender)}`)) {
+            await sendMessage(sender, 'send-message', {
+                message: '⏳ Verificando seus dados...'
+            });
+        }
+        
+        const contato = await verificacaoPromise;
         
         if (!contato) {
-            // Resposta imediata para usuários não cadastrados
-            setImmediate(async () => {
-                await sendMessage(sender, 'send-message', {
-                    message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
-                });
+            await sendMessage(sender, 'send-message', {
+                message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
             return;
         }
@@ -745,20 +746,15 @@ async function processarMensagem(message, client) {
             return;
         }
 
-        // Saudação inicial para usuários não iniciados - OTIMIZADA
+        // Saudação inicial para usuários não iniciados
         if (contato.statusTreinamento === 'não iniciado') {
-            // Verificar se já enviou saudação recentemente (evitar spam)
             if (!saudacoesEnviadas.has(sender)) {
                 saudacoesEnviadas.add(sender);
-                // Remover da lista após 2 minutos
                 setTimeout(() => {
                     saudacoesEnviadas.delete(sender);
                 }, 2 * 60 * 1000);
                 
-                // Usar setImmediate para resposta mais rápida
-                setImmediate(async () => {
-                    await iniciarTreinamento(sender, contato);
-                });
+                await iniciarTreinamento(sender, contato);
                 return;
             }
         }
@@ -1125,7 +1121,6 @@ async function processarMensagem(message, client) {
     } catch (error) {
         console.error('❌ Erro processamento:', error.message);
     } finally {
-        clearTimeout(timeoutId);
         emProcessamento.delete(sender);
     }
 }
