@@ -1,80 +1,70 @@
 
 
-// Variável global para o cliente
-let wppClient = null;
+const axios = require('axios');
 
-// Função para definir o cliente
+// Configuração da API
+const API_BASE = 'http://127.0.0.1:21465/api';
+const SESSION = 'NERDWHATS_AMERICA';
+const TOKEN = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
+
+// Função para definir cliente (compatibilidade)
 function setWppClient(client) {
-    wppClient = client;
+    // Não usado mais
 }
 
-// Função sendMessage com fallback e retry
-async function sendMessage(phone, endpoint, body = {}, maxRetries = 2) {
+// Função sendMessage usando API
+async function sendMessage(phone, endpoint, body = {}) {
     const sendStart = Date.now();
+    const phoneNumber = phone.replace('@c.us', '');
     
-    if (!wppClient) {
-        console.error('❌ wppClient não disponível');
+    try {
+        let response;
+        
+        switch (endpoint) {
+            case 'send-message':
+                response = await axios.post(`${API_BASE}/${SESSION}/send-message`, {
+                    phone: phoneNumber,
+                    message: body.message
+                }, {
+                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    timeout: 2000
+                });
+                break;
+                
+            case 'send-list-message':
+                response = await axios.post(`${API_BASE}/${SESSION}/send-list-message`, {
+                    phone: phoneNumber,
+                    ...body
+                }, {
+                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    timeout: 2000
+                });
+                break;
+                
+            case 'send-file':
+                response = await axios.post(`${API_BASE}/${SESSION}/send-file`, {
+                    phone: phoneNumber,
+                    path: body.path,
+                    filename: body.filename,
+                    caption: body.caption
+                }, {
+                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    timeout: 5000
+                });
+                break;
+                
+            default:
+                return false;
+        }
+        
+        console.log(`✅ ${endpoint}: ${Date.now() - sendStart}ms`);
+        return response.data;
+        
+    } catch (error) {
+        const duration = Date.now() - sendStart;
+        console.error(`❌ ${endpoint} (${duration}ms):`, error.message);
         return false;
     }
-
-    const to = phone.includes('@c.us') ? phone : `${phone}@c.us`;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            console.log(`🔄 Tentativa ${attempt}/${maxRetries} - ${endpoint}`);
-            
-            // Verificar conexão antes de enviar
-            if (wppClient.isConnected) {
-                try {
-                    const connected = await wppClient.isConnected();
-                    if (!connected) {
-                        console.log('⚠️ Cliente não conectado, pulando tentativa');
-                        throw new Error('Cliente desconectado');
-                    }
-                } catch (e) {
-                    console.log('⚠️ Não foi possível verificar conexão');
-                }
-            }
-            
-            // Timeout de 3 segundos por tentativa
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Timeout 3s')), 3000);
-            });
-            
-            let sendPromise;
-            switch (endpoint) {
-                case 'send-message':
-                    sendPromise = wppClient.sendText(to, body.message);
-                    break;
-                case 'send-list-message':
-                    sendPromise = wppClient.sendListMessage(to, body);
-                    break;
-                case 'send-file':
-                    sendPromise = wppClient.sendFile(to, body.path, body.filename, body.caption);
-                    break;
-                default:
-                    return false;
-            }
-            
-            const result = await Promise.race([sendPromise, timeoutPromise]);
-            console.log(`✅ ${endpoint}: ${Date.now() - sendStart}ms (tentativa ${attempt})`);
-            return result;
-            
-        } catch (error) {
-            const duration = Date.now() - sendStart;
-            console.error(`❌ ${endpoint} tentativa ${attempt} (${duration}ms):`, error.message);
-            
-            if (attempt === maxRetries) {
-                console.error(`❌ Todas as tentativas falharam para ${endpoint}`);
-                return false;
-            }
-            
-            // Aguardar 1 segundo antes da próxima tentativa
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-    }
-    
-    return false;
 }
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const { Op } = require('sequelize');
