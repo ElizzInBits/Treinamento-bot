@@ -1,46 +1,70 @@
 
 
-// Variável global para o cliente
-let wppClient = null;
+const axios = require('axios');
 
-// Função para definir o cliente
-function setWppClient(client) {
-    wppClient = client;
-}
+// Configuração da API do wppconnect-server
+const API_BASE = 'http://localhost:21465/api';
+const SESSION = 'NERDWHATS_AMERICA';
+const TOKEN = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
 
-// Função sendMessage super rápida
+// Função sendMessage usando API do servidor
 async function sendMessage(phone, endpoint, body = {}) {
     const sendStart = Date.now();
+    const phoneNumber = phone.replace('@c.us', '');
     
-    if (!wppClient) {
-        console.error('❌ wppClient não disponível');
-        return false;
-    }
-
     try {
-        const to = phone.includes('@c.us') ? phone : `${phone}@c.us`;
-
-        let result;
+        let response;
+        
         switch (endpoint) {
             case 'send-message':
-                result = await wppClient.sendText(to, body.message);
+                response = await axios.post(`${API_BASE}/${SESSION}/send-message`, {
+                    phone: phoneNumber,
+                    message: body.message
+                }, {
+                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    timeout: 5000
+                });
                 break;
+                
             case 'send-list-message':
-                result = await wppClient.sendListMessage(to, body);
+                response = await axios.post(`${API_BASE}/${SESSION}/send-list-message`, {
+                    phone: phoneNumber,
+                    ...body
+                }, {
+                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    timeout: 5000
+                });
                 break;
+                
             case 'send-file':
-                result = await wppClient.sendFile(to, body.path, body.filename, body.caption);
+                response = await axios.post(`${API_BASE}/${SESSION}/send-file`, {
+                    phone: phoneNumber,
+                    path: body.path,
+                    filename: body.filename,
+                    caption: body.caption
+                }, {
+                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    timeout: 10000
+                });
                 break;
+                
             default:
                 return false;
         }
         
         console.log(`✅ ${endpoint}: ${Date.now() - sendStart}ms`);
-        return result;
+        return response.data;
+        
     } catch (error) {
-        console.error(`❌ ${endpoint} (${Date.now() - sendStart}ms):`, error.message);
+        const duration = Date.now() - sendStart;
+        console.error(`❌ ${endpoint} (${duration}ms):`, error.message);
         return false;
     }
+}
+
+// Função para definir cliente (compatibilidade)
+function setWppClient(client) {
+    // Não usado mais, mantido para compatibilidade
 }
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const { Op } = require('sequelize');
@@ -530,18 +554,11 @@ async function gerarEEnviarCertificado(contato, sender) {
 // FUNÇÃO PRINCIPAL DE PROCESSAMENTO
 // ========================================
 
-async function processarMensagem(message, client) {
+async function processarMensagem(message, client = null) {
     const startTime = Date.now();
     console.log(`⏱️ [${new Date().toISOString()}] INÍCIO processamento: ${message.from}`);
     
-    setWppClient(client);
     const sender = message.from.replace('@c.us', '');
-
-    // Verificar estado do cliente
-    if (!client) {
-        console.log(`❌ Cliente WhatsApp não disponível para ${sender}`);
-        return;
-    }
     
     if (emProcessamento.has(sender)) {
         console.log(`⏸️ Usuário ${sender} já em processamento`);
