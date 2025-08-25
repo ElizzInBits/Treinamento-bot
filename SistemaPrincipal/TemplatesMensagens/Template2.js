@@ -288,7 +288,7 @@ async function processarComandosContinuar(sender, text, selectedId) {
 }
 
 /**
- * Verifica se o contato está cadastrado - OTIMIZADO COM CACHE
+ * Verifica se o contato está cadastrado - SUPER OTIMIZADO
  */
 async function verificarCadastro(sender) {
     const limpo = limparNumero(sender);
@@ -304,23 +304,14 @@ async function verificarCadastro(sender) {
     }
     
     try {
-        // Busca otimizada: primeiro por número exato, depois por LIKE
-        let contato = await Contato.findOne({
+        // Busca APENAS por número exato - sem LIKE
+        const contato = await Contato.findOne({
             where: { telefone: limpo },
             attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
             logging: false
         });
         
-        // Se não encontrou, buscar por LIKE (mais lento)
-        if (!contato) {
-            contato = await Contato.findOne({
-                where: { telefone: { [Op.like]: `%${limpo.slice(-8)}` } },
-                attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
-                logging: false
-            });
-        }
-        
-        // Salvar no cache
+        // Salvar no cache se encontrou
         if (contato) {
             cacheContatos.set(cacheKey, {
                 contato: contato,
@@ -582,10 +573,12 @@ async function processarMensagem(message, client) {
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
 
-        // RESPOSTA INSTANTÂNEA - Verificar cache primeiro
-        const cacheKey = `contato_${limparNumero(sender)}`;
+        // RESPOSTA INSTANTÂNEA - Sempre responder primeiro
+        const numeroLimpo = limparNumero(sender);
+        const cacheKey = `contato_${numeroLimpo}`;
         let contato = null;
         
+        // Verificar cache
         if (cacheContatos.has(cacheKey)) {
             const cached = cacheContatos.get(cacheKey);
             if (Date.now() - cached.timestamp < CACHE_TIMEOUT) {
@@ -593,19 +586,31 @@ async function processarMensagem(message, client) {
             }
         }
         
-        // Se não tem no cache, responder imediatamente
+        // Se não tem no cache, buscar rapidamente
+        if (!contato) {
+            try {
+                contato = await Contato.findOne({
+                    where: { telefone: numeroLimpo },
+                    attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
+                    logging: false
+                });
+                
+                if (contato) {
+                    cacheContatos.set(cacheKey, {
+                        contato: contato,
+                        timestamp: Date.now()
+                    });
+                }
+            } catch (error) {
+                console.error('Erro busca rápida:', error.message);
+            }
+        }
+        
+        // Se ainda não encontrou, responder mensagem de cadastro
         if (!contato) {
             await sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
-            
-            // Verificar cadastro em background sem bloquear
-            verificarCadastro(sender).then(contatoEncontrado => {
-                if (contatoEncontrado) {
-                    processarMensagemCadastrada(message, client, contatoEncontrado);
-                }
-            }).catch(() => {});
-            
             return;
         }
         
