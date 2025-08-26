@@ -629,12 +629,19 @@ async function processarMensagem(message, client) {
 
         console.log(`👤 Contato encontrado: ${contato.nome}, Status: ${contato.statusTreinamento}`);
         
-        if (contato.statusTreinamento === 'não iniciado') {
-            // Invalidar cache se necessário
-            cacheContatos.invalidarContato(sender);
-        }
-
         const ultimaInteracao = await obterUltimaInteracao(sender);
+        
+        // PRIORIDADE MÁXIMA: Iniciar treinamento para usuários não iniciados
+        if (contato.statusTreinamento === 'não iniciado' && 
+            !ultimaInteracao || 
+            (ultimaInteracao && ultimaInteracao.tipo !== 'selecionar_treinamento' && 
+             ultimaInteracao.tipo !== 'confirmacao_treinamento' &&
+             ultimaInteracao.tipo !== 'treinamento_iniciado')) {
+            
+            console.log(`🚀 INICIANDO TREINAMENTO IMEDIATAMENTE para: ${contato.nome}`);
+            await iniciarTreinamento(sender, contato);
+            return;
+        }
 
         if (contato.statusTreinamento === 'concluído') {
 
@@ -714,27 +721,17 @@ async function processarMensagem(message, client) {
             }
         }
 
-        // PROCESSAR SSMA PRIMEIRO - ANTES DA CONTINUIDADE
-        const script = scriptsTreinamento['treinamentoSSMA'];
-        console.log(`🔍 Script SSMA encontrado: ${!!script}, função processarRespostaSSMA: ${!!(script && script.processarRespostaSSMA)}`);
-        if (script && script.processarRespostaSSMA) {
-            // Verificar se é uma resposta específica do SSMA usando funções universais
-            if (selectedId === 'rever_modulo1' || selectedId === 'rever_modulo2' ||
-                selectedId === 'iniciar_ssma' || selectedId === 'nao_iniciar_ssma' ||
-                verificarResposta(text, 'positiva') || verificarResposta(text, 'negativa') ||
-                verificarRespostaQuiz(text) ||
-                ultimaInteracao?.tipo === 'aguardando_confirmacao' ||
-                ultimaInteracao?.tipo === 'aguardando_revisao_modulo1' ||
-                ultimaInteracao?.tipo === 'aguardando_revisao_modulo2' ||
-                ultimaInteracao?.tipo === 'aguardando_inicio_ssma' ||
-                ultimaInteracao?.tipo === 'aguardando_modulo2_intro' ||
-                ultimaInteracao?.tipo === 'aguardando_quiz_intro' ||
-                ultimaInteracao?.tipo?.includes('aguardando_quiz') ||
-                ultimaInteracao?.tipo?.includes('confirmacao_dados_ssma') ||
-                ultimaInteracao?.tipo?.startsWith('quiz_modulo') ||
-                selectedId?.includes('_q') || selectedId?.includes('_m2q')) {
-
-                console.log(`🔍 Tentando processar no SSMA: "${text}", selectedId="${selectedId}", ultimaInteracao="${ultimaInteracao?.tipo}"`);
+        // PROCESSAR SSMA - apenas se há interação relevante
+        if (ultimaInteracao && (ultimaInteracao.tipo === 'aguardando_confirmacao' ||
+            ultimaInteracao.tipo?.startsWith('quiz_modulo') ||
+            ultimaInteracao.tipo?.includes('confirmacao_dados_ssma') ||
+            selectedId === 'iniciar_ssma' || selectedId === 'nao_iniciar_ssma' ||
+            verificarRespostaQuiz(text))) {
+            
+            const script = scriptsTreinamento['treinamentoSSMA'];
+            console.log(`🔍 Processando SSMA: "${text}", selectedId="${selectedId}", ultimaInteracao="${ultimaInteracao?.tipo}"`);
+            
+            if (script && script.processarRespostaSSMA) {
                 try {
                     const resultado = await script.processarRespostaSSMA(sender, text, selectedId, contato, sendMessage);
                     console.log(`🔍 Resultado SSMA: ${resultado}`);
@@ -742,7 +739,6 @@ async function processarMensagem(message, client) {
                         console.log(`✅ SSMA processou com sucesso`);
                         return;
                     }
-                    console.log(`❌ SSMA não processou`);
                 } catch (error) {
                     console.error(`❌ Erro ao processar resposta SSMA:`, error);
                 }
@@ -788,14 +784,7 @@ async function processarMensagem(message, client) {
             return;
         }
 
-        // Saudação inicial para usuários não iniciados (evitar loop)
-        if (contato.statusTreinamento === 'não iniciado' && ultimaInteracao?.tipo !== 'selecionar_treinamento') {
-            const inicioStart = Date.now();
-            await iniciarTreinamento(sender, contato);
-            console.log(`🚀 Iniciar treinamento: ${Date.now() - inicioStart}ms`);
-            console.log(`⏱️ TOTAL processamento não iniciado: ${Date.now() - startTime}ms`);
-            return;
-        }
+        // (Lógica de início já executada acima)
 
 
 
@@ -1150,11 +1139,7 @@ async function processarMensagem(message, client) {
 
 
 
-        // Verificar se é usuário não iniciado que precisa de ajuda (evitar loop)
-        if (contato.statusTreinamento === 'não iniciado' && ultimaInteracao?.tipo !== 'treinamento_iniciado' && ultimaInteracao?.tipo !== 'selecionar_treinamento') {
-            await iniciarTreinamento(sender, contato);
-            return;
-        }
+        // (Lógica de usuário não iniciado já tratada no início)
 
         // Se chegou até aqui e é usuário cadastrado, pode ser problema de cache
         if (text.toLowerCase().includes('cadastro') || text.toLowerCase().includes('cadastrei') || 
