@@ -413,6 +413,15 @@ async function iniciarModulo1(sender, sendMessage) {
         message: '📖 *MÓDULO 1: FUNDAMENTOS DO SSMA*\n\n🎯 *O que é SSMA?*\nSaúde, Segurança e Meio Ambiente - conjunto de normas e procedimentos para proteger você, seus colegas e o planeta.\n\n🏥 *Segurança e Saúde no Trabalho (SST)*\nSST são normas e procedimentos legalmente exigidas que visam:\n• Prevenir doenças ocupacionais\n• Evitar acidentes de trabalho\n• Proteger sua integridade física\n• Garantir ambiente de trabalho saudável',
     });
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Enviar imagem SSMA
+    await sendMessage(sender, 'send-image', {
+        path: 'C:\\Treinamento-bot\\SistemaPrincipal\\TemplatesMensagens\\Treinamentos\\LCM\\Imagens\\SSMA.png',
+        caption: '📊 Conceitos fundamentais de SSMA'
+    });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+
 
     await sendMessage(sender, 'send-message', {
         message: '⚡ *Premissas Básicas da Segurança*\n\n🔴 A Segurança é IMPRESCINDÍVEL - não é opcional!\n🔴 A responsabilidade é de cada um e é INTRANSFERÍVEL\n🔴 Consciência em segurança é vital\n🔴 O único prejudicado pela falta de segurança será VOCÊ MESMO\n\n🎯 Nossa meta é ZERO acidentes! Acidentes causam sofrimento, afastamentos, problemas familiares e até morte.',

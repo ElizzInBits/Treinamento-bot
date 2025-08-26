@@ -35,6 +35,10 @@ async function sendMessage(phone, endpoint, body = {}) {
                 result = await wppClient.sendFile(phone, body.path, body.filename, body.caption);
                 break;
                 
+            case 'send-image':
+                result = await wppClient.sendImage(phone, body.path, body.filename || 'image.png', body.caption || '');
+                break;
+                
             default:
                 return false;
         }
@@ -583,10 +587,27 @@ async function processarMensagem(message, client) {
 
         // Se não encontrou contato, responder IMEDIATAMENTE
         if (!contato) {
-            console.log(`❌ Contato não encontrado - respondendo imediatamente`);
+            console.log(`❌ Contato não encontrado - enviando saudação/cadastro`);
+            
+            // Mensagem de saudação
             await sendMessage(sender, 'send-message', {
-                message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
+                message: `👋 Olá! Seja muito bem-vindo(a)!\n\n🤖 Eu sou um bot de treinamentos da Salubritá! 🚀`,
             });
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Mensagem sobre o que faz
+            await sendMessage(sender, 'send-message', {
+                message: `🏢 Estou aqui para aplicar treinamentos de segurança e saúde no trabalho de forma rápida e eficiente!\n\n🎓 Nossos treinamentos são certificados e reconhecidos nacionalmente.`,
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Mensagem de cadastro
+            await sendMessage(sender, 'send-message', {
+                message: `🤔 Humm, parece que você ainda não fez seu cadastro em nossa plataforma.\n\n📝 Para iniciar seu treinamento, é necessário se cadastrar primeiro.\n\n👉 Clique no link abaixo para se cadastrar:\n\nhttps://abrir.link/kAgON\n\n✨ Após o cadastro, volte aqui e me envie qualquer mensagem para começarmos!`,
+            });
+            
             return;
         }
 
