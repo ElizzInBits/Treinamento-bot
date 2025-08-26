@@ -937,7 +937,7 @@ function abrirDetalhesContato(id) {
         <div class="info-icon">🏢</div>
         <div class="info-content">
           <div class="info-label">Empresa</div>
-          <div class="info-value">${empresa ? (empresa.razao_social || empresa.razaoSocial || 'Nome não informado') : 'Empresa não encontrada'}</div>
+          <div class="info-value">${contato.nomeEmpresa || (empresa ? (empresa.razao_social || empresa.razaoSocial || 'Nome não informado') : 'Empresa não encontrada')}</div>
         </div>
       </div>
       <div class="info-item">
