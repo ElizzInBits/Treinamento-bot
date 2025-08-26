@@ -252,13 +252,13 @@ async function enviarEmail(destinatario, arquivoPath, treinamento = null) {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'elizabethmirandaa302@gmail.com',
-        pass: 'gjux jpwq oqmg lpyi',
+        user: 'inovacao.tecnologiasalub@gmail.com',
+        pass: 'hszz igye owqn ldlz',
       },
     });
 
     const mailOptions = {
-      from: process.env.EMAIL_USER || 'seu-email@gmail.com',
+      from: 'inovacao.tecnologiasalub@gmail.com',
       to: destinatario,
       subject: `🎓 Certificado de Conclusão - ${treinamento?.nome || 'Treinamento'}`,
       html: `
