@@ -290,7 +290,7 @@ async function iniciarModulo1(sender, sendMessage) {
             console.error('❌ Erro ao enviar imagem NR 06:', error);
         }
     }
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Enviar imagem SSMA
     const imagemSSMAPath = path.join(__dirname, 'Imagens', 'SSMA.png');
@@ -305,7 +305,7 @@ async function iniciarModulo1(sender, sendMessage) {
             console.error('❌ Erro ao enviar imagem SSMA:', error);
         }
     }
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Enviar imagem SST
     const imagemSSTPath = path.join(__dirname, 'Imagens', 'SST.png');
@@ -320,19 +320,19 @@ async function iniciarModulo1(sender, sendMessage) {
             console.error('❌ Erro ao enviar imagem SST:', error);
         }
     }
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
     // Conteúdo completo do Módulo 1 - Fundamentos e Prevenção
     await sendMessage(sender, 'send-message', {
         message: '📖 *MÓDULO 1: FUNDAMENTOS E PREVENÇÃO*\n\n🎯 *O que é SSMA?*\nSaúde, Segurança e Meio Ambiente - conjunto de normas e procedimentos para proteger você, seus colegas e o planeta.\n\n🏥 *Segurança e Saúde no Trabalho (SST)*\nSST são normas e procedimentos legalmente exigidas que visam:\n• Prevenir doenças ocupacionais\n• Evitar acidentes de trabalho\n• Proteger sua integridade física\n• Garantir ambiente de trabalho saudável',
     });
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
 
     await sendMessage(sender, 'send-message', {
         message: '⚡ *Premissas Básicas da Segurança*\n\n🔴 A Segurança é IMPRESCINDÍVEL - não é opcional!\n🔴 A responsabilidade é de cada um e é INTRANSFERÍVEL\n🔴 Consciência em segurança é vital\n🔴 O único prejudicado pela falta de segurança será VOCÊ MESMO\n\n🎯 Nossa meta é ZERO acidentes! Acidentes causam sofrimento, afastamentos, problemas familiares e até morte.',
     });
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
 
         
@@ -349,13 +349,13 @@ async function iniciarModulo1(sender, sendMessage) {
             console.error('❌ Erro ao enviar imagem LEI:', error);
         }
     }
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
 
     await sendMessage(sender, 'send-message', {
         message: '📖 *TIPOS DE ACIDENTES - CONHECER PARA PREVENIR*\n\n🚨 *TODO acidente do trabalho deve ser comunicado ao Setor da Segurança do Trabalho IMEDIATAMENTE!*',
     });
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
 
     //Enviar imagem CIPA
@@ -371,14 +371,14 @@ async function iniciarModulo1(sender, sendMessage) {
             console.error('❌ Erro ao enviar imagem CIPA:', error);
         }
     }
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
 
 
     await sendMessage(sender, 'send-message', {
         message: '📋 *Classificação por Tipo de Dano:*\n\n🩹 *ACIDENTE PESSOAL*\n• Gera lesão física e/ou doença no colaborador\n• Pode causar morte, invalidez permanente\n• Exemplos: cortes, fraturas, queimaduras\n\n🌍 *ACIDENTE AMBIENTAL*\n• Danos ao meio ambiente, saúde pública\n• Exemplos: vazamentos, contaminação\n\n🔧 *ACIDENTE MATERIAL*\n• Danos em máquinas, equipamentos, veículos\n• Pode gerar paralisação de atividades\n\n⚠️ *QUASE ACIDENTE*\n• Evento que PODERIA ter sido acidente, mas não foi\n• Exemplo: Ferramenta pesada cai ao lado de trabalhador\n• Importante: São alertas para prevenção!',
     });
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     await sendMessage(sender, 'send-message', {
         message: '🏥 *CUIDANDO DA SUA SAÚDE*\n\n🏥 *PCMSO - Programa de Controle Médico e Saúde Ocupacional*\n\nTodos devem realizar exames médicos conforme NR-7:\n\n🔹 *ADMISSIONAL* - Antes de começar\n🔹 *PERIÓDICO* - A cada 12 meses\n🔹 *MUDANÇA DE RISCO* - Ao trocar de função\n🔹 *RETORNO AO TRABALHO* - Após afastamento > 30 dias\n🔹 *DEMISSIONAL* - Na saída da empresa\n\n🚨 *REGRA FUNDAMENTAL: Nenhum colaborador pode trabalhar sem treinamento adequado!*',
@@ -398,7 +398,7 @@ async function iniciarModulo1(sender, sendMessage) {
             console.error('❌ Erro ao enviar imagem PCMSO:', error);
         }
     }
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
 
     await sendMessage(sender, 'send-message', {
@@ -510,20 +510,37 @@ async function iniciarModulo2(sender, sendMessage) {
     });
     await new Promise(resolve => setTimeout(resolve, 2000));
 
+    //Enviar imagem MAPARISCO   
+    const path = require('path');
+    const fs = require('fs');
+    const imagemMapaRiscoPath = path.join(__dirname, 'Imagens', 'MAPARISCO.png');
+    if (fs.existsSync(imagemMapaRiscoPath)) {
+        try {
+            await sendMessage(sender, 'send-image', {
+                path: imagemMapaRiscoPath,
+                filename: 'MAPARISCO.png',
+                caption: 'MAPA DE RISCOS',
+            });
+        } catch (error) {
+            console.error('Erro ao enviar imagem:', error);
+        }
+    }
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
     await sendMessage(sender, 'send-message', {
         message: '📖 *PERIGOS, RISCOS E CONTROLES*\n\n🔍 *Diferença Fundamental:*\n\n⚠️ *PERIGO:* Fonte/situação com potencial para causar danos\n📊 *RISCO:* Possibilidade de que uma perda ou dano ocorra\n\n📐 *Fórmula: RISCO = Probabilidade × Consequência*\n\n🏆 *HIERARQUIA DE CONTROLES (seguir esta ordem!)*\n\n1️⃣ *ELIMINAÇÃO* - Remover completamente o perigo (mais eficaz!)\n2️⃣ *SUBSTITUIÇÃO* - Trocar por algo menos perigoso\n3️⃣ *CONTROLES DE ENGENHARIA* - Barreiras físicas, proteções coletivas\n4️⃣ *CONTROLES ADMINISTRATIVOS* - Procedimentos, treinamentos, sinalização\n5️⃣ *EPI* - ÚLTIMA opção, não a primeira!',
     });
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     await sendMessage(sender, 'send-message', {
         message: '📖 *EQUIPAMENTOS DE PROTEÇÃO* 🛡️\n\n🔄 *EPC vs EPI*\n\n👥 *EQUIPAMENTOS DE PROTEÇÃO COLETIVA (EPC)*\n• Protegem TODOS os trabalhadores\n• Exemplos: guarda-corpos, ventilação, sinalização\n• PRIORIDADE sobre EPI\n\n👤 *EQUIPAMENTOS DE PROTEÇÃO INDIVIDUAL (EPI)*\n• Dispositivos de uso pessoal\n• USO OBRIGATÓRIO por norma\n• Todo EPI precisa de Certificado de Aprovação - CA\n• Aprenda como usar, guardar e conservar seu EPI\n• Se danificado, comunique para substituição\n• Use de forma adequada e sempre que necessário!\n\n🛡️ *EPI protege apenas quem usa. Controles coletivos protegem todos!*',
     });
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     await sendMessage(sender, 'send-message', {
         message: '⚠️ *4 Atitudes Perigosas a Evitar:*\n\n🚫 "Nunca irá acontecer comigo"\n🚫 "Sou ótimo profissional, não preciso de EPI"\n🚫 "EPIs são desconfortáveis"\n🚫 "Quanto mais rápido trabalhar, melhor"\n\n💡 *Lembre-se: A pressa é inimiga da segurança!*',
     });
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     await sendMessage(sender, 'send-message', {
         message: '📝 *QUIZ MÓDULO 2*\n\nVamos testar seus conhecimentos sobre controles e equipamentos!',
@@ -600,11 +617,32 @@ async function finalizarModulo2(sender, acertos, sendMessage) {
  */
 async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
     // Considerações finais
+
+    // Enviar imagem SEGURANCA
+    const path = require('path');
+    const fs = require('fs');
+    const imagemSegurancaPath = path.join(__dirname, 'Imagens', 'SEGURANCA.png');
+    if (fs.existsSync(imagemSegurancaPath)) {
+        try {
+            await sendMessage(sender, 'send-image', {        
+                path: imagemSegurancaPath,      
+                filename: 'SEGURANCA.png',
+                caption: 'SEGURANÇA',
+            });
+        } catch (error) {
+            console.error('Erro ao enviar imagem SEGURANCA:', error);
+        }
+    }
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+
     await sendMessage(sender, 'send-message', {
         message: '🎆 *CONSIDERAÇÕES FINAIS*\n\n🛡️ *Sua Segurança Depende de Você*\n• A Responsabilidade é individual e intransferível\n• O Conhecimento salva vidas\n• A Prevenção é sempre melhor que correção\n• Sua família conta com você voltando seguro para casa\n\n📞 *Contatos Importantes*\n• SESMT: Sempre disponível para dúvidas e orientações\n• CIPA: Seus representantes na prevenção\n• Emergência: Comunicar IMEDIATAMENTE qualquer acidente',
     });
     
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+
     
     await sendMessage(sender, 'send-message', {
         message: '🎉 *TREINAMENTO CONCLUÍDO COM SUCESSO!*\n\n🏆 Parabéns! Você completou os 2 módulos do treinamento SSMA.\n\n📚 *Lembre-se: SSMA não é apenas um conjunto de regras, é um modo de vida que protege você, seus colegas e o meio ambiente. Pratique sempre!*',
