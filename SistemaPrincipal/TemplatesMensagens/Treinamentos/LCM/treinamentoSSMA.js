@@ -449,8 +449,13 @@ async function enviarPergunta(sender, indicePergunta, config, tipoQuiz, sendMess
     };
 
     await sendMessage(sender, 'send-list-message', listMsg);
-    // Não resetar acertos aqui - manter o valor atual
-    await salvarInteracao(sender, `${tipoQuiz}_pergunta_${indicePergunta}`, JSON.stringify({ perguntaAtual: indicePergunta }));
+    // Inicializar com acertos = 0 apenas na primeira pergunta
+    const acertos = indicePergunta === 0 ? 0 : undefined;
+    const dadosInteracao = { perguntaAtual: indicePergunta };
+    if (acertos !== undefined) {
+        dadosInteracao.acertos = acertos;
+    }
+    await salvarInteracao(sender, `${tipoQuiz}_pergunta_${indicePergunta}`, JSON.stringify(dadosInteracao));
 }
 
 /**
@@ -460,45 +465,35 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
     const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
     const perguntaAtual = dados.perguntaAtual || 0;
     
-    // Buscar acertos da interação anterior se não estiver nos dados atuais
+    // Buscar acertos acumulados das interações anteriores
     let acertos = dados.acertos || 0;
-    if (acertos === 0 && perguntaAtual > 0) {
-        // Buscar interação anterior para pegar acertos
-        const interacaoAnterior = await Interacao.findOne({
-            where: { 
-                telefone: sender,
-                tipo: `quiz_modulo1_pergunta_${perguntaAtual - 1}`
-            },
-            order: [['createdAt', 'DESC']]
-        });
-        if (interacaoAnterior) {
-            const dadosAnteriores = JSON.parse(interacaoAnterior.mensagem || '{}');
-            acertos = dadosAnteriores.acertos || 0;
-        }
-    }
     
     const respostaLimpa = extrairResposta(resposta);
     const pergunta = QUIZ_MODULO1_CONFIG.perguntas[perguntaAtual];
     const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
+    
+    // Atualizar acertos se resposta estiver correta
+    if (respostaCorreta) {
+        acertos += 1;
+    }
     
     // Feedback da resposta
     await sendMessage(sender, 'send-message', {
         message: respostaCorreta ? pergunta.explicacao : `❌ Incorreto. A resposta correta é "${pergunta.respostaCorreta.toUpperCase()}".`,
     });
     
-    const novosAcertos = respostaCorreta ? acertos + 1 : acertos;
     const proximaPergunta = perguntaAtual + 1;
     
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Verifica se terminou o módulo 1
     if (proximaPergunta >= QUIZ_MODULO1_CONFIG.perguntas.length) {
-        await finalizarModulo1(sender, novosAcertos, sendMessage);
+        await finalizarModulo1(sender, acertos, sendMessage);
         return true;
     }
     
     // Próxima pergunta - salvar acertos atualizados
-    await salvarInteracao(sender, `quiz_modulo1_pergunta_${proximaPergunta}`, JSON.stringify({ acertos: novosAcertos, perguntaAtual: proximaPergunta }));
+    await salvarInteracao(sender, `quiz_modulo1_pergunta_${proximaPergunta}`, JSON.stringify({ acertos: acertos, perguntaAtual: proximaPergunta }));
     await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO1_CONFIG, 'quiz_modulo1', sendMessage);
     return true;
 }
@@ -605,43 +600,33 @@ async function processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessa
     const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
     const perguntaAtual = dados.perguntaAtual || 0;
     
-    // Buscar acertos da interação anterior se não estiver nos dados atuais
+    // Buscar acertos acumulados das interações anteriores
     let acertos = dados.acertos || 0;
-    if (acertos === 0 && perguntaAtual > 0) {
-        // Buscar interação anterior para pegar acertos
-        const interacaoAnterior = await Interacao.findOne({
-            where: { 
-                telefone: sender,
-                tipo: `quiz_modulo2_pergunta_${perguntaAtual - 1}`
-            },
-            order: [['createdAt', 'DESC']]
-        });
-        if (interacaoAnterior) {
-            const dadosAnteriores = JSON.parse(interacaoAnterior.mensagem || '{}');
-            acertos = dadosAnteriores.acertos || 0;
-        }
-    }
     
     const respostaLimpa = extrairResposta(resposta);
     const pergunta = QUIZ_MODULO2_CONFIG.perguntas[perguntaAtual];
     const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
     
+    // Atualizar acertos se resposta estiver correta
+    if (respostaCorreta) {
+        acertos += 1;
+    }
+    
     await sendMessage(sender, 'send-message', {
         message: respostaCorreta ? pergunta.explicacao : `❌ Incorreto. A resposta correta é "${pergunta.respostaCorreta.toUpperCase()}".`,
     });
     
-    const novosAcertos = respostaCorreta ? acertos + 1 : acertos;
     const proximaPergunta = perguntaAtual + 1;
     
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     if (proximaPergunta >= QUIZ_MODULO2_CONFIG.perguntas.length) {
-        await finalizarModulo2(sender, novosAcertos, sendMessage);
+        await finalizarModulo2(sender, acertos, sendMessage);
         return true;
     }
     
     // Salvar acertos atualizados para próxima pergunta
-    await salvarInteracao(sender, `quiz_modulo2_pergunta_${proximaPergunta}`, JSON.stringify({ acertos: novosAcertos, perguntaAtual: proximaPergunta }));
+    await salvarInteracao(sender, `quiz_modulo2_pergunta_${proximaPergunta}`, JSON.stringify({ acertos: acertos, perguntaAtual: proximaPergunta }));
     await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO2_CONFIG, 'quiz_modulo2', sendMessage);
     return true;
 }
@@ -750,8 +735,11 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
     
     // Aguardando confirmação para iniciar quiz módulo 1
-    if (selectedId === 'iniciar_quiz_modulo1' || (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && verificarRespostaSSMA(text, 'positiva'))) {
+    if (selectedId === 'iniciar_quiz_modulo1' || 
+        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && verificarRespostaSSMA(text, 'positiva')) ||
+        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && text.toLowerCase().includes('sim - iniciar quiz agora'))) {
         console.log('✅ Iniciando quiz módulo 1');
+        await salvarInteracao(sender, 'quiz_modulo1_pergunta_0', JSON.stringify({ acertos: 0, perguntaAtual: 0 }));
         await enviarPergunta(sender, 0, QUIZ_MODULO1_CONFIG, 'quiz_modulo1', sendMessage);
         return true;
     }
@@ -764,8 +752,11 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
     
     // Aguardando confirmação para iniciar quiz módulo 2
-    if (selectedId === 'iniciar_quiz_modulo2' || (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo2' && verificarRespostaSSMA(text, 'positiva'))) {
+    if (selectedId === 'iniciar_quiz_modulo2' || 
+        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo2' && verificarRespostaSSMA(text, 'positiva')) ||
+        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo2' && text.toLowerCase().includes('sim - iniciar quiz agora'))) {
         console.log('✅ Iniciando quiz módulo 2');
+        await salvarInteracao(sender, 'quiz_modulo2_pergunta_0', JSON.stringify({ acertos: 0, perguntaAtual: 0 }));
         await enviarPergunta(sender, 0, QUIZ_MODULO2_CONFIG, 'quiz_modulo2', sendMessage);
         return true;
     }
