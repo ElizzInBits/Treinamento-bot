@@ -728,8 +728,8 @@ async function processarMensagem(message, client) {
             return;
         }
 
-        // Saudação inicial para usuários não iniciados
-        if (contato.statusTreinamento === 'não iniciado') {
+        // Saudação inicial para usuários não iniciados (evitar loop)
+        if (contato.statusTreinamento === 'não iniciado' && ultimaInteracao?.tipo !== 'selecionar_treinamento') {
             const inicioStart = Date.now();
             await iniciarTreinamento(sender, contato);
             console.log(`🚀 Iniciar treinamento: ${Date.now() - inicioStart}ms`);
