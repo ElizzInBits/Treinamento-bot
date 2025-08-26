@@ -576,54 +576,17 @@ async function processarMensagem(message, client) {
             return;
         }
 
-        // RESPOSTA INSTANTÂNEA com cache otimizado
+        // BUSCA RÁPIDA DE CONTATO
         const dbStart = Date.now();
         let contato = await cacheContatos.buscarContato(sender);
         console.log(`🔍 Busca contato: ${Date.now() - dbStart}ms`);
 
-        // Se não encontrou contato, invalidar cache e tentar novamente
+        // Se não encontrou contato, responder IMEDIATAMENTE
         if (!contato) {
-            console.log(`❌ Contato não encontrado no cache, invalidando e tentando novamente...`);
-            cacheContatos.invalidarContato(sender);
-            
-            // Tentar busca direta no banco
-            try {
-                const numeroLimpo = sender.replace(/\D/g, '').replace(/@c\.us$/, '');
-                const variacoes = [numeroLimpo];
-                
-                // Gerar variações do número
-                if (numeroLimpo.length === 13 && numeroLimpo.charAt(4) === '9') {
-                    variacoes.push(numeroLimpo.substring(0, 4) + numeroLimpo.substring(5));
-                } else if (numeroLimpo.length === 12) {
-                    variacoes.push(numeroLimpo.substring(0, 4) + '9' + numeroLimpo.substring(4));
-                }
-                
-                contato = await Contato.findOne({
-                    where: { 
-                        telefone: {
-                            [Op.in]: variacoes
-                        }
-                    },
-                    logging: false
-                });
-                
-                if (contato) {
-                    console.log(`✅ Contato encontrado no banco: ${contato.nome}`);
-                    cacheContatos.atualizarContato(sender, contato);
-                }
-            } catch (error) {
-                console.error('Erro na busca direta:', error.message);
-            }
-        }
-
-        // Se ainda não encontrou contato, responder imediatamente
-        if (!contato) {
-            const msgStart = Date.now();
+            console.log(`❌ Contato não encontrado - respondendo imediatamente`);
             await sendMessage(sender, 'send-message', {
                 message: `🤖 Olá! Eu sou um bot de treinamentos! 🚀\n\nEstou aqui para aplicar treinamentos de segurança e saúde no trabalho.\n\n🤔 Humm, parece que você ainda não fez seu cadastro.\nClique no link abaixo para se cadastrar e iniciar seu treinamento:\n\n👉 https://abrir.link/kAgON`,
             });
-            console.log(`📤 Envio mensagem não cadastrado: ${Date.now() - msgStart}ms`);
-            console.log(`⏱️ TOTAL processamento não cadastrado: ${Date.now() - startTime}ms`);
             return;
         }
 
@@ -646,28 +609,14 @@ async function processarMensagem(message, client) {
         if (contato.statusTreinamento === 'não iniciado') {
             console.log(`🚀 USUÁRIO NÃO INICIADO DETECTADO: ${contato.nome}`);
             
-            // Se há interação muito antiga (mais de 1 hora), ignorar
-            const umaHoraAtras = new Date(Date.now() - 60 * 60 * 1000);
-            const interacaoRecente = ultimaInteracao && ultimaInteracao.createdAt > umaHoraAtras;
-            
-            if (!interacaoRecente || 
-                !ultimaInteracao ||
+            // Verificar se não é uma resposta a seleção de treinamento
+            if (!ultimaInteracao || 
                 (ultimaInteracao.tipo !== 'selecionar_treinamento' && 
-                 ultimaInteracao.tipo !== 'confirmacao_treinamento' &&
                  ultimaInteracao.tipo !== 'treinamento_iniciado')) {
                 
-                console.log(`🚀 INICIANDO TREINAMENTO IMEDIATAMENTE para: ${contato.nome}`);
+                console.log(`🚀 INICIANDO SELEÇÃO DE TREINAMENTO para: ${contato.nome}`);
                 await iniciarTreinamento(sender, contato);
                 return;
-            } else {
-                console.log(`⏸️ Treinamento não iniciado devido à interação recente: ${ultimaInteracao.tipo}`);
-                
-                // Forçar início se usuário insistir
-                if (text.toLowerCase().includes('iniciar') || text.toLowerCase().includes('começar') || text.toLowerCase().includes('treinamento')) {
-                    console.log(`🚀 FORÇANDO INÍCIO por solicitação do usuário`);
-                    await iniciarTreinamento(sender, contato);
-                    return;
-                }
             }
         }
 
@@ -961,76 +910,12 @@ async function processarMensagem(message, client) {
             }
         }
 
-        // Processar confirmação de seleção de treinamento PRIMEIRO
-        if (ultimaInteracao?.tipo === 'confirmacao_treinamento' && ultimaInteracao.mensagem) {
-            const dadosInteracao = JSON.parse(ultimaInteracao.mensagem);
+        // (Lógica de confirmação removida - execução direta)
 
-            // Confirmar treinamento (por selectedId ou texto)
-            if (selectedId.startsWith('confirmar_treinamento_') ||
-                text.toLowerCase().includes('sim')) {
-
-                const treinamentoId = selectedId.startsWith('confirmar_treinamento_') ?
-                    parseInt(selectedId.replace('confirmar_treinamento_', '')) :
-                    dadosInteracao.treinamentoId;
-
-                const treinamento = await Treinamento.findByPk(treinamentoId);
-
-                if (treinamento) {
-                    // Limpar interação anterior para evitar loop
-                    await salvarUltimaInteracao(sender, 'treinamento_iniciado', '');
-
-                    await contato.update({
-                        statusTreinamento: 'em andamento',
-                        treinamentoId: treinamento.id
-                    });
-
-                    // Mapear nome do treinamento para nome do arquivo
-                    let nomeArquivo = treinamento.nome;
-
-                    // Mapeamento específico para treinamentos
-                    if (treinamento.id === 14 || treinamento.nome.toLowerCase().includes('ssma')) {
-                        nomeArquivo = 'treinamentoSSMA';
-                    }
-
-                    // Executar script dinâmico
-                    const script = scriptsTreinamento[nomeArquivo];
-                    console.log(`🔍 Executando script: ${nomeArquivo}, script encontrado: ${!!script}`);
-                    if (script && script.executarTreinamento) {
-                        try {
-                            console.log(`🚀 Chamando executarTreinamento para ${nomeArquivo}`);
-                            await script.executarTreinamento(sender, contato, sendMessage);
-                            return;
-                        } catch (error) {
-                            console.error(`❌ Erro ao executar script ${nomeArquivo}:`, error);
-                            await sendMessage(sender, 'send-message', {
-                                message: '❌ Erro ao iniciar treinamento. Entre em contato com o suporte.',
-                            });
-                            return;
-                        }
-                    } else {
-                        console.error(`❌ Script não encontrado: ${nomeArquivo}`);
-                        await sendMessage(sender, 'send-message', {
-                            message: '❌ Script de treinamento não encontrado. Entre em contato com o suporte.',
-                        });
-                        return;
-                    }
-                }
-            }
-
-            // Cancelar seleção (por selectedId ou texto)
-            if (selectedId === 'cancelar_selecao' ||
-                text.toLowerCase().includes('não') ||
-                text.toLowerCase().includes('outro') ||
-                text.toLowerCase().includes('cancelar')) {
-
-                await iniciarTreinamento(sender, contato);
-                return;
-            }
-        }
-
-        // Processar seleção de treinamento - detectar por selectedId ou texto
-        if (contato.statusTreinamento === 'não iniciado' && ultimaInteracao?.tipo !== 'confirmacao_treinamento' && (selectedId.startsWith('treinamento_') || text.toLowerCase().includes('treinamento básico') || text.toLowerCase().includes('curso') || text.toLowerCase().includes('cipa') || text.toLowerCase().includes('teste') || (text.toLowerCase().includes('ssma') && text.toLowerCase().includes('treinamento')))) {
-
+        // Processar seleção de treinamento - DIRETO SEM CONFIRMAÇÃO
+        if (contato.statusTreinamento === 'não iniciado' && 
+            ultimaInteracao?.tipo === 'selecionar_treinamento' &&
+            (selectedId.startsWith('treinamento_') || text.toLowerCase().includes('treinamento básico') || text.toLowerCase().includes('ssma'))) {
 
             let treinamento;
 
@@ -1039,59 +924,34 @@ async function processarMensagem(message, client) {
                 const treinamentoId = selectedId.replace('treinamento_', '');
                 treinamento = await Treinamento.findByPk(treinamentoId);
             } else {
-                // Buscar treinamento pelo nome no texto - mais flexível
-                const nomeTexto = rawText.trim(); // Usar rawText em vez de text
-
-
-                treinamento = await Treinamento.findOne({
-                    where: {
-                        nome: {
-                            [Op.like]: `%${nomeTexto}%`
-                        }
-                    }
-                });
-
-                // Se não encontrou, tentar busca mais ampla
-                if (!treinamento) {
-                    const palavrasChave = nomeTexto.toLowerCase().split(' ');
-                    for (const palavra of palavrasChave) {
-                        if (palavra.length > 3) { // Só palavras com mais de 3 caracteres
-                            treinamento = await Treinamento.findOne({
-                                where: {
-                                    nome: {
-                                        [Op.like]: `%${palavra}%`
-                                    }
-                                }
-                            });
-                            if (treinamento) break;
-                        }
-                    }
-                }
+                // Buscar treinamento SSMA diretamente
+                treinamento = await Treinamento.findByPk(14); // ID do SSMA
             }
 
             if (treinamento) {
-                // Mensagem de confirmação
-                const listMsg = {
-                    title: '',
-                    description: `✅ Você selecionou: **${treinamento.nome}**\n\nConfirma que deseja iniciar este treinamento?`,
-                    buttonText: 'Confirmar seleção',
-                    listType: 'SINGLE_SELECT',
-                    sections: [{
-                        title: '',
-                        rows: [
-                            { id: `confirmar_treinamento_${treinamento.id}`, title: 'Sim, iniciar este treinamento', description: '' },
-                            { id: 'cancelar_selecao', title: 'Não, escolher outro', description: '' },
-                        ],
-                    }],
-                };
-
-                await sendMessage(sender, 'send-list-message', listMsg);
-                await salvarUltimaInteracao(sender, 'confirmacao_treinamento', JSON.stringify({ ...listMsg, treinamentoId: treinamento.id }));
-                return;
-            } else {
-                await sendMessage(sender, 'send-message', {
-                    message: '❌ Treinamento não encontrado.',
+                console.log(`✅ Treinamento selecionado: ${treinamento.nome}`);
+                
+                // Atualizar status IMEDIATAMENTE
+                await contato.update({
+                    statusTreinamento: 'em andamento',
+                    treinamentoId: treinamento.id
                 });
+                
+                // Salvar interação para evitar loop
+                await salvarUltimaInteracao(sender, 'treinamento_iniciado', 'ssma_executando');
+                
+                // Executar script SSMA DIRETAMENTE
+                const script = scriptsTreinamento['treinamentoSSMA'];
+                if (script && script.executarTreinamento) {
+                    console.log(`🚀 Executando treinamento SSMA`);
+                    await script.executarTreinamento(sender, contato, sendMessage);
+                    return;
+                } else {
+                    console.error(`❌ Script SSMA não encontrado`);
+                    await sendMessage(sender, 'send-message', {
+                        message: '❌ Erro ao iniciar treinamento. Entre em contato com o suporte.',
+                    });
+                }
                 return;
             }
         }
