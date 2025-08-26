@@ -9,7 +9,6 @@ const TOKEN = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
 
 // Headers padrão
 const API_HEADERS = {
-    'Authorization': `Bearer ${TOKEN}`,
     'Content-Type': 'application/json'
 };
 
