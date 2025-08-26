@@ -238,7 +238,10 @@ async function processarResposta(sender, message, sendMessage) {
 // -------------------------------------------
 // Função compatível com Template2.js
 async function processarRespostaSSMA(sender, text, selectedId, contato, sendMessage) {
-    return await processarResposta(sender, text, sendMessage);
+    console.log(`🔍 SSMA processarRespostaSSMA chamada: sender=${sender}, text="${text}", selectedId="${selectedId}"`);
+    const resultado = await processarResposta(sender, text, sendMessage);
+    console.log(`🔍 SSMA resultado: ${resultado}`);
+    return resultado;
 }
 
 // Função para treinamentos pendentes (compatibilidade)

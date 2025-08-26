@@ -680,6 +680,7 @@ async function processarMensagem(message, client) {
 
         // PROCESSAR SSMA PRIMEIRO - ANTES DA CONTINUIDADE
         const script = scriptsTreinamento['treinamentoSSMA'];
+        console.log(`🔍 Script SSMA encontrado: ${!!script}, função processarRespostaSSMA: ${!!(script && script.processarRespostaSSMA)}`);
         if (script && script.processarRespostaSSMA) {
             // Verificar se é uma resposta específica do SSMA usando funções universais
             if (selectedId === 'rever_modulo1' || selectedId === 'rever_modulo2' ||
@@ -696,16 +697,17 @@ async function processarMensagem(message, client) {
                 ultimaInteracao?.tipo?.includes('confirmacao_dados_ssma') ||
                 selectedId?.includes('_q') || selectedId?.includes('_m2q')) {
 
-                console.log(`🔍 Tentando processar no SSMA: "${text}"`);
+                console.log(`🔍 Tentando processar no SSMA: "${text}", selectedId="${selectedId}"`);
                 try {
                     const resultado = await script.processarRespostaSSMA(sender, text, selectedId, contato, sendMessage);
+                    console.log(`🔍 Resultado SSMA: ${resultado}`);
                     if (resultado) {
                         console.log(`✅ SSMA processou com sucesso`);
                         return;
                     }
                     console.log(`❌ SSMA não processou`);
                 } catch (error) {
-                    console.error(`Erro ao processar resposta SSMA:`, error);
+                    console.error(`❌ Erro ao processar resposta SSMA:`, error);
                 }
             }
         }
