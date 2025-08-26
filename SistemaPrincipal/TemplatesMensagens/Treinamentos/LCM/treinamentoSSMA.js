@@ -277,6 +277,21 @@ async function iniciarModulo1(sender, sendMessage) {
     const path = require('path');
     const fs = require('fs');
 
+    // Enviar imagem NR 06
+    const imagemNR06Path = path.join(__dirname, 'Imagens', 'NR 06.png');
+    if (fs.existsSync(imagemNR06Path)) {
+        try {
+            await sendMessage(sender, 'send-image', {
+                path: imagemNR06Path,
+                filename: 'NR 06.png',
+                caption: ''
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar imagem NR 06:', error);
+        }
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     // Enviar imagem SSMA
     const imagemSSMAPath = path.join(__dirname, 'Imagens', 'SSMA.png');
     if (fs.existsSync(imagemSSMAPath)) {
