@@ -1,24 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const empresaSelect = document.getElementById('empresa');
   const telefoneInput = document.getElementById('telefone');
   const ddiSelect = document.getElementById('ddi');
   const cpfInput = document.getElementById('cpf');
   const cpfError = document.getElementById('cpfError');
-
-  // 🔽 Carregar empresas do backend e popular o select
-  fetch('/api/empresas/select/options')
-    .then(res => res.json())
-    .then(empresas => {
-      empresas.forEach(emp => {
-        const option = document.createElement('option');
-        option.value = emp.id;
-        option.textContent = emp.razao_social;
-        empresaSelect.appendChild(option);
-      });
-    })
-    .catch(error => {
-      console.error('Erro ao carregar empresas:', error);
-    });
 
   // 🔽 Função para formatar CPF
   function formatarCPF(value) {
@@ -148,9 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const email = document.getElementById('email').value.trim();
     const ddi = document.getElementById('ddi').value;
     const telefone = document.getElementById('telefone').value.trim();
-    const empresaId = document.getElementById('empresa').value;
+    const nomeEmpresa = document.getElementById('nomeEmpresa').value.trim();
 
-    if (!nomeCompleto || !cpf || !email || !ddi || !telefone || !empresaId) {
+    if (!nomeCompleto || !cpf || !email || !ddi || !telefone || !nomeEmpresa) {
       alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
@@ -169,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
       cpf: cpf.replace(/\D/g, ''),
       email: email,
       telefone: telefoneCompleto,
-      empresaId: parseInt(empresaId, 10)
+      empresaId: 1,
+      nomeEmpresa: nomeEmpresa
     };
 
     console.log('📝 Dados sendo enviados:', novoUsuario);

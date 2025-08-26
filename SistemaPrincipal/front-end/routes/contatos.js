@@ -122,7 +122,7 @@ router.post('/', async (req, res) => {
         console.log('Body:', req.body);
         console.log('Body type:', typeof req.body);
         
-        const { nome, telefone, cpf, empresaId, email } = req.body;
+        const { nome, telefone, cpf, empresaId, email, nomeEmpresa } = req.body;
 
         // Validação básica
         if (!nome || !telefone || !email) {
@@ -186,8 +186,9 @@ router.post('/', async (req, res) => {
             nome: nome.trim(),
             telefone: telefoneLimpo,
             cpf: cpfLimpo,
-            empresaId: empresaId ? parseInt(empresaId, 10) : null,
+            empresaId: empresaId ? parseInt(empresaId, 10) : 1,
             email: email.trim(),
+            nomeEmpresa: nomeEmpresa ? nomeEmpresa.trim() : null,
             statusTreinamento: 'não iniciado'
         });
 
@@ -239,7 +240,8 @@ router.put('/:id', async (req, res) => {
       email,
       statusTreinamento,
       cpf,
-      empresaId // ✅ usamos empresaId agora
+      empresaId, // ✅ usamos empresaId agora
+      nomeEmpresa
     } = req.body;
 
     const contato = await Contato.findByPk(req.params.id);
@@ -300,6 +302,7 @@ router.put('/:id', async (req, res) => {
     if (email !== undefined) camposParaAtualizar.email = email.trim();
     if (statusTreinamento) camposParaAtualizar.statusTreinamento = statusTreinamento;
     if (cpf !== undefined) camposParaAtualizar.cpf = cpf ? cpf.replace(/\D/g, '') : null;
+    if (nomeEmpresa !== undefined) camposParaAtualizar.nomeEmpresa = nomeEmpresa ? nomeEmpresa.trim() : null;
 
     // ✅ Corrigido: atualiza a empresa corretamente via ID (chave estrangeira)
     if (empresaId !== undefined) {
