@@ -24,8 +24,8 @@ function verificarRespostaSSMA(texto, tipo = 'positiva') {
     );
 }
 
-// Configurações do quiz Módulo 1 (SSMA + Acidentes - 8 questões)
-const QUIZ_CONFIG = {
+// Quiz Módulo 1 - Fundamentos SSMA
+const QUIZ_MODULO1_CONFIG = {
     perguntas: [
         {
             pergunta: '1. O que significa SSMA?',
@@ -36,7 +36,7 @@ const QUIZ_CONFIG = {
                 d: 'Setor de Segurança e Medicina do Trabalho'
             },
             respostaCorreta: 'b',
-            explicacao: 'SSMA significa Saúde, Segurança e Meio Ambiente!'
+            explicacao: '✅ Correto! SSMA significa Saúde, Segurança e Meio Ambiente!'
         },
         {
             pergunta: '2. Verdadeiro ou Falso: A responsabilidade pela segurança pode ser transferida para outra pessoa.',
@@ -47,7 +47,7 @@ const QUIZ_CONFIG = {
                 d: 'Falso - apenas em emergências'
             },
             respostaCorreta: 'b',
-            explicacao: 'Falso - A responsabilidade pela segurança é intransferível!'
+            explicacao: '✅ Correto! A responsabilidade pela segurança é intransferível!'
         },
         {
             pergunta: '3. Qual é o objetivo principal da SST?',
@@ -58,7 +58,7 @@ const QUIZ_CONFIG = {
                 d: 'Agradar fiscais'
             },
             respostaCorreta: 'b',
-            explicacao: 'O objetivo principal da SST é proteger a integridade do trabalhador!'
+            explicacao: '✅ Correto! O objetivo principal da SST é proteger a integridade do trabalhador!'
         },
         {
             pergunta: '4. Complete a premissa: "A Segurança é _____"',
@@ -69,10 +69,16 @@ const QUIZ_CONFIG = {
                 d: 'relativa'
             },
             respostaCorreta: 'c',
-            explicacao: 'A Segurança é IMPRESCINDÍVEL - não é opcional!'
-        },
+            explicacao: '✅ Correto! A Segurança é IMPRESCINDÍVEL - não é opcional!'
+        }
+    ]
+};
+
+// Quiz Módulo 2 - Tipos de Acidentes
+const QUIZ_MODULO2_CONFIG = {
+    perguntas: [
         {
-            pergunta: '5. Uma ferramenta cai ao lado de um trabalhador, sem atingi-lo. Isso é:',
+            pergunta: '1. Uma ferramenta cai ao lado de um trabalhador, sem atingi-lo. Isso é:',
             alternativas: {
                 a: 'Acidente pessoal',
                 b: 'Acidente material',
@@ -80,10 +86,10 @@ const QUIZ_CONFIG = {
                 d: 'Não é acidente'
             },
             respostaCorreta: 'c',
-            explicacao: 'É um quase acidente - evento que poderia ter causado lesão mas não causou.'
+            explicacao: '✅ Correto! É um quase acidente - evento que poderia ter causado lesão mas não causou.'
         },
         {
-            pergunta: '6. Verdadeiro ou Falso: Acidente de trajeto só conta se acontecer indo para o trabalho.',
+            pergunta: '2. Verdadeiro ou Falso: Acidente de trajeto só conta se acontecer indo para o trabalho.',
             alternativas: {
                 a: 'Verdadeiro - só na ida',
                 b: 'Falso - vale para ida E volta',
@@ -91,10 +97,10 @@ const QUIZ_CONFIG = {
                 d: 'Falso - não existe acidente de trajeto'
             },
             respostaCorreta: 'b',
-            explicacao: 'Falso - Acidente de trajeto vale tanto na ida quanto na volta do trabalho!'
+            explicacao: '✅ Correto! Acidente de trajeto vale tanto na ida quanto na volta do trabalho!'
         },
         {
-            pergunta: '7. Todo acidente deve ser comunicado:',
+            pergunta: '3. Todo acidente deve ser comunicado:',
             alternativas: {
                 a: 'Apenas se houver ferimento',
                 b: 'Só os graves',
@@ -102,10 +108,10 @@ const QUIZ_CONFIG = {
                 d: 'Apenas no final do dia'
             },
             respostaCorreta: 'c',
-            explicacao: 'Todo acidente deve ser comunicado imediatamente ao SESMT!'
+            explicacao: '✅ Correto! Todo acidente deve ser comunicado imediatamente ao SESMT!'
         },
         {
-            pergunta: '8. Um vazamento de óleo que contamina o solo é um acidente:',
+            pergunta: '4. Um vazamento de óleo que contamina o solo é um acidente:',
             alternativas: {
                 a: 'Pessoal',
                 b: 'Material',
@@ -113,79 +119,185 @@ const QUIZ_CONFIG = {
                 d: 'De trajeto'
             },
             respostaCorreta: 'c',
-            explicacao: 'É um acidente ambiental pois causa danos ao meio ambiente!'
+            explicacao: '✅ Correto! É um acidente ambiental pois causa danos ao meio ambiente!'
         }
     ]
 };
 
-// Configurações do quiz Módulo 2 (Programas de Saúde e Segurança + EPI/EPC)
-const QUIZ_MODULO2_CONFIG = {
+// Quiz Módulo 3 - Cuidando da Saúde
+const QUIZ_MODULO3_CONFIG = {
     perguntas: [
         {
-            pergunta: '1. O PCMSO é o Programa de Controle Médico e Saúde Ocupacional. Qual exame deve ser realizado na contratação?',
+            pergunta: '1. Com que frequência são feitos os exames periódicos?',
             alternativas: {
-                a: 'Exame periódico',
-                b: 'Exame admissional',
-                c: 'Exame demissional',
-                d: 'Exame de retorno ao trabalho'
+                a: '6 meses',
+                b: '12 meses',
+                c: '18 meses',
+                d: '24 meses'
             },
             respostaCorreta: 'b',
-            explicacao: 'O exame admissional deve ser realizado na contratação do colaborador.'
+            explicacao: '✅ Correto! Os exames periódicos são feitos a cada 12 meses.'
         },
         {
-            pergunta: '2. Qual a diferença entre EPC e EPI?',
+            pergunta: '2. Verdadeiro ou Falso: Posso trabalhar antes de fazer o treinamento de integração.',
             alternativas: {
-                a: 'EPC é individual, EPI é coletivo',
-                b: 'EPC protege todos, EPI é uso pessoal',
-                c: 'Não há diferença entre eles',
-                d: 'EPI tem prioridade sobre EPC'
+                a: 'Verdadeiro - posso trabalhar',
+                b: 'Falso - preciso do treinamento primeiro',
+                c: 'Verdadeiro - só em emergências',
+                d: 'Falso - apenas com supervisor'
             },
             respostaCorreta: 'b',
-            explicacao: 'EPC (Equipamento de Proteção Coletiva) protege todos, EPI (Equipamento de Proteção Individual) é de uso pessoal.'
+            explicacao: '✅ Correto! Nenhum colaborador pode trabalhar sem treinamento adequado!'
         },
         {
-            pergunta: '3. Qual filtro respiratório deve ser usado para fumos e agentes biológicos?',
+            pergunta: '3. O que é necessário para comprovar um treinamento?',
             alternativas: {
-                a: 'PFF1',
-                b: 'PFF2',
-                c: 'PFF3',
-                d: 'Qualquer um serve'
+                a: 'Apenas presença',
+                b: 'Certificado e/ou lista de presença assinada',
+                c: 'Só a nota da prova',
+                d: 'Declaração verbal'
             },
             respostaCorreta: 'b',
-            explicacao: 'O filtro PFF2 é indicado para fumos e agentes biológicos.'
+            explicacao: '✅ Correto! É necessário certificado e/ou lista de presença assinada.'
         },
         {
-            pergunta: '4. Sobre trabalho em altura, é correto afirmar:',
+            pergunta: '4. Qual programa identifica e controla riscos específicos?',
             alternativas: {
-                a: 'É considerado acima de 1 metro',
-                b: 'É considerado acima de 2 metros',
-                c: 'É considerado acima de 3 metros',
-                d: 'Não há altura mínima definida'
+                a: 'PCMSO',
+                b: 'PGR',
+                c: 'CIPA',
+                d: 'SESMT'
             },
             respostaCorreta: 'b',
-            explicacao: 'Trabalho em altura é considerado acima de 2 metros.'
+            explicacao: '✅ Correto! O PGR (Programa de Gerenciamento de Riscos) identifica e controla riscos específicos.'
+        }
+    ]
+};
+
+// Quiz Módulo 4 - Mapas de Riscos
+const QUIZ_MODULO4_CONFIG = {
+    perguntas: [
+        {
+            pergunta: '1. Qual é o principal objetivo do Mapa de Riscos?',
+            alternativas: {
+                a: 'Decorar o ambiente',
+                b: 'Diagnóstico de segurança',
+                c: 'Cumprir legislação',
+                d: 'Impressionar clientes'
+            },
+            respostaCorreta: 'b',
+            explicacao: '✅ Correto! O principal objetivo é fazer diagnóstico de segurança e saúde.'
         },
         {
-            pergunta: '5. Qual dos pensamentos abaixo é considerado perigoso para a segurança?',
+            pergunta: '2. Verdadeiro ou Falso: Apenas o SESMT pode participar da elaboração do Mapa de Riscos.',
             alternativas: {
-                a: '"Vou usar todos os EPIs necessários"',
-                b: '"Preciso seguir os procedimentos"',
-                c: '"Nunca vai acontecer comigo"',
-                d: '"Segurança em primeiro lugar"'
+                a: 'Verdadeiro - só o SESMT',
+                b: 'Falso - trabalhadores também participam',
+                c: 'Verdadeiro - só técnicos',
+                d: 'Falso - só a CIPA participa'
+            },
+            respostaCorreta: 'b',
+            explicacao: '✅ Correto! A participação dos trabalhadores é fundamental na elaboração do Mapa de Riscos.'
+        },
+        {
+            pergunta: '3. O que representam as diferentes cores no Mapa de Riscos?',
+            alternativas: {
+                a: 'Beleza visual',
+                b: 'Tipos de riscos',
+                c: 'Departamentos',
+                d: 'Hierarquia'
+            },
+            respostaCorreta: 'b',
+            explicacao: '✅ Correto! As diferentes cores representam os tipos de riscos existentes.'
+        }
+    ]
+};
+
+// Quiz Módulo 5 - Perigos, Riscos e Controles
+const QUIZ_MODULO5_CONFIG = {
+    perguntas: [
+        {
+            pergunta: '1. Qual é a diferença entre perigo e risco?',
+            alternativas: {
+                a: 'Não há diferença',
+                b: 'Perigo é potencial, risco é probabilidade',
+                c: 'Risco é mais grave',
+                d: 'Perigo só existe na construção'
+            },
+            respostaCorreta: 'b',
+            explicacao: '✅ Correto! Perigo é o potencial para causar danos, risco é a probabilidade de ocorrer.'
+        },
+        {
+            pergunta: '2. Na hierarquia de controles, qual deve ser tentado PRIMEIRO?',
+            alternativas: {
+                a: 'EPI',
+                b: 'Treinamento',
+                c: 'Eliminação',
+                d: 'Substituição'
             },
             respostaCorreta: 'c',
-            explicacao: '"Nunca vai acontecer comigo" é um dos 4 pensamentos perigosos que devemos evitar.'
+            explicacao: '✅ Correto! A eliminação do perigo deve ser sempre a primeira opção.'
         },
         {
-            pergunta: '6. Sobre a perda auditiva, é correto afirmar:',
+            pergunta: '3. Verdadeiro ou Falso: EPI deve ser a primeira opção para controlar riscos.',
             alternativas: {
-                a: 'É reversível com tratamento',
-                b: 'É irreversível',
-                c: 'Só acontece com ruído muito alto',
-                d: 'Pode ser curada com cirurgia'
+                a: 'Verdadeiro - EPI primeiro',
+                b: 'Falso - EPI é a última opção',
+                c: 'Verdadeiro - mais barato',
+                d: 'Falso - só em emergências'
             },
             respostaCorreta: 'b',
-            explicacao: 'A perda auditiva é irreversível, por isso a proteção auditiva é fundamental.'
+            explicacao: '✅ Correto! EPI é a ÚLTIMA opção na hierarquia de controles.'
+        },
+        {
+            pergunta: '4. Uma máquina barulhenta é trocada por uma mais silenciosa. Isso é:',
+            alternativas: {
+                a: 'Eliminação',
+                b: 'Substituição',
+                c: 'Controle de engenharia',
+                d: 'EPI'
+            },
+            respostaCorreta: 'b',
+            explicacao: '✅ Correto! Trocar por algo menos perigoso é substituição.'
+        }
+    ]
+};
+
+// Quiz Módulo 6 - Equipamentos de Proteção
+const QUIZ_MODULO6_CONFIG = {
+    perguntas: [
+        {
+            pergunta: '1. O que tem prioridade: EPC ou EPI?',
+            alternativas: {
+                a: 'EPI',
+                b: 'EPC',
+                c: 'Tanto faz',
+                d: 'Depende da situação'
+            },
+            respostaCorreta: 'b',
+            explicacao: '✅ Correto! EPC (Equipamento de Proteção Coletiva) tem prioridade sobre EPI.'
+        },
+        {
+            pergunta: '2. Todo EPI deve ter:',
+            alternativas: {
+                a: 'Cor bonita',
+                b: 'Certificado de Aprovação',
+                c: 'Preço baixo',
+                d: 'Marca famosa'
+            },
+            respostaCorreta: 'b',
+            explicacao: '✅ Correto! Todo EPI deve ter Certificado de Aprovação (CA).'
+        },
+        {
+            pergunta: '3. Verdadeiro ou Falso: A pressa é aliada da segurança.',
+            alternativas: {
+                a: 'Verdadeiro - mais rápido é melhor',
+                b: 'Falso - pressa é inimiga da segurança',
+                c: 'Verdadeiro - economiza tempo',
+                d: 'Falso - só em emergências'
+            },
+            respostaCorreta: 'b',
+            explicacao: '✅ Correto! A pressa é inimiga da segurança. "Quanto mais rápido trabalhar, melhor" é uma atitude perigosa.'
         }
     ]
 };
@@ -296,28 +408,49 @@ async function processarResposta(sender, message, sendMessage) {
  * Inicia o Módulo 1 do treinamento
  */
 async function iniciarModulo1(sender, sendMessage) {
+    // Conteúdo completo do Módulo 1
     await sendMessage(sender, 'send-message', {
-        message: '📖 *MÓDULO 1: CONCEITOS BÁSICOS DE SSMA*\n\nVamos começar com os fundamentos!',
+        message: '📖 *MÓDULO 1: FUNDAMENTOS DO SSMA*\n\n🎯 *O que é SSMA?*\nSaúde, Segurança e Meio Ambiente - conjunto de normas e procedimentos para proteger você, seus colegas e o planeta.\n\n🏥 *Segurança e Saúde no Trabalho (SST)*\nSST são normas e procedimentos legalmente exigidas que visam:\n• Prevenir doenças ocupacionais\n• Evitar acidentes de trabalho\n• Proteger sua integridade física\n• Garantir ambiente de trabalho saudável',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '⚡ *Premissas Básicas da Segurança*\n\n🔴 A Segurança é IMPRESCINDÍVEL - não é opcional!\n🔴 A responsabilidade é de cada um e é INTRANSFERÍVEL\n🔴 Consciência em segurança é vital\n🔴 O único prejudicado pela falta de segurança será VOCÊ MESMO\n\n🎯 Nossa meta é ZERO acidentes! Acidentes causam sofrimento, afastamentos, problemas familiares e até morte.',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '📝 *QUIZ MÓDULO 1*\n\nVamos testar seus conhecimentos sobre os fundamentos do SSMA!',
     });
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    await enviarPergunta(sender, 0, QUIZ_CONFIG, 'quiz_modulo1', sendMessage);
+    await enviarPergunta(sender, 0, QUIZ_MODULO1_CONFIG, 'quiz_modulo1', sendMessage);
 }
 
 /**
- * Envia uma pergunta do quiz
+ * Envia uma pergunta do quiz com lista de seleção
  */
 async function enviarPergunta(sender, indicePergunta, config, tipoQuiz, sendMessage) {
     const pergunta = config.perguntas[indicePergunta];
     
-    const mensagem = `${pergunta.pergunta}\n\n` +
-        `a) ${pergunta.alternativas.a}\n` +
-        `b) ${pergunta.alternativas.b}\n` +
-        `c) ${pergunta.alternativas.c}\n` +
-        `d) ${pergunta.alternativas.d}\n\n` +
-        `Responda com a letra da alternativa (a, b, c ou d):`;
+    // Criar lista de alternativas
+    const listMsg = {
+        title: '',
+        description: pergunta.pergunta,
+        buttonText: 'Selecionar resposta',
+        listType: 'SINGLE_SELECT',
+        sections: [{
+            title: '',
+            rows: [
+                { id: `${tipoQuiz}_${indicePergunta}_a`, title: `a) ${pergunta.alternativas.a}`, description: '' },
+                { id: `${tipoQuiz}_${indicePergunta}_b`, title: `b) ${pergunta.alternativas.b}`, description: '' },
+                { id: `${tipoQuiz}_${indicePergunta}_c`, title: `c) ${pergunta.alternativas.c}`, description: '' },
+                { id: `${tipoQuiz}_${indicePergunta}_d`, title: `d) ${pergunta.alternativas.d}`, description: '' },
+            ],
+        }],
+    };
 
-    await sendMessage(sender, 'send-message', { message: mensagem });
+    await sendMessage(sender, 'send-list-message', listMsg);
     await salvarInteracao(sender, `${tipoQuiz}_pergunta_${indicePergunta}`, JSON.stringify({ acertos: 0, perguntaAtual: indicePergunta }));
 }
 
@@ -329,15 +462,13 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
     const perguntaAtual = dados.perguntaAtual || 0;
     const acertos = dados.acertos || 0;
     
-    // Extrair apenas a letra da resposta
-    const respostaLimpa = resposta.toLowerCase().trim().charAt(0);
-    
-    const pergunta = QUIZ_CONFIG.perguntas[perguntaAtual];
+    const respostaLimpa = extrairResposta(resposta);
+    const pergunta = QUIZ_MODULO1_CONFIG.perguntas[perguntaAtual];
     const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
     
     // Feedback da resposta
     await sendMessage(sender, 'send-message', {
-        message: respostaCorreta ? `✅ Correto! ${pergunta.explicacao}` : `❌ Incorreto. ${pergunta.explicacao}`,
+        message: respostaCorreta ? pergunta.explicacao : `❌ Incorreto. A resposta correta é "${pergunta.respostaCorreta.toUpperCase()}". ${pergunta.explicacao}`,
     });
     
     const novosAcertos = respostaCorreta ? acertos + 1 : acertos;
@@ -346,13 +477,13 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Verifica se terminou o módulo 1
-    if (proximaPergunta >= QUIZ_CONFIG.perguntas.length) {
+    if (proximaPergunta >= QUIZ_MODULO1_CONFIG.perguntas.length) {
         await finalizarModulo1(sender, novosAcertos, sendMessage);
         return true;
     }
     
     // Próxima pergunta
-    await enviarPergunta(sender, proximaPergunta, QUIZ_CONFIG, 'quiz_modulo1', sendMessage);
+    await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO1_CONFIG, 'quiz_modulo1', sendMessage);
     return true;
 }
 
@@ -360,7 +491,7 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
  * Finaliza o módulo 1 e inicia módulo 2
  */
 async function finalizarModulo1(sender, acertos, sendMessage) {
-    const total = QUIZ_CONFIG.perguntas.length;
+    const total = QUIZ_MODULO1_CONFIG.perguntas.length;
     const percentual = Math.round((acertos / total) * 100);
     
     await sendMessage(sender, 'send-message', {
@@ -368,13 +499,49 @@ async function finalizarModulo1(sender, acertos, sendMessage) {
     });
     
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await iniciarModulo2(sender, sendMessage);
+}
+
+/**
+ * Inicia o Módulo 2 do treinamento
+ */
+async function iniciarModulo2(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: '📖 *MÓDULO 2: PROGRAMAS DE SEGURANÇA E EPIs*\n\nVamos para a segunda parte!',
+        message: '📖 *MÓDULO 2: TIPOS DE ACIDENTES - CONHECER PARA PREVENIR*\n\n⚖️ *Definição Legal (Lei 8.213/91)*\n"Acidente do trabalho é aquele que ocorre pelo exercício do trabalho, a serviço da empresa, provocando lesão corporal, perturbação funcional ou doença que cause a morte ou a perda ou redução, permanente ou temporária, da capacidade para o trabalho."',
     });
-    
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '🚨 *TODO acidente do trabalho deve ser comunicado ao Setor da Segurança do Trabalho IMEDIATAMENTE!*\n\n📋 *Classificação por Tipo de Dano:*\n\n🩹 *ACIDENTE PESSOAL*\n• Gera lesão física e/ou doença no colaborador\n• Pode causar morte, invalidez permanente\n• Exemplos: cortes, fraturas, queimaduras\n\n🌍 *ACIDENTE AMBIENTAL*\n• Danos ao meio ambiente, saúde pública\n• Exemplos: vazamentos, contaminação',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '🔧 *ACIDENTE MATERIAL*\n• Danos em máquinas, equipamentos, veículos\n• Pode gerar paralisação de atividades\n\n⚠️ *QUASE ACIDENTE*\n• Evento que PODERIA ter sido acidente, mas não foi\n• Exemplo: Ferramenta pesada cai ao lado de trabalhador\n• Importante: São alertas para prevenção!\n\n🏥 *Acidentes por Afastamento:*\n• SEM AFASTAMENTO: Retorno no mesmo/próximo dia\n• COM AFASTAMENTO: Impossibilita exercer atividades\n• DE TRAJETO: No percurso casa-trabalho-casa',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '📝 *QUIZ MÓDULO 2*\n\nVamos testar seus conhecimentos sobre tipos de acidentes!',
+    });
     await new Promise(resolve => setTimeout(resolve, 1000));
+
     await enviarPergunta(sender, 0, QUIZ_MODULO2_CONFIG, 'quiz_modulo2', sendMessage);
+}
+
+/**
+ * Função universal para processar respostas de quiz
+ */
+function extrairResposta(resposta) {
+    let respostaLimpa = resposta.toLowerCase().trim();
+    if (respostaLimpa.includes('_')) {
+        // Se é selectedId (ex: quiz_modulo1_0_a), pegar a última parte
+        respostaLimpa = respostaLimpa.split('_').pop();
+    } else {
+        // Se é texto digitado, pegar primeiro caractere
+        respostaLimpa = respostaLimpa.charAt(0);
+    }
+    return respostaLimpa;
 }
 
 /**
@@ -385,14 +552,12 @@ async function processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessa
     const perguntaAtual = dados.perguntaAtual || 0;
     const acertos = dados.acertos || 0;
     
-    // Extrair apenas a letra da resposta
-    const respostaLimpa = resposta.toLowerCase().trim().charAt(0);
-    
+    const respostaLimpa = extrairResposta(resposta);
     const pergunta = QUIZ_MODULO2_CONFIG.perguntas[perguntaAtual];
     const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
     
     await sendMessage(sender, 'send-message', {
-        message: respostaCorreta ? `✅ Correto! ${pergunta.explicacao}` : `❌ Incorreto. ${pergunta.explicacao}`,
+        message: respostaCorreta ? pergunta.explicacao : `❌ Incorreto. A resposta correta é "${pergunta.respostaCorreta.toUpperCase()}". ${pergunta.explicacao}`,
     });
     
     const novosAcertos = respostaCorreta ? acertos + 1 : acertos;
@@ -401,7 +566,7 @@ async function processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessa
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     if (proximaPergunta >= QUIZ_MODULO2_CONFIG.perguntas.length) {
-        await finalizarTreinamento(sender, novosAcertos, sendMessage);
+        await finalizarModulo2(sender, novosAcertos, sendMessage);
         return true;
     }
     
@@ -410,14 +575,290 @@ async function processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessa
 }
 
 /**
- * Finaliza o treinamento completo
+ * Finaliza módulo 2 e inicia módulo 3
  */
-async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
+async function finalizarModulo2(sender, acertos, sendMessage) {
     const total = QUIZ_MODULO2_CONFIG.perguntas.length;
-    const percentual = Math.round((acertosModulo2 / total) * 100);
+    const percentual = Math.round((acertos / total) * 100);
     
     await sendMessage(sender, 'send-message', {
-        message: `🎉 *TREINAMENTO CONCLUÍDO!*\n\n📊 Módulo 2: ${acertosModulo2}/${total} (${percentual}%)\n\n🏆 Parabéns! Você completou o treinamento de SSMA.`,
+        message: `🎯 *MÓDULO 2 CONCLUÍDO!*\n\n📊 Resultado: ${acertos}/${total} (${percentual}%)`,
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await iniciarModulo3(sender, sendMessage);
+}
+
+/**
+ * Inicia o Módulo 3 do treinamento
+ */
+async function iniciarModulo3(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '📖 *MÓDULO 3: CUIDANDO DA SUA SAÚDE*\n\n🏥 *PCMSO - Programa de Controle Médico e Saúde Ocupacional*\n\nTodos devem realizar exames médicos conforme NR-7:\n\n🔹 *ADMISSIONAL* - Antes de começar\n🔹 *PERIÓDICO* - A cada 12 meses\n🔹 *MUDANÇA DE RISCO* - Ao trocar de função\n🔹 *RETORNO AO TRABALHO* - Após afastamento > 30 dias\n🔹 *DEMISSIONAL* - Na saída da empresa',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '📚 *Treinamentos Obrigatórios*\n\n🚨 *REGRA FUNDAMENTAL: Nenhum colaborador pode trabalhar sem treinamento adequado!*\n\n• Integração - Para todos\n• Específicos - Altura (NR-35), Espaço Confinado (NR-33), etc.\n• Certificado obrigatório com assinatura\n• Ordem de Serviço específica da função\n• Respeitar prazos de reciclagem\n\n🎯 *PGR - Programa de Gerenciamento de Riscos*\n• Identifica riscos específicos de cada atividade\n• Define medidas de controle adequadas\n• Orienta sobre equipamentos necessários',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '📝 *QUIZ MÓDULO 3*\n\nVamos testar seus conhecimentos sobre cuidados com a saúde!',
+    });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await enviarPergunta(sender, 0, QUIZ_MODULO3_CONFIG, 'quiz_modulo3', sendMessage);
+}
+
+/**
+ * Processa resposta do quiz módulo 3
+ */
+async function processarQuizModulo3(sender, resposta, ultimaInteracao, sendMessage) {
+    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const perguntaAtual = dados.perguntaAtual || 0;
+    const acertos = dados.acertos || 0;
+    
+    const respostaLimpa = extrairResposta(resposta);
+    const pergunta = QUIZ_MODULO3_CONFIG.perguntas[perguntaAtual];
+    const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
+    
+    await sendMessage(sender, 'send-message', {
+        message: respostaCorreta ? pergunta.explicacao : `❌ Incorreto. A resposta correta é "${pergunta.respostaCorreta.toUpperCase()}". ${pergunta.explicacao}`,
+    });
+    
+    const novosAcertos = respostaCorreta ? acertos + 1 : acertos;
+    const proximaPergunta = perguntaAtual + 1;
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    if (proximaPergunta >= QUIZ_MODULO3_CONFIG.perguntas.length) {
+        await finalizarModulo3(sender, novosAcertos, sendMessage);
+        return true;
+    }
+    
+    await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO3_CONFIG, 'quiz_modulo3', sendMessage);
+    return true;
+}
+
+/**
+ * Finaliza módulo 3 e inicia módulo 4
+ */
+async function finalizarModulo3(sender, acertos, sendMessage) {
+    const total = QUIZ_MODULO3_CONFIG.perguntas.length;
+    const percentual = Math.round((acertos / total) * 100);
+    
+    await sendMessage(sender, 'send-message', {
+        message: `🎯 *MÓDULO 3 CONCLUÍDO!*\n\n📊 Resultado: ${acertos}/${total} (${percentual}%)`,
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await iniciarModulo4(sender, sendMessage);
+}
+
+/**
+ * Inicia o Módulo 4 do treinamento
+ */
+async function iniciarModulo4(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '📖 *MÓDULO 4: MAPAS DE RISCOS - VISUALIZANDO PERIGOS* 🗺️\n\n🎯 *Objetivos:*\n• Diagnóstico de segurança e saúde\n• Troca de informações entre trabalhadores\n• Estimular participação na prevenção\n• Conscientizar sobre riscos existentes\n\n🔧 *Como Funcionam:*\n• Representação gráfica dos ambientes\n• Cores diferentes para tipos de riscos\n• Tamanhos diferentes para intensidade\n• Símbolos específicos para cada situação\n\n👥 *Sua participação é fundamental! Você conhece melhor os riscos da sua atividade.*',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '📝 *QUIZ MÓDULO 4*\n\nVamos testar seus conhecimentos sobre Mapas de Riscos!',
+    });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await enviarPergunta(sender, 0, QUIZ_MODULO4_CONFIG, 'quiz_modulo4', sendMessage);
+}
+
+/**
+ * Processa resposta do quiz módulo 4
+ */
+async function processarQuizModulo4(sender, resposta, ultimaInteracao, sendMessage) {
+    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const perguntaAtual = dados.perguntaAtual || 0;
+    const acertos = dados.acertos || 0;
+    
+    const respostaLimpa = extrairResposta(resposta);
+    const pergunta = QUIZ_MODULO4_CONFIG.perguntas[perguntaAtual];
+    const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
+    
+    await sendMessage(sender, 'send-message', {
+        message: respostaCorreta ? pergunta.explicacao : `❌ Incorreto. A resposta correta é "${pergunta.respostaCorreta.toUpperCase()}". ${pergunta.explicacao}`,
+    });
+    
+    const novosAcertos = respostaCorreta ? acertos + 1 : acertos;
+    const proximaPergunta = perguntaAtual + 1;
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    if (proximaPergunta >= QUIZ_MODULO4_CONFIG.perguntas.length) {
+        await finalizarModulo4(sender, novosAcertos, sendMessage);
+        return true;
+    }
+    
+    await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO4_CONFIG, 'quiz_modulo4', sendMessage);
+    return true;
+}
+
+/**
+ * Finaliza módulo 4 e inicia módulo 5
+ */
+async function finalizarModulo4(sender, acertos, sendMessage) {
+    const total = QUIZ_MODULO4_CONFIG.perguntas.length;
+    const percentual = Math.round((acertos / total) * 100);
+    
+    await sendMessage(sender, 'send-message', {
+        message: `🎯 *MÓDULO 4 CONCLUÍDO!*\n\n📊 Resultado: ${acertos}/${total} (${percentual}%)`,
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await iniciarModulo5(sender, sendMessage);
+}
+
+/**
+ * Inicia o Módulo 5 do treinamento
+ */
+async function iniciarModulo5(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '📖 *MÓDULO 5: PERIGOS, RISCOS E CONTROLES*\n\n🔍 *Diferença Fundamental:*\n\n⚠️ *PERIGO:* Fonte/situação com potencial para causar danos\n📊 *RISCO:* Possibilidade de que uma perda ou dano ocorra\n\n📐 *Fórmula: RISCO = Probabilidade × Consequência*',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '🏆 *HIERARQUIA DE CONTROLES (seguir esta ordem!)*\n\n1️⃣ *ELIMINAÇÃO* - Remover completamente o perigo (mais eficaz!)\n2️⃣ *SUBSTITUIÇÃO* - Trocar por algo menos perigoso\n3️⃣ *CONTROLES DE ENGENHARIA* - Barreiras físicas, proteções coletivas\n4️⃣ *CONTROLES ADMINISTRATIVOS* - Procedimentos, treinamentos, sinalização\n5️⃣ *EPI* - ÚLTIMA opção, não a primeira!\n\n🛡️ *EPI protege apenas quem usa. Controles coletivos protegem todos!*',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '📝 *QUIZ MÓDULO 5*\n\nVamos testar seus conhecimentos sobre perigos, riscos e controles!',
+    });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await enviarPergunta(sender, 0, QUIZ_MODULO5_CONFIG, 'quiz_modulo5', sendMessage);
+}
+
+/**
+ * Processa resposta do quiz módulo 5
+ */
+async function processarQuizModulo5(sender, resposta, ultimaInteracao, sendMessage) {
+    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const perguntaAtual = dados.perguntaAtual || 0;
+    const acertos = dados.acertos || 0;
+    
+    const respostaLimpa = extrairResposta(resposta);
+    const pergunta = QUIZ_MODULO5_CONFIG.perguntas[perguntaAtual];
+    const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
+    
+    await sendMessage(sender, 'send-message', {
+        message: respostaCorreta ? pergunta.explicacao : `❌ Incorreto. A resposta correta é "${pergunta.respostaCorreta.toUpperCase()}". ${pergunta.explicacao}`,
+    });
+    
+    const novosAcertos = respostaCorreta ? acertos + 1 : acertos;
+    const proximaPergunta = perguntaAtual + 1;
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    if (proximaPergunta >= QUIZ_MODULO5_CONFIG.perguntas.length) {
+        await finalizarModulo5(sender, novosAcertos, sendMessage);
+        return true;
+    }
+    
+    await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO5_CONFIG, 'quiz_modulo5', sendMessage);
+    return true;
+}
+
+/**
+ * Finaliza módulo 5 e inicia módulo 6
+ */
+async function finalizarModulo5(sender, acertos, sendMessage) {
+    const total = QUIZ_MODULO5_CONFIG.perguntas.length;
+    const percentual = Math.round((acertos / total) * 100);
+    
+    await sendMessage(sender, 'send-message', {
+        message: `🎯 *MÓDULO 5 CONCLUÍDO!*\n\n📊 Resultado: ${acertos}/${total} (${percentual}%)`,
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await iniciarModulo6(sender, sendMessage);
+}
+
+/**
+ * Inicia o Módulo 6 do treinamento
+ */
+async function iniciarModulo6(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '📖 *MÓDULO 6: EQUIPAMENTOS DE PROTEÇÃO* 🛡️\n\n🔄 *EPC vs EPI*\n\n👥 *EQUIPAMENTOS DE PROTEÇÃO COLETIVA (EPC)*\n• Protegem TODOS os trabalhadores\n• Exemplos: guarda-corpos, ventilação, sinalização\n• PRIORIDADE sobre EPI\n\n👤 *EQUIPAMENTOS DE PROTEÇÃO INDIVIDUAL (EPI)*\n• Dispositivos de uso pessoal\n• USO OBRIGATÓRIO por norma\n• Todo EPI precisa de Certificado de Aprovação - CA\n• Aprenda como usar, guardar e conservar seu EPI\n• Se danificado, comunique para substituição\n• Use de forma adequada e sempre que necessário!',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '⚠️ *4 Atitudes Perigosas a Evitar:*\n\n🚫 "Nunca irá acontecer comigo"\n🚫 "Sou ótimo profissional, não preciso de EPI"\n🚫 "EPIs são desconfortáveis"\n🚫 "Quanto mais rápido trabalhar, melhor"\n\n💡 *Lembre-se: A pressa é inimiga da segurança!*',
+    });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await sendMessage(sender, 'send-message', {
+        message: '📝 *QUIZ MÓDULO 6*\n\nVamos testar seus conhecimentos sobre equipamentos de proteção!',
+    });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await enviarPergunta(sender, 0, QUIZ_MODULO6_CONFIG, 'quiz_modulo6', sendMessage);
+}
+
+/**
+ * Processa resposta do quiz módulo 6
+ */
+async function processarQuizModulo6(sender, resposta, ultimaInteracao, sendMessage) {
+    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const perguntaAtual = dados.perguntaAtual || 0;
+    const acertos = dados.acertos || 0;
+    
+    const respostaLimpa = extrairResposta(resposta);
+    const pergunta = QUIZ_MODULO6_CONFIG.perguntas[perguntaAtual];
+    const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
+    
+    await sendMessage(sender, 'send-message', {
+        message: respostaCorreta ? pergunta.explicacao : `❌ Incorreto. A resposta correta é "${pergunta.respostaCorreta.toUpperCase()}". ${pergunta.explicacao}`,
+    });
+    
+    const novosAcertos = respostaCorreta ? acertos + 1 : acertos;
+    const proximaPergunta = perguntaAtual + 1;
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    if (proximaPergunta >= QUIZ_MODULO6_CONFIG.perguntas.length) {
+        await finalizarTreinamento(sender, novosAcertos, sendMessage);
+        return true;
+    }
+    
+    await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO6_CONFIG, 'quiz_modulo6', sendMessage);
+    return true;
+}
+
+/**
+ * Finaliza o treinamento completo
+ */
+async function finalizarTreinamento(sender, acertosModulo6, sendMessage) {
+    const total = QUIZ_MODULO6_CONFIG.perguntas.length;
+    const percentual = Math.round((acertosModulo6 / total) * 100);
+    
+    await sendMessage(sender, 'send-message', {
+        message: `🎯 *MÓDULO 6 CONCLUÍDO!*\n\n📊 Resultado: ${acertosModulo6}/${total} (${percentual}%)`,
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Considerações finais
+    await sendMessage(sender, 'send-message', {
+        message: '🎆 *CONSIDERAÇÕES FINAIS*\n\n🛡️ *Sua Segurança Depende de Você*\n• A Responsabilidade é individual e intransferível\n• O Conhecimento salva vidas\n• A Prevenção é sempre melhor que correção\n• Sua família conta com você voltando seguro para casa\n\n📞 *Contatos Importantes*\n• SESMT: Sempre disponível para dúvidas e orientações\n• CIPA: Seus representantes na prevenção\n• Emergência: Comunicar IMEDIATAMENTE qualquer acidente',
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    await sendMessage(sender, 'send-message', {
+        message: '🎉 *TREINAMENTO CONCLUÍDO COM SUCESSO!*\n\n🏆 Parabéns! Você completou todos os 6 módulos do treinamento SSMA.\n\n📚 *Lembre-se: SSMA não é apenas um conjunto de regras, é um modo de vida que protege você, seus colegas e o meio ambiente. Pratique sempre!*',
     });
     
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -470,6 +911,33 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         return true;
     }
     
+    // Processar respostas de quiz por selectedId
+    if (selectedId && selectedId.includes('_')) {
+        const partes = selectedId.split('_');
+        if (partes.length >= 3) {
+            const tipoQuiz = partes[0] + '_' + partes[1]; // quiz_modulo1, quiz_modulo2, etc.
+            const perguntaNum = parseInt(partes[2]);
+            const resposta = partes[3]; // a, b, c, d
+            
+            console.log(`🔍 Processando resposta de quiz: ${tipoQuiz}, pergunta ${perguntaNum}, resposta ${resposta}`);
+            
+            // Processar baseado no tipo de quiz
+            if (tipoQuiz === 'quiz_modulo1') {
+                return await processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessage);
+            } else if (tipoQuiz === 'quiz_modulo2') {
+                return await processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessage);
+            } else if (tipoQuiz === 'quiz_modulo3') {
+                return await processarQuizModulo3(sender, resposta, ultimaInteracao, sendMessage);
+            } else if (tipoQuiz === 'quiz_modulo4') {
+                return await processarQuizModulo4(sender, resposta, ultimaInteracao, sendMessage);
+            } else if (tipoQuiz === 'quiz_modulo5') {
+                return await processarQuizModulo5(sender, resposta, ultimaInteracao, sendMessage);
+            } else if (tipoQuiz === 'quiz_modulo6') {
+                return await processarQuizModulo6(sender, resposta, ultimaInteracao, sendMessage);
+            }
+        }
+    }
+    
     if (selectedId === 'nao_iniciar_ssma' || (ultimaInteracao?.tipo === 'aguardando_confirmacao' && verificarRespostaSSMA(text, 'negativa'))) {
         await sendMessage(sender, 'send-message', {
             message: '⏰ Sem problemas! Quando estiver pronto, digite *SSMA* para retomar o treinamento.',
@@ -487,6 +955,30 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     if (ultimaInteracao?.tipo?.startsWith('quiz_modulo2_')) {
         console.log('🔍 Processando quiz módulo 2');
         return await processarQuizModulo2(sender, text, ultimaInteracao, sendMessage);
+    }
+    
+    // Processando quiz módulo 3
+    if (ultimaInteracao?.tipo?.startsWith('quiz_modulo3_')) {
+        console.log('🔍 Processando quiz módulo 3');
+        return await processarQuizModulo3(sender, text, ultimaInteracao, sendMessage);
+    }
+    
+    // Processando quiz módulo 4
+    if (ultimaInteracao?.tipo?.startsWith('quiz_modulo4_')) {
+        console.log('🔍 Processando quiz módulo 4');
+        return await processarQuizModulo4(sender, text, ultimaInteracao, sendMessage);
+    }
+    
+    // Processando quiz módulo 5
+    if (ultimaInteracao?.tipo?.startsWith('quiz_modulo5_')) {
+        console.log('🔍 Processando quiz módulo 5');
+        return await processarQuizModulo5(sender, text, ultimaInteracao, sendMessage);
+    }
+    
+    // Processando quiz módulo 6
+    if (ultimaInteracao?.tipo?.startsWith('quiz_modulo6_')) {
+        console.log('🔍 Processando quiz módulo 6');
+        return await processarQuizModulo6(sender, text, ultimaInteracao, sendMessage);
     }
     
     // Confirmação de dados para certificado
