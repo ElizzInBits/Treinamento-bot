@@ -14,7 +14,7 @@ console.log('🚀 Iniciando WhatsApp Bot com conexão direta');
     console.log('✅ Banco conectado - Template');
     
     // Pré-carregar contatos
-    await cacheContatos.preCarregarContatos();
+    await cacheContatos.precarregarContatosAtivos();
   } catch (error) {
     console.error('❌ Erro no banco:', error);
   }
