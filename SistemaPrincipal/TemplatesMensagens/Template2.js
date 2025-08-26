@@ -735,13 +735,27 @@ async function processarMensagem(message, client) {
             }
         }
 
+        // Processar comando MENU para usuários em treinamento
+        if (text.toLowerCase().includes('menu') && contato.statusTreinamento === 'em andamento') {
+            const script = scriptsTreinamento['treinamentoSSMA'];
+            if (script && script.exibirMenuOpcoes) {
+                await script.exibirMenuOpcoes(sender, sendMessage);
+                return;
+            }
+        }
+        
         // PROCESSAR SSMA - apenas se há interação relevante
         if (ultimaInteracao && (ultimaInteracao.tipo === 'aguardando_confirmacao' ||
             ultimaInteracao.tipo?.startsWith('quiz_modulo') ||
             ultimaInteracao.tipo?.includes('confirmacao_dados_ssma') ||
             ultimaInteracao.tipo === 'aguardando_inicio_quiz_modulo1' ||
+            ultimaInteracao.tipo === 'aguardando_inicio_quiz_modulo2' ||
+            ultimaInteracao.tipo === 'menu_opcoes' ||
             selectedId === 'iniciar_ssma' || selectedId === 'nao_iniciar_ssma' ||
             selectedId === 'iniciar_quiz_modulo1' || selectedId === 'nao_iniciar_quiz_modulo1' ||
+            selectedId === 'iniciar_quiz_modulo2' || selectedId === 'nao_iniciar_quiz_modulo2' ||
+            selectedId?.startsWith('reiniciar_') || selectedId === 'continuar_normal' ||
+            text.toLowerCase().includes('sim - iniciar quiz agora') ||
             verificarRespostaQuiz(text))) {
             
             const script = scriptsTreinamento['treinamentoSSMA'];
@@ -827,6 +841,9 @@ async function processarMensagem(message, client) {
             );
 
             if (ultimaInteracaoRelevante) {
+                // Salvar a interação relevante como atual para que o processamento funcione
+                await salvarUltimaInteracao(sender, ultimaInteracaoRelevante.tipo, ultimaInteracaoRelevante.mensagem);
+                
                 try {
                     const mensagemData = JSON.parse(ultimaInteracaoRelevante.mensagem);
                     if (mensagemData.sections) {
@@ -1059,7 +1076,7 @@ async function processarMensagem(message, client) {
         // Se o usuário tem treinamento em andamento mas não foi processado, mostrar opções
         if (contato.statusTreinamento === 'em andamento' && contato.treinamento) {
             await sendMessage(sender, 'send-message', {
-                message: `🔄 Você está no meio do treinamento "${contato.treinamento.nome}". Digite *continuar* para prosseguir ou *reiniciar* para começar novamente.`,
+                message: `🔄 Você está no meio do treinamento "${contato.treinamento.nome}".\n\n📱 *Opções disponíveis:*\n• Digite *continuar* - para prosseguir\n• Digite *menu* - para ver opções de reiniciar\n• Digite *reiniciar* - para começar novamente\n\n💡 Use o *MENU* para navegar entre módulos!`,
             });
             return;
         }

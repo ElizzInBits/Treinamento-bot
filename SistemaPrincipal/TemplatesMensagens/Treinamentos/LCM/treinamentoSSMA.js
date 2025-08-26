@@ -215,7 +215,15 @@ async function executarTreinamento(sender, contato, sendMessage) {
     await sendMessage(sender, 'send-message', {
         message: '🎯 *OBJETIVOS DO TREINAMENTO*\n\n📋 *Objetivo Geral:*\nCapacitar os colaboradores nos princípios básicos de SSMA, desenvolvendo consciência sobre segurança, saúde e meio ambiente.\n\n🎯 *Objetivos Específicos:*\n• Conhecer os conceitos de SSMA\n• Identificar tipos de acidentes\n• Compreender programas de segurança\n• Utilizar EPIs corretamente',
     });
+    
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    await sendMessage(sender, 'send-message', {
+        message: '💡 *DICA IMPORTANTE:*\n\nA qualquer momento durante o treinamento, você pode digitar *MENU* para ver opções de:\n• Reiniciar treinamento completo\n• Reiniciar módulos específicos\n• Continuar normalmente\n\n📱 Use essa função sempre que precisar!',
+    });
 
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     const iniciarMsg = {
         title: '',
         description: '📚 Você está pronto para começar o treinamento?',
@@ -719,13 +727,77 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
 }
 
 /**
+ * Exibe menu de opções para reiniciar treinamento ou módulos
+ */
+async function exibirMenuOpcoes(sender, sendMessage) {
+    const menuMsg = {
+        title: '',
+        description: '📋 *MENU DE OPÇÕES*\n\nEscolha o que deseja fazer:',
+        buttonText: 'Selecionar opção',
+        listType: 'SINGLE_SELECT',
+        sections: [{
+            title: '',
+            rows: [
+                { id: 'reiniciar_treinamento_completo', title: '🔄 Reiniciar treinamento completo', description: 'Começar do início' },
+                { id: 'reiniciar_modulo1', title: '📖 Reiniciar Módulo 1', description: 'Fundamentos e Prevenção' },
+                { id: 'reiniciar_modulo2', title: '🛡️ Reiniciar Módulo 2', description: 'Controles e Equipamentos' },
+                { id: 'continuar_normal', title: '▶️ Continuar normalmente', description: 'Voltar ao treinamento' },
+            ],
+        }],
+    };
+    
+    await sendMessage(sender, 'send-list-message', menuMsg);
+    await salvarInteracao(sender, 'menu_opcoes', JSON.stringify(menuMsg));
+}
+
+/**
  * Processa as respostas do treinamento SSMA - VERSÃO COMPLETA
  */
 async function processarRespostaSSMA(sender, text, selectedId, contato, sendMessage) {
     console.log(`🔍 processarRespostaSSMA chamado: text="${text}", selectedId="${selectedId}"`);
     
+    // Verificar se usuário digitou 'menu'
+    if (text.toLowerCase().includes('menu')) {
+        await exibirMenuOpcoes(sender, sendMessage);
+        return true;
+    }
+    
     const ultimaInteracao = await obterUltimaInteracao(sender);
     console.log(`🔍 Última interação: ${ultimaInteracao?.tipo}`);
+    
+    // Processar opções do menu
+    if (ultimaInteracao?.tipo === 'menu_opcoes') {
+        if (selectedId === 'reiniciar_treinamento_completo') {
+            await sendMessage(sender, 'send-message', {
+                message: '🔄 Reiniciando treinamento completo...'
+            });
+            await executarTreinamento(sender, contato, sendMessage);
+            return true;
+        }
+        
+        if (selectedId === 'reiniciar_modulo1') {
+            await sendMessage(sender, 'send-message', {
+                message: '📖 Reiniciando Módulo 1...'
+            });
+            await iniciarModulo1(sender, sendMessage);
+            return true;
+        }
+        
+        if (selectedId === 'reiniciar_modulo2') {
+            await sendMessage(sender, 'send-message', {
+                message: '🛡️ Reiniciando Módulo 2...'
+            });
+            await iniciarModulo2(sender, sendMessage);
+            return true;
+        }
+        
+        if (selectedId === 'continuar_normal') {
+            await sendMessage(sender, 'send-message', {
+                message: '▶️ Continuando treinamento normalmente...'
+            });
+            return true;
+        }
+    }
     
     // Aguardando confirmação para iniciar
     if (selectedId === 'iniciar_ssma' || (ultimaInteracao?.tipo === 'aguardando_confirmacao' && verificarRespostaSSMA(text, 'positiva'))) {
@@ -877,7 +949,10 @@ module.exports = {
     processarResposta,
     processarRespostaSSMA,
     processarTreinamentosPendentes,
-    gerarCertificadoSSMA
+    gerarCertificadoSSMA,
+    iniciarModulo1,
+    iniciarModulo2,
+    exibirMenuOpcoes
 };
 
 console.log('📝 treinamentoSSMA.js COMPLETO carregado');
