@@ -406,7 +406,23 @@ async function iniciarModulo1(sender, sendMessage) {
     });
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    await enviarPergunta(sender, 0, QUIZ_MODULO1_CONFIG, 'quiz_modulo1', sendMessage);
+    // Perguntar se quer iniciar o quiz
+    const quizMsg = {
+        title: '',
+        description: 'Deseja iniciar o quiz agora?',
+        buttonText: 'Escolher opção',
+        listType: 'SINGLE_SELECT',
+        sections: [{
+            title: '',
+            rows: [
+                { id: 'iniciar_quiz_modulo1', title: 'SIM - Iniciar quiz agora! 📝', description: '' },
+                { id: 'nao_iniciar_quiz_modulo1', title: 'NÃO - Depois faço ⏰', description: '' },
+            ],
+        }],
+    };
+
+    await sendMessage(sender, 'send-list-message', quizMsg);
+    await salvarInteracao(sender, 'aguardando_inicio_quiz_modulo1', JSON.stringify(quizMsg));
 }
 
 /**
@@ -433,7 +449,7 @@ async function enviarPergunta(sender, indicePergunta, config, tipoQuiz, sendMess
     };
 
     await sendMessage(sender, 'send-list-message', listMsg);
-    await salvarInteracao(sender, `${tipoQuiz}_pergunta_${indicePergunta}`, JSON.stringify({ perguntaAtual: indicePergunta }));
+    await salvarInteracao(sender, `${tipoQuiz}_pergunta_${indicePergunta}`, JSON.stringify({ perguntaAtual: indicePergunta, acertos: 0 }));
 }
 
 /**
@@ -641,6 +657,20 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     if (selectedId === 'iniciar_ssma' || (ultimaInteracao?.tipo === 'aguardando_confirmacao' && verificarRespostaSSMA(text, 'positiva'))) {
         console.log('✅ Iniciando módulo 1');
         await iniciarModulo1(sender, sendMessage);
+        return true;
+    }
+    
+    // Aguardando confirmação para iniciar quiz módulo 1
+    if (selectedId === 'iniciar_quiz_modulo1' || (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && verificarRespostaSSMA(text, 'positiva'))) {
+        console.log('✅ Iniciando quiz módulo 1');
+        await enviarPergunta(sender, 0, QUIZ_MODULO1_CONFIG, 'quiz_modulo1', sendMessage);
+        return true;
+    }
+    
+    if (selectedId === 'nao_iniciar_quiz_modulo1' || (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && verificarRespostaSSMA(text, 'negativa'))) {
+        await sendMessage(sender, 'send-message', {
+            message: '⏰ Sem problemas! Quando estiver pronto para o quiz, me avise.',
+        });
         return true;
     }
     
