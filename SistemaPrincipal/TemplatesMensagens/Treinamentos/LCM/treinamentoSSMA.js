@@ -274,29 +274,10 @@ async function processarResposta(sender, message, sendMessage) {
  * Inicia o Módulo 1 do treinamento
  */
 async function iniciarModulo1(sender, sendMessage) {
-
-
-    // Enviar imagem NR 06
-
     const path = require('path');
     const fs = require('fs');
-    const imagemNR06Path = path.join(__dirname, 'Imagens', 'NR06.png');
-    if (fs.existsSync(imagemNR06Path)) {
-        try {
-            await sendMessage(sender, 'send-image', {
-                path: imagemNR06Path,
-                filename: 'NR06.png',
-                caption: ''
-            });
-        } catch (error) {
-            console.error('❌ Erro ao enviar imagem NR 06:', error);
-        }
-    }
-    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Enviar imagem SSMA
-    const path = require('path');
-    const fs = require('fs');
     const imagemSSMAPath = path.join(__dirname, 'Imagens', 'SSMA.png');
     if (fs.existsSync(imagemSSMAPath)) {
         try {
@@ -341,8 +322,6 @@ async function iniciarModulo1(sender, sendMessage) {
 
         
     //Envia imagem LEI
-    const path = require('path');
-    const fs = require('fs');
     const imagemLEIPath = path.join(__dirname, 'Imagens', 'LEI.png');
     if (fs.existsSync(imagemLEIPath)) {
         try {
@@ -365,8 +344,6 @@ async function iniciarModulo1(sender, sendMessage) {
 
 
     //Enviar imagem CIPA
-    const path = require('path');
-    const fs = require('fs');
     const imagemCIPAPath = path.join(__dirname, 'Imagens', 'CIPA.png');
     if (fs.existsSync(imagemCIPAPath)) {
         try {
@@ -393,9 +370,7 @@ async function iniciarModulo1(sender, sendMessage) {
     });
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    //Enviar iamgem PCMSO
-    const path = require('path');
-    const fs = require('fs');
+    //Enviar imagem PCMSO
     const imagemPCMSOPath = path.join(__dirname, 'Imagens', 'PCMSO.png');
     if (fs.existsSync(imagemPCMSOPath)) {
         try {
