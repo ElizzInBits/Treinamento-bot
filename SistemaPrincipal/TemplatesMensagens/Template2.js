@@ -843,7 +843,7 @@ async function processarMensagem(message, client) {
 
 
         // Verificar se é um usuário recadastrado que precisa de orientação
-        if (contato.statusTreinamento === 'não iniciado' && !ultimaInteracao) {
+        if (contato.statusTreinamento === 'não iniciado' && !ultimaInteracao && ultimaInteracao?.tipo !== 'treinamento_iniciado') {
             await iniciarTreinamento(sender, contato);
             return;
         }
@@ -1087,8 +1087,8 @@ async function processarMensagem(message, client) {
 
 
 
-        // Verificar se é usuário não iniciado que precisa de ajuda
-        if (contato.statusTreinamento === 'não iniciado') {
+        // Verificar se é usuário não iniciado que precisa de ajuda (evitar loop)
+        if (contato.statusTreinamento === 'não iniciado' && ultimaInteracao?.tipo !== 'treinamento_iniciado' && ultimaInteracao?.tipo !== 'selecionar_treinamento') {
             await iniciarTreinamento(sender, contato);
             return;
         }
