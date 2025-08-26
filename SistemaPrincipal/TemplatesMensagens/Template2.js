@@ -553,13 +553,70 @@ async function processarMensagem(message, client) {
         const text = message.body?.toLowerCase() || '';
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
+        
+        // Comando especial para recarregar cache
+        if (text === '/reload' || text === 'reload' || text === 'recarregar') {
+            console.log('🔄 Comando de recarga recebido');
+            cacheContatos.invalidarContato(sender);
+            await cacheContatos.precarregarContatosAtivos();
+            
+            const contatoRecarregado = await cacheContatos.buscarContato(sender);
+            if (contatoRecarregado) {
+                await sendMessage(sender, 'send-message', {
+                    message: '✅ Cache recarregado! Olá ' + contatoRecarregado.nome + '!',
+                });
+                if (contatoRecarregado.statusTreinamento === 'não iniciado') {
+                    await iniciarTreinamento(sender, contatoRecarregado);
+                }
+            } else {
+                await sendMessage(sender, 'send-message', {
+                    message: '❌ Ainda não foi possível encontrar seu cadastro.',
+                });
+            }
+            return;
+        }
 
         // RESPOSTA INSTANTÂNEA com cache otimizado
         const dbStart = Date.now();
-        const contato = await cacheContatos.buscarContato(sender);
+        let contato = await cacheContatos.buscarContato(sender);
         console.log(`🔍 Busca contato: ${Date.now() - dbStart}ms`);
 
-        // Se não encontrou contato, responder imediatamente
+        // Se não encontrou contato, invalidar cache e tentar novamente
+        if (!contato) {
+            console.log(`❌ Contato não encontrado no cache, invalidando e tentando novamente...`);
+            cacheContatos.invalidarContato(sender);
+            
+            // Tentar busca direta no banco
+            try {
+                const numeroLimpo = sender.replace(/\D/g, '').replace(/@c\.us$/, '');
+                const variacoes = [numeroLimpo];
+                
+                // Gerar variações do número
+                if (numeroLimpo.length === 13 && numeroLimpo.charAt(4) === '9') {
+                    variacoes.push(numeroLimpo.substring(0, 4) + numeroLimpo.substring(5));
+                } else if (numeroLimpo.length === 12) {
+                    variacoes.push(numeroLimpo.substring(0, 4) + '9' + numeroLimpo.substring(4));
+                }
+                
+                contato = await Contato.findOne({
+                    where: { 
+                        telefone: {
+                            [Op.in]: variacoes
+                        }
+                    },
+                    logging: false
+                });
+                
+                if (contato) {
+                    console.log(`✅ Contato encontrado no banco: ${contato.nome}`);
+                    cacheContatos.atualizarContato(sender, contato);
+                }
+            } catch (error) {
+                console.error('Erro na busca direta:', error.message);
+            }
+        }
+
+        // Se ainda não encontrou contato, responder imediatamente
         if (!contato) {
             const msgStart = Date.now();
             await sendMessage(sender, 'send-message', {
@@ -570,6 +627,8 @@ async function processarMensagem(message, client) {
             return;
         }
 
+        console.log(`👤 Contato encontrado: ${contato.nome}, Status: ${contato.statusTreinamento}`);
+        
         if (contato.statusTreinamento === 'não iniciado') {
             // Invalidar cache se necessário
             cacheContatos.invalidarContato(sender);
@@ -1097,6 +1156,30 @@ async function processarMensagem(message, client) {
             return;
         }
 
+        // Se chegou até aqui e é usuário cadastrado, pode ser problema de cache
+        if (text.toLowerCase().includes('cadastro') || text.toLowerCase().includes('cadastrei') || 
+            text.toLowerCase().includes('já me cadastrei') || text.toLowerCase().includes('fiz o cadastro')) {
+            console.log('🔄 Usuário mencionou cadastro, recarregando cache...');
+            cacheContatos.invalidarContato(sender);
+            await cacheContatos.precarregarContatosAtivos();
+            
+            // Tentar buscar novamente
+            const contatoAtualizado = await cacheContatos.buscarContato(sender);
+            if (contatoAtualizado) {
+                console.log('✅ Contato encontrado após recarga do cache');
+                await sendMessage(sender, 'send-message', {
+                    message: '✅ Cadastro encontrado! Olá ' + contatoAtualizado.nome + '!',
+                });
+                await iniciarTreinamento(sender, contatoAtualizado);
+                return;
+            } else {
+                await sendMessage(sender, 'send-message', {
+                    message: '🔍 Ainda não consegui encontrar seu cadastro. Aguarde alguns minutos ou digite "reload" para tentar novamente.',
+                });
+                return;
+            }
+        }
+        
         // Mensagem padrão para entradas não reconhecidas
         await sendMessage(sender, 'send-message', {
             message: '🤔 Não entendi sua mensagem. Por favor, use as opções fornecidas.',
