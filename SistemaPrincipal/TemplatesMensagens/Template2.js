@@ -571,7 +571,8 @@ async function processarMensagem(message, client) {
         }
 
         if (contato.statusTreinamento === 'não iniciado') {
-            cacheContatos.delete(`empresa_${contato.empresaId}`);
+            // Invalidar cache se necessário
+            cacheContatos.invalidarContato(sender);
         }
 
         const ultimaInteracao = await obterUltimaInteracao(sender);
