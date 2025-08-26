@@ -10,7 +10,7 @@ function adicionarContatoNaTabela(contato) {
     <td>${contato.email || '-'}</td>
     <td>${contato.cpf || '-'}</td>
     <td>${contato.statusTreinamento || '-'}</td>
-    <td>${contato.empresaId || '—'}</td>
+    <td>${contato.nomeEmpresa || '—'}</td>
     <td>${contato.ultimaInteracao || '—'}</td>
   `;
   tbody.appendChild(tr);

@@ -45,6 +45,10 @@ module.exports = (sequelize) => {
         key: 'id',
       },
     },
+    nomeEmpresa: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
 
     ultimaInteracao: {
       type: DataTypes.DATE,
