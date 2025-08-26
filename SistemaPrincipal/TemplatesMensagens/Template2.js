@@ -543,6 +543,7 @@ async function gerarEEnviarCertificado(contato, sender) {
 async function processarMensagem(message, client) {
     const startTime = Date.now();
     console.log(`⏱️ [${new Date().toISOString()}] INÍCIO processamento: ${message.from}`);
+    console.log(`📱 Status cliente WhatsApp: ${client ? 'Conectado' : 'Desconectado'}`);
     
     setWppClient(client);
     const sender = message.from.replace('@c.us', '');
@@ -587,26 +588,40 @@ async function processarMensagem(message, client) {
 
         // Se não encontrou contato, responder IMEDIATAMENTE
         if (!contato) {
-            console.log(`❌ Contato não encontrado - enviando saudação/cadastro`);
+            console.log(`❌ Contato não encontrado - enviando saudação/cadastro completa`);
             
-            // Mensagem de saudação
-            await sendMessage(sender, 'send-message', {
-                message: `👋 Olá! Seja muito bem-vindo(a)!\n\n🤖 Eu sou um bot de treinamentos da Salubritá! 🚀`,
-            });
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Mensagem sobre o que faz
-            await sendMessage(sender, 'send-message', {
-                message: `🏢 Estou aqui para aplicar treinamentos de segurança e saúde no trabalho de forma rápida e eficiente!\n\n🎓 Nossos treinamentos são certificados e reconhecidos nacionalmente.`,
-            });
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Mensagem de cadastro
-            await sendMessage(sender, 'send-message', {
-                message: `🤔 Humm, parece que você ainda não fez seu cadastro em nossa plataforma.\n\n📝 Para iniciar seu treinamento, é necessário se cadastrar primeiro.\n\n👉 Clique no link abaixo para se cadastrar:\n\nhttps://abrir.link/kAgON\n\n✨ Após o cadastro, volte aqui e me envie qualquer mensagem para começarmos!`,
-            });
+            try {
+                // Mensagem de saudação
+                console.log('📤 Enviando mensagem 1/3...');
+                await sendMessage(sender, 'send-message', {
+                    message: `👋 Olá! Seja muito bem-vindo(a)!\n\n🤖 Eu sou um bot de treinamentos da Salubritá! 🚀`,
+                });
+                
+                // Delay menor e com log
+                console.log('⏳ Aguardando 1 segundo...');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Mensagem sobre o que faz
+                console.log('📤 Enviando mensagem 2/3...');
+                await sendMessage(sender, 'send-message', {
+                    message: `🏢 Estou aqui para aplicar treinamentos de segurança e saúde no trabalho de forma rápida e eficiente!\n\n🎓 Nossos treinamentos são certificados e reconhecidos nacionalmente.`,
+                });
+                
+                // Delay menor e com log
+                console.log('⏳ Aguardando 1 segundo...');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Mensagem de cadastro
+                console.log('📤 Enviando mensagem 3/3...');
+                await sendMessage(sender, 'send-message', {
+                    message: `🤔 Humm, parece que você ainda não fez seu cadastro em nossa plataforma.\n\n📝 Para iniciar seu treinamento, é necessário se cadastrar primeiro.\n\n👉 Clique no link abaixo para se cadastrar:\n\nhttps://abrir.link/kAgON\n\n✨ Após o cadastro, volte aqui e me envie qualquer mensagem para começarmos!`,
+                });
+                
+                console.log('✅ Todas as 3 mensagens de cadastro enviadas com sucesso');
+                
+            } catch (error) {
+                console.error('❌ Erro ao enviar mensagens de cadastro:', error);
+            }
             
             return;
         }
