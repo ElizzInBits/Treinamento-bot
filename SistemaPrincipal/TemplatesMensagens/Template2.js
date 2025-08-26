@@ -36,6 +36,7 @@ async function sendMessage(phone, endpoint, body = {}) {
                 break;
                 
             case 'send-image':
+                console.log(`📸 Tentando enviar imagem: ${body.path}`);
                 result = await wppClient.sendImage(phone, body.path, body.filename || 'image.png', body.caption || '');
                 break;
                 
@@ -905,7 +906,7 @@ async function processarMensagem(message, client) {
 
 
         // Verificar se é um usuário recadastrado que precisa de orientação
-        if (contato.statusTreinamento === 'não iniciado' && !ultimaInteracao && ultimaInteracao?.tipo !== 'treinamento_iniciado') {
+        if (contato.statusTreinamento === 'não iniciado' && !ultimaInteracao) {
             await iniciarTreinamento(sender, contato);
             return;
         }
