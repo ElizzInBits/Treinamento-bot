@@ -274,45 +274,114 @@ async function processarResposta(sender, message, sendMessage) {
  * Inicia o Módulo 1 do treinamento
  */
 async function iniciarModulo1(sender, sendMessage) {
+
+
+    // Enviar imagem NR 06
+
+    const path = require('path');
+    const fs = require('fs');
+    const imagemNR06Path = path.join(__dirname, 'Imagens', 'NR06.png');
+    if (fs.existsSync(imagemNR06Path)) {
+        try {
+            await sendMessage(sender, 'send-image', {
+                path: imagemNR06Path,
+                filename: 'NR06.png',
+                caption: ''
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar imagem NR 06:', error);
+        }
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Enviar imagem SSMA
+    const path = require('path');
+    const fs = require('fs');
+    const imagemSSMAPath = path.join(__dirname, 'Imagens', 'SSMA.png');
+    if (fs.existsSync(imagemSSMAPath)) {
+        try {
+            await sendMessage(sender, 'send-image', {
+                path: imagemSSMAPath,
+                filename: 'SSMA.png',
+                caption: '📊 Conceitos fundamentais de SSMA'
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar imagem SSMA:', error);
+        }
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Enviar imagem SST
+    const imagemSSTPath = path.join(__dirname, 'Imagens', 'SST.png');
+    if (fs.existsSync(imagemSSTPath)) {
+        try {
+            await sendMessage(sender, 'send-image', {
+                path: imagemSSTPath,
+                filename: 'SST.png',
+                caption: '🏥 Segurança e Saúde no Trabalho'
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar imagem SST:', error);
+        }
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     // Conteúdo completo do Módulo 1 - Fundamentos e Prevenção
     await sendMessage(sender, 'send-message', {
         message: '📖 *MÓDULO 1: FUNDAMENTOS E PREVENÇÃO*\n\n🎯 *O que é SSMA?*\nSaúde, Segurança e Meio Ambiente - conjunto de normas e procedimentos para proteger você, seus colegas e o planeta.\n\n🏥 *Segurança e Saúde no Trabalho (SST)*\nSST são normas e procedimentos legalmente exigidas que visam:\n• Prevenir doenças ocupacionais\n• Evitar acidentes de trabalho\n• Proteger sua integridade física\n• Garantir ambiente de trabalho saudável',
     });
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Enviar imagem SSMA
-    const path = require('path');
-    const fs = require('fs');
-    const imagemPath = path.join(__dirname, 'Imagens', 'SSMA.png');
-    console.log('📸 Caminho da imagem:', imagemPath);
-    
-    // Verificar se arquivo existe
-    if (fs.existsSync(imagemPath)) {
-        console.log('✅ Arquivo encontrado, enviando imagem...');
-        try {
-            await sendMessage(sender, 'send-image', {
-                path: imagemPath,
-                filename: 'SSMA.png',
-                caption: '📊 Conceitos fundamentais de SSMA'
-            });
-            console.log('✅ Imagem enviada com sucesso');
-        } catch (error) {
-            console.error('❌ Erro ao enviar imagem:', error);
-        }
-    } else {
-        console.error('❌ Arquivo de imagem não encontrado:', imagemPath);
-    }
-    await new Promise(resolve => setTimeout(resolve, 1000));
 
     await sendMessage(sender, 'send-message', {
         message: '⚡ *Premissas Básicas da Segurança*\n\n🔴 A Segurança é IMPRESCINDÍVEL - não é opcional!\n🔴 A responsabilidade é de cada um e é INTRANSFERÍVEL\n🔴 Consciência em segurança é vital\n🔴 O único prejudicado pela falta de segurança será VOCÊ MESMO\n\n🎯 Nossa meta é ZERO acidentes! Acidentes causam sofrimento, afastamentos, problemas familiares e até morte.',
     });
     await new Promise(resolve => setTimeout(resolve, 2000));
 
+
+        
+    //Envia imagem LEI
+    const path = require('path');
+    const fs = require('fs');
+    const imagemLEIPath = path.join(__dirname, 'Imagens', 'LEI.png');
+    if (fs.existsSync(imagemLEIPath)) {
+        try {
+            await sendMessage(sender, 'send-image', {
+                path: imagemLEIPath,
+                filename: 'LEI.png',
+                caption: 'Lei 8.213/91'
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar imagem LEI:', error);
+        }
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+
     await sendMessage(sender, 'send-message', {
-        message: '📖 *TIPOS DE ACIDENTES - CONHECER PARA PREVENIR*\n\n⚖️ *Definição Legal (Lei 8.213/91)*\n"Acidente do trabalho é aquele que ocorre pelo exercício do trabalho, a serviço da empresa, provocando lesão corporal, perturbação funcional ou doença que cause a morte ou a perda ou redução, permanente ou temporária, da capacidade para o trabalho."\n\n🚨 *TODO acidente do trabalho deve ser comunicado ao Setor da Segurança do Trabalho IMEDIATAMENTE!*',
+        message: '📖 *TIPOS DE ACIDENTES - CONHECER PARA PREVENIR*\n\n🚨 *TODO acidente do trabalho deve ser comunicado ao Setor da Segurança do Trabalho IMEDIATAMENTE!*',
     });
     await new Promise(resolve => setTimeout(resolve, 2000));
+
+
+    //Enviar imagem CIPA
+    const path = require('path');
+    const fs = require('fs');
+    const imagemCIPAPath = path.join(__dirname, 'Imagens', 'CIPA.png');
+    if (fs.existsSync(imagemCIPAPath)) {
+        try {
+            await sendMessage(sender, 'send-image', {
+                path: imagemCIPAPath,
+                filename: 'CIPA.png',
+                caption: ''
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar imagem CIPA:', error);
+        }
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+
 
     await sendMessage(sender, 'send-message', {
         message: '📋 *Classificação por Tipo de Dano:*\n\n🩹 *ACIDENTE PESSOAL*\n• Gera lesão física e/ou doença no colaborador\n• Pode causar morte, invalidez permanente\n• Exemplos: cortes, fraturas, queimaduras\n\n🌍 *ACIDENTE AMBIENTAL*\n• Danos ao meio ambiente, saúde pública\n• Exemplos: vazamentos, contaminação\n\n🔧 *ACIDENTE MATERIAL*\n• Danos em máquinas, equipamentos, veículos\n• Pode gerar paralisação de atividades\n\n⚠️ *QUASE ACIDENTE*\n• Evento que PODERIA ter sido acidente, mas não foi\n• Exemplo: Ferramenta pesada cai ao lado de trabalhador\n• Importante: São alertas para prevenção!',
@@ -323,6 +392,24 @@ async function iniciarModulo1(sender, sendMessage) {
         message: '🏥 *CUIDANDO DA SUA SAÚDE*\n\n🏥 *PCMSO - Programa de Controle Médico e Saúde Ocupacional*\n\nTodos devem realizar exames médicos conforme NR-7:\n\n🔹 *ADMISSIONAL* - Antes de começar\n🔹 *PERIÓDICO* - A cada 12 meses\n🔹 *MUDANÇA DE RISCO* - Ao trocar de função\n🔹 *RETORNO AO TRABALHO* - Após afastamento > 30 dias\n🔹 *DEMISSIONAL* - Na saída da empresa\n\n🚨 *REGRA FUNDAMENTAL: Nenhum colaborador pode trabalhar sem treinamento adequado!*',
     });
     await new Promise(resolve => setTimeout(resolve, 2000));
+
+    //Enviar iamgem PCMSO
+    const path = require('path');
+    const fs = require('fs');
+    const imagemPCMSOPath = path.join(__dirname, 'Imagens', 'PCMSO.png');
+    if (fs.existsSync(imagemPCMSOPath)) {
+        try {
+            await sendMessage(sender, 'send-image', {
+                path: imagemPCMSOPath,
+                filename: 'PCMSO.png',
+                caption: ''
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar imagem PCMSO:', error);
+        }
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
 
     await sendMessage(sender, 'send-message', {
         message: '📝 *QUIZ MÓDULO 1*\n\nVamos testar seus conhecimentos sobre fundamentos e prevenção!',
@@ -356,7 +443,7 @@ async function enviarPergunta(sender, indicePergunta, config, tipoQuiz, sendMess
     };
 
     await sendMessage(sender, 'send-list-message', listMsg);
-    await salvarInteracao(sender, `${tipoQuiz}_pergunta_${indicePergunta}`, JSON.stringify({ acertos: 0, perguntaAtual: indicePergunta }));
+    await salvarInteracao(sender, `${tipoQuiz}_pergunta_${indicePergunta}`, JSON.stringify({ perguntaAtual: indicePergunta }));
 }
 
 /**
@@ -387,7 +474,8 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
         return true;
     }
     
-    // Próxima pergunta
+    // Próxima pergunta - salvar acertos atualizados
+    await salvarInteracao(sender, `quiz_modulo1_pergunta_${proximaPergunta}`, JSON.stringify({ acertos: novosAcertos, perguntaAtual: proximaPergunta }));
     await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO1_CONFIG, 'quiz_modulo1', sendMessage);
     return true;
 }
