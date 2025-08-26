@@ -1,62 +1,38 @@
 
 
-const axios = require('axios');
 
-// Configuração da API
-const API_BASE = 'http://127.0.0.1:21465/api';
-const SESSION = 'NERDWHATS_AMERICA';
-const TOKEN = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
 
-// Headers padrão
-const API_HEADERS = {
-    'Authorization': `Bearer ${TOKEN}`,
-    'Content-Type': 'application/json'
-};
+// Cliente WhatsApp direto (será definido pelo bot principal)
+let wppClient = null;
 
-// Função para definir cliente (compatibilidade)
+// Função para definir cliente
 function setWppClient(client) {
-    // Não usado mais
+    wppClient = client;
 }
 
-// Função sendMessage usando API
+// Função sendMessage usando cliente direto
 async function sendMessage(phone, endpoint, body = {}) {
     const sendStart = Date.now();
-    const phoneNumber = phone.replace('@c.us', '');
+    
+    if (!wppClient) {
+        console.error('❌ Cliente WhatsApp não definido');
+        return false;
+    }
     
     try {
-        let response;
+        let result;
         
         switch (endpoint) {
             case 'send-message':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-message`, {
-                    phone: phoneNumber,
-                    message: body.message
-                }, {
-                    headers: API_HEADERS,
-                    timeout: 2000
-                });
+                result = await wppClient.sendText(phone, body.message);
                 break;
                 
             case 'send-list-message':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-list-message`, {
-                    phone: phoneNumber,
-                    ...body
-                }, {
-                    headers: API_HEADERS,
-                    timeout: 2000
-                });
+                result = await wppClient.sendListMessage(phone, body);
                 break;
                 
             case 'send-file':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-file-base64`, {
-                    phone: phoneNumber,
-                    path: body.path,
-                    filename: body.filename,
-                    caption: body.caption
-                }, {
-                    headers: API_HEADERS,
-                    timeout: 5000
-                });
+                result = await wppClient.sendFile(phone, body.path, body.filename, body.caption);
                 break;
                 
             default:
@@ -64,7 +40,7 @@ async function sendMessage(phone, endpoint, body = {}) {
         }
         
         console.log(`✅ ${endpoint}: ${Date.now() - sendStart}ms`);
-        return response.data;
+        return result;
         
     } catch (error) {
         const duration = Date.now() - sendStart;

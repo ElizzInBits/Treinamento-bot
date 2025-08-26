@@ -14,7 +14,7 @@ module.exports = {
     },
     {
       name: 'whatsapp-bot',
-      script: './SistemaPrincipal/TemplatesMensagens/start-api-only.js',
+      script: './SistemaPrincipal/TemplatesMensagens/start-direct.js',
       instances: 1,
       autorestart: true,
       watch: false,
