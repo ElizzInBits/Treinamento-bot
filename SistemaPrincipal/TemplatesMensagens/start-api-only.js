@@ -25,6 +25,7 @@ console.log('🚀 Bot usando APENAS API do wppconnect-server');
 async function verificarAPI() {
   try {
     const response = await axios.get(`${API_BASE}/${SESSION}/status`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` },
       timeout: 2000
     });
     
@@ -43,6 +44,7 @@ const processedMessages = new Set();
 async function buscarMensagens() {
   try {
     const response = await axios.get(`${API_BASE}/${SESSION}/all-unread-messages`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` },
       timeout: 1500
     });
     
