@@ -628,19 +628,47 @@ async function processarMensagem(message, client) {
         }
 
         console.log(`👤 Contato encontrado: ${contato.nome}, Status: ${contato.statusTreinamento}`);
+        console.log(`🔍 Dados do contato:`, {
+            id: contato.id,
+            nome: contato.nome,
+            telefone: contato.telefone,
+            status: contato.statusTreinamento,
+            empresaId: contato.empresaId
+        });
         
         const ultimaInteracao = await obterUltimaInteracao(sender);
+        console.log(`🔍 Última interação:`, ultimaInteracao ? {
+            tipo: ultimaInteracao.tipo,
+            createdAt: ultimaInteracao.createdAt
+        } : 'Nenhuma');
         
         // PRIORIDADE MÁXIMA: Iniciar treinamento para usuários não iniciados
-        if (contato.statusTreinamento === 'não iniciado' && 
-            !ultimaInteracao || 
-            (ultimaInteracao && ultimaInteracao.tipo !== 'selecionar_treinamento' && 
-             ultimaInteracao.tipo !== 'confirmacao_treinamento' &&
-             ultimaInteracao.tipo !== 'treinamento_iniciado')) {
+        if (contato.statusTreinamento === 'não iniciado') {
+            console.log(`🚀 USUÁRIO NÃO INICIADO DETECTADO: ${contato.nome}`);
             
-            console.log(`🚀 INICIANDO TREINAMENTO IMEDIATAMENTE para: ${contato.nome}`);
-            await iniciarTreinamento(sender, contato);
-            return;
+            // Se há interação muito antiga (mais de 1 hora), ignorar
+            const umaHoraAtras = new Date(Date.now() - 60 * 60 * 1000);
+            const interacaoRecente = ultimaInteracao && ultimaInteracao.createdAt > umaHoraAtras;
+            
+            if (!interacaoRecente || 
+                !ultimaInteracao ||
+                (ultimaInteracao.tipo !== 'selecionar_treinamento' && 
+                 ultimaInteracao.tipo !== 'confirmacao_treinamento' &&
+                 ultimaInteracao.tipo !== 'treinamento_iniciado')) {
+                
+                console.log(`🚀 INICIANDO TREINAMENTO IMEDIATAMENTE para: ${contato.nome}`);
+                await iniciarTreinamento(sender, contato);
+                return;
+            } else {
+                console.log(`⏸️ Treinamento não iniciado devido à interação recente: ${ultimaInteracao.tipo}`);
+                
+                // Forçar início se usuário insistir
+                if (text.toLowerCase().includes('iniciar') || text.toLowerCase().includes('começar') || text.toLowerCase().includes('treinamento')) {
+                    console.log(`🚀 FORÇANDO INÍCIO por solicitação do usuário`);
+                    await iniciarTreinamento(sender, contato);
+                    return;
+                }
+            }
         }
 
         if (contato.statusTreinamento === 'concluído') {
@@ -1141,6 +1169,13 @@ async function processarMensagem(message, client) {
 
         // (Lógica de usuário não iniciado já tratada no início)
 
+        // FALLBACK para usuários não iniciados que chegaram até aqui
+        if (contato.statusTreinamento === 'não iniciado') {
+            console.log(`🔄 FALLBACK: Forçando início para usuário não iniciado`);
+            await iniciarTreinamento(sender, contato);
+            return;
+        }
+        
         // Se chegou até aqui e é usuário cadastrado, pode ser problema de cache
         if (text.toLowerCase().includes('cadastro') || text.toLowerCase().includes('cadastrei') || 
             text.toLowerCase().includes('já me cadastrei') || text.toLowerCase().includes('fiz o cadastro')) {
@@ -1166,6 +1201,7 @@ async function processarMensagem(message, client) {
         }
         
         // Mensagem padrão para entradas não reconhecidas
+        console.log(`❌ CHEGOU NA MENSAGEM PADRÃO - Status: ${contato.statusTreinamento}, Última interação: ${ultimaInteracao?.tipo}`);
         await sendMessage(sender, 'send-message', {
             message: '🤔 Não entendi sua mensagem. Por favor, use as opções fornecidas.',
         });
