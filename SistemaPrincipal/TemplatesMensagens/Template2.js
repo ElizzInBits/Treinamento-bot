@@ -739,7 +739,9 @@ async function processarMensagem(message, client) {
         if (ultimaInteracao && (ultimaInteracao.tipo === 'aguardando_confirmacao' ||
             ultimaInteracao.tipo?.startsWith('quiz_modulo') ||
             ultimaInteracao.tipo?.includes('confirmacao_dados_ssma') ||
+            ultimaInteracao.tipo === 'aguardando_inicio_quiz_modulo1' ||
             selectedId === 'iniciar_ssma' || selectedId === 'nao_iniciar_ssma' ||
+            selectedId === 'iniciar_quiz_modulo1' || selectedId === 'nao_iniciar_quiz_modulo1' ||
             verificarRespostaQuiz(text))) {
             
             const script = scriptsTreinamento['treinamentoSSMA'];
