@@ -727,6 +727,46 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
 }
 
 /**
+ * Detecta se usuário teve treinamento interrompido por restart e oferece recuperação
+ */
+async function detectarTreinamentoInterrompido(sender, contato, sendMessage) {
+    if (contato.statusTreinamento !== 'em andamento') return false;
+    
+    const ultimaInteracao = await obterUltimaInteracao(sender);
+    
+    // Se não tem interação ou é muito antiga (mais de 1 hora), considerar interrompido
+    const agora = new Date();
+    const umaHoraAtras = new Date(agora.getTime() - 60 * 60 * 1000);
+    
+    if (!ultimaInteracao || ultimaInteracao.createdAt < umaHoraAtras) {
+        await sendMessage(sender, 'send-message', {
+            message: '🔄 *TREINAMENTO INTERROMPIDO DETECTADO*\n\nParece que seu treinamento foi interrompido. Não se preocupe!\n\n📱 Digite *MENU* para ver suas opções ou escolha abaixo:'
+        });
+        
+        const recuperacaoMsg = {
+            title: '',
+            description: 'Como deseja continuar?',
+            buttonText: 'Escolher opção',
+            listType: 'SINGLE_SELECT',
+            sections: [{
+                title: '',
+                rows: [
+                    { id: 'continuar_de_onde_parou', title: '▶️ Continuar de onde parei', description: 'Tentar recuperar progresso' },
+                    { id: 'reiniciar_treinamento_completo', title: '🔄 Reiniciar do início', description: 'Começar novamente' },
+                    { id: 'ver_menu_opcoes', title: '📋 Ver todas as opções', description: 'Menu completo' },
+                ],
+            }],
+        };
+        
+        await sendMessage(sender, 'send-list-message', recuperacaoMsg);
+        await salvarInteracao(sender, 'recuperacao_treinamento', JSON.stringify(recuperacaoMsg));
+        return true;
+    }
+    
+    return false;
+}
+
+/**
  * Exibe menu de opções para reiniciar treinamento ou módulos
  */
 async function exibirMenuOpcoes(sender, sendMessage) {
@@ -765,8 +805,53 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     const ultimaInteracao = await obterUltimaInteracao(sender);
     console.log(`🔍 Última interação: ${ultimaInteracao?.tipo}`);
     
+    // Processar opções de recuperação
+    if (ultimaInteracao?.tipo === 'recuperacao_treinamento') {
+        if (selectedId === 'continuar_de_onde_parou') {
+            await sendMessage(sender, 'send-message', {
+                message: '🔍 Tentando recuperar seu progresso...'
+            });
+            
+            // Buscar última interação relevante antes da interrupção
+            const interacoesAnteriores = await Interacao.findAll({
+                where: { telefone: sender },
+                order: [['createdAt', 'DESC']],
+                limit: 20
+            });
+            
+            const ultimaRelevante = interacoesAnteriores.find(i => 
+                i.tipo !== 'recuperacao_treinamento' && 
+                i.tipo !== 'opcoes_continuidade' &&
+                i.mensagem && i.mensagem.trim() !== ''
+            );
+            
+            if (ultimaRelevante && ultimaRelevante.tipo.includes('modulo2')) {
+                await sendMessage(sender, 'send-message', {
+                    message: '✅ Progresso recuperado! Você estava no Módulo 2.'
+                });
+                await iniciarModulo2(sender, sendMessage);
+            } else if (ultimaRelevante && ultimaRelevante.tipo.includes('modulo1')) {
+                await sendMessage(sender, 'send-message', {
+                    message: '✅ Progresso recuperado! Você estava no Módulo 1.'
+                });
+                await iniciarModulo1(sender, sendMessage);
+            } else {
+                await sendMessage(sender, 'send-message', {
+                    message: '🔄 Não foi possível recuperar o progresso. Reiniciando do início...'
+                });
+                await executarTreinamento(sender, contato, sendMessage);
+            }
+            return true;
+        }
+        
+        if (selectedId === 'ver_menu_opcoes') {
+            await exibirMenuOpcoes(sender, sendMessage);
+            return true;
+        }
+    }
+    
     // Processar opções do menu
-    if (ultimaInteracao?.tipo === 'menu_opcoes') {
+    if (ultimaInteracao?.tipo === 'menu_opcoes' || ultimaInteracao?.tipo === 'recuperacao_treinamento') {
         if (selectedId === 'reiniciar_treinamento_completo') {
             await sendMessage(sender, 'send-message', {
                 message: '🔄 Reiniciando treinamento completo...'
@@ -952,7 +1037,8 @@ module.exports = {
     gerarCertificadoSSMA,
     iniciarModulo1,
     iniciarModulo2,
-    exibirMenuOpcoes
+    exibirMenuOpcoes,
+    detectarTreinamentoInterrompido
 };
 
 console.log('📝 treinamentoSSMA.js COMPLETO carregado');

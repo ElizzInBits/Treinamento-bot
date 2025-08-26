@@ -775,6 +775,17 @@ async function processarMensagem(message, client) {
             }
         }
 
+        // DETECTAR TREINAMENTO INTERROMPIDO PRIMEIRO
+        if (contato.statusTreinamento === 'em andamento') {
+            const script = scriptsTreinamento['treinamentoSSMA'];
+            if (script && script.detectarTreinamentoInterrompido) {
+                const foiInterrompido = await script.detectarTreinamentoInterrompido(sender, contato, sendMessage);
+                if (foiInterrompido) {
+                    return;
+                }
+            }
+        }
+        
         // Se há interação recente e usuário está em treinamento, oferecer continuidade (apenas se não for resposta de quiz)
         if (ultimaInteracao && contato.statusTreinamento === 'em andamento' &&
             !text.includes('continuar') && !selectedId && !rawText.toLowerCase().includes('exame') &&
@@ -789,7 +800,8 @@ async function processarMensagem(message, client) {
             ultimaInteracao.tipo !== 'aguardando_quiz_intro' && // NÃO oferecer se aguardando quiz
             ultimaInteracao.tipo !== 'aguardando_revisao_modulo1' && // NÃO oferecer se aguardando revisão
             ultimaInteracao.tipo !== 'aguardando_revisao_modulo2' && // NÃO oferecer se aguardando revisão
-            ultimaInteracao.createdAt > new Date(Date.now() - 24 * 60 * 60 * 1000)) { // Últimas 24h
+            ultimaInteracao.tipo !== 'recuperacao_treinamento' && // NÃO oferecer se já está em recuperação
+            ultimaInteracao.createdAt > new Date(Date.now() - 60 * 60 * 1000)) { // Última 1h (reduzido de 24h)
 
             await sendMessage(sender, 'send-message', {
                 message: `👋 Olá! Vejo que você estava no meio do treinamento "${contato.treinamento?.nome || 'SSMA'}".\n\n🔄 Deseja continuar de onde parou?`,
