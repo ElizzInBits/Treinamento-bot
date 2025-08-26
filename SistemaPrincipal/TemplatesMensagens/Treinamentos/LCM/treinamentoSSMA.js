@@ -281,10 +281,27 @@ async function iniciarModulo1(sender, sendMessage) {
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Enviar imagem SSMA
-    await sendMessage(sender, 'send-image', {
-        path: 'C:\\Treinamento-bot\\SistemaPrincipal\\TemplatesMensagens\\Treinamentos\\LCM\\Imagens\\SSMA.png',
-        caption: '📊 Conceitos fundamentais de SSMA'
-    });
+    const path = require('path');
+    const fs = require('fs');
+    const imagemPath = path.join(__dirname, 'Imagens', 'SSMA.png');
+    console.log('📸 Caminho da imagem:', imagemPath);
+    
+    // Verificar se arquivo existe
+    if (fs.existsSync(imagemPath)) {
+        console.log('✅ Arquivo encontrado, enviando imagem...');
+        try {
+            await sendMessage(sender, 'send-image', {
+                path: imagemPath,
+                filename: 'SSMA.png',
+                caption: '📊 Conceitos fundamentais de SSMA'
+            });
+            console.log('✅ Imagem enviada com sucesso');
+        } catch (error) {
+            console.error('❌ Erro ao enviar imagem:', error);
+        }
+    } else {
+        console.error('❌ Arquivo de imagem não encontrado:', imagemPath);
+    }
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     await sendMessage(sender, 'send-message', {
