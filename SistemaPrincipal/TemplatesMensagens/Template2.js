@@ -672,9 +672,10 @@ async function processarMensagem(message, client) {
                 ultimaInteracao?.tipo === 'aguardando_quiz_intro' ||
                 ultimaInteracao?.tipo?.includes('aguardando_quiz') ||
                 ultimaInteracao?.tipo?.includes('confirmacao_dados_ssma') ||
+                ultimaInteracao?.tipo?.startsWith('quiz_modulo') ||
                 selectedId?.includes('_q') || selectedId?.includes('_m2q')) {
 
-                console.log(`🔍 Tentando processar no SSMA: "${text}", selectedId="${selectedId}"`);
+                console.log(`🔍 Tentando processar no SSMA: "${text}", selectedId="${selectedId}", ultimaInteracao="${ultimaInteracao?.tipo}"`);
                 try {
                     const resultado = await script.processarRespostaSSMA(sender, text, selectedId, contato, sendMessage);
                     console.log(`🔍 Resultado SSMA: ${resultado}`);
@@ -917,18 +918,21 @@ async function processarMensagem(message, client) {
 
                     // Executar script dinâmico
                     const script = scriptsTreinamento[nomeArquivo];
+                    console.log(`🔍 Executando script: ${nomeArquivo}, script encontrado: ${!!script}`);
                     if (script && script.executarTreinamento) {
                         try {
+                            console.log(`🚀 Chamando executarTreinamento para ${nomeArquivo}`);
                             await script.executarTreinamento(sender, contato, sendMessage);
                             return;
                         } catch (error) {
-                            console.error(`❌ Erro ao executar script:`, error);
+                            console.error(`❌ Erro ao executar script ${nomeArquivo}:`, error);
                             await sendMessage(sender, 'send-message', {
                                 message: '❌ Erro ao iniciar treinamento. Entre em contato com o suporte.',
                             });
                             return;
                         }
                     } else {
+                        console.error(`❌ Script não encontrado: ${nomeArquivo}`);
                         await sendMessage(sender, 'send-message', {
                             message: '❌ Script de treinamento não encontrado. Entre em contato com o suporte.',
                         });

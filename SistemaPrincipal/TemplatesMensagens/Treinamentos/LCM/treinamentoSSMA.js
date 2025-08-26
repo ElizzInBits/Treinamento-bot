@@ -329,8 +329,11 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
     const perguntaAtual = dados.perguntaAtual || 0;
     const acertos = dados.acertos || 0;
     
+    // Extrair apenas a letra da resposta
+    const respostaLimpa = resposta.toLowerCase().trim().charAt(0);
+    
     const pergunta = QUIZ_CONFIG.perguntas[perguntaAtual];
-    const respostaCorreta = resposta === pergunta.respostaCorreta;
+    const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
     
     // Feedback da resposta
     await sendMessage(sender, 'send-message', {
@@ -382,8 +385,11 @@ async function processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessa
     const perguntaAtual = dados.perguntaAtual || 0;
     const acertos = dados.acertos || 0;
     
+    // Extrair apenas a letra da resposta
+    const respostaLimpa = resposta.toLowerCase().trim().charAt(0);
+    
     const pergunta = QUIZ_MODULO2_CONFIG.perguntas[perguntaAtual];
-    const respostaCorreta = resposta === pergunta.respostaCorreta;
+    const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
     
     await sendMessage(sender, 'send-message', {
         message: respostaCorreta ? `✅ Correto! ${pergunta.explicacao}` : `❌ Incorreto. ${pergunta.explicacao}`,
@@ -414,27 +420,123 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
         message: `🎉 *TREINAMENTO CONCLUÍDO!*\n\n📊 Módulo 2: ${acertosModulo2}/${total} (${percentual}%)\n\n🏆 Parabéns! Você completou o treinamento de SSMA.`,
     });
     
-    // Gerar certificado
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Buscar dados do contato para confirmação
     try {
         const contato = await Contato.findOne({ where: { telefone: sender } });
         if (contato) {
-            await gerarCertificadoBanco(contato.nome, 'SSMA - Saúde, Segurança e Meio Ambiente', sender);
-            await sendMessage(sender, 'send-message', {
-                message: '📜 Seu certificado foi gerado e enviado por email!',
-            });
+            const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
+            const emailCadastrado = contato.email || 'E-mail não informado';
+            
+            const confirmacaoMsg = {
+                title: '',
+                description: `🎓 *Confirmação dos dados para o certificado:*\n\n👤 *Nome:* ${nomeCompleto}\n📧 *E-mail:* ${emailCadastrado}\n\nOs dados estão corretos?`,
+                buttonText: 'Confirmar',
+                listType: 'SINGLE_SELECT',
+                sections: [{
+                    title: '',
+                    rows: [
+                        { id: 'dados_corretos_ssma', title: 'Sim, os dados estão corretos', description: '' },
+                        { id: 'dados_incorretos_ssma', title: 'Não, preciso corrigir', description: '' },
+                    ],
+                }],
+            };
+            
+            await sendMessage(sender, 'send-list-message', confirmacaoMsg);
+            await salvarInteracao(sender, 'confirmacao_dados_ssma', JSON.stringify(confirmacaoMsg));
         }
     } catch (error) {
-        console.error('Erro ao gerar certificado:', error);
+        console.error('Erro ao finalizar treinamento:', error);
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Erro ao finalizar treinamento. Entre em contato com o suporte.',
+        });
     }
-    
-    await salvarInteracao(sender, 'treinamento_concluido', 'ssma');
 }
 
 /**
- * Processa as respostas do treinamento SSMA
+ * Processa as respostas do treinamento SSMA - VERSÃO COMPLETA
  */
 async function processarRespostaSSMA(sender, text, selectedId, contato, sendMessage) {
-    return await processarResposta(sender, text, sendMessage);
+    console.log(`🔍 processarRespostaSSMA chamado: text="${text}", selectedId="${selectedId}"`);
+    
+    const ultimaInteracao = await obterUltimaInteracao(sender);
+    console.log(`🔍 Última interação: ${ultimaInteracao?.tipo}`);
+    
+    // Aguardando confirmação para iniciar
+    if (selectedId === 'iniciar_ssma' || (ultimaInteracao?.tipo === 'aguardando_confirmacao' && verificarRespostaSSMA(text, 'positiva'))) {
+        console.log('✅ Iniciando módulo 1');
+        await iniciarModulo1(sender, sendMessage);
+        return true;
+    }
+    
+    if (selectedId === 'nao_iniciar_ssma' || (ultimaInteracao?.tipo === 'aguardando_confirmacao' && verificarRespostaSSMA(text, 'negativa'))) {
+        await sendMessage(sender, 'send-message', {
+            message: '⏰ Sem problemas! Quando estiver pronto, digite *SSMA* para retomar o treinamento.',
+        });
+        return true;
+    }
+    
+    // Processando quiz módulo 1
+    if (ultimaInteracao?.tipo?.startsWith('quiz_modulo1_')) {
+        console.log('🔍 Processando quiz módulo 1');
+        return await processarQuizModulo1(sender, text, ultimaInteracao, sendMessage);
+    }
+    
+    // Processando quiz módulo 2
+    if (ultimaInteracao?.tipo?.startsWith('quiz_modulo2_')) {
+        console.log('🔍 Processando quiz módulo 2');
+        return await processarQuizModulo2(sender, text, ultimaInteracao, sendMessage);
+    }
+    
+    // Confirmação de dados para certificado
+    if (selectedId === 'dados_corretos_ssma' || text.toLowerCase().includes('dados estão corretos')) {
+        console.log('✅ Gerando certificado');
+        await gerarCertificadoSSMA(sender, contato, sendMessage);
+        return true;
+    }
+    
+    console.log('❌ Nenhuma condição atendida');
+    return false;
+}
+
+/**
+ * Gera certificado SSMA
+ */
+async function gerarCertificadoSSMA(sender, contato, sendMessage) {
+    try {
+        await sendMessage(sender, 'send-message', {
+            message: '📧 Gerando seu certificado...\n\nIsso pode demorar um pouco...',
+        });
+        
+        // Atualizar status do contato
+        await contato.update({
+            statusTreinamento: 'concluído'
+        });
+        
+        const certificadoPath = await gerarCertificadoBanco(contato.id);
+        const treinamento = await Treinamento.findByPk(14);
+        
+        await enviarEmail(contato.email, certificadoPath, treinamento);
+        
+        await sendMessage(sender, 'send-message', {
+            message: `🎉 Seu certificado foi gerado com sucesso! \n\n📧 Ele foi enviado para: ${contato.email}\n\n📄 Também está disponível aqui:`,
+        });
+        
+        await sendMessage(sender, 'send-file', {
+            path: certificadoPath,
+            filename: 'Certificado_SSMA.pdf',
+            caption: '🎓 Seu certificado de conclusão do treinamento SSMA'
+        });
+        
+        await salvarInteracao(sender, 'treinamento_concluido', 'ssma_completo');
+        
+    } catch (error) {
+        console.error('❌ Erro ao gerar certificado:', error);
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Erro ao gerar certificado. Entre em contato com o suporte.',
+        });
+    }
 }
 
 /**
@@ -445,6 +547,7 @@ async function processarTreinamentosPendentes(sender, selectedId, contato, sendM
         await sendMessage(sender, 'send-message', {
             message: '🙏 Sem problemas! Quando quiser ver seus treinamentos, digite "treinamentos".',
         });
+        await salvarInteracao(sender, 'conversa_finalizada', 'nao_ver_treinamentos');
         return true;
     }
     return false;
@@ -454,7 +557,8 @@ module.exports = {
     executarTreinamento,
     processarResposta,
     processarRespostaSSMA,
-    processarTreinamentosPendentes
+    processarTreinamentosPendentes,
+    gerarCertificadoSSMA
 };
 
-console.log('📝 treinamentoSSMA.js ORIGINAL carregado');
+console.log('📝 treinamentoSSMA.js COMPLETO carregado');
