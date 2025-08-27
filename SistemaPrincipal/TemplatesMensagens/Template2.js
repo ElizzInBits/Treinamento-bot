@@ -826,14 +826,15 @@ async function processarMensagem(message, client) {
 
         // Verificar se usuário foi reiniciado pelo sistema administrativo
         if (contato.statusTreinamento === 'não iniciado' && ultimaInteracao && 
-            ultimaInteracao.createdAt < new Date(Date.now() - 5 * 60 * 1000)) {
-            console.log('🔄 Usuário reiniciado detectado - limpando interações antigas');
-            // Limpar interações antigas para evitar conflitos
+            (ultimaInteracao.tipo === 'menu_opcoes' || ultimaInteracao.tipo === 'confirmacao_dados_ssma' || 
+             ultimaInteracao.tipo.includes('quiz_') || ultimaInteracao.tipo === 'treinamento_concluido')) {
+            console.log('🔄 Restart administrativo detectado - forçando reinicio limpo');
+            // Limpar TODAS as interações para restart limpo
             await Interacao.destroy({
-                where: {
-                    telefone: sender,
-                    createdAt: { [Op.lt]: new Date(Date.now() - 5 * 60 * 1000) }
-                }
+                where: { telefone: sender }
+            });
+            await sendMessage(sender, 'send-message', {
+                message: '🔄 Seu treinamento foi reiniciado pelo administrador. Vamos começar novamente!'
             });
             await iniciarTreinamento(sender, contato);
             return;
@@ -863,7 +864,6 @@ async function processarMensagem(message, client) {
         // Processar comando CONTINUAR para usuários em treinamento
         if (contato.statusTreinamento === 'em andamento' && (text === 'continuar' || text === 'manda' || text === 'pronto' || text === 'vai na fé')) {
             // Verificar se usuário estava aguardando quiz
-            const ultimaInteracao = await obterUltimaInteracao(sender);
             if (ultimaInteracao && (ultimaInteracao.tipo === 'aguardando_inicio_quiz_modulo1' || ultimaInteracao.tipo === 'aguardando_inicio_quiz_modulo2')) {
                 const script = scriptsTreinamento['treinamentoSSMA'];
                 if (script && script.processarRespostaSSMA) {
@@ -872,6 +872,11 @@ async function processarMensagem(message, client) {
                     return;
                 }
             }
+            // Se não estava aguardando quiz, mostrar opções
+            await sendMessage(sender, 'send-message', {
+                message: '📱 *Opções disponíveis:*\n• Digite *menu* - para ver opções de reiniciar\n• Digite *ssma* - para retomar o treinamento\n\n💡 Use o *MENU* para navegar!',
+            });
+            return;
         }
         
         // Processar comando MENU para usuários em treinamento
