@@ -474,16 +474,20 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
     const perguntaAtual = dados.perguntaAtual || 0;
     
     // Buscar acertos acumulados das interações anteriores
-    let acertos = dados.acertos || 0;
+    let acertos = dados.acertos !== undefined ? dados.acertos : 0;
     
     const respostaLimpa = extrairResposta(resposta);
     const pergunta = QUIZ_MODULO1_CONFIG.perguntas[perguntaAtual];
     const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
     
+    console.log(`📊 Quiz Módulo 1 - Pergunta ${perguntaAtual + 1}: Resposta="${respostaLimpa}", Correta="${pergunta.respostaCorreta}", Acerto=${respostaCorreta}, Acertos Atuais=${acertos}`);
+    
     // Atualizar acertos se resposta estiver correta
     if (respostaCorreta) {
         acertos += 1;
     }
+    
+    console.log(`📊 Acertos após pergunta ${perguntaAtual + 1}: ${acertos}`);
     
     // Feedback da resposta
     await sendMessage(sender, 'send-message', {
@@ -496,6 +500,7 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
     
     // Verifica se terminou o módulo 1
     if (proximaPergunta >= QUIZ_MODULO1_CONFIG.perguntas.length) {
+        console.log(`🏁 Finalizando Módulo 1 com ${acertos} acertos`);
         await finalizarModulo1(sender, acertos, sendMessage);
         return true;
     }
