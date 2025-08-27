@@ -840,13 +840,14 @@ async function processarMensagem(message, client) {
         }
         
         // Processar comando CONTINUAR para usuários em treinamento
-        if (contato.statusTreinamento === 'em andamento' && (text === 'continuar' || text === 'manda' || text === 'pronto')) {
+        if (contato.statusTreinamento === 'em andamento' && (text === 'continuar' || text === 'manda' || text === 'pronto' || text === 'vai na fé')) {
             // Verificar se usuário estava aguardando quiz
             const ultimaInteracao = await obterUltimaInteracao(sender);
-            if (ultimaInteracao && ultimaInteracao.tipo === 'aguardando_inicio_quiz_modulo1') {
+            if (ultimaInteracao && (ultimaInteracao.tipo === 'aguardando_inicio_quiz_modulo1' || ultimaInteracao.tipo === 'aguardando_inicio_quiz_modulo2')) {
                 const script = scriptsTreinamento['treinamentoSSMA'];
                 if (script && script.processarRespostaSSMA) {
-                    await script.processarRespostaSSMA(sender, 'iniciar_quiz_modulo1', 'iniciar_quiz_modulo1', contato, sendMessage);
+                    const tipoQuiz = ultimaInteracao.tipo === 'aguardando_inicio_quiz_modulo1' ? 'iniciar_quiz_modulo1' : 'iniciar_quiz_modulo2';
+                    await script.processarRespostaSSMA(sender, tipoQuiz, tipoQuiz, contato, sendMessage);
                     return;
                 }
             }
