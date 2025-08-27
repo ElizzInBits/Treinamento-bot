@@ -401,6 +401,105 @@ async function buscarTreinamentosEmpresa(empresaId) {
 }
 
 /**
+ * Busca contato com múltiplas tentativas e refresh de cache
+ */
+async function buscarContatoRobusto(sender) {
+    console.log(`🔍 Iniciando busca robusta para: ${sender}`);
+    
+    // Tentativa 1: Cache normal
+    let contato = await cacheContatos.buscarContato(sender);
+    if (contato) {
+        console.log('✅ Contato encontrado na tentativa 1 (cache)');
+        return contato;
+    }
+    
+    console.log('⚠️ Tentativa 1 falhou, tentando refresh do cache...');
+    
+    // Tentativa 2: Refresh do cache e nova busca
+    try {
+        cacheContatos.invalidarContato(sender);
+        await cacheContatos.precarregarContatosAtivos();
+        await new Promise(resolve => setTimeout(resolve, 500)); // Pequeno delay
+        
+        contato = await cacheContatos.buscarContato(sender);
+        if (contato) {
+            console.log('✅ Contato encontrado na tentativa 2 (após refresh)');
+            return contato;
+        }
+    } catch (error) {
+        console.error('❌ Erro no refresh do cache:', error);
+    }
+    
+    console.log('⚠️ Tentativa 2 falhou, buscando diretamente no banco...');
+    
+    // Tentativa 3: Busca direta no banco (para cadastros muito recentes)
+    try {
+        const { Contato } = require('../BancoDeDados/models');
+        contato = await Contato.findOne({
+            where: { telefone: sender },
+            include: ['empresaRef'],
+            logging: false
+        });
+        
+        if (contato) {
+            console.log('✅ Contato encontrado na tentativa 3 (banco direto)');
+            // Adicionar ao cache para próximas consultas
+            cacheContatos.adicionarContato(sender, contato);
+            return contato;
+        }
+    } catch (error) {
+        console.error('❌ Erro na busca direta no banco:', error);
+    }
+    
+    console.log('❌ Contato não encontrado após todas as tentativas');
+    return null;
+}
+
+/**
+ * Envia mensagens de cadastro de forma padronizada
+ */
+async function enviarMensagensCadastro(sender, sendMessage) {
+    try {
+        console.log('📤 Enviando sequência de cadastro...');
+        
+        await sendMessage(sender, 'send-message', {
+            message: `👋 Olá! Seja muito bem-vindo(a)!\n\n🤖 Eu sou um bot de treinamentos da Salubritá! 🚀`,
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await sendMessage(sender, 'send-message', {
+            message: `🏢 Estou aqui para aplicar treinamentos de segurança e saúde no trabalho de forma rápida e eficiente!\n\n🎓 Nossos treinamentos são certificados e reconhecidos nacionalmente.`,
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await sendMessage(sender, 'send-message', {
+            message: `🤔 Humm, parece que você ainda não fez seu cadastro em nossa plataforma.\n\n📝 Para iniciar seu treinamento, é necessário se cadastrar primeiro.\n\n👉 Clique no link abaixo para se cadastrar:\n\nhttps://abrir.link/kAgON\n\n✨ Após o cadastro, volte aqui e me envie qualquer mensagem para começarmos!`,
+        });
+        
+        console.log('✅ Sequência de cadastro enviada com sucesso');
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar mensagens de cadastro:', error);
+    }
+}
+
+/**
+ * Detecta se é um usuário recém-cadastrado
+ */
+function isUsuarioRecemCadastrado(contato) {
+    if (!contato.createdAt) return false;
+    
+    const agora = new Date();
+    const cadastro = new Date(contato.createdAt);
+    const diferencaMinutos = (agora - cadastro) / (1000 * 60);
+    
+    // Considera recém-cadastrado se foi há menos de 30 minutos
+    return diferencaMinutos < 30;
+}
+
+/**
  * Inicia o treinamento para novos usuários - OTIMIZADO
  */
 async function iniciarTreinamento(sender, contato) {
@@ -409,12 +508,22 @@ async function iniciarTreinamento(sender, contato) {
     
     // Usar dados da empresa já carregados no contato (se disponível)
     const nomeEmpresa = contato.empresaRef?.razaoSocial || 'sua empresa';
+    const recemCadastrado = isUsuarioRecemCadastrado(contato);
 
     const msg1Start = Date.now();
-    await sendMessage(sender, 'send-message', {
-        message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`,
-    });
-    console.log(`📤 Mensagem saudação: ${Date.now() - msg1Start}ms`);
+    
+    // Mensagem personalizada baseada no fluxo de cadastro
+    if (recemCadastrado) {
+        await sendMessage(sender, 'send-message', {
+            message: `👋 Olá, ${contato.nome}! ✨\n\n🎉 Obrigado por se cadastrar! Vi que você já está pronto para começar.`,
+        });
+    } else {
+        await sendMessage(sender, 'send-message', {
+            message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) de volta!`,
+        });
+    }
+    
+    console.log(`📤 Mensagem saudação (${recemCadastrado ? 'recém-cadastrado' : 'existente'}): ${Date.now() - msg1Start}ms`);
 
     // Buscar treinamentos da empresa (agora otimizado)
     const dbStart = Date.now();
@@ -582,48 +691,15 @@ async function processarMensagem(message, client) {
             return;
         }
 
-        // BUSCA RÁPIDA DE CONTATO
+        // BUSCA ROBUSTA DE CONTATO COM MÚLTIPLAS TENTATIVAS
         const dbStart = Date.now();
-        let contato = await cacheContatos.buscarContato(sender);
-        console.log(`🔍 Busca contato: ${Date.now() - dbStart}ms`);
+        let contato = await buscarContatoRobusto(sender);
+        console.log(`🔍 Busca contato robusta: ${Date.now() - dbStart}ms`);
 
-        // Se não encontrou contato, responder IMEDIATAMENTE
+        // Se não encontrou contato após todas as tentativas, responder IMEDIATAMENTE
         if (!contato) {
-            console.log(`❌ Contato não encontrado - enviando saudação/cadastro completa`);
-            
-            try {
-                // Mensagem de saudação
-                console.log('📤 Enviando mensagem 1/3...');
-                await sendMessage(sender, 'send-message', {
-                    message: `👋 Olá! Seja muito bem-vindo(a)!\n\n🤖 Eu sou um bot de treinamentos da Salubritá! 🚀`,
-                });
-                
-                // Delay menor e com log
-                console.log('⏳ Aguardando 1 segundo...');
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Mensagem sobre o que faz
-                console.log('📤 Enviando mensagem 2/3...');
-                await sendMessage(sender, 'send-message', {
-                    message: `🏢 Estou aqui para aplicar treinamentos de segurança e saúde no trabalho de forma rápida e eficiente!\n\n🎓 Nossos treinamentos são certificados e reconhecidos nacionalmente.`,
-                });
-                
-                // Delay menor e com log
-                console.log('⏳ Aguardando 1 segundo...');
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Mensagem de cadastro
-                console.log('📤 Enviando mensagem 3/3...');
-                await sendMessage(sender, 'send-message', {
-                    message: `🤔 Humm, parece que você ainda não fez seu cadastro em nossa plataforma.\n\n📝 Para iniciar seu treinamento, é necessário se cadastrar primeiro.\n\n👉 Clique no link abaixo para se cadastrar:\n\nhttps://abrir.link/kAgON\n\n✨ Após o cadastro, volte aqui e me envie qualquer mensagem para começarmos!`,
-                });
-                
-                console.log('✅ Todas as 3 mensagens de cadastro enviadas com sucesso');
-                
-            } catch (error) {
-                console.error('❌ Erro ao enviar mensagens de cadastro:', error);
-            }
-            
+            console.log(`❌ Contato não encontrado após busca robusta - enviando saudação/cadastro`);
+            await enviarMensagensCadastro(sender, sendMessage);
             return;
         }
 
@@ -633,8 +709,15 @@ async function processarMensagem(message, client) {
             nome: contato.nome,
             telefone: contato.telefone,
             status: contato.statusTreinamento,
-            empresaId: contato.empresaId
+            empresaId: contato.empresaId,
+            recemCadastrado: isUsuarioRecemCadastrado(contato)
         });
+        
+        // Delay adicional para usuários recém-cadastrados (equalizar fluxos)
+        if (isUsuarioRecemCadastrado(contato)) {
+            console.log('⏳ Usuário recém-cadastrado detectado, aplicando delay de sincronização...');
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        }
         
         const ultimaInteracao = await obterUltimaInteracao(sender);
         console.log(`🔍 Última interação:`, ultimaInteracao ? {
