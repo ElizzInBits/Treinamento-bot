@@ -3,6 +3,7 @@ const router = express.Router();
 const { Contato, Empresa } = require('../../BancoDeDados/models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../../BancoDeDados/database');
+const { notificarNovoCadastro } = require('../Notificacoes/googleNotifications');
 
 // Função para limpar número (mesma do seu código)
 function limparNumero(numero) {
@@ -267,6 +268,9 @@ router.post('/', async (req, res) => {
                 timestamp: new Date()
             });
         }
+
+        // Enviar notificação do Google
+        await notificarNovoCadastro(novoContato);
 
         res.status(201).json({
             message: 'Contato cadastrado com sucesso',
