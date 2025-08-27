@@ -477,6 +477,10 @@ async function enviarMensagensCadastro(sender, sendMessage) {
         await sendMessage(sender, 'send-message', {
             message: `🤔 Humm, parece que você ainda não fez seu cadastro em nossa plataforma.\n\n📝 Para iniciar seu treinamento, é necessário se cadastrar primeiro.\n\n👉 Clique no link abaixo para se cadastrar:\n\nhttps://abrir.link/kAgON\n\n✨ Após o cadastro, volte aqui e me envie qualquer mensagem para começarmos!`,
         });
+
+         await sendMessage(sender, 'send-message', {
+            message: `*ATENÇÃO:* \nUse o *MESMO NÚMERO* que você utilizará para conversar com o bot de treinamento no WhatsApp.`,
+        });
         
         console.log('✅ Sequência de cadastro enviada com sucesso');
         
