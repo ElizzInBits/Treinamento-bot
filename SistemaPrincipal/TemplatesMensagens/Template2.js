@@ -818,6 +818,18 @@ async function processarMensagem(message, client) {
             }
         }
 
+        // Processar comando SSMA para retomar treinamento
+        if (contato.statusTreinamento === 'em andamento' && text === 'ssma') {
+            const script = scriptsTreinamento['treinamentoSSMA'];
+            if (script && script.executarTreinamento) {
+                await sendMessage(sender, 'send-message', {
+                    message: '🔄 Retomando seu treinamento SSMA...'
+                });
+                await script.executarTreinamento(sender, contato, sendMessage);
+                return;
+            }
+        }
+        
         // Processar saudações simples para usuários em treinamento
         if (contato.statusTreinamento === 'em andamento' && 
             (text === 'olá' || text === 'ola' || text === 'oi' || text === 'hello' || text === 'bom dia' || text === 'boa tarde' || text === 'boa noite')) {
