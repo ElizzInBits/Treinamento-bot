@@ -9,7 +9,7 @@ const { Op } = require('sequelize');
 
 // Respostas aceitas para verificação - EXPANDIDAS
 const RESPOSTAS_POSITIVAS = ['sim', 'vamos', 'pode mandar', 'começar', 'iniciar', 'pronto', 'ok', 'vamos nessa', 'vamos começar', 'sim - vamos começar', 'confirmar', 'dados corretos', 'estou pronto', 'bora', 'beleza', 'certo', 'perfeito'];
-const RESPOSTAS_NEGATIVAS = ['não', 'nao', 'ainda não', 'ainda nao', 'depois', 'mais tarde', 'preciso me preparar', 'dados incorretos', 'corrigir', 'cancelar', 'parar', 'sair'];
+const RESPOSTAS_NEGATIVAS = ['não', 'nao', 'ainda não', 'ainda nao', 'depois', 'mais tarde', 'preciso me preparar', 'dados incorretos', 'corrigir', 'cancelar', 'parar', 'sair', 'depois faço', 'não - depois faço'];
 
 // Função universal para verificar respostas
 function verificarRespostaSSMA(texto, tipo = 'positiva') {
@@ -395,6 +395,19 @@ async function iniciarModulo1(sender, sendMessage) {
 
     //Enviar imagem PCMSO
     const imagemPCMSOPath = path.join(__dirname, 'Imagens', 'PCMSO.png');
+    if (fs.existsSync(imagemPCMSOPath)) {
+        try {
+            await sendMessage(sender, 'send-image', {
+                path: imagemPCMSOPath,
+                filename: 'PCMSO.png',
+                caption: ''
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar imagem PCMSO:', error);
+        }
+    }
+    await new Promise(resolve => setTimeout(resolve, 3000));
+}magens', 'PCMSO.png');
     if (fs.existsSync(imagemPCMSOPath)) {
         try {
             await sendMessage(sender, 'send-image', {
@@ -880,6 +893,65 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
             await sendMessage(sender, 'send-message', {
                 message: '▶️ Continuando treinamento normalmente...'
             });
+            
+            // Buscar onde o usuário estava e continuar
+            const interacoesRecentes = await Interacao.findAll({
+                where: { telefone: sender },
+                order: [['createdAt', 'DESC']],
+                limit: 10
+            });
+            
+            const ultimaRelevante = interacoesRecentes.find(i => 
+                i.tipo !== 'menu_opcoes' && 
+                i.tipo !== 'recuperacao_treinamento' &&
+                i.tipo !== 'opcoes_continuidade' &&
+                i.mensagem && i.mensagem.trim() !== ''
+            );
+            
+            if (ultimaRelevante) {
+                try {
+                    const mensagemData = JSON.parse(ultimaRelevante.mensagem);
+                    if (mensagemData.sections) {
+                        await sendMessage(sender, 'send-list-message', mensagemData);
+                    } else {
+                        await sendMessage(sender, 'send-message', { message: ultimaRelevante.mensagem });
+                    }
+                } catch {
+                    // Se não conseguir parsear, continuar com quiz do módulo 1
+                    const quizMsg = {
+                        title: '',
+                        description: 'Deseja iniciar o quiz agora?',
+                        buttonText: 'Escolher opção',
+                        listType: 'SINGLE_SELECT',
+                        sections: [{
+                            title: '',
+                            rows: [
+                                { id: 'iniciar_quiz_modulo1', title: 'SIM - Iniciar quiz agora! 📝', description: '' },
+                                { id: 'nao_iniciar_quiz_modulo1', title: 'NÃO - Depois faço ⏰', description: '' },
+                            ],
+                        }],
+                    };
+                    await sendMessage(sender, 'send-list-message', quizMsg);
+                    await salvarInteracao(sender, 'aguardando_inicio_quiz_modulo1', JSON.stringify(quizMsg));
+                }
+            } else {
+                // Se não encontrou nada relevante, oferecer quiz do módulo 1
+                const quizMsg = {
+                    title: '',
+                    description: 'Deseja iniciar o quiz agora?',
+                    buttonText: 'Escolher opção',
+                    listType: 'SINGLE_SELECT',
+                    sections: [{
+                        title: '',
+                        rows: [
+                            { id: 'iniciar_quiz_modulo1', title: 'SIM - Iniciar quiz agora! 📝', description: '' },
+                            { id: 'nao_iniciar_quiz_modulo1', title: 'NÃO - Depois faço ⏰', description: '' },
+                        ],
+                    }],
+                };
+                await sendMessage(sender, 'send-list-message', quizMsg);
+                await salvarInteracao(sender, 'aguardando_inicio_quiz_modulo1', JSON.stringify(quizMsg));
+            }
             return true;
         }
     }
@@ -901,7 +973,9 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         return true;
     }
     
-    if (selectedId === 'nao_iniciar_quiz_modulo1' || (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && verificarRespostaSSMA(text, 'negativa'))) {
+    if (selectedId === 'nao_iniciar_quiz_modulo1' || 
+        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && verificarRespostaSSMA(text, 'negativa')) ||
+        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && text.toLowerCase().includes('não - depois faço'))) {
         await sendMessage(sender, 'send-message', {
             message: '⏰ Sem problemas! Quando estiver pronto para o quiz, me avise.',
         });
@@ -918,7 +992,9 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         return true;
     }
     
-    if (selectedId === 'nao_iniciar_quiz_modulo2' || (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo2' && verificarRespostaSSMA(text, 'negativa'))) {
+    if (selectedId === 'nao_iniciar_quiz_modulo2' || 
+        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo2' && verificarRespostaSSMA(text, 'negativa')) ||
+        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo2' && text.toLowerCase().includes('não - depois faço'))) {
         await sendMessage(sender, 'send-message', {
             message: '⏰ Sem problemas! Quando estiver pronto para o quiz, me avise.',
         });

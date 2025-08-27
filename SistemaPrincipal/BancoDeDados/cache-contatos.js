@@ -99,6 +99,17 @@ class CacheContatos {
             timestamp: Date.now()
         });
     }
+    
+    // Adicionar contato manualmente ao cache (para contatos recém-encontrados)
+    adicionarContato(telefone, contato) {
+        const numeroLimpo = this.limparNumero(telefone);
+        const cacheKey = `contato_${numeroLimpo}`;
+        this.cache.set(cacheKey, {
+            contato: contato,
+            timestamp: Date.now()
+        });
+        console.log(`➕ Contato adicionado ao cache: ${contato.nome}`);
+    }
 
     // Limpeza automática do cache
     limpezaAutomatica() {
