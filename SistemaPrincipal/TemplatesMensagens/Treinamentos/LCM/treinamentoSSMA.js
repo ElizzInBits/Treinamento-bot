@@ -779,29 +779,12 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
     
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Buscar dados do contato para confirmação
+    // Enviar mensagem de manutenção diretamente
     try {
         const contato = await Contato.findOne({ where: { telefone: sender } });
         if (contato) {
-            const nomeCompleto = contato.nomeCompleto || contato.nome || 'Nome não informado';
-            const emailCadastrado = contato.email || 'E-mail não informado';
-            
-            const confirmacaoMsg = {
-                title: '',
-                description: `🎓 *Confirmação dos dados para o certificado:*\n\n👤 *Nome:* ${nomeCompleto}\n📧 *E-mail:* ${emailCadastrado}\n\nOs dados estão corretos?`,
-                buttonText: 'Confirmar',
-                listType: 'SINGLE_SELECT',
-                sections: [{
-                    title: '',
-                    rows: [
-                        { id: 'dados_corretos_ssma', title: 'Sim, os dados estão corretos', description: '' },
-                        { id: 'dados_incorretos_ssma', title: 'Não, preciso corrigir', description: '' },
-                    ],
-                }],
-            };
-            
-            await sendMessage(sender, 'send-list-message', confirmacaoMsg);
-            await salvarInteracao(sender, 'confirmacao_dados_ssma', JSON.stringify(confirmacaoMsg));
+            // Chamar diretamente a função de geração de certificado (que agora envia mensagem de manutenção)
+            await gerarCertificadoSSMA(sender, contato, sendMessage);
         }
     } catch (error) {
         console.error('Erro ao finalizar treinamento:', error);

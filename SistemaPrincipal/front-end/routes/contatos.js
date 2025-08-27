@@ -9,34 +9,51 @@ function limparNumero(numero) {
     return numero.replace(/\D/g, '').replace(/@c\.us$/, '');
 }
 
-// Função para validar telefone - Apenas DDI+DDD (igual ao frontend)
+// Função para validar telefone - MELHORADA
 function validarTelefone(telefone) {
     const cleaned = limparNumero(telefone);
+    console.log(`🔍 Validando telefone: "${telefone}" -> "${cleaned}" (${cleaned.length} dígitos)`);
 
-    // Aceitar apenas números com 12 ou 13 dígitos (DDI+DDD+número)
-    if (cleaned.length !== 12 && cleaned.length !== 13) {
+    // Aceitar números com 10, 11, 12 ou 13 dígitos
+    if (cleaned.length < 10 || cleaned.length > 13) {
+        console.log(`❌ Tamanho inválido: ${cleaned.length} dígitos`);
         return false;
     }
 
-    // Validar se os primeiros 2 dígitos são um DDI válido (10-99)
-    const ddi = cleaned.slice(0, 2);
-    if (parseInt(ddi) < 10 || parseInt(ddi) > 99) {
-        return false;
+    // Se tem 10 ou 11 dígitos (apenas DDD + número)
+    if (cleaned.length === 10 || cleaned.length === 11) {
+        const ddd = cleaned.slice(0, 2);
+        if (parseInt(ddd) < 11 || parseInt(ddd) > 99) {
+            console.log(`❌ DDD inválido: ${ddd}`);
+            return false;
+        }
+        console.log(`✅ Telefone válido (DDD+número): ${cleaned}`);
+        return true;
     }
 
-    // Validar se os próximos 2 dígitos são um DDD válido (11-99)
-    const ddd = cleaned.slice(2, 4);
-    if (parseInt(ddd) < 11 || parseInt(ddd) > 99) {
-        return false;
+    // Se tem 12 ou 13 dígitos (DDI + DDD + número)
+    if (cleaned.length === 12 || cleaned.length === 13) {
+        const ddi = cleaned.slice(0, 2);
+        const ddd = cleaned.slice(2, 4);
+        
+        // Validar DDI (aceitar mais DDIs comuns)
+        const ddisValidos = ['55', '1', '44', '33', '49', '39', '34', '351', '54', '56', '57', '51'];
+        if (!ddisValidos.includes(ddi)) {
+            console.log(`❌ DDI inválido: ${ddi}`);
+            return false;
+        }
+        
+        // Validar DDD
+        if (parseInt(ddd) < 11 || parseInt(ddd) > 99) {
+            console.log(`❌ DDD inválido: ${ddd}`);
+            return false;
+        }
+        
+        console.log(`✅ Telefone válido (DDI+DDD+número): ${cleaned}`);
+        return true;
     }
 
-    // Validar se o número tem o tamanho correto após DDI+DDD
-    const numero = cleaned.slice(4);
-    if (numero.length !== 8 && numero.length !== 9) {
-        return false;
-    }
-
-    return true;
+    return false;
 }
 
 // Função para validar CPF simples (apenas dígitos e tamanho)
@@ -48,32 +65,76 @@ function validarCPF(cpf) {
     return true;
 }
 
-// Função para gerar variações (atualizada para trabalhar com DDI+DDD)
+// Função para gerar variações - MELHORADA
 function gerarVariacoes(numeroCompleto) {
     const limpo = limparNumero(numeroCompleto);
+    const variacoes = [limpo];
+    
+    console.log(`🔄 Gerando variações para: ${limpo}`);
 
-    // Se não tem pelo menos 12 dígitos, retorna apenas o número limpo
-    if (limpo.length < 12) return [limpo];
-
-    // Verifica se começa com DDI 55 (Brasil)
-    if (!limpo.startsWith('55')) return [limpo];
-
-    const ddd = limpo.slice(2, 4);
-    const base = limpo.slice(4);
-
-    let var1 = limpo;
-    let var2 = limpo;
-
-    // Gera variações com e sem o 9 no celular
-    if (base.length === 9 && base[0] === '9') {
-        // Remove o 9 do celular
-        var2 = '55' + ddd + base.slice(1);
-    } else if (base.length === 8) {
-        // Adiciona o 9 no celular
-        var2 = '55' + ddd + '9' + base;
+    // Se tem 10 dígitos (DDD + 8 dígitos)
+    if (limpo.length === 10) {
+        // Adicionar variação com 9
+        const comNove = limpo.slice(0, 2) + '9' + limpo.slice(2);
+        variacoes.push(comNove);
+        
+        // Adicionar variações com DDI 55
+        variacoes.push('55' + limpo);
+        variacoes.push('55' + comNove);
+    }
+    
+    // Se tem 11 dígitos (DDD + 9 dígitos)
+    else if (limpo.length === 11) {
+        // Remover o 9 se estiver na posição correta
+        if (limpo.charAt(2) === '9') {
+            const semNove = limpo.slice(0, 2) + limpo.slice(3);
+            variacoes.push(semNove);
+        }
+        
+        // Adicionar variações com DDI 55
+        variacoes.push('55' + limpo);
+        if (limpo.charAt(2) === '9') {
+            const semNove = limpo.slice(0, 2) + limpo.slice(3);
+            variacoes.push('55' + semNove);
+        }
+    }
+    
+    // Se tem 12 dígitos (DDI + DDD + 8 dígitos)
+    else if (limpo.length === 12) {
+        // Adicionar variação com 9
+        const comNove = limpo.slice(0, 4) + '9' + limpo.slice(4);
+        variacoes.push(comNove);
+        
+        // Remover DDI se for 55
+        if (limpo.startsWith('55')) {
+            variacoes.push(limpo.slice(2));
+            variacoes.push(limpo.slice(2, 4) + '9' + limpo.slice(4));
+        }
+    }
+    
+    // Se tem 13 dígitos (DDI + DDD + 9 dígitos)
+    else if (limpo.length === 13) {
+        // Remover o 9 se estiver na posição correta
+        if (limpo.charAt(4) === '9') {
+            const semNove = limpo.slice(0, 4) + limpo.slice(5);
+            variacoes.push(semNove);
+        }
+        
+        // Remover DDI se for 55
+        if (limpo.startsWith('55')) {
+            variacoes.push(limpo.slice(2));
+            if (limpo.charAt(4) === '9') {
+                const semNove = limpo.slice(2, 4) + limpo.slice(5);
+                variacoes.push(semNove);
+            }
+        }
     }
 
-    return [var1, var2];
+    // Remover duplicatas
+    const varicoesUnicas = [...new Set(variacoes)];
+    console.log(`🔄 Variações geradas: ${varicoesUnicas.join(', ')}`);
+    
+    return varicoesUnicas;
 }
 
 // Listar todos os contatos
