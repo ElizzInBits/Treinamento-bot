@@ -794,6 +794,7 @@ function renderizarContatosEmpresa() {
             <div class="contact-actions">
               <button class="btn-info" onclick="abrirDetalhesContato(${contato.id})">Detalhes</button>
               <button class="btn-warning" onclick="abrirEditarContato(${contato.id})">Editar</button>
+              <button class="btn-secondary" onclick="restartTreinamentoContato(${contato.id})" title="Reiniciar treinamento do contato">🔄 Restart</button>
               <button class="btn-error" onclick="removerContato(${contato.id})">Remover</button>
             </div>
           </div>
@@ -885,6 +886,67 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
     })
     .catch(() => mostrarAlerta('Erro ao atualizar contato.', 'error'));
 });
+
+// Restart de treinamento do contato
+function restartTreinamentoContato(contatoId) {
+  const contato = contatos.find(c => c.id === contatoId);
+  if (!contato) {
+    mostrarAlerta('Contato não encontrado.', 'error');
+    return;
+  }
+
+  if (!confirm(`🔄 RESTART DE TREINAMENTO\n\nTem certeza que deseja reiniciar o treinamento de ${contato.nome}?\n\n⚠️ Esta ação irá:\n• Resetar o status do treinamento\n• Limpar todas as interações\n• O bot começará como se fosse a primeira conversa\n\nEsta ação não pode ser desfeita.`)) {
+    return;
+  }
+
+  // Feedback visual imediato
+  const button = event.target;
+  const originalText = button.innerHTML;
+  button.innerHTML = '⏳ Reiniciando...';
+  button.disabled = true;
+  button.style.opacity = '0.7';
+
+  authenticatedFetch(`http://72.60.48.249:3000/api/contatos/${contatoId}/restart-treinamento`, {
+    method: 'POST'
+  })
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
+    .then(() => {
+      // Animação de sucesso
+      button.innerHTML = '✅ Reiniciado!';
+      button.style.background = 'linear-gradient(135deg, var(--success), #059669)';
+      
+      setTimeout(() => {
+        mostrarAlerta(`🔄 Treinamento de ${contato.nome} foi reiniciado com sucesso!\n\nO bot agora tratará este contato como uma primeira interação.`, 'success');
+        
+        // Recarregar dados
+        carregarContatos().then(() => {
+          // Atualizar estatísticas do mapeamento
+          atualizarEstatisticasMapeamento();
+
+          // Atualizar a lista de contatos da empresa no modal se estiver aberto
+          if (empresaSelecionada) {
+            contatosEmpresaSelecionada = contatos.filter(c => c.empresaId === empresaSelecionada.id);
+            renderizarContatosEmpresa();
+          }
+
+          if (document.getElementById('empresas').classList.contains('active')) {
+            renderizarEmpresas();
+            atualizarEstatisticasEmpresas();
+          }
+        });
+      }, 1000);
+    })
+    .catch(() => {
+      // Restaurar estado original em caso de erro
+      button.innerHTML = originalText;
+      button.disabled = false;
+      button.style.opacity = '1';
+      mostrarAlerta('Erro ao reiniciar treinamento.', 'error');
+    });
+}
 
 // Remover contato
 function removerContato(id) {
