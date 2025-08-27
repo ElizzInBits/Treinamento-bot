@@ -818,6 +818,15 @@ async function processarMensagem(message, client) {
             }
         }
 
+        // Processar saudações simples para usuários em treinamento
+        if (contato.statusTreinamento === 'em andamento' && 
+            (text === 'olá' || text === 'ola' || text === 'oi' || text === 'hello' || text === 'bom dia' || text === 'boa tarde' || text === 'boa noite')) {
+            await sendMessage(sender, 'send-message', {
+                message: `👋 Olá! Você está no meio do treinamento SSMA.\n\n📱 *Opções disponíveis:*\n• Digite *continuar* - para prosseguir\n• Digite *menu* - para ver opções de reiniciar\n• Digite *reiniciar* - para começar novamente\n\n💡 Use o *MENU* para navegar entre módulos!`,
+            });
+            return;
+        }
+        
         // Processar comando MENU para usuários em treinamento
         if (text.toLowerCase().includes('menu') && contato.statusTreinamento === 'em andamento') {
             const script = scriptsTreinamento['treinamentoSSMA'];
@@ -1172,9 +1181,18 @@ async function processarMensagem(message, client) {
 
 
         // Se o usuário tem treinamento em andamento mas não foi processado, mostrar opções
-        if (contato.statusTreinamento === 'em andamento' && contato.treinamento) {
+        if (contato.statusTreinamento === 'em andamento') {
+            // Verificar se é uma saudação simples
+            if (text === 'olá' || text === 'ola' || text === 'oi' || text === 'hello') {
+                await sendMessage(sender, 'send-message', {
+                    message: `👋 Olá! Você está no meio do treinamento SSMA.\n\n📱 *Opções disponíveis:*\n• Digite *continuar* - para prosseguir\n• Digite *menu* - para ver opções de reiniciar\n• Digite *reiniciar* - para começar novamente\n\n💡 Use o *MENU* para navegar entre módulos!`,
+                });
+                return;
+            }
+            
+            // Para outras mensagens não reconhecidas
             await sendMessage(sender, 'send-message', {
-                message: `🔄 Você está no meio do treinamento "${contato.treinamento.nome}".\n\n📱 *Opções disponíveis:*\n• Digite *continuar* - para prosseguir\n• Digite *menu* - para ver opções de reiniciar\n• Digite *reiniciar* - para começar novamente\n\n💡 Use o *MENU* para navegar entre módulos!`,
+                message: `🔄 Você está no meio do treinamento SSMA.\n\n📱 *Opções disponíveis:*\n• Digite *continuar* - para prosseguir\n• Digite *menu* - para ver opções de reiniciar\n• Digite *reiniciar* - para começar novamente\n\n💡 Use o *MENU* para navegar entre módulos!`,
             });
             return;
         }
