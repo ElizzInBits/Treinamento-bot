@@ -519,7 +519,7 @@ async function iniciarTreinamento(sender, contato) {
         });
     } else {
         await sendMessage(sender, 'send-message', {
-            message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a) de volta!`,
+            message: `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`,
         });
     }
     

@@ -272,19 +272,7 @@ body {
     font-size: 0.95rem;
   }
   
-  .telefone-container {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 8px !important;
-  }
-  
-  .telefone-container select {
-    width: 100% !important;
-  }
-  
-  .telefone-container input {
-    width: 100% !important;
-  }
+
   
   .btn-primary {
     padding: 0.875rem 1.25rem;
@@ -357,15 +345,7 @@ body {
     border-radius: 6px;
   }
   
-  .telefone-container {
-    flex-direction: column !important;
-    gap: 6px !important;
-  }
-  
-  .telefone-container select,
-  .telefone-container input {
-    width: 100% !important;
-  }
+
   
   .btn-primary {
     padding: 0.75rem 1rem;
