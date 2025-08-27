@@ -591,13 +591,27 @@ async function iniciarModulo2(sender, sendMessage) {
  */
 function extrairResposta(resposta) {
     let respostaLimpa = resposta.toLowerCase().trim();
+    
     if (respostaLimpa.includes('_')) {
         // Se é selectedId (ex: quiz_modulo1_0_a), pegar a última parte
         respostaLimpa = respostaLimpa.split('_').pop();
     } else {
-        // Se é texto digitado, pegar primeiro caractere
-        respostaLimpa = respostaLimpa.charAt(0);
+        // Se é texto digitado, extrair a letra da alternativa
+        // Procurar por padrões como "a)", "b)", "c)", "d)" ou apenas "a", "b", "c", "d"
+        const match = respostaLimpa.match(/^([abcd])\)|\b([abcd])\)|^([abcd])$|\b([abcd])\b/);
+        if (match) {
+            // Pegar o primeiro grupo que não é undefined
+            respostaLimpa = match[1] || match[2] || match[3] || match[4];
+        } else {
+            // Fallback: pegar primeiro caractere se for a, b, c ou d
+            const primeiroChar = respostaLimpa.charAt(0);
+            if (['a', 'b', 'c', 'd'].includes(primeiroChar)) {
+                respostaLimpa = primeiroChar;
+            }
+        }
     }
+    
+    console.log(`🔍 Resposta extraída: "${resposta}" -> "${respostaLimpa}"`);
     return respostaLimpa;
 }
 
