@@ -1126,16 +1126,9 @@ async function gerarCertificadoSSMA(sender, contato, sendMessage) {
             statusTreinamento: 'concluído'
         });
         
-        // Mensagem de manutenção do certificado
+        // Mensagem final do treinamento
         await sendMessage(sender, 'send-message', {
-            message: '🔧 *CERTIFICADO EM MANUTENÇÃO*\n\n📧 Nosso sistema de geração e envio de certificados está temporariamente em manutenção pela equipe de desenvolvimento.\n\n✅ *O que isso significa para você:*\n• Seu treinamento foi registrado com sucesso\n• Sua conclusão está devidamente documentada\n• Você está certificado para exercer suas atividades\n\n📬 *Em breve você receberá:*\n• Certificado digital aqui no chat\n• Certificado por e-mail no endereço cadastrado\n• Notificação assim que estiver disponível\n\n⏰ *Previsão:* Sistema será normalizado em breve\n\n🙏 Agradecemos sua compreensão e parabenizamos pela dedicação ao treinamento!',
-        });
-        
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Aviso final sobre o certificado
-        await sendMessage(sender, 'send-message', {
-            message: '📋 *IMPORTANTE - LEIA COM ATENÇÃO*\n\n🎓 Seu certificado será enviado automaticamente para o e-mail cadastrado assim que o sistema for normalizado.\n\n📧 *Verifique regularmente:*\n• Caixa de entrada\n• Pasta de spam/lixo eletrônico\n\n❓ *Dúvidas ou não recebeu?*\nEntre em contato conosco através dos canais oficiais da empresa.\n\n✅ *Treinamento oficialmente concluído!*\nObrigado pela sua participação e dedicação!',
+            message: '🎉 *PARABÉNS! TREINAMENTO CONCLUÍDO COM SUCESSO!*\n\n🏆 Você completou todos os módulos do treinamento SSMA e está oficialmente capacitado!\n\n🔧 *CERTIFICADO EM MANUTENÇÃO*\n\nNosso sistema de geração de certificados está temporariamente em manutenção pela equipe de desenvolvimento.\n\n✅ *Seu treinamento foi registrado com sucesso!*\n\n📬 *Em breve você receberá:*\n• Certificado digital aqui no chat\n• Certificado por e-mail no endereço cadastrado\n\n⏰ Sistema será normalizado em breve.\n\n🙏 Agradecemos sua compreensão e parabenizamos pela dedicação!',
         });
         
         // Salvar interação final para parar processamento
