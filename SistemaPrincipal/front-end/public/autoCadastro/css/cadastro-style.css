@@ -167,6 +167,21 @@ body {
   border-color: var(--error);
 }
 
+/* Container para telefone - DDI + número */
+.telefone-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.telefone-container select {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.telefone-container input {
+  flex: 1;
+}
 
 .info-message {
   background-color: #fff4e5;
