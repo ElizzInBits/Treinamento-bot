@@ -407,19 +407,6 @@ async function iniciarModulo1(sender, sendMessage) {
         }
     }
     await new Promise(resolve => setTimeout(resolve, 3000));
-}magens', 'PCMSO.png');
-    if (fs.existsSync(imagemPCMSOPath)) {
-        try {
-            await sendMessage(sender, 'send-image', {
-                path: imagemPCMSOPath,
-                filename: 'PCMSO.png',
-                caption: ''
-            });
-        } catch (error) {
-            console.error('❌ Erro ao enviar imagem PCMSO:', error);
-        }
-    }
-    await new Promise(resolve => setTimeout(resolve, 3000));
     
 
     await sendMessage(sender, 'send-message', {
