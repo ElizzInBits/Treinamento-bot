@@ -1123,6 +1123,12 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         return true;
     }
     
+    // Verificar se treinamento já foi concluído para evitar reprocessamento
+    if (ultimaInteracao?.tipo === 'treinamento_concluido_final') {
+        console.log('⚠️ Treinamento já concluído - ignorando mensagem');
+        return true;
+    }
+    
     console.log('❌ Nenhuma condição atendida');
     return false;
 }
@@ -1132,37 +1138,23 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
  */
 async function gerarCertificadoSSMA(sender, contato, sendMessage) {
     try {
-        await sendMessage(sender, 'send-message', {
-            message: '📧 Gerando seu certificado...\n\nIsso pode demorar um pouco...',
-        });
-        
         // Atualizar status do contato
         await contato.update({
             statusTreinamento: 'concluído'
         });
         
-        const certificadoPath = await gerarCertificadoBanco(contato.id);
-        const treinamento = await Treinamento.findByPk(14);
-        
-        await enviarEmail(contato.email, certificadoPath, treinamento);
-        
+        // Mensagem de manutenção do certificado
         await sendMessage(sender, 'send-message', {
-            message: `🎉 Seu certificado foi gerado com sucesso! \n\n📧 Ele foi enviado para: ${contato.email}\n\n📄 Também está disponível aqui:`,
-        });
-        
-        await sendMessage(sender, 'send-file', {
-            path: certificadoPath,
-            filename: 'Certificado_SSMA.pdf',
-            caption: '🎓 Seu certificado de conclusão do treinamento SSMA'
+            message: '🔧 *CERTIFICADO EM MANUTENÇÃO*\n\n📧 Nosso sistema de geração e envio de certificados está temporariamente em manutenção pela equipe de desenvolvimento.\n\n✅ *O que isso significa para você:*\n• Seu treinamento foi registrado com sucesso\n• Sua conclusão está devidamente documentada\n• Você está certificado para exercer suas atividades\n\n📬 *Em breve você receberá:*\n• Certificado digital aqui no chat\n• Certificado por e-mail no endereço cadastrado\n• Notificação assim que estiver disponível\n\n⏰ *Previsão:* Sistema será normalizado em breve\n\n🙏 Agradecemos sua compreensão e parabenizamos pela dedicação ao treinamento!',
         });
         
         // Salvar interação final para parar processamento
         await salvarInteracao(sender, 'treinamento_concluido_final', 'ssma_completo_parar');
         
     } catch (error) {
-        console.error('❌ Erro ao gerar certificado:', error);
+        console.error('❌ Erro ao finalizar treinamento:', error);
         await sendMessage(sender, 'send-message', {
-            message: '❌ Erro ao gerar certificado. Entre em contato com o suporte.',
+            message: '❌ Erro ao finalizar treinamento. Entre em contato com o suporte.',
         });
     }
 }
