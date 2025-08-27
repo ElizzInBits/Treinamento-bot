@@ -839,6 +839,19 @@ async function processarMensagem(message, client) {
             return;
         }
         
+        // Processar comando CONTINUAR para usuários em treinamento
+        if (contato.statusTreinamento === 'em andamento' && (text === 'continuar' || text === 'manda' || text === 'pronto')) {
+            // Verificar se usuário estava aguardando quiz
+            const ultimaInteracao = await obterUltimaInteracao(sender);
+            if (ultimaInteracao && ultimaInteracao.tipo === 'aguardando_inicio_quiz_modulo1') {
+                const script = scriptsTreinamento['treinamentoSSMA'];
+                if (script && script.processarRespostaSSMA) {
+                    await script.processarRespostaSSMA(sender, 'iniciar_quiz_modulo1', 'iniciar_quiz_modulo1', contato, sendMessage);
+                    return;
+                }
+            }
+        }
+        
         // Processar comando MENU para usuários em treinamento
         if (text.toLowerCase().includes('menu') && contato.statusTreinamento === 'em andamento') {
             const script = scriptsTreinamento['treinamentoSSMA'];
