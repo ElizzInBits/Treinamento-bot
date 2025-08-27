@@ -725,6 +725,12 @@ async function processarMensagem(message, client) {
             createdAt: ultimaInteracao.createdAt
         } : 'Nenhuma');
         
+        // VERIFICAR SE TREINAMENTO FOI CONCLUÍDO E PARAR PROCESSAMENTO
+        if (ultimaInteracao?.tipo === 'treinamento_concluido_final') {
+            console.log('✅ Treinamento concluído - não processar mais mensagens');
+            return;
+        }
+        
         // PRIORIDADE MÁXIMA: Iniciar treinamento para usuários não iniciados
         if (contato.statusTreinamento === 'não iniciado') {
             console.log(`🚀 USUÁRIO NÃO INICIADO DETECTADO: ${contato.nome}`);
@@ -818,6 +824,21 @@ async function processarMensagem(message, client) {
             }
         }
 
+        // Verificar se usuário foi reiniciado pelo sistema administrativo
+        if (contato.statusTreinamento === 'não iniciado' && ultimaInteracao && 
+            ultimaInteracao.createdAt < new Date(Date.now() - 5 * 60 * 1000)) {
+            console.log('🔄 Usuário reiniciado detectado - limpando interações antigas');
+            // Limpar interações antigas para evitar conflitos
+            await Interacao.destroy({
+                where: {
+                    telefone: sender,
+                    createdAt: { [Op.lt]: new Date(Date.now() - 5 * 60 * 1000) }
+                }
+            });
+            await iniciarTreinamento(sender, contato);
+            return;
+        }
+        
         // Processar comando SSMA para retomar treinamento
         if (contato.statusTreinamento === 'em andamento' && text === 'ssma') {
             const script = scriptsTreinamento['treinamentoSSMA'];
