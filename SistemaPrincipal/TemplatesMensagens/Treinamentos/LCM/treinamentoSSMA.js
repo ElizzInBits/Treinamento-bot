@@ -39,15 +39,15 @@ const QUIZ_MODULO1_CONFIG = {
             explicacao: '✅ Correto! SSMA significa Saúde, Segurança e Meio Ambiente!'
         },
         {
-            pergunta: '2. Verdadeiro ou Falso: A responsabilidade pela segurança pode ser transferida para outra pessoa.',
+            pergunta: '2. Segundo as premissas básicas da segurança, a responsabilidade pela segurança é:',
             alternativas: {
-                a: 'Verdadeiro - pode ser transferida',
-                b: 'Falso - A responsabilidade é intransferível',
-                c: 'Verdadeiro - apenas para supervisores',
-                d: 'Falso - apenas em emergências'
+                a: 'Transferível para o supervisor',
+                b: 'Individual e intransferível',
+                c: 'Compartilhada com a equipe',
+                d: 'Responsabilidade apenas da empresa'
             },
             respostaCorreta: 'b',
-            explicacao: '✅ Correto! A responsabilidade pela segurança é intransferível!'
+            explicacao: '✅ Correto! A responsabilidade pela segurança é de cada um e é INTRANSFERÍVEL!'
         },
         {
             pergunta: '3. Uma ferramenta cai ao lado de um trabalhador, sem atingi-lo. Isso é:',
