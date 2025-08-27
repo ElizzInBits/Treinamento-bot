@@ -324,6 +324,41 @@ router.put('/:id', async (req, res) => {
 });
 
 
+// Restart de treinamento
+router.post('/:id/restart-treinamento', async (req, res) => {
+    try {
+        const contato = await Contato.findByPk(req.params.id);
+        if (!contato) {
+            return res.status(404).json({ error: 'Contato não encontrado' });
+        }
+
+        // Resetar status do treinamento
+        await contato.update({
+            statusTreinamento: 'não iniciado',
+            treinamentoId: null
+        });
+
+        // Limpar todas as interações do usuário
+        const { Interacao } = require('../../BancoDeDados/models');
+        await Interacao.destroy({
+            where: { telefone: contato.telefone }
+        });
+
+        // Limpar cache do contato
+        const cacheContatos = require('../../BancoDeDados/cache-contatos');
+        cacheContatos.invalidarContato(contato.telefone);
+
+        res.json({ 
+            message: 'Treinamento reiniciado com sucesso',
+            contato: contato
+        });
+
+    } catch (error) {
+        console.error('Erro ao reiniciar treinamento:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
 // Deletar contato
 router.delete('/:id', async (req, res) => {
     try {
