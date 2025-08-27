@@ -170,17 +170,18 @@ body {
 /* Container para telefone - DDI + número */
 .telefone-container {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
 }
 
 .telefone-container select {
-  width: 120px;
+  width: 90px;
   flex-shrink: 0;
 }
 
 .telefone-container input {
   flex: 1;
+  min-width: 0;
 }
 
 .info-message {
