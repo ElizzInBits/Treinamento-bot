@@ -778,6 +778,11 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
     });
     
     await new Promise(resolve => setTimeout(resolve, 1000));
+
+     // Mensagem final do treinamento
+     await sendMessage(sender, 'send-message', {
+        message: '🎉 *PARABÉNS! TREINAMENTO CONCLUÍDO COM SUCESSO!*\n\n🏆 Você completou todos os módulos do treinamento SSMA e está oficialmente capacitado!\n\n🔧 *CERTIFICADO EM MANUTENÇÃO*\n\nNosso sistema de geração de certificados está temporariamente em manutenção pela equipe de desenvolvimento.\n\n✅ *Seu treinamento foi registrado com sucesso!*\n\n📬 *Em breve você receberá:*\n• Certificado digital aqui no chat\n• Certificado por e-mail no endereço cadastrado\n\n⏰ Sistema será normalizado em breve.\n\n🙏 Agradecemos sua compreensão e parabenizamos pela dedicação!',
+    });
     
     // Enviar mensagem de manutenção diretamente
     try {
@@ -870,6 +875,49 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         return true;
     }
     
+    // Comando continuar para retomar treinamento
+    if (text.toLowerCase() === 'continuar') {
+        console.log('🔄 Comando continuar detectado');
+        
+        // Verificar progresso atual do usuário
+        if (contato.statusTreinamento === 'em_andamento') {
+            // Se tem interação de quiz pendente, continuar quiz
+            if (ultimaInteracao?.tipo?.startsWith('quiz_modulo1_')) {
+                await sendMessage(sender, 'send-message', {
+                    message: '📝 Continuando quiz do Módulo 1...'
+                });
+                return true;
+            } else if (ultimaInteracao?.tipo?.startsWith('quiz_modulo2_')) {
+                await sendMessage(sender, 'send-message', {
+                    message: '📝 Continuando quiz do Módulo 2...'
+                });
+                return true;
+            } else {
+                // Oferecer quiz do módulo 1 se não tem progresso específico
+                const quizMsg = {
+                    title: '',
+                    description: 'Deseja iniciar o quiz do Módulo 1?',
+                    buttonText: 'Escolher opção',
+                    listType: 'SINGLE_SELECT',
+                    sections: [{
+                        title: '',
+                        rows: [
+                            { id: 'iniciar_quiz_modulo1', title: 'SIM - Iniciar quiz agora! 📝', description: '' },
+                            { id: 'nao_iniciar_quiz_modulo1', title: 'NÃO - Depois faço ⏰', description: '' },
+                        ],
+                    }],
+                };
+                await sendMessage(sender, 'send-list-message', quizMsg);
+                await salvarInteracao(sender, 'aguardando_inicio_quiz_modulo1', JSON.stringify(quizMsg));
+                return true;
+            }
+        } else {
+            // Se não está em andamento, iniciar do começo
+            await iniciarModulo1(sender, sendMessage);
+            return true;
+        }
+    }
+    
     const ultimaInteracao = await obterUltimaInteracao(sender);
     console.log(`🔍 Última interação: ${ultimaInteracao?.tipo}`);
     
@@ -952,33 +1000,42 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
                 message: '▶️ Continuando treinamento normalmente...'
             });
             
-            // Buscar onde o usuário estava e continuar
-            const interacoesRecentes = await Interacao.findAll({
-                where: { telefone: sender },
-                order: [['createdAt', 'DESC']],
-                limit: 10
-            });
-            
-            const ultimaRelevante = interacoesRecentes.find(i => 
-                i.tipo !== 'menu_opcoes' && 
-                i.tipo !== 'recuperacao_treinamento' &&
-                i.tipo !== 'opcoes_continuidade' &&
-                i.mensagem && i.mensagem.trim() !== ''
-            );
-            
-            if (ultimaRelevante) {
-                try {
-                    const mensagemData = JSON.parse(ultimaRelevante.mensagem);
-                    if (mensagemData.sections) {
-                        await sendMessage(sender, 'send-list-message', mensagemData);
-                    } else {
-                        await sendMessage(sender, 'send-message', { message: ultimaRelevante.mensagem });
-                    }
-                } catch {
-                    // Se não conseguir parsear, continuar com quiz do módulo 1
+            // Verificar progresso atual do usuário baseado no status
+            if (contato.statusTreinamento === 'em_andamento') {
+                // Buscar última interação de quiz para determinar onde estava
+                const interacoesQuiz = await Interacao.findAll({
+                    where: { 
+                        telefone: sender,
+                        tipo: { [Op.like]: '%quiz%' }
+                    },
+                    order: [['createdAt', 'DESC']],
+                    limit: 5
+                });
+                
+                const ultimoQuiz = interacoesQuiz[0];
+                
+                if (ultimoQuiz && ultimoQuiz.tipo.includes('modulo2')) {
+                    // Estava no módulo 2, oferecer quiz módulo 2
                     const quizMsg = {
                         title: '',
-                        description: 'Deseja iniciar o quiz agora?',
+                        description: 'Deseja continuar com o quiz do Módulo 2?',
+                        buttonText: 'Escolher opção',
+                        listType: 'SINGLE_SELECT',
+                        sections: [{
+                            title: '',
+                            rows: [
+                                { id: 'iniciar_quiz_modulo2', title: 'SIM - Continuar quiz Módulo 2! 📝', description: '' },
+                                { id: 'nao_iniciar_quiz_modulo2', title: 'NÃO - Depois faço ⏰', description: '' },
+                            ],
+                        }],
+                    };
+                    await sendMessage(sender, 'send-list-message', quizMsg);
+                    await salvarInteracao(sender, 'aguardando_inicio_quiz_modulo2', JSON.stringify(quizMsg));
+                } else {
+                    // Padrão: oferecer quiz módulo 1
+                    const quizMsg = {
+                        title: '',
+                        description: 'Deseja iniciar o quiz do Módulo 1?',
                         buttonText: 'Escolher opção',
                         listType: 'SINGLE_SELECT',
                         sections: [{
@@ -993,22 +1050,8 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
                     await salvarInteracao(sender, 'aguardando_inicio_quiz_modulo1', JSON.stringify(quizMsg));
                 }
             } else {
-                // Se não encontrou nada relevante, oferecer quiz do módulo 1
-                const quizMsg = {
-                    title: '',
-                    description: 'Deseja iniciar o quiz agora?',
-                    buttonText: 'Escolher opção',
-                    listType: 'SINGLE_SELECT',
-                    sections: [{
-                        title: '',
-                        rows: [
-                            { id: 'iniciar_quiz_modulo1', title: 'SIM - Iniciar quiz agora! 📝', description: '' },
-                            { id: 'nao_iniciar_quiz_modulo1', title: 'NÃO - Depois faço ⏰', description: '' },
-                        ],
-                    }],
-                };
-                await sendMessage(sender, 'send-list-message', quizMsg);
-                await salvarInteracao(sender, 'aguardando_inicio_quiz_modulo1', JSON.stringify(quizMsg));
+                // Se não está em andamento, iniciar do começo
+                await executarTreinamento(sender, contato, sendMessage);
             }
             return true;
         }
@@ -1048,6 +1091,17 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         await salvarInteracao(sender, 'quiz_modulo2_pergunta_0', JSON.stringify({ acertos: 0, perguntaAtual: 0 }));
         await enviarPergunta(sender, 0, QUIZ_MODULO2_CONFIG, 'quiz_modulo2', sendMessage);
         return true;
+    }
+    
+    // Tratar respostas inesperadas durante quiz
+    if (ultimaInteracao?.tipo?.startsWith('quiz_modulo1_pergunta_') || ultimaInteracao?.tipo?.startsWith('quiz_modulo2_pergunta_')) {
+        // Se não é selectedId válido e não contém a, b, c, d, orientar usuário
+        if (!selectedId && !text.toLowerCase().match(/[abcd]/)) {
+            await sendMessage(sender, 'send-message', {
+                message: '⚠️ Por favor, selecione uma das alternativas (a, b, c ou d) ou use os botões da lista para responder à pergunta.'
+            });
+            return true;
+        }
     }
     
     if (selectedId === 'nao_iniciar_quiz_modulo2' || 
@@ -1124,11 +1178,6 @@ async function gerarCertificadoSSMA(sender, contato, sendMessage) {
         // Atualizar status do contato
         await contato.update({
             statusTreinamento: 'concluído'
-        });
-        
-        // Mensagem final do treinamento
-        await sendMessage(sender, 'send-message', {
-            message: '🎉 *PARABÉNS! TREINAMENTO CONCLUÍDO COM SUCESSO!*\n\n🏆 Você completou todos os módulos do treinamento SSMA e está oficialmente capacitado!\n\n🔧 *CERTIFICADO EM MANUTENÇÃO*\n\nNosso sistema de geração de certificados está temporariamente em manutenção pela equipe de desenvolvimento.\n\n✅ *Seu treinamento foi registrado com sucesso!*\n\n📬 *Em breve você receberá:*\n• Certificado digital aqui no chat\n• Certificado por e-mail no endereço cadastrado\n\n⏰ Sistema será normalizado em breve.\n\n🙏 Agradecemos sua compreensão e parabenizamos pela dedicação!',
         });
         
         // Salvar interação final para parar processamento
