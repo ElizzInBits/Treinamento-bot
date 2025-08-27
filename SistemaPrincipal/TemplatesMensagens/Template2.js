@@ -878,13 +878,16 @@ async function processarMensagem(message, client) {
             !rawText.toLowerCase().includes('pode mandar') && // NÃO oferecer continuidade se usuário já respondeu
             !rawText.toLowerCase().includes('vamos nessa') && // NÃO oferecer se respondeu ao quiz
             !rawText.toLowerCase().includes('rever conteúdo') && // NÃO oferecer se está revisando conteúdo
+            !rawText.toLowerCase().includes('olá') && !rawText.toLowerCase().includes('ola') && // NÃO oferecer para saudações simples
             ultimaInteracao.tipo !== 'opcoes_continuidade' && ultimaInteracao.tipo !== 'confirmacao_dados_ssma' &&
             ultimaInteracao.tipo !== 'aguardando_inicio_ssma' && // NÃO oferecer se já está aguardando resposta
             ultimaInteracao.tipo !== 'aguardando_quiz_intro' && // NÃO oferecer se aguardando quiz
             ultimaInteracao.tipo !== 'aguardando_revisao_modulo1' && // NÃO oferecer se aguardando revisão
             ultimaInteracao.tipo !== 'aguardando_revisao_modulo2' && // NÃO oferecer se aguardando revisão
             ultimaInteracao.tipo !== 'recuperacao_treinamento' && // NÃO oferecer se já está em recuperação
-            ultimaInteracao.createdAt > new Date(Date.now() - 60 * 60 * 1000)) { // Última 1h (reduzido de 24h)
+            ultimaInteracao.tipo !== 'selecionar_treinamento' && // NÃO oferecer se ainda está selecionando treinamento
+            ultimaInteracao.createdAt > new Date(Date.now() - 60 * 60 * 1000) && // Última 1h (reduzido de 24h)
+            ultimaInteracao.createdAt < new Date(Date.now() - 5 * 60 * 1000)) { // Mas não muito recente (últimos 5 min)
 
             await sendMessage(sender, 'send-message', {
                 message: `👋 Olá! Vejo que você estava no meio do treinamento "${contato.treinamento?.nome || 'SSMA'}".\n\n🔄 Deseja continuar de onde parou?`,
