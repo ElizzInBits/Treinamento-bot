@@ -738,7 +738,8 @@ async function processarMensagem(message, client) {
             // Verificar se não é uma resposta a seleção de treinamento
             if (!ultimaInteracao || 
                 (ultimaInteracao.tipo !== 'selecionar_treinamento' && 
-                 ultimaInteracao.tipo !== 'treinamento_iniciado')) {
+                 ultimaInteracao.tipo !== 'treinamento_iniciado' &&
+                 ultimaInteracao.tipo !== 'aguardando_confirmacao')) {
                 
                 console.log(`🚀 INICIANDO SELEÇÃO DE TREINAMENTO para: ${contato.nome}`);
                 await iniciarTreinamento(sender, contato);
@@ -825,14 +826,18 @@ async function processarMensagem(message, client) {
         }
 
         // Verificar se usuário foi reiniciado pelo sistema administrativo
+        // Status "não iniciado" mas tem interações de treinamento = restart administrativo
         if (contato.statusTreinamento === 'não iniciado' && ultimaInteracao && 
-            (ultimaInteracao.tipo === 'menu_opcoes' || ultimaInteracao.tipo === 'confirmacao_dados_ssma' || 
-             ultimaInteracao.tipo.includes('quiz_') || ultimaInteracao.tipo === 'treinamento_concluido')) {
-            console.log('🔄 Restart administrativo detectado - forçando reinicio limpo');
-            // Limpar TODAS as interações para restart limpo
-            await Interacao.destroy({
-                where: { telefone: sender }
-            });
+            (ultimaInteracao.tipo.includes('quiz_') || 
+             ultimaInteracao.tipo === 'confirmacao_dados_ssma' || 
+             ultimaInteracao.tipo === 'treinamento_concluido' ||
+             ultimaInteracao.tipo === 'aguardando_confirmacao' ||
+             ultimaInteracao.tipo === 'menu_opcoes' ||
+             ultimaInteracao.tipo.includes('modulo'))) {
+            console.log('🔄 RESTART ADMINISTRATIVO DETECTADO!');
+            console.log(`Status: ${contato.statusTreinamento}, Última interação: ${ultimaInteracao.tipo}`);
+            
+            // NÃO limpar interações aqui - já foram limpas pelo endpoint
             await sendMessage(sender, 'send-message', {
                 message: '🔄 Seu treinamento foi reiniciado pelo administrador. Vamos começar novamente!'
             });

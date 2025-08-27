@@ -457,12 +457,30 @@ async function enviarPergunta(sender, indicePergunta, config, tipoQuiz, sendMess
     };
 
     await sendMessage(sender, 'send-list-message', listMsg);
-    // Inicializar com acertos = 0 apenas na primeira pergunta
-    const acertos = indicePergunta === 0 ? 0 : undefined;
-    const dadosInteracao = { perguntaAtual: indicePergunta };
-    if (acertos !== undefined) {
-        dadosInteracao.acertos = acertos;
+    
+    // SEMPRE salvar dados completos da interação
+    const dadosInteracao = { 
+        perguntaAtual: indicePergunta,
+        acertos: indicePergunta === 0 ? 0 : undefined // Apenas primeira pergunta inicia com 0
+    };
+    
+    // Se não é primeira pergunta, buscar acertos da interação anterior
+    if (indicePergunta > 0) {
+        const ultimaInteracao = await obterUltimaInteracao(sender);
+        if (ultimaInteracao) {
+            try {
+                const dadosAnteriores = JSON.parse(ultimaInteracao.mensagem || '{}');
+                if (typeof dadosAnteriores.acertos === 'number') {
+                    dadosInteracao.acertos = dadosAnteriores.acertos;
+                }
+            } catch (error) {
+                console.error('Erro ao recuperar acertos anteriores:', error);
+                dadosInteracao.acertos = 0; // Fallback seguro
+            }
+        }
     }
+    
+    console.log(`💾 Enviando pergunta ${indicePergunta + 1} com dados:`, dadosInteracao);
     await salvarInteracao(sender, `${tipoQuiz}_pergunta_${indicePergunta}`, JSON.stringify(dadosInteracao));
 }
 
@@ -473,21 +491,41 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
     const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
     const perguntaAtual = dados.perguntaAtual || 0;
     
-    // Buscar acertos acumulados das interações anteriores
-    let acertos = dados.acertos !== undefined ? dados.acertos : 0;
+    // Buscar acertos acumulados com fallback robusto
+    let acertos = typeof dados.acertos === 'number' ? dados.acertos : 0;
+    
+    // Fallback: buscar acertos da última resposta válida se não existir no JSON atual
+    if (typeof dados.acertos !== 'number') {
+        const interacoesRecentes = await Interacao.findAll({
+            where: { telefone: sender, tipo: { [Op.like]: 'quiz_modulo1_pergunta_%' } },
+            order: [['createdAt', 'DESC']],
+            limit: 10
+        });
+        const ultimaComAcerto = interacoesRecentes.find(i => {
+            try {
+                const d = JSON.parse(i.mensagem || '{}');
+                return typeof d.acertos === 'number';
+            } catch { return false; }
+        });
+        if (ultimaComAcerto) {
+            const dadosAnteriores = JSON.parse(ultimaComAcerto.mensagem);
+            acertos = dadosAnteriores.acertos;
+            console.log(`🔄 Acertos recuperados do fallback: ${acertos}`);
+        }
+    }
     
     const respostaLimpa = extrairResposta(resposta);
     const pergunta = QUIZ_MODULO1_CONFIG.perguntas[perguntaAtual];
     const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
     
-    console.log(`📊 Quiz Módulo 1 - Pergunta ${perguntaAtual + 1}: Resposta="${respostaLimpa}", Correta="${pergunta.respostaCorreta}", Acerto=${respostaCorreta}, Acertos Atuais=${acertos}`);
+    console.log(`📊 Quiz Módulo 1 - Pergunta ${perguntaAtual + 1}: Resposta="${respostaLimpa}", Correta="${pergunta.respostaCorreta}", Acerto=${respostaCorreta}, Acertos Antes=${acertos}`);
     
     // Atualizar acertos se resposta estiver correta
     if (respostaCorreta) {
         acertos += 1;
     }
     
-    console.log(`📊 Acertos após pergunta ${perguntaAtual + 1}: ${acertos}`);
+    console.log(`📊 Acertos após pergunta ${perguntaAtual + 1}: ${acertos}/${QUIZ_MODULO1_CONFIG.perguntas.length}`);
     
     // Feedback da resposta
     await sendMessage(sender, 'send-message', {
@@ -505,8 +543,10 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
         return true;
     }
     
-    // Próxima pergunta - salvar acertos atualizados
-    await salvarInteracao(sender, `quiz_modulo1_pergunta_${proximaPergunta}`, JSON.stringify({ acertos: acertos, perguntaAtual: proximaPergunta }));
+    // Próxima pergunta - SEMPRE salvar acertos atualizados
+    const dadosProximaPergunta = { acertos: acertos, perguntaAtual: proximaPergunta };
+    await salvarInteracao(sender, `quiz_modulo1_pergunta_${proximaPergunta}`, JSON.stringify(dadosProximaPergunta));
+    console.log(`💾 Salvando estado: ${JSON.stringify(dadosProximaPergunta)}`);
     await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO1_CONFIG, 'quiz_modulo1', sendMessage);
     return true;
 }
@@ -627,17 +667,41 @@ async function processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessa
     const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
     const perguntaAtual = dados.perguntaAtual || 0;
     
-    // Buscar acertos acumulados das interações anteriores
-    let acertos = dados.acertos || 0;
+    // Buscar acertos acumulados com fallback robusto
+    let acertos = typeof dados.acertos === 'number' ? dados.acertos : 0;
+    
+    // Fallback: buscar acertos da última resposta válida se não existir no JSON atual
+    if (typeof dados.acertos !== 'number') {
+        const interacoesRecentes = await Interacao.findAll({
+            where: { telefone: sender, tipo: { [Op.like]: 'quiz_modulo2_pergunta_%' } },
+            order: [['createdAt', 'DESC']],
+            limit: 10
+        });
+        const ultimaComAcerto = interacoesRecentes.find(i => {
+            try {
+                const d = JSON.parse(i.mensagem || '{}');
+                return typeof d.acertos === 'number';
+            } catch { return false; }
+        });
+        if (ultimaComAcerto) {
+            const dadosAnteriores = JSON.parse(ultimaComAcerto.mensagem);
+            acertos = dadosAnteriores.acertos;
+            console.log(`🔄 Módulo 2 - Acertos recuperados do fallback: ${acertos}`);
+        }
+    }
     
     const respostaLimpa = extrairResposta(resposta);
     const pergunta = QUIZ_MODULO2_CONFIG.perguntas[perguntaAtual];
     const respostaCorreta = respostaLimpa === pergunta.respostaCorreta;
     
+    console.log(`📊 Quiz Módulo 2 - Pergunta ${perguntaAtual + 1}: Resposta="${respostaLimpa}", Correta="${pergunta.respostaCorreta}", Acerto=${respostaCorreta}, Acertos Antes=${acertos}`);
+    
     // Atualizar acertos se resposta estiver correta
     if (respostaCorreta) {
         acertos += 1;
     }
+    
+    console.log(`📊 Acertos após pergunta ${perguntaAtual + 1}: ${acertos}/${QUIZ_MODULO2_CONFIG.perguntas.length}`);
     
     await sendMessage(sender, 'send-message', {
         message: respostaCorreta ? pergunta.explicacao : `❌ Incorreto. A resposta correta é "${pergunta.respostaCorreta.toUpperCase()}".`,
@@ -653,7 +717,9 @@ async function processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessa
     }
     
     // Salvar acertos atualizados para próxima pergunta
-    await salvarInteracao(sender, `quiz_modulo2_pergunta_${proximaPergunta}`, JSON.stringify({ acertos: acertos, perguntaAtual: proximaPergunta }));
+    const dadosProximaPergunta = { acertos: acertos, perguntaAtual: proximaPergunta };
+    await salvarInteracao(sender, `quiz_modulo2_pergunta_${proximaPergunta}`, JSON.stringify(dadosProximaPergunta));
+    console.log(`💾 Módulo 2 - Salvando estado: ${JSON.stringify(dadosProximaPergunta)}`);
     await enviarPergunta(sender, proximaPergunta, QUIZ_MODULO2_CONFIG, 'quiz_modulo2', sendMessage);
     return true;
 }
