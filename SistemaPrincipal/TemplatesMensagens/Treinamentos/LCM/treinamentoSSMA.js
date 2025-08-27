@@ -1087,7 +1087,8 @@ async function gerarCertificadoSSMA(sender, contato, sendMessage) {
             caption: '🎓 Seu certificado de conclusão do treinamento SSMA'
         });
         
-        await salvarInteracao(sender, 'treinamento_concluido', 'ssma_completo');
+        // Salvar interação final para parar processamento
+        await salvarInteracao(sender, 'treinamento_concluido_final', 'ssma_completo_parar');
         
     } catch (error) {
         console.error('❌ Erro ao gerar certificado:', error);
