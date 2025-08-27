@@ -272,12 +272,17 @@ body {
   }
   
   .telefone-container {
-    flex-direction: column;
-    gap: 0.75rem;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
   }
   
   .telefone-container select {
-    width: 100%;
+    width: 100% !important;
+  }
+  
+  .telefone-container input {
+    width: 100% !important;
   }
   
   .btn-primary {
@@ -352,7 +357,13 @@ body {
   }
   
   .telefone-container {
-    gap: 0.5rem;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  
+  .telefone-container select,
+  .telefone-container input {
+    width: 100% !important;
   }
   
   .btn-primary {
