@@ -781,7 +781,7 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
 
      // Mensagem final do treinamento
      await sendMessage(sender, 'send-message', {
-        message: '🎉 *PARABÉNS! TREINAMENTO CONCLUÍDO COM SUCESSO!*\n\n🔧 *CERTIFICADO EM MANUTENÇÃO*\n\nNosso sistema de geração de certificados está temporariamente em manutenção pela equipe de desenvolvimento.\n\n✅ *Seu treinamento foi registrado com sucesso!*\n\n📬 *Em breve você receberá:*\n• Certificado digital aqui no chat\n• Certificado por e-mail no endereço cadastrado\n\n⏰ Sistema será normalizado em breve.\n\n🙏 Agradecemos sua compreensão e parabenizamos pela dedicação!',
+        message: '🔧 *CERTIFICADO EM MANUTENÇÃO*\n\nNosso sistema de geração de certificados está temporariamente em manutenção pela equipe de desenvolvimento.\n\n✅ *Seu treinamento foi registrado com sucesso!*\n\n📬 *Em breve você receberá:*\n• Certificado digital aqui no chat\n• Certificado por e-mail no endereço cadastrado\n\n⏰ Sistema será normalizado em breve.\n\n🙏 Agradecemos sua compreensão e parabenizamos pela dedicação!',
     });
     
     // Enviar mensagem de manutenção diretamente
