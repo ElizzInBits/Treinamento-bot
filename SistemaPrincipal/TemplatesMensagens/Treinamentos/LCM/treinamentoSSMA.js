@@ -83,15 +83,15 @@ const QUIZ_MODULO1_CONFIG = {
             explicacao: '✅ Correto! Os exames periódicos são feitos a cada 12 meses.'
         },
         {
-            pergunta: '6. Verdadeiro ou Falso: Posso trabalhar antes de fazer o treinamento de integração.',
+            pergunta: '6. Qual exame é obrigatório antes de iniciar o trabalho?',
             alternativas: {
-                a: 'Verdadeiro - posso trabalhar',
-                b: 'Falso - preciso do treinamento primeiro',
-                c: 'Verdadeiro - só em emergências',
-                d: 'Falso - apenas com supervisor'
+                a: 'Exame admissional',
+                b: 'Exame periódico',
+                c: 'Exame demissional',
+                d: 'Exame de retorno'
             },
-            respostaCorreta: 'b',
-            explicacao: '✅ Correto! Nenhum colaborador pode trabalhar sem treinamento adequado!'
+            respostaCorreta: 'a',
+            explicacao: '✅ Correto! O exame admissional deve ser feito antes de começar a trabalhar!'
         }
     ]
 };
