@@ -869,9 +869,12 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         }
     }
     
-    // Processar opções do menu
-    if (ultimaInteracao?.tipo === 'menu_opcoes' || ultimaInteracao?.tipo === 'recuperacao_treinamento') {
-        if (selectedId === 'reiniciar_treinamento_completo') {
+    // Processar opções do menu - CORRIGIDO
+    if (ultimaInteracao?.tipo === 'menu_opcoes' || ultimaInteracao?.tipo === 'recuperacao_treinamento' || 
+        text.toLowerCase().includes('reiniciar treinamento completo') || 
+        text.toLowerCase().includes('reiniciar módulo')) {
+        
+        if (selectedId === 'reiniciar_treinamento_completo' || text.toLowerCase().includes('reiniciar treinamento completo')) {
             await sendMessage(sender, 'send-message', {
                 message: '🔄 Reiniciando treinamento completo...'
             });
@@ -879,7 +882,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
             return true;
         }
         
-        if (selectedId === 'reiniciar_modulo1') {
+        if (selectedId === 'reiniciar_modulo1' || text.toLowerCase().includes('reiniciar módulo 1')) {
             await sendMessage(sender, 'send-message', {
                 message: '📖 Reiniciando Módulo 1...'
             });
@@ -887,7 +890,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
             return true;
         }
         
-        if (selectedId === 'reiniciar_modulo2') {
+        if (selectedId === 'reiniciar_modulo2' || text.toLowerCase().includes('reiniciar módulo 2')) {
             await sendMessage(sender, 'send-message', {
                 message: '🛡️ Reiniciando Módulo 2...'
             });
@@ -895,7 +898,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
             return true;
         }
         
-        if (selectedId === 'continuar_normal') {
+        if (selectedId === 'continuar_normal' || text.toLowerCase().includes('continuar normalmente')) {
             await sendMessage(sender, 'send-message', {
                 message: '▶️ Continuando treinamento normalmente...'
             });
