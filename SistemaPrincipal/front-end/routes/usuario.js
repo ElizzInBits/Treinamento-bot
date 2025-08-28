@@ -108,7 +108,8 @@ router.put('/atualizar', async (req, res) => {
         await usuario.update({
             nome: nomeCompleto || usuario.nome,
             email: email || usuario.email,
-            telefone: telefone || usuario.telefone
+            telefone: telefone || usuario.telefone,
+            nomeEmpresa: nomeEmpresa || usuario.nomeEmpresa
         });
         
         // Emitir evento WebSocket para atualização em tempo real
