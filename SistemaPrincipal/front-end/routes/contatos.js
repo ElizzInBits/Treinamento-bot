@@ -3,9 +3,9 @@ const router = express.Router();
 const { Contato, Empresa } = require('../../BancoDeDados/models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../../BancoDeDados/database');
-// Função temporária para notificações (substituir por Firebase quando configurado)
-const notificarNovoCadastro = async (contato) => {
-    console.log('📱 NOTIFICAÇÃO GOOGLE (simulada):', {
+// Função para notificações do navegador
+const notificarNovoCadastro = async (contato, io) => {
+    const notificacao = {
         titulo: '🆕 Novo Cadastro Realizado',
         mensagem: `${contato.nome} se cadastrou no sistema de treinamentos`,
         dados: {
@@ -13,9 +13,17 @@ const notificarNovoCadastro = async (contato) => {
             contatoId: contato.id,
             nome: contato.nome,
             telefone: contato.telefone,
-            email: contato.email
+            email: contato.email,
+            timestamp: new Date().toISOString()
         }
-    });
+    };
+    
+    console.log('📱 NOTIFICAÇÃO BROWSER:', notificacao);
+    
+    // Enviar via WebSocket para o frontend mostrar notificação do navegador
+    if (io) {
+        io.emit('browser-notification', notificacao);
+    }
 };
 
 // Função para limpar número (mesma do seu código)
@@ -282,8 +290,8 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // Enviar notificação do Google
-        await notificarNovoCadastro(novoContato);
+        // Enviar notificação do navegador
+        await notificarNovoCadastro(novoContato, io);
 
         res.status(201).json({
             message: 'Contato cadastrado com sucesso',
