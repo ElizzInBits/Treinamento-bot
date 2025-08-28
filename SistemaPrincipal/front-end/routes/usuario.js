@@ -62,7 +62,7 @@ router.post('/login', async (req, res) => {
                     email: usuario.email,
                     telefone: usuario.telefone,
                     ddi: '+55',
-                    nomeEmpresa: usuario.empresaRef?.razaoSocial || 'Não informado'
+                    nomeEmpresa: usuario.nomeEmpresa || usuario.empresaRef?.razaoSocial || 'Não informado'
                 }
             });
         } else {
