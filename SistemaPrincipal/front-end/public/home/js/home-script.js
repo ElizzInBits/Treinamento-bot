@@ -109,6 +109,40 @@ if (socket) {
       });
     }
   });
+  
+  socket.on('contatoAtualizado', (data) => {
+    console.log('Contato atualizado via WebSocket:', data.contato);
+    
+    // Atualizar contato na lista local
+    const index = contatos.findIndex(c => c.id === data.contato.id);
+    if (index !== -1) {
+      contatos[index] = {
+        ...contatos[index],
+        ...data.contato,
+        id: parseInt(data.contato.id, 10),
+        empresaId: parseInt(data.contato.empresaId, 10),
+        treinamentoId: data.contato.treinamentoId ? parseInt(data.contato.treinamentoId, 10) : null
+      };
+    }
+    
+    // Atualizar estatísticas
+    atualizarEstatisticasMapeamento();
+    atualizarEstatisticasEmpresas();
+    
+    // Atualizar visualizações se estiverem ativas
+    if (document.getElementById('empresas').classList.contains('active')) {
+      renderizarEmpresas();
+    }
+    
+    // Atualizar modal de contatos da empresa se estiver aberto
+    if (empresaSelecionada && data.contato.empresaId === empresaSelecionada.id) {
+      const contatoIndex = contatosEmpresaSelecionada.findIndex(c => c.id === data.contato.id);
+      if (contatoIndex !== -1) {
+        contatosEmpresaSelecionada[contatoIndex] = data.contato;
+        renderizarContatosEmpresa();
+      }
+    }
+  });
 }
 
 // Solicitar permissão para notificações
