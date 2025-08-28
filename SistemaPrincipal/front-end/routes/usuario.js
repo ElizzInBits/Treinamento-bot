@@ -32,7 +32,7 @@ function salvarContatos(contatos) {
 }
 
 // Rota para login do usuário
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
     const { email, cpf } = req.body;
     
     if (!email || !cpf) {
@@ -42,26 +42,46 @@ router.post('/login', (req, res) => {
         });
     }
     
-    const contatos = lerContatos();
-    const usuario = contatos.find(c => 
-        c.email === email && c.cpf === cpf.replace(/\D/g, '')
-    );
-    
-    if (usuario) {
-        res.json({
-            success: true,
-            usuario: usuario
+    try {
+        // Buscar no banco de dados Sequelize
+        const { Contato } = require('../../BancoDeDados/models');
+        const usuario = await Contato.findOne({
+            where: {
+                email: email,
+                cpf: cpf.replace(/\D/g, '')
+            },
+            include: ['empresaRef']
         });
-    } else {
-        res.status(404).json({
+        
+        if (usuario) {
+            res.json({
+                success: true,
+                usuario: {
+                    nomeCompleto: usuario.nome,
+                    cpf: usuario.cpf,
+                    email: usuario.email,
+                    telefone: usuario.telefone,
+                    ddi: '+55',
+                    nomeEmpresa: usuario.empresaRef?.razaoSocial || 'Não informado'
+                }
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: 'Usuário não encontrado'
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao buscar usuário:', error);
+        res.status(500).json({
             success: false,
-            message: 'Usuário não encontrado'
+            message: 'Erro interno do servidor'
         });
     }
 });
 
 // Rota para atualizar dados do usuário
-router.put('/atualizar', (req, res) => {
+router.put('/atualizar', async (req, res) => {
     const { cpf, nomeCompleto, email, telefone, nomeEmpresa } = req.body;
     
     if (!cpf) {
@@ -71,35 +91,42 @@ router.put('/atualizar', (req, res) => {
         });
     }
     
-    const contatos = lerContatos();
-    const index = contatos.findIndex(c => c.cpf === cpf.replace(/\D/g, ''));
-    
-    if (index === -1) {
-        return res.status(404).json({
-            success: false,
-            message: 'Usuário não encontrado'
+    try {
+        const { Contato } = require('../../BancoDeDados/models');
+        const usuario = await Contato.findOne({
+            where: { cpf: cpf.replace(/\D/g, '') }
         });
-    }
-    
-    // Atualizar dados
-    contatos[index] = {
-        ...contatos[index],
-        nomeCompleto: nomeCompleto || contatos[index].nomeCompleto,
-        email: email || contatos[index].email,
-        telefone: telefone || contatos[index].telefone,
-        nomeEmpresa: nomeEmpresa || contatos[index].nomeEmpresa
-    };
-    
-    if (salvarContatos(contatos)) {
+        
+        if (!usuario) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuário não encontrado'
+            });
+        }
+        
+        // Atualizar dados
+        await usuario.update({
+            nome: nomeCompleto || usuario.nome,
+            email: email || usuario.email,
+            telefone: telefone || usuario.telefone
+        });
+        
         res.json({
             success: true,
             message: 'Dados atualizados com sucesso',
-            usuario: contatos[index]
+            usuario: {
+                nomeCompleto: usuario.nome,
+                cpf: usuario.cpf,
+                email: usuario.email,
+                telefone: usuario.telefone,
+                nomeEmpresa: nomeEmpresa
+            }
         });
-    } else {
+    } catch (error) {
+        console.error('Erro ao atualizar usuário:', error);
         res.status(500).json({
             success: false,
-            message: 'Erro ao salvar dados'
+            message: 'Erro interno do servidor'
         });
     }
 });
