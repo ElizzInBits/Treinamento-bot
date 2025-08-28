@@ -19,10 +19,15 @@ const notificarNovoCadastro = async (contato, io) => {
     };
     
     console.log('📱 NOTIFICAÇÃO BROWSER:', notificacao);
+    console.log('🔌 WebSocket IO disponível:', !!io);
     
     // Enviar via WebSocket para o frontend mostrar notificação do navegador
     if (io) {
+        console.log('📡 Enviando browser-notification via WebSocket');
         io.emit('browser-notification', notificacao);
+        console.log('✅ browser-notification enviada');
+    } else {
+        console.log('❌ WebSocket IO não disponível');
     }
 };
 
