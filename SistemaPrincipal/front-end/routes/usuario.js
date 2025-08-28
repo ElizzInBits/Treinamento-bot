@@ -1,87 +1,107 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const Usuario = require('../BancoDeDados/models/Usuario');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 
-// Middleware de autenticação
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+// Caminho para o arquivo de contatos
+const contatosPath = path.join(__dirname, '..', '..', 'BancoDeDados', 'contatos.json');
 
-  if (!token) {
-    return res.status(401).json({ error: 'Token de acesso requerido' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET || 'secret-key', (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Token inválido' });
+// Função para ler contatos
+function lerContatos() {
+    try {
+        if (fs.existsSync(contatosPath)) {
+            const data = fs.readFileSync(contatosPath, 'utf8');
+            return JSON.parse(data);
+        }
+        return [];
+    } catch (error) {
+        console.error('Erro ao ler contatos:', error);
+        return [];
     }
-    req.user = user;
-    next();
-  });
 }
 
-// GET /api/usuario/perfil - Obter dados do perfil
-router.get('/perfil', authenticateToken, async (req, res) => {
-  try {
-    // Para o sistema atual, vamos retornar dados do admin logado
-    const usuario = {
-      id: 1,
-      nome: req.user.username || 'Administrador',
-      email: 'admin@sistema.com',
-      telefone: '',
-      cargo: 'Administrador do Sistema',
-      created_at: new Date()
-    };
+// Função para salvar contatos
+function salvarContatos(contatos) {
+    try {
+        fs.writeFileSync(contatosPath, JSON.stringify(contatos, null, 2));
+        return true;
+    } catch (error) {
+        console.error('Erro ao salvar contatos:', error);
+        return false;
+    }
+}
+
+// Rota para login do usuário
+router.post('/login', (req, res) => {
+    const { email, cpf } = req.body;
     
-    res.json(usuario);
-  } catch (error) {
-    console.error('Erro ao obter perfil:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
+    if (!email || !cpf) {
+        return res.status(400).json({
+            success: false,
+            message: 'Email e CPF são obrigatórios'
+        });
+    }
+    
+    const contatos = lerContatos();
+    const usuario = contatos.find(c => 
+        c.email === email && c.cpf === cpf.replace(/\D/g, '')
+    );
+    
+    if (usuario) {
+        res.json({
+            success: true,
+            usuario: usuario
+        });
+    } else {
+        res.status(404).json({
+            success: false,
+            message: 'Usuário não encontrado'
+        });
+    }
 });
 
-// PUT /api/usuario/perfil - Atualizar dados do perfil
-router.put('/perfil', authenticateToken, async (req, res) => {
-  try {
-    const { nome, email, telefone, cargo, senhaAtual, novaSenha } = req.body;
+// Rota para atualizar dados do usuário
+router.put('/atualizar', (req, res) => {
+    const { cpf, nomeCompleto, email, telefone, nomeEmpresa } = req.body;
     
-    if (!nome || !email) {
-      return res.status(400).json({ error: 'Nome e email são obrigatórios' });
+    if (!cpf) {
+        return res.status(400).json({
+            success: false,
+            message: 'CPF é obrigatório para identificar o usuário'
+        });
     }
     
-    // Para o sistema atual, vamos apenas validar a senha se fornecida
-    if (novaSenha) {
-      if (!senhaAtual) {
-        return res.status(400).json({ error: 'Senha atual é obrigatória para alterar a senha' });
-      }
-      
-      // Verificar se a senha atual é a senha do admin
-      const senhaAdmin = process.env.ADMIN_PASSWORD || 'maduroabacaxi';
-      if (senhaAtual !== senhaAdmin) {
-        return res.status(400).json({ error: 'Senha atual incorreta' });
-      }
-      
-      if (novaSenha.length < 6) {
-        return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres' });
-      }
-      
-      // Por enquanto, apenas simular a atualização
-      console.log('Nova senha seria:', novaSenha);
-      return res.json({ 
-        message: 'Perfil atualizado com sucesso! Para alterar a senha do sistema, atualize a variável ADMIN_PASSWORD no arquivo .env' 
-      });
+    const contatos = lerContatos();
+    const index = contatos.findIndex(c => c.cpf === cpf.replace(/\D/g, ''));
+    
+    if (index === -1) {
+        return res.status(404).json({
+            success: false,
+            message: 'Usuário não encontrado'
+        });
     }
     
-    // Simular atualização dos dados
-    console.log('Dados atualizados:', { nome, email, telefone, cargo });
-    res.json({ message: 'Perfil atualizado com sucesso!' });
+    // Atualizar dados
+    contatos[index] = {
+        ...contatos[index],
+        nomeCompleto: nomeCompleto || contatos[index].nomeCompleto,
+        email: email || contatos[index].email,
+        telefone: telefone || contatos[index].telefone,
+        nomeEmpresa: nomeEmpresa || contatos[index].nomeEmpresa
+    };
     
-  } catch (error) {
-    console.error('Erro ao atualizar perfil:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
+    if (salvarContatos(contatos)) {
+        res.json({
+            success: true,
+            message: 'Dados atualizados com sucesso',
+            usuario: contatos[index]
+        });
+    } else {
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao salvar dados'
+        });
+    }
 });
 
 module.exports = router;
