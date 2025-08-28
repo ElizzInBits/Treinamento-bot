@@ -347,12 +347,12 @@ app.get('/empre', (req, res) => {
 });
 
 app.get('/usuario-login', (req, res) => {
-    const usuarioLoginPath = path.join(publicPath, 'usuario-login.html');
+    const usuarioLoginPath = path.join(publicPath, 'usuario', 'login.html');
     fs.existsSync(usuarioLoginPath) ? res.sendFile(usuarioLoginPath) : res.json({ error: 'Página de login do usuário não encontrada' });
 });
 
 app.get('/usuario-painel', (req, res) => {
-    const usuarioPainelPath = path.join(publicPath, 'usuario-painel.html');
+    const usuarioPainelPath = path.join(publicPath, 'usuario', 'painel.html');
     fs.existsSync(usuarioPainelPath) ? res.sendFile(usuarioPainelPath) : res.json({ error: 'Painel do usuário não encontrado' });
 });
 
