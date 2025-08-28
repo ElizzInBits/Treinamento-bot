@@ -13,17 +13,17 @@ function mostrarModalInstrucoes(titulo, tipo) {
       <h3>🔒 Notificações Bloqueadas</h3>
       <p>Para ativar as notificações, siga os passos:</p>
       <div style="text-align: left; margin: 20px 0;">
-        <h4>🔧 Chrome/Edge:</h4>
+        <h4>🔧 Para qualquer navegador:</h4>
         <ol>
-          <li>Clique no ícone de <strong>cadeado</strong> na barra de endereço</li>
-          <li>Altere "Notificações" para <strong>"Permitir"</strong></li>
-          <li>Recarregue a página</li>
+          <li>Clique no ícone de <strong>cadeado ou escudo</strong> na barra de endereço</li>
+          <li>Procure por "Notificações" e altere para <strong>"Permitir"</strong></li>
+          <li>Recarregue a página e teste novamente</li>
         </ol>
-        <h4>🦊 Firefox:</h4>
+        <p><strong>Ou:</strong></p>
         <ol>
-          <li>Clique no ícone de <strong>escudo</strong> na barra de endereço</li>
-          <li>Desative o bloqueio de notificações</li>
-          <li>Recarregue a página</li>
+          <li>Acesse as configurações do navegador</li>
+          <li>Procure por "Notificações" ou "Privacidade"</li>
+          <li>Adicione este site à lista de permitidos</li>
         </ol>
       </div>
     `;
@@ -65,30 +65,28 @@ function mostrarModalInstrucoes(titulo, tipo) {
 // Função para testar notificações
 async function testarNotificacoes() {
   if (!('Notification' in window)) {
-    mostrarModalInstrucoes('Seu navegador não suporta notificações.', 'erro');
+    alert('❌ Seu navegador não suporta notificações.');
     return;
   }
   
-  if (Notification.permission === 'denied') {
-    mostrarModalInstrucoes('Notificações foram bloqueadas pelo navegador.', 'bloqueado');
-    return;
-  }
-  
-  if (Notification.permission === 'default') {
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      mostrarModalInstrucoes('Permissão negada.', 'negado');
-      return;
-    }
-  }
-  
+  // Forçar solicitação de permissão sempre
   try {
-    new Notification('🧪 Teste de Notificação', {
-      body: 'Se você está vendo isso, as notificações estão funcionando!',
-      icon: '/home/Imagens/logo.png'
-    });
-    alert('✅ Notificação de teste enviada! Verifique se apareceu no canto da tela.');
+    const permission = await Notification.requestPermission();
+    
+    if (permission === 'granted') {
+      // Testar notificação imediatamente
+      new Notification('🎉 Notificações Ativadas!', {
+        body: 'Agora você receberá alertas de novos cadastros.',
+        icon: '/home/Imagens/logo.png'
+      });
+      alert('✅ Notificações ativadas com sucesso!');
+    } else if (permission === 'denied') {
+      mostrarModalInstrucoes('Notificações bloqueadas', 'bloqueado');
+    } else {
+      alert('⚠️ Você precisa permitir as notificações quando solicitado.');
+    }
   } catch (error) {
-    alert('❌ Erro ao enviar notificação: ' + error.message);
+    console.error('Erro:', error);
+    mostrarModalInstrucoes('Erro ao solicitar permissão', 'bloqueado');
   }
 }
