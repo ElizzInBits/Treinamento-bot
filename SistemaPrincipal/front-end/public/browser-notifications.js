@@ -136,6 +136,55 @@ class BrowserNotifications {
     isEnabled() {
         return this.permission === 'granted';
     }
+    
+    // Mostrar instruções para ativar notificações
+    showInstructions() {
+        const userAgent = navigator.userAgent;
+        let instructions = '';
+        
+        if (userAgent.includes('Chrome')) {
+            instructions = `
+🔔 **Como ativar notificações no Chrome:**
+
+1. Clique no ícone de cadeado 🔒 na barra de endereços
+2. Clique em "Notificações"
+3. Selecione "Permitir"
+4. Recarregue a página
+
+OU
+
+1. Vá em Configurações > Privacidade e segurança > Configurações do site
+2. Clique em "Notificações"
+3. Adicione este site à lista de permitidos`;
+        } else if (userAgent.includes('Firefox')) {
+            instructions = `
+🔔 **Como ativar notificações no Firefox:**
+
+1. Clique no ícone de escudo 🛡️ na barra de endereços
+2. Clique em "Notificações bloqueadas"
+3. Selecione "Permitir"
+4. Recarregue a página`;
+        } else if (userAgent.includes('Safari')) {
+            instructions = `
+🔔 **Como ativar notificações no Safari:**
+
+1. Vá em Safari > Preferências
+2. Clique na aba "Sites"
+3. Selecione "Notificações" na barra lateral
+4. Encontre este site e altere para "Permitir"`;
+        } else {
+            instructions = `
+🔔 **Como ativar notificações:**
+
+1. Procure o ícone de notificações na barra de endereços
+2. Clique e selecione "Permitir"
+3. Recarregue a página
+
+Ou vá nas configurações do navegador e permita notificações para este site.`;
+        }
+        
+        return instructions;
+    }
 }
 
 // Inicializar sistema de notificações
