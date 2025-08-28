@@ -346,6 +346,16 @@ app.get('/empre', (req, res) => {
     fs.existsSync(emprePath) ? res.sendFile(emprePath) : res.json({ error: 'Painel 3 não encontrado', path: emprePath });
 });
 
+app.get('/usuario-login', (req, res) => {
+    const usuarioLoginPath = path.join(publicPath, 'usuario-login.html');
+    fs.existsSync(usuarioLoginPath) ? res.sendFile(usuarioLoginPath) : res.json({ error: 'Página de login do usuário não encontrada' });
+});
+
+app.get('/usuario-painel', (req, res) => {
+    const usuarioPainelPath = path.join(publicPath, 'usuario-painel.html');
+    fs.existsSync(usuarioPainelPath) ? res.sendFile(usuarioPainelPath) : res.json({ error: 'Painel do usuário não encontrado' });
+});
+
 // ✅ 10. Middleware de erro
 app.use((err, req, res, next) => {
     // Tratar erros de parsing JSON especificamente
