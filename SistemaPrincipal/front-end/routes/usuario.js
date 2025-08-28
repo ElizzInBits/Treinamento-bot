@@ -111,6 +111,15 @@ router.put('/atualizar', async (req, res) => {
             telefone: telefone || usuario.telefone
         });
         
+        // Emitir evento WebSocket para atualização em tempo real
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('contatoAtualizado', {
+                contato: usuario,
+                empresaId: usuario.empresaId
+            });
+        }
+        
         res.json({
             success: true,
             message: 'Dados atualizados com sucesso',
