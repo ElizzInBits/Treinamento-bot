@@ -138,13 +138,27 @@ class BrowserNotifications {
     }
 }
 
-// Inicializar sistema de notificações quando a página carregar
+// Inicializar sistema de notificações
 let browserNotifications;
 
-document.addEventListener('DOMContentLoaded', () => {
-    browserNotifications = new BrowserNotifications();
-});
+// Função para inicializar
+function initBrowserNotifications() {
+    try {
+        browserNotifications = new BrowserNotifications();
+        window.browserNotifications = browserNotifications;
+        console.log('✅ Sistema de notificações inicializado');
+    } catch (error) {
+        console.error('❌ Erro ao inicializar notificações:', error);
+    }
+}
+
+// Inicializar quando DOM estiver pronto
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBrowserNotifications);
+} else {
+    // DOM já carregado
+    initBrowserNotifications();
+}
 
 // Exportar para uso global
 window.BrowserNotifications = BrowserNotifications;
-window.browserNotifications = browserNotifications;

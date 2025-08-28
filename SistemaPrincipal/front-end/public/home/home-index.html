@@ -195,6 +195,10 @@
               <span style="font-size: 1.2rem;">🏢</span>
               Cadastrar Nova Empresa
             </button>
+            <button class="btn-icon" onclick="testarNotificacoes()" title="Testar notificações" style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; font-size: 1rem;">
+              <span style="font-size: 1.2rem;">🔔</span>
+              Testar Notificações
+            </button>
           </div>
 
           <div class="loading-container" id="loadingEmpresas">
@@ -546,6 +550,33 @@
           } else {
             alert('Sistema de notificações não disponível.');
           }
+        }
+        
+        // Função para testar notificações
+        async function testarNotificacoes() {
+          console.log('Testando notificações...');
+          
+          if (!window.browserNotifications) {
+            alert('❌ Sistema de notificações não carregado. Recarregue a página.');
+            return;
+          }
+          
+          if (!window.browserNotifications.isEnabled()) {
+            const ativado = await window.browserNotifications.enableNotifications();
+            if (!ativado) {
+              alert('❌ Permissão negada. Ative as notificações nas configurações do navegador.');
+              return;
+            }
+          }
+          
+          // Testar notificação
+          window.browserNotifications.showNotification(
+            '🆕 Teste de Notificação',
+            'Se você está vendo isso, as notificações estão funcionando!',
+            { tipo: 'teste' }
+          );
+          
+          alert('✅ Notificação de teste enviada!');
         }
       </script>
 
