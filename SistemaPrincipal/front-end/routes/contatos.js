@@ -3,7 +3,20 @@ const router = express.Router();
 const { Contato, Empresa } = require('../../BancoDeDados/models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../../BancoDeDados/database');
-const { notificarNovoCadastro } = require('../Notificacoes/googleNotifications');
+// Função temporária para notificações (substituir por Firebase quando configurado)
+const notificarNovoCadastro = async (contato) => {
+    console.log('📱 NOTIFICAÇÃO GOOGLE (simulada):', {
+        titulo: '🆕 Novo Cadastro Realizado',
+        mensagem: `${contato.nome} se cadastrou no sistema de treinamentos`,
+        dados: {
+            tipo: 'novo_cadastro',
+            contatoId: contato.id,
+            nome: contato.nome,
+            telefone: contato.telefone,
+            email: contato.email
+        }
+    });
+};
 
 // Função para limpar número (mesma do seu código)
 function limparNumero(numero) {
