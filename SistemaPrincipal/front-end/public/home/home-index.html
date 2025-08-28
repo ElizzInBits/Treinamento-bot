@@ -509,6 +509,7 @@
       <script src="../inactivity-manager.js"></script>
       <script src="../auth.js"></script>
       <script src="/socket.io/socket.io.js"></script>
+      <script src="../browser-notifications.js"></script>
       <script src="js/config.js"></script>
       <script src="js/home-script.js"></script>
       <script>
@@ -528,6 +529,24 @@
         }
         setInterval(atualizarRelogio, 1000);
         atualizarRelogio();
+        
+        // Função para ativar/desativar notificações
+        async function toggleNotificacoes() {
+          if (window.browserNotifications) {
+            if (window.browserNotifications.isEnabled()) {
+              alert('Notificações já estão ativadas!');
+            } else {
+              const ativado = await window.browserNotifications.enableNotifications();
+              if (ativado) {
+                alert('✅ Notificações ativadas! Você receberá alertas de novos cadastros.');
+              } else {
+                alert('❌ Não foi possível ativar as notificações. Verifique as configurações do navegador.');
+              }
+            }
+          } else {
+            alert('Sistema de notificações não disponível.');
+          }
+        }
       </script>
 
 
