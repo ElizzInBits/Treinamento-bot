@@ -121,6 +121,20 @@ try {
     });
 }
 
+// 👤 Usuário
+let usuarioRoutes;
+try {
+    console.log('👤 Carregando rota de usuário...');
+    usuarioRoutes = require('./routes/usuario.js');
+    console.log('✅ Rota de usuário carregada com sucesso');
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de usuário:', error.message);
+    usuarioRoutes = express.Router();
+    usuarioRoutes.get('/', (req, res) => {
+        res.json({ error: 'Rota de usuário não pôde ser carregada', message: error.message });
+    });
+}
+
 // ✅ 6. Sistema de autenticação
 const jwt = require('jsonwebtoken');
 const SECRET_KEY = process.env.JWT_SECRET || 'admin-secret-key-2024';
@@ -196,6 +210,7 @@ app.use('/api/treinamentos', (req, res, next) => {
     authenticateToken(req, res, next);
 }, treinamentosRoutes);
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
+app.use('/api/usuario', usuarioRoutes);
 
 // ✅ 7. Servir mídia (uploads) estáticos
 const midiaPath = path.join(__dirname, '..', 'media', 'treinamentos');
