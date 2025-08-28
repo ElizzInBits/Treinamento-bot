@@ -41,6 +41,10 @@
               <span class="icon">📊</span>
               Exportar Dados
             </button>
+            <button class="btn-secondary" onclick="abrirPerfilUsuario()" title="Meu Perfil">
+              <span class="icon">👤</span>
+              Perfil
+            </button>
           </div>
           <button class="btn-logout" onclick="logout()" title="Sair do sistema">
             <span class="icon">🚪</span>
@@ -509,6 +513,68 @@
         </div>
       </div>
 
+      <!-- Modal de Perfil do Usuário -->
+      <div id="modalPerfilUsuario" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3>👤 Meu Perfil</h3>
+            <button class="modal-close" onclick="fecharModalPerfil()">X</button>
+          </div>
+          <div class="modal-content">
+            <form id="perfilUsuarioForm" class="professional-form">
+              <div class="form-section">
+                <h4>📝 Informações Pessoais</h4>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="perfilNome">Nome Completo <span class="required">*</span></label>
+                    <input type="text" id="perfilNome" class="form-control" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="perfilEmail">Email <span class="required">*</span></label>
+                    <input type="email" id="perfilEmail" class="form-control" required />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="perfilTelefone">Telefone</label>
+                    <input type="text" id="perfilTelefone" class="form-control" placeholder="(00) 00000-0000" />
+                  </div>
+                  <div class="form-group">
+                    <label for="perfilCargo">Cargo</label>
+                    <input type="text" id="perfilCargo" class="form-control" placeholder="Ex: Administrador" />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-section">
+                <h4>🔒 Alterar Senha</h4>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="senhaAtual">Senha Atual</label>
+                    <input type="password" id="senhaAtual" class="form-control" />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="novaSenha">Nova Senha</label>
+                    <input type="password" id="novaSenha" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="confirmarSenha">Confirmar Nova Senha</label>
+                    <input type="password" id="confirmarSenha" class="form-control" />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="fecharModalPerfil()">Cancelar</button>
+                <button type="submit" class="btn-primary">Salvar Alterações</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
       <!-- Scripts -->
       <script src="../inactivity-manager.js"></script>
       <script src="../auth.js"></script>
@@ -578,6 +644,99 @@
           
           alert('Notificação de teste enviada!');
         }
+        
+        // Funções do perfil do usuário
+        async function abrirPerfilUsuario() {
+          try {
+            const response = await authenticatedFetch('/api/usuario/perfil');
+            const usuario = await response.json();
+            
+            document.getElementById('perfilNome').value = usuario.nome || '';
+            document.getElementById('perfilEmail').value = usuario.email || '';
+            document.getElementById('perfilTelefone').value = usuario.telefone || '';
+            document.getElementById('perfilCargo').value = usuario.cargo || '';
+            
+            document.getElementById('modalPerfilUsuario').style.display = 'block';
+          } catch (error) {
+            console.error('Erro ao carregar perfil:', error);
+            alert('Erro ao carregar dados do perfil.');
+          }
+        }
+        
+        function fecharModalPerfil() {
+          document.getElementById('modalPerfilUsuario').style.display = 'none';
+          document.getElementById('perfilUsuarioForm').reset();
+        }
+        
+        // Submissão do formulário de perfil
+        document.addEventListener('DOMContentLoaded', function() {
+          const form = document.getElementById('perfilUsuarioForm');
+          if (form) {
+            form.addEventListener('submit', async function(e) {
+              e.preventDefault();
+              
+              const dados = {
+                nome: document.getElementById('perfilNome').value.trim(),
+                email: document.getElementById('perfilEmail').value.trim(),
+                telefone: document.getElementById('perfilTelefone').value.trim(),
+                cargo: document.getElementById('perfilCargo').value.trim()
+              };
+              
+              const senhaAtual = document.getElementById('senhaAtual').value;
+              const novaSenha = document.getElementById('novaSenha').value;
+              const confirmarSenha = document.getElementById('confirmarSenha').value;
+              
+              if (novaSenha || confirmarSenha) {
+                if (!senhaAtual) {
+                  alert('Digite a senha atual para alterar a senha.');
+                  return;
+                }
+                if (novaSenha !== confirmarSenha) {
+                  alert('As senhas não coincidem.');
+                  return;
+                }
+                if (novaSenha.length < 6) {
+                  alert('A nova senha deve ter pelo menos 6 caracteres.');
+                  return;
+                }
+                dados.senhaAtual = senhaAtual;
+                dados.novaSenha = novaSenha;
+              }
+              
+              try {
+                const response = await authenticatedFetch('/api/usuario/perfil', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(dados)
+                });
+                
+                if (response.ok) {
+                  alert('Perfil atualizado com sucesso!');
+                  fecharModalPerfil();
+                } else {
+                  const error = await response.json();
+                  alert(error.message || 'Erro ao atualizar perfil.');
+                }
+              } catch (error) {
+                console.error('Erro ao atualizar perfil:', error);
+                alert('Erro ao atualizar perfil.');
+              }
+            });
+          }
+        });
+        
+        // Máscara para telefone no perfil
+        document.addEventListener('input', function(e) {
+          if (e.target.id === 'perfilTelefone') {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length === 11) {
+              value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            } else if (value.length === 10) {
+              value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+            }
+            e.target.value = value;
+          }
+        });
       </script>
 
 
