@@ -10,7 +10,7 @@ const SSLConfig = require('./ssl-config');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const HTTPS_PORT = process.env.HTTPS_PORT || 443;
+const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
 const SSL_ENABLED = process.env.SSL_ENABLED === 'true' || false;
 
 // Configuração SSL
