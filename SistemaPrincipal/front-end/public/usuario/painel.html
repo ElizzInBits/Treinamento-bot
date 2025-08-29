@@ -102,8 +102,7 @@
             userData = JSON.parse(storedData);
             displayUserData();
         });
-
-        function displayUserData() {
+         function displayUserData() {
             document.getElementById('viewNome').textContent = userData.nomeCompleto || '-';
             document.getElementById('viewCpf').textContent = formatCpf(userData.cpf) || '-';
             document.getElementById('viewEmail').textContent = userData.email || '-';
