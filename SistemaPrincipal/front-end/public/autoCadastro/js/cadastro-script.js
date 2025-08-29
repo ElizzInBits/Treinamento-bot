@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('📝 Dados sendo enviados:', novoUsuario);
 
-    fetch('http://72.60.48.249:3000/api/contatos', {
+    fetch('https://salubrita-bot.ddns.net/api/contatos', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

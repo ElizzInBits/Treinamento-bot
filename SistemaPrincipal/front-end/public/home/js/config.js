@@ -1,7 +1,7 @@
 // Configuração de URLs para o servidor
 const CONFIG = {
-  API_BASE_URL: 'http://72.60.48.249:3000/api',
-  WEBSOCKET_URL: 'http://72.60.48.249:3000'
+  API_BASE_URL: 'https://salubrita-bot.ddns.net/api',
+  WEBSOCKET_URL: 'https://salubrita-bot.ddns.net'
 };
 
 // Substituir todas as URLs hardcoded
