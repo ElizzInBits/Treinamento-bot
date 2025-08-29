@@ -4,17 +4,47 @@ const path = require('path');
 const express = require('express');
 const fs = require('fs');
 const http = require('http');
+const https = require('https');
 const { Server } = require('socket.io');
+const SSLConfig = require('./ssl-config');
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
+const PORT = process.env.PORT || 3000;
+const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
+const SSL_ENABLED = process.env.SSL_ENABLED === 'true' || false;
+
+// Configuração SSL
+const sslConfig = new SSLConfig();
+let server, httpsServer;
+
+// Criar servidores HTTP e HTTPS
+if (SSL_ENABLED && sslConfig.certificatesExist()) {
+    // Servidor HTTPS principal
+    const sslOptions = sslConfig.getSSLOptions();
+    httpsServer = https.createServer(sslOptions, app);
+    
+    // Servidor HTTP para redirecionamento
+    const httpApp = express();
+    httpApp.use((req, res) => {
+        const httpsUrl = `https://${req.headers.host.replace(':' + PORT, ':' + HTTPS_PORT)}${req.url}`;
+        res.redirect(301, httpsUrl);
+    });
+    server = http.createServer(httpApp);
+    
+    console.log('🔒 SSL habilitado - servidor HTTPS ativo');
+} else {
+    // Servidor HTTP padrão
+    server = http.createServer(app);
+    console.log('🔓 SSL desabilitado - servidor HTTP ativo');
+}
+
+// Socket.IO no servidor principal
+const io = new Server(httpsServer || server, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
     }
 });
-const PORT = process.env.PORT || 3000;
 
 // WebSocket para atualizações em tempo real
 io.on('connection', (socket) => {
@@ -395,17 +425,42 @@ async function iniciarServidor() {
     try {
         console.log('🚀 Iniciando servidor...');
 
-        server.listen(PORT, '0.0.0.0', () => {
-            const serverIP = process.env.FRONTEND_URL || 'http://72.60.48.249:3000';
-            console.log(`✅ Servidor rodando na porta ${PORT}`);
-            console.log(`🔗 Teste: ${serverIP}/test`);
-            console.log(`📱 Painel 1: ${serverIP}/home`);
-            console.log(`📱 Painel 2: ${serverIP}/autoCadastro`);
-            console.log(`📱 Painel 3: ${serverIP}/empre`);
-            console.log(`🔗 API Contatos: ${serverIP}/api/contatos`);
-            console.log(`🔗 API Treinamentos: ${serverIP}/api/treinamentos`);
-            console.log(`🔗 API Empresas: ${serverIP}/api/empresas`);
-        });
+        if (SSL_ENABLED && httpsServer) {
+            // Iniciar servidor HTTPS
+            httpsServer.listen(HTTPS_PORT, '0.0.0.0', () => {
+                const serverIP = process.env.FRONTEND_URL || `https://72.60.48.249:${HTTPS_PORT}`;
+                console.log(`✅ Servidor HTTPS rodando na porta ${HTTPS_PORT}`);
+                console.log(`🔗 Teste: ${serverIP}/test`);
+                console.log(`📱 Painel 1: ${serverIP}/home`);
+                console.log(`📱 Painel 2: ${serverIP}/autoCadastro`);
+                console.log(`📱 Painel 3: ${serverIP}/empre`);
+                console.log(`🔗 API Contatos: ${serverIP}/api/contatos`);
+                console.log(`🔗 API Treinamentos: ${serverIP}/api/treinamentos`);
+                console.log(`🔗 API Empresas: ${serverIP}/api/empresas`);
+            });
+            
+            // Iniciar servidor HTTP para redirecionamento
+            server.listen(PORT, '0.0.0.0', () => {
+                console.log(`🔄 Servidor HTTP (redirecionamento) rodando na porta ${PORT}`);
+            });
+        } else {
+            // Servidor HTTP padrão
+            server.listen(PORT, '0.0.0.0', () => {
+                const serverIP = process.env.FRONTEND_URL || `http://72.60.48.249:${PORT}`;
+                console.log(`✅ Servidor HTTP rodando na porta ${PORT}`);
+                console.log(`🔗 Teste: ${serverIP}/test`);
+                console.log(`📱 Painel 1: ${serverIP}/home`);
+                console.log(`📱 Painel 2: ${serverIP}/autoCadastro`);
+                console.log(`📱 Painel 3: ${serverIP}/empre`);
+                console.log(`🔗 API Contatos: ${serverIP}/api/contatos`);
+                console.log(`🔗 API Treinamentos: ${serverIP}/api/treinamentos`);
+                console.log(`🔗 API Empresas: ${serverIP}/api/empresas`);
+                
+                if (!SSL_ENABLED) {
+                    console.log('💡 Para habilitar SSL, configure SSL_ENABLED=true no .env');
+                }
+            });
+        }
 
         try {
             console.log('🔗 Tentando conectar ao banco de dados...');
