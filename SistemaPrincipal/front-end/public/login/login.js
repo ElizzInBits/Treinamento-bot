@@ -20,7 +20,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     const errorMessage = document.getElementById('error-message');
     
     try {
-        const response = await fetch('https://salubrita-bot.ddns.net/api/login', {
+        const response = await fetch('/api/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

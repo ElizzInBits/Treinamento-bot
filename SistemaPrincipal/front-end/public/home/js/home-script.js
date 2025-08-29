@@ -205,7 +205,7 @@ function limparCanvas(canvasId) {
 // Função para verificar se o backend está rodando
 async function verificarBackend() {
   try {
-    const response = await authenticatedFetch('https://salubrita-bot.ddns.net/api/health', {
+    const response = await authenticatedFetch('/api/health', {
       method: 'GET',
       timeout: 3000
     });
@@ -302,7 +302,7 @@ async function criarGraficoStatus() {
   }
   
   try {
-    const response = await authenticatedFetch('https://salubrita-bot.ddns.net/api/dashboard/status-treinamento');
+    const response = await authenticatedFetch('/api/dashboard/status-treinamento');
     const dados = await response.json();
     
     if (dados.length === 0) {
@@ -446,7 +446,7 @@ function mostrarAlerta(mensagem, tipo = 'success') {
 // Função específica para mapear contatos com treinamento
 async function mapContatosComTreinamento() {
   try {
-    const response = await fetch('https://salubrita-bot.ddns.net/api/dashboard/contatos-em-treinamento');
+    const response = await fetch('/api/dashboard/contatos-em-treinamento');
     const data = await response.json();
     return data.total || 0;
   } catch (error) {
@@ -458,7 +458,7 @@ async function mapContatosComTreinamento() {
 // Atualizar estatísticas da aba Mapeamento com dados da API
 async function atualizarEstatisticasMapeamento() {
   try {
-    const response = await authenticatedFetch('https://salubrita-bot.ddns.net/api/dashboard/stats');
+    const response = await authenticatedFetch('/api/dashboard/stats');
     const stats = await response.json();
     
     console.log('📊 Stats recebidas da API:', stats);
@@ -498,7 +498,7 @@ async function atualizarEstatisticasMapeamento() {
 async function carregarInsights() {
   try {
     // Top empresas por engajamento
-    const topEmpresasResponse = await authenticatedFetch('https://salubrita-bot.ddns.net/api/dashboard/top-empresas');
+    const topEmpresasResponse = await authenticatedFetch('/api/dashboard/top-empresas');
     const topEmpresas = await topEmpresasResponse.json();
     
     const topEmpresasElement = document.getElementById('topEmpresas');
@@ -513,7 +513,7 @@ async function carregarInsights() {
     }
     
     // Calcular tendência de crescimento
-    const evolucaoResponse = await authenticatedFetch('https://salubrita-bot.ddns.net/api/dashboard/evolucao-mensal');
+    const evolucaoResponse = await authenticatedFetch('/api/dashboard/evolucao-mensal');
     const evolucao = await evolucaoResponse.json();
     
     const tendenciaElement = document.getElementById('tendenciaCrescimento');
@@ -531,7 +531,7 @@ async function carregarInsights() {
     }
     
     // Calcular eficiência do sistema
-    const statsResponse = await authenticatedFetch('https://salubrita-bot.ddns.net/api/dashboard/stats');
+    const statsResponse = await authenticatedFetch('/api/dashboard/stats');
     const stats = await statsResponse.json();
     
     const eficienciaElement = document.getElementById('eficienciaSistema');
@@ -643,7 +643,7 @@ function atualizarSelectTreinamento() {
 
 // Carregar contatos
 function carregarContatos() {
-  return authenticatedFetch('https://salubrita-bot.ddns.net/api/contatos')
+  return authenticatedFetch('/api/contatos')
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar contatos');
       return res.json();
@@ -763,7 +763,7 @@ function visualizarContatosEmpresa(empresaId) {
   document.getElementById('searchInputModal').value = '';
   renderizarContatosEmpresa();
   
-  /*fetch(`https://salubrita-bot.ddns.net/api/empresas/${empresaId}/contatos`)
+  /*fetch(`/api/empresas/${empresaId}/contatos`)
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar contatos');
       return res.json();
@@ -890,7 +890,7 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
     treinamentoId: treinamentoId ? parseInt(treinamentoId) : null
   };
 
-  authenticatedFetch(`https://salubrita-bot.ddns.net/api/contatos/${contatoId}`, {
+  authenticatedFetch(`/api/contatos/${contatoId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dadosAtualizados)
@@ -940,7 +940,7 @@ function restartTreinamentoContato(contatoId) {
   button.disabled = true;
   button.style.opacity = '0.7';
 
-  authenticatedFetch(`https://salubrita-bot.ddns.net/api/contatos/${contatoId}/restart-treinamento`, {
+  authenticatedFetch(`/api/contatos/${contatoId}/restart-treinamento`, {
     method: 'POST'
   })
     .then(res => {
@@ -986,7 +986,7 @@ function restartTreinamentoContato(contatoId) {
 function removerContato(id) {
   if (!confirm('Tem certeza que deseja remover este contato?')) return;
 
-  authenticatedFetch(`https://salubrita-bot.ddns.net/api/contatos/${id}`, {
+  authenticatedFetch(`/api/contatos/${id}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -1094,7 +1094,7 @@ function carregarTreinamentos() {
   const loading = document.getElementById('loadingTreinamentos');
   if (loading) loading.style.display = 'block';
 
-  return authenticatedFetch('https://salubrita-bot.ddns.net/api/treinamentos')
+  return authenticatedFetch('/api/treinamentos')
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar treinamentos');
       return res.json();
@@ -1278,7 +1278,7 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   submitButton.textContent = 'Criando treinamento...';
   submitButton.disabled = true;
 
-  authenticatedFetch('https://salubrita-bot.ddns.net/api/treinamentos', {
+  authenticatedFetch('/api/treinamentos', {
     method: 'POST',
     body: formData, // Atenção: não colocar headers 'Content-Type' com JSON aqui
   })
@@ -1377,7 +1377,7 @@ function removerTreinamento(id) {
     }
   }
 
-  authenticatedFetch(`https://salubrita-bot.ddns.net/api/treinamentos/${id}`, {
+  authenticatedFetch(`/api/treinamentos/${id}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -1465,7 +1465,7 @@ function carregarEmpresas() {
   const loading = document.getElementById('loadingEmpresas');
   if (loading) loading.style.display = 'block';
 
-  return authenticatedFetch('https://salubrita-bot.ddns.net/api/empresas')
+  return authenticatedFetch('/api/empresas')
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar empresas');
       return res.json();
@@ -1669,7 +1669,7 @@ window.addEventListener('error', function (e) {
 
 // Função para verificar conectividade com a API
 function verificarConectividadeAPI() {
-  return authenticatedFetch('https://salubrita-bot.ddns.net/api/health', {
+  return authenticatedFetch('/api/health', {
     method: 'GET'
   })
     .then(response => response.ok)
@@ -1727,7 +1727,7 @@ document.getElementById('empresaForm')?.addEventListener('submit', function (e) 
     porte_empresa: porte || null
   };
 
-  authenticatedFetch('https://salubrita-bot.ddns.net/api/empresas', {
+  authenticatedFetch('/api/empresas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(novaEmpresa)
@@ -1798,7 +1798,7 @@ document.getElementById('contatoForm')?.addEventListener('submit', function (e) 
     statusTreinamento: treinamentoId ? 'ativo' : 'sem_treinamento'
   };
 
-  authenticatedFetch('https://salubrita-bot.ddns.net/api/contatos', {
+  authenticatedFetch('/api/contatos', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(novoContato)
@@ -2560,7 +2560,7 @@ function abrirDetalhesTreinamento(treinamentoId) {
       formData.append('midias', novasMidias[i]);
     }
 
-    authenticatedFetch(`https://salubrita-bot.ddns.net/api/treinamentos/${treinamentoId}`, {
+    authenticatedFetch(`/api/treinamentos/${treinamentoId}`, {
       method: 'PUT',
       body: formData
     })
@@ -2628,7 +2628,7 @@ function removerMidia(nomeArquivo, treinamentoId) {
     }
   });
   
-  authenticatedFetch(`https://salubrita-bot.ddns.net/api/treinamentos/${treinamentoId}/midia/${nomeArquivo}`, {
+  authenticatedFetch(`/api/treinamentos/${treinamentoId}/midia/${nomeArquivo}`, {
     method: 'DELETE'
   })
   .then(res => {
@@ -2668,7 +2668,7 @@ ${treinamentos.map(t => `• ${t.modalidade || 'Não informado'}`).join('\n')}
     
     // Testar API diretamente
     try {
-      const statsResponse = await fetch('https://salubrita-bot.ddns.net/api/dashboard/stats');
+      const statsResponse = await fetch('/api/dashboard/stats');
       const stats = await statsResponse.json();
       console.log('📊 Stats da API:', stats);
     } catch (apiError) {
@@ -2941,7 +2941,7 @@ async function criarGraficoEmpresas() {
   }
   
   try {
-    const response = await authenticatedFetch('https://salubrita-bot.ddns.net/api/dashboard/empresas-contatos');
+    const response = await authenticatedFetch('/api/dashboard/empresas-contatos');
     const dadosEmpresas = await response.json();
     
     if (dadosEmpresas.length === 0) {
@@ -3332,8 +3332,8 @@ function abrirModalTreinamentosEmpresa(empresaId) {
   
   // Carregar treinamentos disponíveis e da empresa
   Promise.all([
-    authenticatedFetch(`https://salubrita-bot.ddns.net/api/empresas/${empresaId}/treinamentos/disponiveis`).then(r => r.json()),
-    authenticatedFetch(`https://salubrita-bot.ddns.net/api/empresas/${empresaId}/treinamentos/atribuidos`).then(r => r.json())
+    authenticatedFetch(`/api/empresas/${empresaId}/treinamentos/disponiveis`).then(r => r.json()),
+    authenticatedFetch(`/api/empresas/${empresaId}/treinamentos/atribuidos`).then(r => r.json())
   ])
   .then(([treinamentosDisponiveis, treinamentosEmpresa]) => {
     
@@ -3430,7 +3430,7 @@ function atribuirTreinamento(empresaId, treinamentoId) {
   button.disabled = true;
   button.style.opacity = '0.7';
   
-  authenticatedFetch(`https://salubrita-bot.ddns.net/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
+  authenticatedFetch(`/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
     method: 'POST'
   })
     .then(res => {
@@ -3466,7 +3466,7 @@ function removerTreinamentoEmpresa(empresaId, treinamentoId) {
   button.disabled = true;
   button.style.opacity = '0.7';
   
-  authenticatedFetch(`https://salubrita-bot.ddns.net/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
+  authenticatedFetch(`/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -3514,7 +3514,7 @@ function abrirDetalhesEmpresa(empresaId) {
   document.getElementById('modalDetalhesEmpresa').style.display = 'block';
   
   // Carregar dados completos da empresa
-  authenticatedFetch(`https://salubrita-bot.ddns.net/api/empresas/${empresaId}/completo`)
+  authenticatedFetch(`/api/empresas/${empresaId}/completo`)
     .then(r => r.json())
     .then(empresaCompleta => {
       const treinamentosEmpresa = empresaCompleta.treinamentos || [];
@@ -3668,7 +3668,7 @@ function salvarEmpresa(empresaId) {
     cep: document.getElementById('editCep').value
   };
   
-  authenticatedFetch(`https://salubrita-bot.ddns.net/api/empresas/${empresaId}`, {
+  authenticatedFetch(`/api/empresas/${empresaId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados)
