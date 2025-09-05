@@ -481,6 +481,12 @@ async function enviarMensagensCadastro(sender, sendMessage) {
          await sendMessage(sender, 'send-message', {
             message: `*ATENÇÃO:* \nUse o *MESMO NÚMERO* que você utilizará para conversar com o bot de treinamento no WhatsApp.`,
         });
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await sendMessage(sender, 'send-message', {
+            message: `💡 *Caso tenha feito cadastro com um número diferente desse*, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.`,
+        });
         
         console.log('✅ Sequência de cadastro enviada com sucesso');
         
