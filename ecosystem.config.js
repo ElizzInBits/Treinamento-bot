@@ -20,9 +20,9 @@ module.exports = {
     },
     {
       name: 'whatsapp-bot',
-      cwd: './SistemaPrincipal',
-      script: 'npm',
-      args: 'start',
+      cwd: './SistemaPrincipal/TemplatesMensagens',
+      script: 'node',
+      args: 'start-direct.js',
       instances: 1,
       exec_mode: 'fork',
       env: {
