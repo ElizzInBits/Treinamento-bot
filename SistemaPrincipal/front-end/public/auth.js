@@ -30,7 +30,14 @@ window.addEventListener('beforeunload', function() {
     }
 });
 
-// Função para fazer requisições autenticadas
+// Configurações de retry
+const RETRY_CONFIG = {
+    maxRetries: 3,
+    retryDelay: 1000,
+    timeoutMs: 10000
+};
+
+// Função para fazer requisições autenticadas com retry
 function authenticatedFetch(url, options = {}) {
     const token = localStorage.getItem('adminToken');
     
@@ -49,10 +56,105 @@ function authenticatedFetch(url, options = {}) {
         headers['Content-Type'] = 'application/json';
     }
     
-    return fetch(url, { ...options, headers }).catch(error => {
-        console.error('Erro na requisição:', error);
+    return retryFetch(url, { ...options, headers }, 0)
+        .catch(error => {
+            console.error('Erro na requisição:', error);
+            handleConnectionError(error);
+            throw error;
+        });
+}
+
+// Função de retry com backoff exponencial
+async function retryFetch(url, options, attempt) {
+    try {
+        const response = await fetch(url, options);
+        
+        if (response.ok) {
+            resetConnectionStatus();
+        }
+        
+        return response;
+    } catch (error) {
+        if (attempt < RETRY_CONFIG.maxRetries && isRetryableError(error)) {
+            console.warn(`Tentativa ${attempt + 1}/${RETRY_CONFIG.maxRetries} falhou. Tentando novamente...`);
+            
+            const delay = RETRY_CONFIG.retryDelay * Math.pow(2, attempt);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            
+            return retryFetch(url, options, attempt + 1);
+        }
+        
         throw error;
-    });
+    }
+}
+
+// Verificar se o erro é passível de retry
+function isRetryableError(error) {
+    return (
+        error.name === 'TypeError' ||
+        error.name === 'AbortError' ||
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('NetworkError') ||
+        error.message.includes('timeout')
+    );
+}
+
+// Gerenciar status de conexão
+let connectionStatus = {
+    isOnline: true,
+    consecutiveErrors: 0,
+    lastErrorTime: null
+};
+
+function handleConnectionError(error) {
+    connectionStatus.consecutiveErrors++;
+    connectionStatus.lastErrorTime = Date.now();
+    
+    if (connectionStatus.consecutiveErrors >= 3) {
+        connectionStatus.isOnline = false;
+        showConnectionAlert();
+    }
+}
+
+function resetConnectionStatus() {
+    if (!connectionStatus.isOnline) {
+        connectionStatus.isOnline = true;
+        connectionStatus.consecutiveErrors = 0;
+        hideConnectionAlert();
+    }
+}
+
+function showConnectionAlert() {
+    const existingAlert = document.getElementById('connectionAlert');
+    if (existingAlert) return;
+    
+    const alert = document.createElement('div');
+    alert.id = 'connectionAlert';
+    alert.className = 'connection-alert';
+    alert.innerHTML = `
+        <div class="alert-content">
+            <span class="alert-icon">⚠️</span>
+            <div class="alert-text">
+                <strong>Problemas de Conectividade</strong>
+                <p>Verificando conexão com o servidor...</p>
+            </div>
+            <button onclick="retryConnection()" class="retry-btn">🔄 Tentar Novamente</button>
+        </div>
+    `;
+    
+    document.body.appendChild(alert);
+}
+
+function hideConnectionAlert() {
+    const alert = document.getElementById('connectionAlert');
+    if (alert) {
+        alert.remove();
+    }
+}
+
+function retryConnection() {
+    hideConnectionAlert();
+    verificarConectividadeAPI();
 }
 
 // Função de logout
@@ -60,7 +162,27 @@ function logout() {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('loginTime');
     sessionStorage.clear();
+    hideConnectionAlert();
     window.location.href = '/login/login.html';
+}
+
+// Função para verificar conectividade
+function verificarConectividadeAPI() {
+    return fetch('/api/health', {
+        method: 'GET'
+    })
+    .then(response => {
+        if (response.ok) {
+            resetConnectionStatus();
+            return true;
+        }
+        return false;
+    })
+    .catch((error) => {
+        console.warn('API não está disponível:', error.message);
+        handleConnectionError(error);
+        return false;
+    });
 }
 
 // Verificar autenticação ao carregar a página
