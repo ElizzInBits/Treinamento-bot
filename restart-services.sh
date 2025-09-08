@@ -18,22 +18,10 @@ netstat -tulpn | grep -E ':(3000|3443|21465)' || echo "✅ Portas livres"
 # Aguardar um pouco
 sleep 3
 
-# Reiniciar serviços na ordem correta
-echo "🚀 Iniciando wppconnect-server..."
-cd /root/Treinamento-bot/wppconnect-server
-pm2 start npm --name "wppconnect-server" -- start
-
-sleep 5
-
-echo "🚀 Iniciando whatsapp-bot..."
-cd /root/Treinamento-bot/SistemaPrincipal
-pm2 start npm --name "whatsapp-bot" -- start
-
-sleep 5
-
-echo "🚀 Iniciando frontend..."
-cd /root/Treinamento-bot/SistemaPrincipal/front-end
-pm2 start npm --name "frontend" -- start
+# Reiniciar serviços usando ecosystem.config.js
+echo "🚀 Iniciando todos os serviços..."
+cd /root/Treinamento-bot
+pm2 start ecosystem.config.js
 
 sleep 3
 
