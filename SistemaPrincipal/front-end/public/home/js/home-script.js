@@ -7,25 +7,102 @@ let empresaIdCounter = 1;
 let empresaSelecionada = null;
 let contatosEmpresaSelecionada = [];
 
-// Conectar ao WebSocket com tratamento de erro
+// Conectar ao WebSocket com tratamento de erro melhorado
 let socket;
+let socketReconnectAttempts = 0;
+const MAX_SOCKET_RECONNECT_ATTEMPTS = 5;
+
 try {
   socket = io({
-    timeout: 5000,
+    timeout: 10000,
     reconnection: true,
-    reconnectionAttempts: 3
+    reconnectionAttempts: MAX_SOCKET_RECONNECT_ATTEMPTS,
+    reconnectionDelay: 2000,
+    reconnectionDelayMax: 10000,
+    maxReconnectionAttempts: MAX_SOCKET_RECONNECT_ATTEMPTS
+  });
+  
+  socket.on('connect', () => {
+    console.log('✅ WebSocket conectado');
+    socketReconnectAttempts = 0;
+    hideSocketAlert();
   });
   
   socket.on('connect_error', (error) => {
-    console.warn('Erro de conexão WebSocket:', error);
+    socketReconnectAttempts++;
+    console.warn(`❌ Erro de conexão WebSocket (tentativa ${socketReconnectAttempts}):`, error.message);
+    
+    if (socketReconnectAttempts >= 3) {
+      showSocketAlert();
+    }
   });
   
   socket.on('disconnect', (reason) => {
-    console.warn('WebSocket desconectado:', reason);
+    console.warn('🔌 WebSocket desconectado:', reason);
+    
+    if (reason === 'io server disconnect') {
+      socket.connect();
+    }
   });
+  
+  socket.on('reconnect', (attemptNumber) => {
+    console.log(`🔄 WebSocket reconectado após ${attemptNumber} tentativas`);
+    socketReconnectAttempts = 0;
+    hideSocketAlert();
+  });
+  
+  socket.on('reconnect_failed', () => {
+    console.error('❌ Falha ao reconectar WebSocket após todas as tentativas');
+    showSocketAlert(true);
+  });
+  
 } catch (error) {
-  console.warn('Erro ao inicializar WebSocket:', error);
+  console.warn('❌ Erro ao inicializar WebSocket:', error);
   socket = null;
+  showSocketAlert(true);
+}
+
+function showSocketAlert(permanent = false) {
+  const existingAlert = document.getElementById('socketAlert');
+  if (existingAlert) return;
+  
+  const alert = document.createElement('div');
+  alert.id = 'socketAlert';
+  alert.className = 'socket-alert';
+  alert.innerHTML = `
+    <div class="alert-content">
+      <span class="alert-icon">🔌</span>
+      <div class="alert-text">
+        <strong>Conexão em Tempo Real Indisponível</strong>
+        <p>Atualizações automáticas podem não funcionar. Recarregue a página periodicamente.</p>
+      </div>
+      ${!permanent ? '<button onclick="retrySocket()" class="retry-btn">🔄 Reconectar</button>' : ''}
+    </div>
+  `;
+  
+  document.body.appendChild(alert);
+  
+  if (!permanent) {
+    setTimeout(() => {
+      if (alert.parentNode) {
+        alert.remove();
+      }
+    }, 15000);
+  }
+}
+
+function hideSocketAlert() {
+  const alert = document.getElementById('socketAlert');
+  if (alert) {
+    alert.remove();
+  }
+}
+
+function retrySocket() {
+  if (socket) {
+    socket.connect();
+  }
+  hideSocketAlert();
 }
 
 // Escutar eventos de novos contatos e empresas
@@ -216,41 +293,104 @@ async function verificarBackend() {
   }
 }
 
-// Inicializar sistema
+// Inicializar sistema com melhor tratamento de erros
 document.addEventListener('DOMContentLoaded', async function () {
   // Definir aba ativa imediatamente para evitar flash
   const activeTab = localStorage.getItem('activeTab') || 'mapeamento';
   showTab(activeTab);
   
-  // Verificar se o backend está rodando
-  const backendDisponivel = await verificarBackend();
+  // Iniciar monitoramento de conectividade
+  startConnectivityMonitoring();
   
-  if (!backendDisponivel) {
-    mostrarAlerta('⚠️ Backend não está disponível. Inicie o servidor na porta 3000 para funcionalidade completa.', 'error');
+  try {
+    // Verificar se o backend está rodando
+    const backendDisponivel = await verificarBackend();
+    
+    if (!backendDisponivel) {
+      showOfflineMode();
+      return;
+    }
+    
+    // Carregar dados com tratamento robusto
+    await carregarDadosIniciais();
+    
+  } catch (error) {
+    console.error('Erro ao inicializar sistema:', error);
+    showErrorMode(error);
+  }
+});
+
+// Carregar dados iniciais com tratamento robusto
+async function carregarDadosIniciais() {
+  const loadingSteps = [
+    { fn: carregarEmpresas, name: 'empresas', callback: atualizarSelectEmpresa },
+    { fn: carregarTreinamentos, name: 'treinamentos', callback: atualizarSelectTreinamento },
+    { fn: carregarContatos, name: 'contatos', callback: null }
+  ];
+  
+  let successCount = 0;
+  const errors = [];
+  
+  for (const step of loadingSteps) {
+    try {
+      await step.fn();
+      if (step.callback) step.callback();
+      successCount++;
+    } catch (error) {
+      console.error(`Erro ao carregar ${step.name}:`, error);
+      errors.push({ step: step.name, error });
+    }
   }
   
-  // Carregar dados em sequência para evitar problemas de timing
-  carregarEmpresas()
-    .then(() => {
-      atualizarSelectEmpresa();
-      return carregarTreinamentos();
-    })
-    .then(() => {
-      atualizarSelectTreinamento();
-      return carregarContatos();
-    })
-    .then(() => {
-      // Aguardar um pouco para garantir que tudo foi carregado
-      setTimeout(() => {
-        atualizarEstatisticasMapeamento();
-        atualizarEstatisticasEmpresas();
-      }, 500);
-    })
-    .catch(error => {
-      console.error('Erro ao inicializar sistema:', error);
-      mostrarAlerta('Erro ao carregar dados do sistema.', 'error');
-    });
-});
+  // Atualizar estatísticas apenas se pelo menos alguns dados foram carregados
+  if (successCount > 0) {
+    setTimeout(() => {
+      atualizarEstatisticasMapeamento();
+      atualizarEstatisticasEmpresas();
+    }, 500);
+  }
+  
+  // Mostrar resumo de erros se houver
+  if (errors.length > 0 && errors.length < loadingSteps.length) {
+    const errorMessage = `Alguns dados não puderam ser carregados: ${errors.map(e => e.step).join(', ')}`;
+    mostrarAlerta(errorMessage, 'warning');
+  } else if (successCount === loadingSteps.length) {
+    mostrarAlerta('✅ Sistema inicializado com sucesso!', 'success');
+  }
+}
+
+function showOfflineMode() {
+  const offlineDiv = document.createElement('div');
+  offlineDiv.className = 'offline-mode';
+  offlineDiv.innerHTML = `
+    <div class="offline-content">
+      <div class="offline-icon">🌐</div>
+      <h2>Modo Offline</h2>
+      <p>O servidor não está disponível no momento.</p>
+      <p>Verifique se o backend está rodando na porta 3000.</p>
+      <button onclick="location.reload()" class="retry-btn">🔄 Tentar Novamente</button>
+    </div>
+  `;
+  document.body.appendChild(offlineDiv);
+}
+
+function showErrorMode(error) {
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'error-mode';
+  errorDiv.innerHTML = `
+    <div class="error-content">
+      <div class="error-icon">⚠️</div>
+      <h2>Erro de Inicialização</h2>
+      <p>Ocorreu um erro ao inicializar o sistema.</p>
+      <details>
+        <summary>Detalhes do erro</summary>
+        <pre>${error.message}</pre>
+      </details>
+      <button onclick="location.reload()" class="retry-btn">🔄 Recarregar Página</button>
+    </div>
+  `;
+  document.body.appendChild(errorDiv);
+}
 
 
 //dashboard
@@ -1669,24 +1809,52 @@ window.addEventListener('error', function (e) {
 
 // Função para verificar conectividade com a API
 function verificarConectividadeAPI() {
-  return authenticatedFetch('/api/health', {
-    method: 'GET'
+  return fetch('/api/health', {
+    method: 'GET',
+    signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined
   })
-    .then(response => response.ok)
-    .catch(() => {
-      console.warn('API não está disponível');
+    .then(response => {
+      if (response.ok && typeof resetConnectionStatus === 'function') {
+        resetConnectionStatus();
+        return true;
+      }
+      return false;
+    })
+    .catch((error) => {
+      console.warn('API não está disponível:', error.message);
+      if (typeof handleConnectionError === 'function') {
+        handleConnectionError(error);
+      }
       return false;
     });
 }
 
-// Inicializar verificação de conectividade periodicamente
-setInterval(function () {
-  verificarConectividadeAPI().then(isConnected => {
-    if (!isConnected) {
-      mostrarAlerta('Problemas de conectividade detectados. Algumas funcionalidades podem estar indisponíveis.', 'error');
+// Verificação de conectividade mais inteligente
+let connectivityCheckInterval;
+
+function startConnectivityMonitoring() {
+  verificarConectividadeAPI();
+  
+  connectivityCheckInterval = setInterval(() => {
+    verificarConectividadeAPI();
+  }, 60000); // A cada minuto
+}
+
+// Detectar mudanças no status online/offline do navegador
+window.addEventListener('online', () => {
+  console.log('🌐 Navegador voltou online');
+  verificarConectividadeAPI();
+});
+
+window.addEventListener('offline', () => {
+  console.log('🌐 Navegador ficou offline');
+  if (typeof connectionStatus !== 'undefined') {
+    connectionStatus.isOnline = false;
+    if (typeof showConnectionAlert === 'function') {
+      showConnectionAlert();
     }
-  });
-}, 60000); // Verificar a cada minuto
+  }
+});
 
 // Adicionar funcionalidades de cadastro que estavam faltando
 

@@ -2,35 +2,57 @@ module.exports = {
   apps: [
     {
       name: 'wppconnect-server',
-      script: './start-server.js',
       cwd: './wppconnect-server',
+      script: 'npm',
+      args: 'start',
       instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '400M',
+      exec_mode: 'fork',
       env: {
+        NODE_ENV: 'production',
         PORT: 21465
-      }
+      },
+      error_file: './logs/wppconnect-error.log',
+      out_file: './logs/wppconnect-out.log',
+      log_file: './logs/wppconnect-combined.log',
+      time: true,
+      max_restarts: 3,
+      restart_delay: 5000
     },
     {
       name: 'whatsapp-bot',
-      script: './SistemaPrincipal/TemplatesMensagens/start-direct.js',
+      cwd: './SistemaPrincipal',
+      script: 'npm',
+      args: 'start',
       instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '200M'
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production'
+      },
+      error_file: './logs/whatsapp-bot-error.log',
+      out_file: './logs/whatsapp-bot-out.log',
+      log_file: './logs/whatsapp-bot-combined.log',
+      time: true,
+      max_restarts: 3,
+      restart_delay: 5000,
+      watch: false
     },
     {
       name: 'frontend',
-      script: './SistemaPrincipal/front-end/server-front.js',
+      cwd: './SistemaPrincipal/front-end',
+      script: 'npm',
+      args: 'start',
       instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '300M',
+      exec_mode: 'fork',
       env: {
+        NODE_ENV: 'production',
         PORT: 3000
-      }
+      },
+      error_file: './logs/frontend-error.log',
+      out_file: './logs/frontend-out.log',
+      log_file: './logs/frontend-combined.log',
+      time: true,
+      max_restarts: 3,
+      restart_delay: 5000
     }
   ]
 };
-

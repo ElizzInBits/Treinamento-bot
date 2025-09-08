@@ -665,6 +665,18 @@ async function processarMensagem(message, client) {
     console.log(`⏱️ [${new Date().toISOString()}] INÍCIO processamento: ${message.from}`);
     console.log(`📱 Status cliente WhatsApp: ${client ? 'Conectado' : 'Desconectado'}`);
     
+    // Validar mensagem
+    if (!message || !message.from || !message.body) {
+        console.log('❌ Mensagem inválida ou vazia, ignorando');
+        return;
+    }
+    
+    // Filtrar mensagens undefined ou vazias
+    if (message.body === 'undefined' || message.body.trim() === '' || message.body === null) {
+        console.log('❌ Mensagem com conteúdo undefined/vazio, ignorando');
+        return;
+    }
+    
     setWppClient(client);
     const sender = message.from.replace('@c.us', '');
 
@@ -678,6 +690,14 @@ async function processarMensagem(message, client) {
         const text = message.body?.toLowerCase() || '';
         const selectedId = message.selectedRowId || '';
         const rawText = message.body || '';
+        
+        console.log(`📨 Processando mensagem: "${rawText}" de ${sender}`);
+        
+        // Validação adicional de conteúdo
+        if (!rawText || rawText.trim() === '' || rawText === 'undefined') {
+            console.log('❌ Conteúdo da mensagem inválido após validação inicial');
+            return;
+        }
         
         // Comando especial para recarregar cache
         if (text === '/reload' || text === 'reload' || text === 'recarregar') {
