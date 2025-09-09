@@ -1,7 +1,4 @@
 
-
-
-
 // Cliente WhatsApp direto (será definido pelo bot principal)
 let wppClient = null;
 
@@ -1114,8 +1111,6 @@ async function processarMensagem(message, client) {
             return;
         }
 
-        // Processamento de quiz movido para o início da função
-
 
 
         // Verificar se é um usuário recadastrado que precisa de orientação
@@ -1286,8 +1281,6 @@ async function processarMensagem(message, client) {
 
 
 
-        // (Lógica de usuário não iniciado já tratada no início)
-
         // FALLBACK para usuários não iniciados que chegaram até aqui
         if (contato.statusTreinamento === 'não iniciado') {
             console.log(`🔄 FALLBACK: Forçando início para usuário não iniciado`);
@@ -1340,8 +1333,6 @@ async function processarMensagemCadastrada(message, client, contato) {
     const selectedId = message.selectedRowId || '';
     const rawText = message.body || '';
 
-    // Continuar processamento normal para usuário cadastrado
-    // (resto da lógica original aqui)
 }
 
 // Exportar funções para serem usadas externamente

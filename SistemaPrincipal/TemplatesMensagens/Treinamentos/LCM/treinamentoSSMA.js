@@ -1,6 +1,18 @@
 //Script de Treinamento SSMA
 //ID do Treinamento: 14
 
+// Importar gerenciadores otimizados
+const resourceManager = require('../../resourceManager');
+const SystemOptimizations = require('../../../optimizations');
+const Logger = require('../../../utils/logger');
+const SecurityUtils = require('../../../utils/security');
+
+// Criar gerenciador de imagens otimizado
+const optimizedImageManager = SystemOptimizations.createOptimizedImageManager();
+
+// ID do treinamento para recursos
+const TRAINING_ID = 'ssma';
+
 // sendMessage will be passed as parameter to avoid circular dependency
 const { Treinamento, Contato } = require('../../../BancoDeDados/models/index.js');
 const { Interacao, Empresa } = require('../../../BancoDeDados/models/index.js');
@@ -732,7 +744,12 @@ async function finalizarModulo2(sender, acertos, sendMessage) {
     const percentual = Math.round((acertos / total) * 100);
     
     await sendMessage(sender, 'send-message', {
-        message: `🎯 *MÓDULO 2 CONCLUÍDO!*\n\n📊 Resultado: ${acertos}/${total} (${percentual}%)`,
+        message: resourceManager.getTemplate('global', 'modulo_concluido', {
+            numero: '2',
+            acertos: acertos,
+            total: total,
+            percentual: percentual
+        }),
     });
     
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -741,20 +758,19 @@ async function finalizarModulo2(sender, acertos, sendMessage) {
 
 
 
+
+
 /**
  * Finaliza o treinamento completo
  */
 async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
-    // Considerações finais
-
-    // Enviar imagem SEGURANCA
-    const path = require('path');
-    const fs = require('fs');
-    const imagemSegurancaPath = path.join(__dirname, 'Imagens', 'SEGURANCA.png');
-    if (fs.existsSync(imagemSegurancaPath)) {
+    // Enviar imagem SEGURANCA usando o gerenciador de recursos
+    const imagemUrl = resourceManager.getImageUrl(TRAINING_ID, 'SEGURANCA');
+    const imagemPath = await optimizedImageManager.getImage('SEGURANCA', imagemUrl);
+    if (imagemPath) {
         try {
             await sendMessage(sender, 'send-image', {        
-                path: imagemSegurancaPath,      
+                path: imagemPath,      
                 filename: 'SEGURANCA.png',
                 caption: '',
             });
@@ -764,24 +780,21 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
     }
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-
+    // Usar templates do treinamento SSMA
     await sendMessage(sender, 'send-message', {
-        message: '🎆 *CONSIDERAÇÕES FINAIS*\n\n🛡️ *Sua Segurança Depende de Você*\n• A Responsabilidade é individual e intransferível\n• O Conhecimento salva vidas\n• A Prevenção é sempre melhor que correção\n• Sua família conta com você voltando seguro para casa\n\n📞 *Contatos Importantes*\n• SESMT: Sempre disponível para dúvidas e orientações\n• CIPA: Seus representantes na prevenção\n• Emergência: Comunicar IMEDIATAMENTE qualquer acidente',
+        message: resourceManager.getTemplate(TRAINING_ID, 'consideracoes_finais'),
     });
     
     await new Promise(resolve => setTimeout(resolve, 5000));
 
-
-    
     await sendMessage(sender, 'send-message', {
-        message: '🎉 *TREINAMENTO CONCLUÍDO COM SUCESSO!*\n\n🏆 Parabéns! Você completou os 2 módulos do treinamento SSMA.\n\n📚 *Lembre-se: SSMA não é apenas um conjunto de regras, é um modo de vida que protege você, seus colegas e o meio ambiente. Pratique sempre!*',
+        message: resourceManager.getTemplate(TRAINING_ID, 'treinamento_finalizado'),
     });
     
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-     // Mensagem final do treinamento
-     await sendMessage(sender, 'send-message', {
-        message: '🔧 *CERTIFICADO EM MANUTENÇÃO*\n\nNosso sistema de geração de certificados está temporariamente em manutenção pela equipe de desenvolvimento.\n\n✅ *Seu treinamento foi registrado com sucesso!*\n\n📬 *Em breve você receberá:*\n• Certificado digital aqui no chat\n• Certificado por e-mail no endereço cadastrado\n\n⏰ Sistema será normalizado em breve.\n\n🙏 Agradecemos sua compreensão e parabenizamos pela dedicação!',
+    await sendMessage(sender, 'send-message', {
+        message: resourceManager.getTemplate('global', 'certificado_manutencao'),
     });
     
     // Enviar mensagem de manutenção diretamente
@@ -813,7 +826,7 @@ async function detectarTreinamentoInterrompido(sender, contato, sendMessage) {
     
     if (!ultimaInteracao || ultimaInteracao.createdAt < umaHoraAtras) {
         await sendMessage(sender, 'send-message', {
-            message: '🔄 *TREINAMENTO INTERROMPIDO DETECTADO*\n\nParece que seu treinamento foi interrompido. Não se preocupe!\n\n📱 Digite *MENU* para ver suas opções ou escolha abaixo:'
+            message: resourceManager.getTemplate('global', 'treinamento_interrompido')
         });
         
         const recuperacaoMsg = {
@@ -845,7 +858,7 @@ async function detectarTreinamentoInterrompido(sender, contato, sendMessage) {
 async function exibirMenuOpcoes(sender, sendMessage) {
     const menuMsg = {
         title: '',
-        description: '📋 *MENU DE OPÇÕES*\n\nEscolha o que deseja fazer:',
+        description: resourceManager.getTemplate('global', 'menu_opcoes'),
         buttonText: 'Selecionar opção',
         listType: 'SINGLE_SELECT',
         sections: [{
@@ -867,7 +880,10 @@ async function exibirMenuOpcoes(sender, sendMessage) {
  * Processa as respostas do treinamento SSMA - VERSÃO COMPLETA
  */
 async function processarRespostaSSMA(sender, text, selectedId, contato, sendMessage) {
-    console.log(`🔍 processarRespostaSSMA chamado: text="${text}", selectedId="${selectedId}"`);
+    Logger.info('Processing SSMA response', { 
+        text: SecurityUtils.sanitizeLog(text), 
+        selectedId: SecurityUtils.sanitizeLog(selectedId) 
+    });
     
     // Verificar se usuário digitou 'menu'
     if (text.toLowerCase().includes('menu')) {
