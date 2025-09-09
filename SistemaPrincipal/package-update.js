@@ -3,10 +3,12 @@ const Logger = require('./utils/logger');
 
 async function updateVulnerablePackages() {
     const updates = [
-        'npm audit fix --force',
-        'npm update tar-fs@latest',
-        'npm update express@latest',
-        'npm update cors@latest'
+        'npm audit fix',
+        'npm update tar-fs',
+        'npm update express',
+        'npm update cors',
+        'npm install tar-fs@latest --save',
+        'npm install express@latest --save'
     ];
 
     for (const command of updates) {
