@@ -38,9 +38,9 @@ module.exports = {
     },
     {
       name: 'frontend',
-      cwd: './SistemaPrincipal/front-end',
-      script: 'npm',
-      args: 'start',
+      cwd: './SistemaPrincipal',
+      script: 'node',
+      args: 'startup-optimized.js',
       instances: 1,
       exec_mode: 'fork',
       env: {

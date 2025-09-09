@@ -80,9 +80,14 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors());
 
-// ✅ 3. Middleware de debug
+// ✅ 3. Middleware de segurança e debug
+const securityMiddleware = require('../middleware/security');
+const Logger = require('../utils/logger');
+
+app.use(securityMiddleware);
+
 app.use((req, res, next) => {
-    console.log(`📡 ${new Date().toISOString()} - ${req.method} ${req.path}`);
+    Logger.info('Request received', { method: req.method, path: req.path });
     next();
 });
 
