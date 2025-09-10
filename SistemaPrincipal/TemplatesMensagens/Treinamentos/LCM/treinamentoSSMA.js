@@ -294,12 +294,10 @@ async function processarResposta(sender, message, sendMessage) {
  * Inicia o Módulo 1 do treinamento
  */
 async function iniciarModulo1(sender, sendMessage) {
-    const path = require('path');
-    const fs = require('fs');
-
-    // Enviar imagem NR 06
-    const imagemNR06Path = path.join(__dirname, 'Imagens', 'NR 06.png');
-    if (fs.existsSync(imagemNR06Path)) {
+    // Enviar imagem NR 06 do Google Drive
+    const imagemNR06Url = resourceManager.getImageUrl(TRAINING_ID, 'NR06');
+    const imagemNR06Path = await optimizedImageManager.getImage('NR06', imagemNR06Url);
+    if (imagemNR06Path) {
         try {
             await sendMessage(sender, 'send-image', {
                 path: imagemNR06Path,
@@ -312,9 +310,10 @@ async function iniciarModulo1(sender, sendMessage) {
     }
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Enviar imagem SSMA
-    const imagemSSMAPath = path.join(__dirname, 'Imagens', 'SSMA.png');
-    if (fs.existsSync(imagemSSMAPath)) {
+    // Enviar imagem SSMA do Google Drive
+    const imagemSSMAUrl = resourceManager.getImageUrl(TRAINING_ID, 'SSMA');
+    const imagemSSMAPath = await optimizedImageManager.getImage('SSMA', imagemSSMAUrl);
+    if (imagemSSMAPath) {
         try {
             await sendMessage(sender, 'send-image', {
                 path: imagemSSMAPath,
@@ -327,9 +326,10 @@ async function iniciarModulo1(sender, sendMessage) {
     }
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Enviar imagem SST
-    const imagemSSTPath = path.join(__dirname, 'Imagens', 'SST.png');
-    if (fs.existsSync(imagemSSTPath)) {
+    // Enviar imagem SST do Google Drive
+    const imagemSSTUrl = resourceManager.getImageUrl(TRAINING_ID, 'SST');
+    const imagemSSTPath = await optimizedImageManager.getImage('SST', imagemSSTUrl);
+    if (imagemSSTPath) {
         try {
             await sendMessage(sender, 'send-image', {
                 path: imagemSSTPath,
@@ -356,9 +356,10 @@ async function iniciarModulo1(sender, sendMessage) {
 
 
         
-    //Envia imagem LEI
-    const imagemLEIPath = path.join(__dirname, 'Imagens', 'LEI.png');
-    if (fs.existsSync(imagemLEIPath)) {
+    // Enviar imagem LEI do Google Drive
+    const imagemLEIUrl = resourceManager.getImageUrl(TRAINING_ID, 'LEI');
+    const imagemLEIPath = await optimizedImageManager.getImage('LEI', imagemLEIUrl);
+    if (imagemLEIPath) {
         try {
             await sendMessage(sender, 'send-image', {
                 path: imagemLEIPath,
@@ -378,9 +379,10 @@ async function iniciarModulo1(sender, sendMessage) {
     await new Promise(resolve => setTimeout(resolve, 5000));
 
 
-    //Enviar imagem CIPA
-    const imagemCIPAPath = path.join(__dirname, 'Imagens', 'CIPA.png');
-    if (fs.existsSync(imagemCIPAPath)) {
+    // Enviar imagem CIPA do Google Drive
+    const imagemCIPAUrl = resourceManager.getImageUrl(TRAINING_ID, 'CIPA');
+    const imagemCIPAPath = await optimizedImageManager.getImage('CIPA', imagemCIPAUrl);
+    if (imagemCIPAPath) {
         try {
             await sendMessage(sender, 'send-image', {
                 path: imagemCIPAPath,
@@ -405,9 +407,10 @@ async function iniciarModulo1(sender, sendMessage) {
     });
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    //Enviar imagem PCMSO
-    const imagemPCMSOPath = path.join(__dirname, 'Imagens', 'PCMSO.png');
-    if (fs.existsSync(imagemPCMSOPath)) {
+    // Enviar imagem PCMSO do Google Drive
+    const imagemPCMSOUrl = resourceManager.getImageUrl(TRAINING_ID, 'PCMSO');
+    const imagemPCMSOPath = await optimizedImageManager.getImage('PCMSO', imagemPCMSOUrl);
+    if (imagemPCMSOPath) {
         try {
             await sendMessage(sender, 'send-image', {
                 path: imagemPCMSOPath,
@@ -587,11 +590,10 @@ async function iniciarModulo2(sender, sendMessage) {
     });
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    //Enviar imagem MAPARISCO   
-    const path = require('path');
-    const fs = require('fs');
-    const imagemMapaRiscoPath = path.join(__dirname, 'Imagens', 'MAPARISCO.png');
-    if (fs.existsSync(imagemMapaRiscoPath)) {
+    // Enviar imagem MAPARISCO do Google Drive
+    const imagemMapaRiscoUrl = resourceManager.getImageUrl(TRAINING_ID, 'MAPARISCO');
+    const imagemMapaRiscoPath = await optimizedImageManager.getImage('MAPARISCO', imagemMapaRiscoUrl);
+    if (imagemMapaRiscoPath) {
         try {
             await sendMessage(sender, 'send-image', {
                 path: imagemMapaRiscoPath,
