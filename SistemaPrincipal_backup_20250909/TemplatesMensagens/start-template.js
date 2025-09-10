@@ -149,6 +149,25 @@ async function inicializarWhatsApp() {
       });
     });
     
+    // Bloqueador de chamadas
+    globalClient.onIncomingCall(async (call) => {
+      try {
+        console.log('📞 Chamada recebida de:', call.peerJid);
+        
+        // Rejeitar chamada imediatamente
+        await globalClient.rejectCall(call.id);
+        console.log('❌ Chamada rejeitada automaticamente');
+        
+        // Enviar aviso
+        const avisoMsg = '🚫 *Chamadas não são aceitas neste número*\n\nPor favor, envie uma mensagem de texto que eu responderei o mais rápido possível! 😊';
+        await globalClient.sendText(call.peerJid, avisoMsg);
+        console.log('✅ Aviso enviado para:', call.peerJid);
+        
+      } catch (error) {
+        console.error('❌ Erro ao bloquear chamada:', error.message);
+      }
+    });
+    
   } catch (error) {
     console.error('❌ Erro na conexão direta:', error.message);
     console.log('🔄 Usando apenas API do wppconnect-server como backup');
