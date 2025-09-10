@@ -1,0 +1,15 @@
+{
+  "boas_vindas": "Olá {{nome}}, bem-vindo ao nosso treinamento SSMA! 🎯",
+  "modulo1_inicio": "📖 *MÓDULO 1 - FUNDAMENTOS E PREVENÇÃO*\n\nVamos começar com os conceitos básicos de segurança.",
+  "modulo2_inicio": "🛡️ *MÓDULO 2 - CONTROLES E EQUIPAMENTOS*\n\nAgora vamos aprender sobre equipamentos de proteção.",
+  "quiz_pergunta_template": "❓ *Pergunta {{numero}}*\n\n{{pergunta}}\n\n{{opcoes}}",
+  "resposta_correta": "✅ Parabéns, {{nome}}! Resposta correta! 🎉\n\n{{explicacao}}",
+  "resposta_incorreta": "❌ Incorreto. A resposta correta é \"{{resposta_correta}}\".\n\n{{explicacao}}",
+  "modulo_concluido": "🎯 *MÓDULO {{numero}} CONCLUÍDO!*\n\n📊 Resultado: {{acertos}}/{{total}} ({{percentual}}%)",
+  "treinamento_finalizado": "🎉 *TREINAMENTO CONCLUÍDO COM SUCESSO!*\n\n🏆 Parabéns! Você completou os 2 módulos do treinamento SSMA.\n\n📚 *Lembre-se: SSMA não é apenas um conjunto de regras, é um modo de vida que protege você, seus colegas e o meio ambiente. Pratique sempre!*",
+  "consideracoes_finais": "🎆 *CONSIDERAÇÕES FINAIS*\n\n🛡️ *Sua Segurança Depende de Você*\n• A Responsabilidade é individual e intransferível\n• O Conhecimento salva vidas\n• A Prevenção é sempre melhor que correção\n• Sua família conta com você voltando seguro para casa\n\n📞 *Contatos Importantes*\n• SESMT: Sempre disponível para dúvidas e orientações\n• CIPA: Seus representantes na prevenção\n• Emergência: Comunicar IMEDIATAMENTE qualquer acidente",
+  "certificado_manutencao": "🔧 *CERTIFICADO EM MANUTENÇÃO*\n\nNosso sistema de geração de certificados está temporariamente em manutenção pela equipe de desenvolvimento.\n\n✅ *Seu treinamento foi registrado com sucesso!*\n\n📬 *Em breve você receberá:*\n• Certificado digital aqui no chat\n• Certificado por e-mail no endereço cadastrado\n\n⏰ Sistema será normalizado em breve.\n\n🙏 Agradecemos sua compreensão e parabenizamos pela dedicação!",
+  "treinamento_interrompido": "🔄 *TREINAMENTO INTERROMPIDO DETECTADO*\n\nParece que seu treinamento foi interrompido. Não se preocupe!\n\n📱 Digite *MENU* para ver suas opções ou escolha abaixo:",
+  "menu_opcoes": "📋 *MENU DE OPÇÕES*\n\nEscolha o que deseja fazer:",
+  "erro_generico": "❌ Erro inesperado. Entre em contato com o suporte."
+}

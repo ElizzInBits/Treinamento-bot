@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Dados Cadastrais</title>
+    <link rel="icon" type="image/png" href="../home/Imagens/logo.png">
+</head>
+<body style="background: linear-gradient(135deg, #0f4c5c 0%, #6ec6ca 100%); min-height: 100vh; margin: 0; padding: 20px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+    <div class="container" style="max-width: 600px; margin: 0 auto; background: white; border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.15);">
+        <div class="header" style="padding: 32px 32px 24px 32px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+            <img src="../home/Imagens/logo2.png" alt="Logo" style="height: 60px; margin-bottom: 16px;">
+            <h1 style="color: #374151; font-size: 24px; font-weight: 700; margin: 0;">Meus Dados Cadastrais</h1>
+        </div>
+
+        <div class="content" style="padding: 32px;">
+            <div id="viewMode">
+                <div class="data-grid" style="display: grid; gap: 20px;">
+                    <div class="data-item" style="background: #f8fafc; padding: 16px; border-radius: 12px; border-left: 4px solid #0f4c5c;">
+                        <label style="color: #6b7280; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Nome Completo</label>
+                        <p id="viewNome" style="color: #374151; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">-</p>
+                    </div>
+                    
+                    <div class="data-item" style="background: #f8fafc; padding: 16px; border-radius: 12px; border-left: 4px solid #0f4c5c;">
+                        <label style="color: #6b7280; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">CPF</label>
+                        <p id="viewCpf" style="color: #374151; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">-</p>
+                    </div>
+                    
+                    <div class="data-item" style="background: #f8fafc; padding: 16px; border-radius: 12px; border-left: 4px solid #0f4c5c;">
+                        <label style="color: #6b7280; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">E-mail</label>
+                        <p id="viewEmail" style="color: #374151; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">-</p>
+                    </div>
+                    
+                    <div class="data-item" style="background: #f8fafc; padding: 16px; border-radius: 12px; border-left: 4px solid #0f4c5c;">
+                        <label style="color: #6b7280; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Telefone</label>
+                        <p id="viewTelefone" style="color: #374151; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">-</p>
+                    </div>
+                    
+                    <div class="data-item" style="background: #f8fafc; padding: 16px; border-radius: 12px; border-left: 4px solid #0f4c5c;">
+                        <label style="color: #6b7280; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Empresa</label>
+                        <p id="viewEmpresa" style="color: #374151; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">-</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 32px;">
+                    <button onclick="toggleEditMode()" style="flex: 1; background: linear-gradient(135deg, #0f4c5c 0%, #128c7e 100%); color: white; border: none; padding: 14px 24px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer;">
+                        ✏️ Editar Dados
+                    </button>
+                    <button onclick="window.location.href='/autoCadastro'" style="flex: 1; background: #6b7280; color: white; border: none; padding: 14px 24px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer;">
+                        ← Voltar
+                    </button>
+                </div>
+            </div>
+
+            <div id="editMode" style="display: none;">
+                <form id="editForm">
+                    <div style="margin-bottom: 20px;">
+                        <label style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">Nome Completo</label>
+                        <input type="text" id="editNome" required style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">E-mail</label>
+                        <input type="email" id="editEmail" required style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">Telefone</label>
+                        <input type="text" id="editTelefone" required style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    
+                    <div style="margin-bottom: 24px;">
+                        <label style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">Empresa</label>
+                        <input type="text" id="editEmpresa" required style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <button type="submit" style="flex: 1; background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; border: none; padding: 14px 24px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer;">
+                            ✅ Salvar Alterações
+                        </button>
+                        <button type="button" onclick="toggleEditMode()" style="flex: 1; background: #6b7280; color: white; border: none; padding: 14px 24px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer;">
+                            ❌ Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userData = null;
+
+        // Carregar dados do usuário
+        window.addEventListener('load', function() {
+            const storedData = localStorage.getItem('userData');
+            if (!storedData) {
+                alert('Sessão expirada. Faça login novamente.');
+                window.location.href = '/usuario-login';
+                return;
+            }
+            
+            userData = JSON.parse(storedData);
+            displayUserData();
+        });
+         function displayUserData() {
+            document.getElementById('viewNome').textContent = userData.nomeCompleto || '-';
+            document.getElementById('viewCpf').textContent = formatCpf(userData.cpf) || '-';
+            document.getElementById('viewEmail').textContent = userData.email || '-';
+            document.getElementById('viewTelefone').textContent = formatTelefone(userData.ddi, userData.telefone) || '-';
+            document.getElementById('viewEmpresa').textContent = userData.nomeEmpresa || '-';
+        }
+
+        function toggleEditMode() {
+            const viewMode = document.getElementById('viewMode');
+            const editMode = document.getElementById('editMode');
+            
+            if (viewMode.style.display === 'none') {
+                viewMode.style.display = 'block';
+                editMode.style.display = 'none';
+            } else {
+                viewMode.style.display = 'none';
+                editMode.style.display = 'block';
+                fillEditForm();
+            }
+        }
+
+        function fillEditForm() {
+            document.getElementById('editNome').value = userData.nomeCompleto || '';
+            document.getElementById('editEmail').value = userData.email || '';
+            document.getElementById('editTelefone').value = userData.telefone || '';
+            document.getElementById('editEmpresa').value = userData.nomeEmpresa || '';
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const updatedData = {
+                nomeCompleto: document.getElementById('editNome').value,
+                email: document.getElementById('editEmail').value,
+                telefone: document.getElementById('editTelefone').value,
+                nomeEmpresa: document.getElementById('editEmpresa').value
+            };
+            
+            try {
+                const response = await fetch('/api/usuario/atualizar', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...updatedData, cpf: userData.cpf })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    userData = { ...userData, ...updatedData };
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    displayUserData();
+                    toggleEditMode();
+                    alert('Dados atualizados com sucesso!');
+                } else {
+                    alert('Erro ao atualizar dados: ' + result.message);
+                }
+            } catch (error) {
+                alert('Erro ao atualizar dados. Tente novamente.');
+            }
+        });
+
+        function formatCpf(cpf) {
+            if (!cpf) return '';
+            return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        }
+
+        function formatTelefone(ddi, telefone) {
+            if (!telefone) return '';
+            const formatted = telefone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3');
+            return (ddi || '+55') + ' ' + formatted;
+        }
+    </script>
+</body>
+</html>

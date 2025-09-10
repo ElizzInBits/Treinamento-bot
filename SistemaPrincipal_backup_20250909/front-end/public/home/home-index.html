@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão de Treinamentos</title>
+  <link rel="icon" type="image/png" href="Imagens/logo.png" />
+  <link rel="stylesheet" href="css/home-style.css" />
+  <link rel="stylesheet" href="css/midias.css" />
+  <link rel="stylesheet" href="css/gestao-treinamentos.css" />
+  <link rel="stylesheet" href="../connection-alerts.css" />
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="main-container">
+    <!-- Header Principal -->
+    <header class="main-header">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo-icon"><img src="Imagens/image.png" alt=""></div>
+          <div class="logo-text">
+            <h1>Gestão de Treinamentos</h1>
+            <p class="subtitle">Sistema Para Gerenciamento e Aplicação de Treinamentos</p>
+          </div>
+        </div>
+        <div class="header-info">
+          <div class="system-status">
+            <span class="status-indicator online"></span>
+            <span class="status-text">Sistema Online</span>
+          </div>
+          <div class="current-time" id="currentTime"></div>
+        </div>
+        <div class="header-actions">
+          <div class="actions-row">
+            <button class="btn-icon" onclick="atualizarTodasEstatisticas()" title="Atualizar dados">
+              <span class="icon">🔄</span>
+            </button>
+            <button class="btn-primary" onclick="exportarDadosXLS()">
+              <span class="icon">📊</span>
+              Exportar Dados
+            </button>
+
+          </div>
+          <button class="btn-logout" onclick="logout()" title="Sair do sistema">
+            <span class="icon">🚪</span>
+            <span class="logout-text">Log out</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navegação por Tabs -->
+    <nav class="tab-navigation">
+      <div class="nav-container">
+        <button class="nav-tab" onclick="showTab('mapeamento')" data-tab="mapeamento">
+          Mapeamento
+        </button>
+        <button class="nav-tab" onclick="showTab('empresas')" data-tab="empresas">
+          Empresas
+        </button>
+        <button class="nav-tab" onclick="showTab('treinamentos')" data-tab="treinamentos">
+          Treinamentos
+        </button>
+      </div>
+    </nav>
+
+    <!-- Container Principal -->
+    <main class="content-container">
+      <!-- Alerts -->
+      <div id="alerts" class="alerts-container"></div>
+
+      <!-- Aba Mapeamento -->
+      <section id="mapeamento" class="tab-content">
+        <div class="content-card">
+          <div class="card-header">
+            <h2>Dashboard de Mapeamento</h2>
+            <p>Visualize os principais indicadores e análises de dados do sistema</p>
+          </div>
+
+          <!-- Cards de Indicadores -->
+          <div class="dashboard-stats">
+            <div class="stat-item" onclick="showTab('empresas')" style="cursor: pointer;">
+              <div class="stat-icon">👥</div>
+              <div class="stat-value" id="mapTotalContatos">0</div>
+              <div class="stat-label">Total de Contatos</div>
+            </div>
+            <div class="stat-item" onclick="showTab('empresas')" style="cursor: pointer;">
+              <div class="stat-icon">🏢</div>
+              <div class="stat-value" id="mapEmpresasAtivas">0</div>
+              <div class="stat-label">Empresas Ativas</div>
+            </div>
+            <div class="stat-item" onclick="showTab('treinamentos')" style="cursor: pointer;">
+              <div class="stat-icon">📚</div>
+              <div class="stat-value" id="mapTreinamentosDisponiveis">0</div>
+              <div class="stat-label">Treinamentos</div>
+            </div>
+          </div>
+
+          <!-- Insights Avançados -->
+          <div class="insights-section">
+            <h3>Insights e Análises</h3>
+            <div class="insights-grid">
+              <div class="insight-card">
+                <div class="insight-icon">🏆</div>
+                <div class="insight-content">
+                  <h4>Top Empresas por Engajamento</h4>
+                  <div id="topEmpresas" class="top-list">Carregando...</div>
+                </div>
+              </div>
+              <div class="insight-card">
+                <div class="insight-icon">📈</div>
+                <div class="insight-content">
+                  <h4>Tendência de Crescimento</h4>
+                  <div id="tendenciaCrescimento" class="metric-value">Carregando...</div>
+                </div>
+              </div>
+              <div class="insight-card">
+                <div class="insight-icon">⚡</div>
+                <div class="insight-content">
+                  <h4>Eficiência do Sistema</h4>
+                  <div id="eficienciaSistema" class="metric-value">Carregando...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráficos -->
+          <div class="charts-container">
+            <div class="chart-row">
+              <div class="chart-item">
+                <div class="chart-header">
+                  <h4>Contatos por Empresa</h4>
+                  <button class="refresh-btn" onclick="criarGraficoEmpresas()" title="Atualizar">🔄</button>
+                </div>
+                <canvas id="graficoEmpresas" width="400" height="200"></canvas>
+              </div>
+              <div class="chart-item">
+                <div class="chart-header">
+                  <h4>Status de Treinamento</h4>
+                  <button class="refresh-btn" onclick="criarGraficoStatus()" title="Atualizar">🔄</button>
+                </div>
+                <canvas id="graficoStatus" width="400" height="200"></canvas>
+              </div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-item">
+                <div class="chart-header">
+                  <h4>Treinamentos por Modalidade</h4>
+                  <button class="refresh-btn" onclick="criarGraficoModalidades()" title="Atualizar">🔄</button>
+                </div>
+                <canvas id="graficoModalidades" width="400" height="200"></canvas>
+              </div>
+              <div class="chart-item">
+                <div class="chart-header">
+                  <h4>Evolução Mensal</h4>
+                  <button class="refresh-btn" onclick="criarGraficoEvolucao()" title="Atualizar">🔄</button>
+                </div>
+                <canvas id="graficoEvolucao" width="400" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Aba Empresas -->
+      <section id="empresas" class="tab-content">
+        <div class="content-card">
+          <div class="card-header">
+            <h2>Empresas Cadastradas</h2>
+            <p>Vizualize e gerencie as empresas cadastradas no sistema</p>
+          </div>
+
+          <div class="dashboard-stats">
+            <div class="stat-item">
+              <div class="stat-value" id="totalEmpresas">0</div>
+              <div class="stat-label">Total de Empresas</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="totalContatos">0</div>
+              <div class="stat-label">Total de Contatos</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="contatosComTreinamento">0</div>
+              <div class="stat-label">Com Treinamento</div>
+            </div>
+          </div>
+
+          <div class="quick-actions" style="display: flex; gap: 1rem; margin: 2rem 0; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="window.open('/autoCadastro', '_blank')" style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; font-size: 1rem;">
+              <span style="font-size: 1.2rem;">👤</span>
+              Cadastrar Novo Contato
+            </button>
+            <button class="btn-secondary" onclick="window.open('/empre', '_blank')" style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; font-size: 1rem;">
+              <span style="font-size: 1.2rem;">🏢</span>
+              Cadastrar Nova Empresa
+            </button>
+            <button class="btn-icon" onclick="testarNotificacoes()" title="Testar notificações" style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; font-size: 1rem;">
+              <span style="font-size: 1.2rem;">🔔</span>
+              Testar Notificações
+            </button>
+          </div>
+
+          <div class="loading-container" id="loadingEmpresas">
+            <div class="loading-spinner"></div>
+            <p>Carregando empresas...</p>
+          </div>
+
+          <div id="empresasGrid" class="companies-grid"></div>
+        </div>
+      </section>
+
+      <!-- Aba Treinamentos -->
+      <section id="treinamentos" class="tab-content">
+        <div class="content-card">
+          <div class="training-form-section">
+            <h3>Criar Novo Treinamento</h3>
+            <form id="treinamentoForm" class="professional-form">
+
+              <!-- Informações Básicas -->
+              <div class="form-section">
+                <h4 class="section-title">Informações Básicas</h4>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="novoTreinamento">Nome do Treinamento <span class="required">*</span></label>
+                    <input type="text" id="novoTreinamento" name="novoTreinamento" required
+                      placeholder="Digite o nome do treinamento" maxlength="100" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="modalidadeTreinamento">Modalidade de Treinamento <span class="required">*</span></label>
+                    <select id="modalidadeTreinamento" name="modalidadeTreinamento" required class="form-control">
+                      <option value="">Selecione a modalidade</option>
+                      <option value="presencial">Presencial</option>
+                      <option value="online">Online</option>
+                      <option value="hibrido">Híbrido</option>
+                      <option value="ead">EAD</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="cargaHoraria">Carga Horária Realizada <span class="required">*</span></label>
+                    <input type="number" id="cargaHoraria" name="cargaHoraria" required placeholder="Ex: 40" min="1"
+                      max="9999" class="form-control" />
+                    <small class="form-help">Informe em horas</small>
+                  </div>
+                  <div class="form-group">
+                    <label for="tipoTreinamento">Tipo de Treinamento <span class="required">*</span></label>
+                    <select id="tipoTreinamento" name="tipoTreinamento" required class="form-control">
+                      <option value="">Selecione o tipo</option>
+                      <option value="Teórico">Teórico</option>
+                      <option value="Prático">Prático</option>
+                      <option value="Teórico e Prático">Teórico e Prático</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="emConformidade">Em Conformidade <span class="required">*</span></label>
+                    <input type="text" id="emConformidade" name="emConformidade" required placeholder="Descreva a conformidade"
+                      maxlength="255" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="aproveitamentoConteudo">Aproveitamento de Conteúdo <span
+                        class="required">*</span></label>
+                    <input type="text" id="aproveitamentoConteudo" name="aproveitamentoConteudo" required
+                      placeholder="E..." maxlength="100" class="form-control" />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group full-width">
+                    <label for="conteudoProgramatico">Conteúdo Programático Aplicado <span
+                        class="required">*</span></label>
+                    <textarea id="conteudoProgramatico" name="conteudoProgramatico" required
+                      placeholder="Descreva o conteúdo programático aplicado no treinamento" rows="4" maxlength="1000"
+                      class="form-control"></textarea>
+                    <small class="form-help">Máximo 1000 caracteres</small>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="form-section">
+                <h4 class="section-title">Mídias do Treinamento</h4>
+                <div class="form-group full-width">
+                  <label for="midiasTreinamento">Anexar Mídias (Imagens, Vídeos, Áudios, PDFs)</label>
+                  <div class="file-upload-container">
+                    <div class="file-upload-area" onclick="document.getElementById('midiasTreinamento').click()">
+                      <div class="upload-icon">📁</div>
+                      <div class="upload-text">Clique aqui ou arraste os arquivos</div>
+                      <div class="upload-hint">✅ Tamanho máximo permitido (máx. 100MB cada)</div>
+                      <div class="upload-types">
+                        <span class="type-badge">🖼️ Imagens</span>
+                        <span class="type-badge">🎥 Vídeos</span>
+                        <span class="type-badge">🎧 Áudios</span>
+                        <span class="type-badge">📄 PDFs</span>
+                      </div>
+                    </div>
+                    <input type="file" id="midiasTreinamento" name="midiasTreinamento" multiple
+                      accept="image/*,video/*,audio/*,application/pdf" class="form-control" style="display: none;" />
+                    <div id="selectedFiles" class="selected-files"></div>
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('midiasTreinamento').click()" style="margin-top: 10px; display: none;" id="btnAdicionarMais">
+                      ➕ Adicionar Mais Arquivos
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Informações dos Instrutores -->
+              <div class="form-section">
+                <h4 class="section-title">Informações dos Instrutores</h4>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="nomeInstrutor">Nome do Instrutor Principal <span class="required">*</span></label>
+                    <input type="text" id="nomeInstrutor" name="nomeInstrutor" required
+                      placeholder="Nome completo do instrutor" maxlength="100" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="qualificacaoInstrutor">Qualificação do Instrutor</label>
+                    <input type="text" id="qualificacaoInstrutor" name="qualificacaoInstrutor"
+                      placeholder="Ex: Especialista em Segurança, Certificado..." maxlength="200"
+                      class="form-control" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="registroInstrutor">Registro do Instrutor <span class="required">*</span></label>
+                  <input type="text" id="registroInstrutor" name="registroInstrutor" required
+                    placeholder="Número de registro profissional" maxlength="100"
+                    class="form-control" />
+                </div>
+              </div>
+
+              <!-- Informações sobre Responsabilidade -->
+              <div class="form-section">
+                <h4 class="section-title">Informações sobre Responsabilidade</h4>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="responsavelTreinamento">Responsável pelo Treinamento <span
+                        class="required">*</span></label>
+                    <input type="text" id="responsavelTreinamento" name="responsavelTreinamento" required
+                      placeholder="Nome do responsável pela organização" maxlength="100" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="cargoResponsavel">Cargo do Responsável</label>
+                    <input type="text" id="cargoResponsavel" name="cargoResponsavel"
+                      placeholder="Ex:Coordenador de Treinamento" maxlength="100"
+                      class="form-control" />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="areaResponsavel">Área Responsável <span class="required">*</span></label>
+                    <input type="text" id="areaResponsavel" name="areaResponsavel" required
+                      placeholder="Ex: Recursos Humanos, Segurança do Trabalho" maxlength="100"
+                      class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="registroResponsavel">Registro do Responsável <span class="required">*</span></label>
+                    <input type="text" id="registroResponsavel" name="registroResponsavel" required
+                      placeholder="Número de registro profissional" maxlength="100"
+                      class="form-control" />
+                  </div>
+                </div>
+
+
+              </div>
+
+              <!-- Ações -->
+              <div class="form-actions">
+                <button type="button" class="btn-secondary">Cancelar</button>
+                <button type="submit" class="btn-primary">Criar Treinamento</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Carregando -->
+          <div class="loading-container" id="loadingTreinamentos">
+            <div class="loading-spinner"></div>
+            <p>Carregando treinamentos...</p>
+          </div>
+
+          <!-- Grid de treinamentos -->
+          <div id="treinamentosGrid" class="training-cards"></div>
+        </div>
+      </section>
+
+
+
+      <!-- Modais -->
+      <div id="modalContatosEmpresa" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 id="modalTituloEmpresa">Contatos da Empresa</h3>
+            <button class="modal-close" onclick="fecharModalContatosEmpresa()">X</button>
+          </div>
+          <div class="modal-content">
+            <div class="search-section">
+              <div class="search-input-wrapper">
+                <input type="text" id="searchInputModal" placeholder="Pesquisar contatos por nome ou telefone..."
+                  class="search-input" onkeyup="filtrarContatosModal()" />
+              </div>
+            </div>
+            <div id="modalConteudoEmpresa"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="modalContatos" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 id="modalTitulo">Contatos do Treinamento</h3>
+            <button class="modal-close" onclick="fecharModal()">X</button>
+          </div>
+          <div class="modal-content" id="modalConteudo"></div>
+        </div>
+      </div>
+
+      <div id="modalEditarContato" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3>Editar Contato</h3>
+            <button class="modal-close" onclick="fecharModalEditarContato()">X</button>
+          </div>
+          <div class="modal-content">
+            <form id="editarContatoForm" class="professional-form">
+              <input type="hidden" id="editarContatoId" />
+              <div class="form-group">
+                <label for="editarNome">Nome <span class="required">*</span></label>
+                <input type="text" id="editarNome" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label for="editarTelefone">Telefone <span class="required">*</span></label>
+                <input type="text" id="editarTelefone" class="form-control" required placeholder="Ex: 5531999990000" />
+              </div>
+              <div class="form-group">
+                <label for="editarEmpresa">Empresa <span class="required">*</span></label>
+                <select id="editarEmpresa" class="form-control" required>
+                  <option value="">Selecione uma empresa</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="editarTreinamento">Treinamento</label>
+                <select id="editarTreinamento" class="form-control">
+                  <option value="">Sem treinamento</option>
+                </select>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">Salvar Alterações</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div id="modalDetalhesContato" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3>Detalhes do Contato</h3>
+            <button class="modal-close" onclick="fecharModalDetalhesContato()">X</button>
+          </div>
+          <div class="modal-content" id="detalhesContatoConteudo"></div>
+        </div>
+      </div>
+
+      <!-- Modal de Detalhes/Edição do Treinamento -->
+      <div id="modalDetalhesTreinamento" class="modal-overlay" style="display:none;">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 id="tituloModalTreinamento">Detalhes do Treinamento</h3>
+            <button class="modal-close" onclick="fecharModalDetalhesTreinamento()">X</button>
+          </div>
+          <div class="modal-content" id="conteudoModalTreinamento">
+            <!-- Detalhes e formulário de edição serão inseridos via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Treinamentos da Empresa -->
+      <div id="modalTreinamentosEmpresa" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 id="modalTituloTreinamentosEmpresa">Treinamentos da Empresa</h3>
+            <button class="modal-close" onclick="fecharModalTreinamentosEmpresa()">X</button>
+          </div>
+          <div class="modal-content" id="conteudoTreinamentosEmpresa">
+            <!-- Conteúdo será inserido via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Detalhes da Empresa -->
+      <div id="modalDetalhesEmpresa" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 id="modalTituloDetalhesEmpresa">Detalhes da Empresa</h3>
+            <button class="modal-close" onclick="fecharModalDetalhesEmpresa()">X</button>
+          </div>
+          <div class="modal-content" id="conteudoDetalhesEmpresa">
+            <!-- Conteúdo será inserido via JS -->
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- Scripts -->
+      <script src="../inactivity-manager.js"></script>
+      <script src="../auth.js"></script>
+      <script src="/socket.io/socket.io.js"></script>
+      <script src="notificacoes.js"></script>
+      <script src="js/config.js"></script>
+      <script src="js/home-script.js"></script>
+      <script>
+        // Atualizar relógio no header
+        function atualizarRelogio() {
+          const agora = new Date();
+          const timeElement = document.getElementById('currentTime');
+          if (timeElement) {
+            timeElement.textContent = agora.toLocaleString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+          }
+        }
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio();
+        
+        // Função para ativar/desativar notificações
+        async function toggleNotificacoes() {
+          if (!('Notification' in window)) {
+            mostrarModalInstrucoes('Seu navegador não suporta notificações.', 'erro');
+            return;
+          }
+          
+          if (Notification.permission === 'granted') {
+            alert('✅ Notificações já estão ativadas!');
+            return;
+          }
+          
+          if (Notification.permission === 'denied') {
+            mostrarModalInstrucoes('Notificações foram bloqueadas pelo navegador.', 'bloqueado');
+            return;
+          }
+          
+          try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+              alert('✅ Notificações ativadas! Você receberá alertas de novos cadastros.');
+              // Testar imediatamente
+              new Notification('🎉 Notificações Ativadas!', {
+                body: 'Você receberá alertas de novos cadastros.',
+                icon: '/home/Imagens/logo.png'
+              });
+            } else {
+              mostrarModalInstrucoes('Permissão negada.', 'negado');
+            }
+          } catch (error) {
+            alert('❌ Erro ao solicitar permissão: ' + error.message);
+          }
+        }
+        
+        // Função para testar notificações
+        async function testarNotificacoes() {
+          console.log('Testando notificações...');
+          
+          if (!('Notification' in window)) {
+            mostrarModalInstrucoes('Seu navegador não suporta notificações.', 'erro');
+            return;
+          }
+          
+          if (Notification.permission === 'denied') {
+            mostrarModalInstrucoes('Notificações foram bloqueadas pelo navegador.', 'bloqueado');
+            return;
+          }
+          
+          if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+              mostrarModalInstrucoes('Permissão negada.', 'negado');
+              return;
+            }
+          }
+          
+          try {
+            new Notification('🧪 Teste de Notificação', {
+              body: 'Se você está vendo isso, as notificações estão funcionando!',
+              icon: '/home/Imagens/logo.png'
+            });
+            alert('✅ Notificação de teste enviada! Verifique se apareceu no canto da tela.');
+          } catch (error) {
+            alert('❌ Erro ao enviar notificação: ' + error.message);
+          }
+        }
+        
+        // Função para mostrar modal com instruções
+        function mostrarModalInstrucoes(titulo, tipo) {
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 10000; display: flex; 
+            align-items: center; justify-content: center;
+          `;
+          
+          let conteudo = '';
+          if (tipo === 'bloqueado') {
+            conteudo = `
+              <h3>🔒 Notificações Bloqueadas</h3>
+              <p>Para ativar as notificações, siga os passos:</p>
+              <div style="text-align: left; margin: 20px 0;">
+                <h4>🔧 Chrome/Edge:</h4>
+                <ol>
+                  <li>Clique no ícone de <strong>cadeado</strong> na barra de endereço</li>
+                  <li>Altere "Notificações" para <strong>"Permitir"</strong></li>
+                  <li>Recarregue a página</li>
+                </ol>
+                <h4>🦊 Firefox:</h4>
+                <ol>
+                  <li>Clique no ícone de <strong>escudo</strong> na barra de endereço</li>
+                  <li>Desative o bloqueio de notificações</li>
+                  <li>Recarregue a página</li>
+                </ol>
+              </div>
+            `;
+          } else if (tipo === 'negado') {
+            conteudo = `
+              <h3>❌ Permissão Negada</h3>
+              <p>Você negou a permissão para notificações.</p>
+              <p>Para ativar, clique em <strong>"Permitir"</strong> quando o navegador solicitar.</p>
+              <p>Ou siga as instruções acima para desbloquear manualmente.</p>
+            `;
+          } else {
+            conteudo = `
+              <h3>⚠️ ${titulo}</h3>
+              <p>Seu navegador não suporta notificações web.</p>
+            `;
+          }
+          
+          modal.innerHTML = `
+            <div style="
+              background: white; padding: 30px; border-radius: 15px; 
+              max-width: 500px; width: 90%; text-align: center;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            ">
+              ${conteudo}
+              <button onclick="this.closest('div').remove()" style="
+                background: #0f4c5c; color: white; border: none; 
+                padding: 10px 20px; border-radius: 5px; cursor: pointer;
+                margin-top: 20px;
+              ">Entendi</button>
+            </div>
+          `;
+          
+          document.body.appendChild(modal);
+          
+          // Fechar ao clicar fora
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+          });
+        }
+        
+
+      </script>
+
+
+</body>
+
+</html>
