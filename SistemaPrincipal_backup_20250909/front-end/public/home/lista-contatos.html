@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lista de Contatos</title>
+  <link rel="stylesheet" href="/home/css/lista-contatos.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📇 Lista de Contatos</h1>
+      <p>Veja todos os contatos cadastrados</p>
+    </div>
+
+    <div class="list-section">
+      <table id="tabelaContatos">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Email</th>
+            <th>CPF</th>
+            <th>Status</th>
+            <th>Empresa</th>
+            <th>Última Interação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Os contatos vão aparecer aqui -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/home/js/lista-contatos.js" defer></script>
+</body>
+</html>
