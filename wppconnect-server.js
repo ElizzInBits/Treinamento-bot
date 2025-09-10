@@ -1,6 +1,12 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
 const express = require('express');
 const cors = require('cors');
+const { 
+  CALL_BLOCKER_CONFIG, 
+  isNumberAllowed, 
+  shouldSendMessage, 
+  markMessageSent 
+} = require('./call-blocker-config');
 
 const app = express();
 const PORT = 21465;
@@ -35,9 +41,102 @@ wppconnect.create({
 }).then(c => {
   client = c;
   console.log('✅ WppConnect Server conectado!');
+  
+  // Configurar bloqueio de ligações
+  setupCallBlocking(client);
+  
 }).catch(err => {
   console.error('❌ Erro WppConnect:', err);
 });
+
+// Função para bloquear ligações com configurações avançadas
+function setupCallBlocking(client) {
+  if (!client || !CALL_BLOCKER_CONFIG.enabled) {
+    if (!CALL_BLOCKER_CONFIG.enabled) {
+      console.log('⚠️ Bloqueio de ligações desabilitado na configuração');
+    }
+    return;
+  }
+  
+  try {
+    // Interceptar ligações recebidas
+    client.onIncomingCall(async (call) => {
+      const phoneNumber = call.peerJid.replace('@c.us', '');
+      const isGroup = call.peerJid.includes('@g.us');
+      
+      if (CALL_BLOCKER_CONFIG.detailedLogging) {
+        console.log(`📞 Ligação recebida de: ${phoneNumber} ${isGroup ? '(Grupo)' : '(Individual)'}`);
+        console.log(`📋 Detalhes da ligação:`, {
+          id: call.id,
+          from: call.peerJid,
+          isVideo: call.isVideo || false,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Verificar se deve bloquear ligações de grupo
+      if (isGroup && !CALL_BLOCKER_CONFIG.blockGroupCalls) {
+        console.log('📞 Ligação de grupo permitida pela configuração');
+        return;
+      }
+      
+      // Verificar whitelist
+      const isAllowed = isNumberAllowed(phoneNumber);
+      
+      try {
+        // Rejeitar a ligação automaticamente
+        await client.rejectCall(call.id);
+        
+        if (CALL_BLOCKER_CONFIG.detailedLogging) {
+          console.log(`❌ Ligação rejeitada: ${phoneNumber} ${isAllowed ? '(Whitelist)' : '(Bloqueada)'}`);
+        }
+        
+        // Determinar qual mensagem enviar
+        let mensagem;
+        if (isAllowed && CALL_BLOCKER_CONFIG.whitelistMessage) {
+          mensagem = CALL_BLOCKER_CONFIG.whitelistMessage;
+        } else {
+          mensagem = CALL_BLOCKER_CONFIG.blockedMessage;
+        }
+        
+        // Verificar se deve enviar mensagem
+        if (shouldSendMessage(call.peerJid)) {
+          // Aguardar antes de enviar a mensagem
+          setTimeout(async () => {
+            try {
+              await client.sendText(call.peerJid, mensagem);
+              markMessageSent(call.peerJid);
+              
+              if (CALL_BLOCKER_CONFIG.detailedLogging) {
+                console.log(`✅ Mensagem de bloqueio enviada para: ${phoneNumber}`);
+              }
+            } catch (msgError) {
+              console.error(`❌ Erro ao enviar mensagem para ${phoneNumber}:`, msgError.message);
+            }
+          }, CALL_BLOCKER_CONFIG.messageDelay);
+        } else {
+          if (CALL_BLOCKER_CONFIG.detailedLogging) {
+            console.log(`⏭️ Mensagem não enviada (já enviada hoje): ${phoneNumber}`);
+          }
+        }
+        
+      } catch (rejectError) {
+        console.error(`❌ Erro ao rejeitar ligação de ${phoneNumber}:`, rejectError.message);
+      }
+    });
+    
+    console.log('🛡️ Sistema de bloqueio de ligações ativado com configurações avançadas!');
+    console.log(`📊 Configurações ativas:`);
+    console.log(`   • Bloqueio habilitado: ${CALL_BLOCKER_CONFIG.enabled}`);
+    console.log(`   • Bloqueio de grupos: ${CALL_BLOCKER_CONFIG.blockGroupCalls}`);
+    console.log(`   • Números permitidos: ${CALL_BLOCKER_CONFIG.allowedNumbers.length}`);
+    console.log(`   • Uma mensagem por dia: ${CALL_BLOCKER_CONFIG.oncePerDay}`);
+    console.log(`   • Delay da mensagem: ${CALL_BLOCKER_CONFIG.messageDelay}ms`);
+    
+  } catch (error) {
+    console.error('❌ Erro ao configurar bloqueio de ligações:', error.message);
+  }
+}
 
 // Rotas da API
 app.get('/status', async (req, res) => {
