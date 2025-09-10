@@ -1,0 +1,42 @@
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const EmpresaTreinamento = sequelize.define('empresa_treinamentos', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'empresas',
+        key: 'id',
+      },
+    },
+    treinamento_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'treinamento',
+        key: 'id',
+      },
+    },
+    data_atribuicao: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+  }, {
+    timestamps: false,
+    freezeTableName: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ['empresa_id', 'treinamento_id']
+      }
+    ]
+  });
+
+  return EmpresaTreinamento;
+};
