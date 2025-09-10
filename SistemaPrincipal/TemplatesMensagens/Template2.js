@@ -34,6 +34,19 @@ wppconnect.create({
   wppClient = c;
   setWppClient(c);
   console.log('✅ Bot Cliente conectado!');
+  
+  // Bloqueador de chamadas
+  c.onIncomingCall(async (call) => {
+    console.log('📞 Chamada recebida de:', call.peerJid);
+    try {
+      await c.rejectCall(call.id);
+      await c.sendText(call.peerJid, '🚫 *Chamadas não são aceitas*\n\nEnvie mensagem de texto! 😊');
+      console.log('✅ Chamada bloqueada');
+    } catch (error) {
+      console.error('❌ Erro ao bloquear:', error.message);
+    }
+  });
+  
 }).catch(err => {
   console.error('❌ Erro Bot Cliente:', err);
 });
