@@ -6,21 +6,18 @@ const fs = require('fs');
 const http = require('http');
 const https = require('https');
 const { Server } = require('socket.io');
-const SSLConfig = require('./ssl-config');
+const sslConfig = require('./ssl-config');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
 const SSL_ENABLED = process.env.SSL_ENABLED === 'true' || false;
-
-// Configuração SSL
-const sslConfig = new SSLConfig();
 let server, httpsServer;
 
 // Criar servidores HTTP e HTTPS
-if (SSL_ENABLED && sslConfig.certificatesExist()) {
+if (SSL_ENABLED && sslConfig.enabled) {
     // Servidor HTTPS principal
-    const sslOptions = sslConfig.getSSLOptions();
+    const sslOptions = { key: sslConfig.key, cert: sslConfig.cert };
     httpsServer = https.createServer(sslOptions, app);
     
     // Servidor HTTP para redirecionamento
