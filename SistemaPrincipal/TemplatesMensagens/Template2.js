@@ -35,15 +35,53 @@ async function processarMensagem(message, client) {
       return;
     }
     
-    // Buscar contato no banco
+    // Buscar contato no banco - tentar diferentes formatos
     let contato = await Contato.findOne({ where: { telefone } });
+    
+    // Se não encontrou, tentar sem o código do país
+    if (!contato && telefone.startsWith('55')) {
+      const telefoneLocal = telefone.substring(2);
+      contato = await Contato.findOne({ where: { telefone: telefoneLocal } });
+      console.log(`🔍 Tentativa 2 - Buscando: ${telefoneLocal}`);
+    }
+    
+    // Se ainda não encontrou, tentar com formato +55
+    if (!contato) {
+      const telefoneComMais = `+${telefone}`;
+      contato = await Contato.findOne({ where: { telefone: telefoneComMais } });
+      console.log(`🔍 Tentativa 3 - Buscando: ${telefoneComMais}`);
+    }
     
     console.log(`🔍 Buscando contato: ${telefone}`);
     console.log(`📋 Contato encontrado:`, contato ? `${contato.nome} (ID: ${contato.id})` : 'NÃO ENCONTRADO');
     
+    // Debug: mostrar alguns contatos do banco
     if (!contato) {
-      // Resposta para contatos não cadastrados
-      await client.sendText(message.from, `😊 Olá! Bem-vindo(a)!\n\nPara acessar nossos treinamentos, você precisa estar cadastrado em nosso sistema.\n\n📞 Entre em contato conosco para realizar seu cadastro e começar seus treinamentos!`);
+      const todosContatos = await Contato.findAll({ limit: 3 });
+      console.log('📋 Exemplos de contatos no banco:');
+      todosContatos.forEach(c => console.log(`  - ${c.telefone} (${c.nome})`));
+    }
+    
+    if (!contato) {
+      // Mensagens de boas-vindas Salubritá
+      await client.sendText(message.from, '👋 Olá! Seja muito bem-vindo(a)!\n\n🤖 Eu sou um bot de treinamentos da Salubritá! 🚀');
+      
+      setTimeout(async () => {
+        await client.sendText(message.from, '🏢 Estou aqui para aplicar treinamentos de segurança e saúde no trabalho de forma rápida e eficiente!\n\n🎓 Nossos treinamentos são certificados e reconhecidos nacionalmente.');
+      }, 1000);
+      
+      setTimeout(async () => {
+        await client.sendText(message.from, '🤔 Humm, parece que você ainda não fez seu cadastro em nossa plataforma.\n\n📝 Para iniciar seu treinamento, é necessário se cadastrar primeiro.\n\n👉 Clique no link abaixo para se cadastrar:\n\nhttps://abrir.link/kAgON\n\n✨ Após o cadastro, volte aqui e me envie qualquer mensagem para começarmos!');
+      }, 2000);
+      
+      setTimeout(async () => {
+        await client.sendText(message.from, 'ATENÇÃO:\nUse o MESMO NÚMERO que você utilizará para conversar com o bot de treinamento no WhatsApp.');
+      }, 3000);
+      
+      setTimeout(async () => {
+        await client.sendText(message.from, '💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.');
+      }, 4000);
+      
       return;
     }
     
