@@ -72,6 +72,15 @@ class ImageManager {
             const client = url.startsWith('https') ? https : http;
             
             client.get(url, (response) => {
+                // Tratar redirecionamentos
+                if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                    console.log(`🔄 Redirecionamento: ${response.statusCode}`);
+                    this.downloadImage(response.headers.location, filepath)
+                        .then(resolve)
+                        .catch(reject);
+                    return;
+                }
+                
                 if (response.statusCode === 200) {
                     const file = fs.createWriteStream(filepath);
                     response.pipe(file);
