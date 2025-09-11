@@ -117,7 +117,7 @@ async function processarMensagem(message, client) {
     // Verificar se é seleção do menu de treinamentos
     if (message.selectedRowId === 'ssma_basico' || mensagem.toLowerCase().includes('treinamento básico de ssma')) {
       // Verificar se já concluiu o treinamento
-      if (contato.statusTreinamento === 'concluido') {
+      if (contato.statusTreinamento === 'concluído' || contato.statusTreinamento === 'concluido') {
         await client.sendText(message.from, `🎆 Olá ${contato.nome}!\n\n✅ Você já concluiu o treinamento SSMA com sucesso!\n\n📜 Caso precise revisar o conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
         return;
       }
@@ -129,7 +129,7 @@ async function processarMensagem(message, client) {
     // Verificar se é comando de treinamento SSMA
     if (mensagem.toLowerCase().includes('ssma') || mensagem.toLowerCase().includes('treinamento')) {
       // Verificar se já concluiu o treinamento
-      if (contato.statusTreinamento === 'concluido') {
+      if (contato.statusTreinamento === 'concluído' || contato.statusTreinamento === 'concluido') {
         await client.sendText(message.from, `🎆 Olá ${contato.nome}!\n\n✅ Você já concluiu o treinamento SSMA com sucesso!\n\n📜 Caso precise revisar o conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
         return;
       }
@@ -139,7 +139,7 @@ async function processarMensagem(message, client) {
     }
     
     // Tentar processar resposta do treinamento SSMA (apenas se não concluiu)
-    if (contato.statusTreinamento !== 'concluido') {
+    if (contato.statusTreinamento !== 'concluído' && contato.statusTreinamento !== 'concluido') {
       console.log('🔄 Tentando processar resposta SSMA');
       const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
       if (processouSSMA) {
@@ -157,7 +157,7 @@ async function processarMensagem(message, client) {
       
       setTimeout(async () => {
         // Verificar status do treinamento
-        if (contato.statusTreinamento === 'concluido') {
+        if (contato.statusTreinamento === 'concluído' || contato.statusTreinamento === 'concluido') {
           await client.sendText(message.from, `🎆 Parabéns ${contato.nome}!\n\n✅ Você já concluiu todos os treinamentos disponíveis!\n\n📜 Caso precise revisar algum conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
         } else {
           // Enviar menu de treinamentos
