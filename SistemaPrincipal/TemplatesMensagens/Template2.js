@@ -79,8 +79,7 @@ function setWppClient(client) {
     wppClient = client;
 }
 
-// DESABILITADO - usando apenas wppconnect-server
-/*
+// Cliente direto ativado
 wppconnect.create({
   session: 'WHATSAPP_BOT_DIRECT',
   headless: true,
@@ -137,7 +136,6 @@ wppconnect.create({
 }).catch(err => {
   console.error('❌ Erro Bot Cliente:', err);
 });
-*/
 
 // Função sendMessage usando cliente direto
 async function sendMessage(phone, endpoint, body = {}) {
