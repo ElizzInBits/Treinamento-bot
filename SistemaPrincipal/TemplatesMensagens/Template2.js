@@ -35,25 +35,28 @@ async function processarMensagem(message, client) {
       return;
     }
     
-    // Buscar contato no banco - tentar diferentes formatos
-    let contato = await Contato.findOne({ where: { telefone } });
+    // Buscar contato no banco - tentar TODOS os formatos possíveis
+    const formatosTelefone = [
+      telefone,                           // 553399595511
+      telefone.substring(2),              // 3399595511  
+      `+${telefone}`,                     // +553399595511
+      telefone.substring(0, 2) + telefone.substring(4), // 5599595511
+      telefone.substring(4),              // 99595511
+      `(${telefone.substring(2, 4)}) ${telefone.substring(4, 9)}-${telefone.substring(9)}`, // (33) 99959-5511
+      `${telefone.substring(2, 4)}${telefone.substring(4)}`, // 3399595511
+    ];
     
-    // Se não encontrou, tentar sem o código do país
-    if (!contato && telefone.startsWith('55')) {
-      const telefoneLocal = telefone.substring(2);
-      contato = await Contato.findOne({ where: { telefone: telefoneLocal } });
-      console.log(`🔍 Tentativa 2 - Buscando: ${telefoneLocal}`);
+    let contato = null;
+    for (const formato of formatosTelefone) {
+      contato = await Contato.findOne({ where: { telefone: formato } });
+      if (contato) {
+        console.log(`✅ Contato encontrado com formato: ${formato}`);
+        break;
+      }
+      console.log(`❌ Tentativa: ${formato}`);
     }
     
-    // Se ainda não encontrou, tentar com formato +55
-    if (!contato) {
-      const telefoneComMais = `+${telefone}`;
-      contato = await Contato.findOne({ where: { telefone: telefoneComMais } });
-      console.log(`🔍 Tentativa 3 - Buscando: ${telefoneComMais}`);
-    }
-    
-    console.log(`🔍 Buscando contato: ${telefone}`);
-    console.log(`📋 Contato encontrado:`, contato ? `${contato.nome} (ID: ${contato.id})` : 'NÃO ENCONTRADO');
+    console.log(`📋 RESULTADO FINAL:`, contato ? `${contato.nome} (ID: ${contato.id})` : 'NÃO ENCONTRADO');
     
     // Debug: mostrar alguns contatos do banco
     if (!contato) {
