@@ -112,7 +112,10 @@ async function processarMensagem(message, client) {
       return await sendMessage(phone, endpoint, body);
     };
     
-    console.log(`🎯 Processando mensagem: "${mensagem}" para ${contato.nome}`);
+    // Recarregar contato do banco para ter status atualizado
+    await contato.reload();
+    
+    console.log(`🎯 Processando mensagem: "${mensagem}" para ${contato.nome} (Status: ${contato.statusTreinamento})`);
     
     // Verificar se é seleção do menu de treinamentos
     if (message.selectedRowId === 'ssma_basico' || mensagem.toLowerCase().includes('treinamento básico de ssma')) {
