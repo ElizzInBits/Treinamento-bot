@@ -117,6 +117,12 @@ async function processarMensagem(message, client) {
     
     console.log(`🎯 Processando mensagem: "${mensagem}" para ${contato.nome} (Status: ${contato.statusTreinamento})`);
     
+    // PARAR IMEDIATAMENTE se treinamento concluído
+    if (contato.statusTreinamento === 'concluído' || contato.statusTreinamento === 'concluido') {
+      console.log('🚫 BLOQUEADO - Treinamento já concluído');
+      return;
+    }
+    
     // Verificar se é seleção do menu de treinamentos
     if (message.selectedRowId === 'ssma_basico' || mensagem.toLowerCase().includes('treinamento básico de ssma')) {
       // Verificar se já concluiu o treinamento
