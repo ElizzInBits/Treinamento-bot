@@ -45,9 +45,40 @@ wppconnect.create({
   // Configurar bloqueio de ligações
   setupCallBlocking(client);
   
+  // Configurar processamento de mensagens
+  setupMessageProcessing(client);
+  
 }).catch(err => {
   console.error('❌ Erro WppConnect:', err);
 });
+
+// Função para processar mensagens
+function setupMessageProcessing(client) {
+  if (!client) return;
+  
+  try {
+    const { processarMensagem } = require('./SistemaPrincipal/TemplatesMensagens/Template2');
+    
+    client.onMessage(async (message) => {
+      if (!message.body) return;
+      if (message.isGroupMsg) return;
+      if (message.fromMe) return;
+      
+      console.log('📨 Mensagem recebida no wppconnect-server:', message.body, 'de:', message.from);
+      
+      try {
+        await processarMensagem(message, client);
+      } catch (error) {
+        console.error('❌ Erro ao processar mensagem no server:', error.message);
+      }
+    });
+    
+    console.log('💬 Sistema de processamento de mensagens ativado!');
+    
+  } catch (error) {
+    console.error('❌ Erro ao configurar processamento de mensagens:', error.message);
+  }
+}
 
 // Função para bloquear ligações com configurações avançadas
 function setupCallBlocking(client) {
