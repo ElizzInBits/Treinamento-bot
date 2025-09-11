@@ -114,12 +114,16 @@ async function processarMensagem(message, client) {
     }
     console.log('⚠️ Resposta SSMA não processada, enviando resposta padrão');
     
-    // Resposta padrão para contatos cadastrados
-    if (mensagem.toLowerCase().includes('oi') || mensagem.toLowerCase().includes('olá')) {
-      await client.sendText(message.from, `😊 Olá ${contato.nome}! Como posso ajudar você hoje?\n\n📚 Para iniciar um treinamento, digite *SSMA*`);
-    } else {
-      await client.sendText(message.from, `💬 Olá ${contato.nome}! Recebi sua mensagem.\n\n📚 Para iniciar um treinamento, digite *SSMA*\n📞 Ou nossa equipe entrará em contato em breve!`);
-    }
+    // Mensagem de boas-vindas para contatos cadastrados
+    await client.sendText(message.from, `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`);
+    
+    setTimeout(async () => {
+      await client.sendText(message.from, '📚 Aqui estão os treinamentos disponíveis');
+      
+      setTimeout(async () => {
+        await treinamentoSSMA.executarTreinamento(telefone, contato, sendMessageForTraining);
+      }, 1000);
+    }, 1000);
     
   } catch (error) {
     console.error('❌ Erro ao processar mensagem:', error);
