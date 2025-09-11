@@ -38,12 +38,13 @@ async function processarMensagem(message, client) {
     // Buscar contato no banco - tentar TODOS os formatos possíveis
     const formatosTelefone = [
       telefone,                           // 553399595511
+      `${telefone.substring(0, 4)}9${telefone.substring(4)}`, // 5533999595511 (adicionar 9)
+      telefone.replace(/^(55\d{2})9/, '$1'), // 553399595511 -> 5533995511 (remover 9)
       telefone.substring(2),              // 3399595511  
+      `${telefone.substring(2, 4)}9${telefone.substring(4)}`, // 33999595511 (DDD + 9)
+      telefone.substring(2).replace(/^(\d{2})9/, '$1'), // 3399595511 -> 33995511 (remover 9 do DDD)
       `+${telefone}`,                     // +553399595511
-      telefone.substring(0, 2) + telefone.substring(4), // 5599595511
-      telefone.substring(4),              // 99595511
-      `(${telefone.substring(2, 4)}) ${telefone.substring(4, 9)}-${telefone.substring(9)}`, // (33) 99959-5511
-      `${telefone.substring(2, 4)}${telefone.substring(4)}`, // 3399595511
+      `+${telefone.substring(0, 4)}9${telefone.substring(4)}`, // +5533999595511
     ];
     
     let contato = null;
