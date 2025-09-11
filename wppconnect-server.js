@@ -46,6 +46,7 @@ wppconnect.create({
   setupCallBlocking(client);
   
   // Configurar processamento de mensagens
+  console.log('🔧 Configurando processamento de mensagens...');
   setupMessageProcessing(client);
   
 }).catch(err => {
@@ -54,44 +55,14 @@ wppconnect.create({
 
 // Função para processar mensagens
 function setupMessageProcessing(client) {
-  if (!client) return;
+  if (!client) {
+    console.log('❌ Cliente não definido para processamento de mensagens');
+    return;
+  }
+  
+  console.log('🔧 Iniciando configuração de processamento de mensagens...');
   
   try {
-    const { connectDB, sequelize } = require('./SistemaPrincipal/BancoDeDados/database');
-    const ContatoModel = require('./SistemaPrincipal/BancoDeDados/models/contato');
-    const treinamentoSSMA = require('./SistemaPrincipal/TemplatesMensagens/Treinamentos/LCM/treinamentoSSMA');
-    
-    let Contato = null;
-    
-    // Conectar ao banco
-    connectDB().then(() => {
-      Contato = ContatoModel(sequelize);
-      console.log('✅ Banco conectado - wppconnect-server');
-    }).catch(error => {
-      console.error('❌ Erro no banco - wppconnect-server:', error);
-    });
-    
-    // Função sendMessage para treinamento
-    const sendMessageForTraining = async (phone, endpoint, body) => {
-      try {
-        switch (endpoint) {
-          case 'send-message':
-            return await client.sendText(phone, body.message);
-          case 'send-list-message':
-            return await client.sendListMessage(phone, body);
-          case 'send-file':
-            return await client.sendFile(phone, body.path, body.filename, body.caption);
-          case 'send-image':
-            return await client.sendImage(phone, body.path, body.filename, body.caption);
-          default:
-            return false;
-        }
-      } catch (error) {
-        console.error('❌ Erro sendMessage:', error.message);
-        return false;
-      }
-    };
-    
     client.onMessage(async (message) => {
       if (!message.body) return;
       if (message.isGroupMsg) return;
@@ -100,47 +71,18 @@ function setupMessageProcessing(client) {
       const telefone = message.from.replace('@c.us', '');
       const mensagem = message.body.trim();
       
-      console.log(`💬 Processando: "${mensagem}" de ${telefone}`);
+      console.log(`💬 MENSAGEM RECEBIDA: "${mensagem}" de ${telefone}`);
       
       try {
-        if (!Contato) {
-          await client.sendText(message.from, '😊 Olá! Sistema inicializando, tente novamente em alguns segundos.');
-          return;
-        }
-        
-        let contato = await Contato.findOne({ where: { telefone } });
-        
-        if (!contato) {
-          await client.sendText(message.from, `😊 Olá! Bem-vindo(a)!\n\nPara acessar nossos treinamentos, você precisa estar cadastrado em nosso sistema.\n\n📞 Entre em contato conosco para realizar seu cadastro e começar seus treinamentos!`);
-          return;
-        }
-        
-        // Verificar se é comando de treinamento SSMA
-        if (mensagem.toLowerCase().includes('ssma') || mensagem.toLowerCase().includes('treinamento')) {
-          await treinamentoSSMA.executarTreinamento(telefone, contato, sendMessageForTraining);
-          return;
-        }
-        
-        // Tentar processar resposta do treinamento SSMA
-        const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
-        if (processouSSMA) {
-          return;
-        }
-        
-        // Resposta padrão
-        if (mensagem.toLowerCase().includes('oi') || mensagem.toLowerCase().includes('olá')) {
-          await client.sendText(message.from, `😊 Olá ${contato.nome}! Como posso ajudar você hoje?\n\n📚 Para iniciar um treinamento, digite *SSMA*`);
-        } else {
-          await client.sendText(message.from, `💬 Olá ${contato.nome}! Recebi sua mensagem.\n\n📚 Para iniciar um treinamento, digite *SSMA*`);
-        }
+        // Resposta simples para teste
+        await client.sendText(message.from, `😊 Olá! Recebi sua mensagem: "${mensagem}"\n\n📚 Para iniciar o treinamento SSMA, digite *SSMA*`);
         
       } catch (error) {
-        console.error('❌ Erro ao processar mensagem:', error);
-        await client.sendText(message.from, '❌ Desculpe, ocorreu um erro. Tente novamente.');
+        console.error('❌ Erro ao enviar resposta:', error);
       }
     });
     
-    console.log('💬 Sistema de processamento de mensagens ativado!');
+    console.log('✅ Sistema de processamento de mensagens ativado!');
     
   } catch (error) {
     console.error('❌ Erro ao configurar processamento de mensagens:', error.message);
