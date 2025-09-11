@@ -6,16 +6,12 @@ const CALL_BLOCKER_CONFIG = {
   enabled: true,
   
   // Mensagem enviada quando uma ligação é bloqueada
-  blockedMessage: `🚫 *LIGAÇÕES BLOQUEADAS*
+  blockedMessage: `🚫 *Chamadas não são aceitas*
 
-Olá! Este é um bot automatizado e não aceita ligações.
-
-📱 Por favor, envie uma mensagem de texto para ser atendido.
-
-Obrigado pela compreensão!`,
+Envie mensagem de texto! 😊`,
 
   // Delay em milissegundos antes de enviar a mensagem (para evitar conflitos)
-  messageDelay: 2000,
+  messageDelay: 500,
   
   // Log detalhado das ligações bloqueadas
   detailedLogging: true,
