@@ -1,6 +1,7 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const ContatoModel = require('../BancoDeDados/models/contato');
+const treinamentoSSMA = require('./Treinamentos/LCM/treinamentoSSMA');
 
 // Inicializar modelo
 let Contato = null;
@@ -39,15 +40,27 @@ async function processarMensagem(message, client) {
     
     if (!contato) {
       // Resposta para contatos não cadastrados
-      await client.sendText(message.from, '😊 Olá! Para utilizar nossos treinamentos, você precisa estar cadastrado.\n\nEntre em contato com nossa equipe para se cadastrar!');
+      await client.sendText(message.from, `😊 Olá! Bem-vindo(a)!\n\nPara acessar nossos treinamentos, você precisa estar cadastrado em nosso sistema.\n\n📞 Entre em contato conosco para realizar seu cadastro e começar seus treinamentos!`);
       return;
     }
     
-    // Resposta simples para contatos cadastrados
+    // Verificar se é comando de treinamento SSMA
+    if (mensagem.toLowerCase().includes('ssma') || mensagem.toLowerCase().includes('treinamento')) {
+      await treinamentoSSMA.executarTreinamento(telefone, contato, sendMessage);
+      return;
+    }
+    
+    // Tentar processar resposta do treinamento SSMA
+    const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessage);
+    if (processouSSMA) {
+      return;
+    }
+    
+    // Resposta padrão para contatos cadastrados
     if (mensagem.toLowerCase().includes('oi') || mensagem.toLowerCase().includes('olá')) {
-      await client.sendText(message.from, `😊 Olá ${contato.nome}! Como posso ajudar você hoje?`);
+      await client.sendText(message.from, `😊 Olá ${contato.nome}! Como posso ajudar você hoje?\n\n📚 Para iniciar um treinamento, digite *SSMA*`);
     } else {
-      await client.sendText(message.from, `💬 Olá ${contato.nome}! Recebi sua mensagem: "${mensagem}"\n\nEm breve nossa equipe entrará em contato!`);
+      await client.sendText(message.from, `💬 Olá ${contato.nome}! Recebi sua mensagem.\n\n📚 Para iniciar um treinamento, digite *SSMA*\n📞 Ou nossa equipe entrará em contato em breve!`);
     }
     
   } catch (error) {
