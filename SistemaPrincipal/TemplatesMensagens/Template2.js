@@ -25,7 +25,7 @@ async function processarMensagem(message, client) {
   const telefone = message.from.replace('@c.us', '');
   const mensagem = message.body.trim();
   
-  console.log(`💬 Processando: "${mensagem}" de ${telefone}`);
+  console.log(`💬 [Template2] Processando: "${mensagem}" de ${telefone}`);
   
   try {
     // Verificar se o modelo está carregado
@@ -38,6 +38,9 @@ async function processarMensagem(message, client) {
     // Buscar contato no banco
     let contato = await Contato.findOne({ where: { telefone } });
     
+    console.log(`🔍 Buscando contato: ${telefone}`);
+    console.log(`📋 Contato encontrado:`, contato ? `${contato.nome} (ID: ${contato.id})` : 'NÃO ENCONTRADO');
+    
     if (!contato) {
       // Resposta para contatos não cadastrados
       await client.sendText(message.from, `😊 Olá! Bem-vindo(a)!\n\nPara acessar nossos treinamentos, você precisa estar cadastrado em nosso sistema.\n\n📞 Entre em contato conosco para realizar seu cadastro e começar seus treinamentos!`);
@@ -49,17 +52,23 @@ async function processarMensagem(message, client) {
       return await sendMessage(phone, endpoint, body);
     };
     
+    console.log(`🎯 Processando mensagem: "${mensagem}" para ${contato.nome}`);
+    
     // Verificar se é comando de treinamento SSMA
     if (mensagem.toLowerCase().includes('ssma') || mensagem.toLowerCase().includes('treinamento')) {
+      console.log('🚀 Iniciando treinamento SSMA');
       await treinamentoSSMA.executarTreinamento(telefone, contato, sendMessageForTraining);
       return;
     }
     
     // Tentar processar resposta do treinamento SSMA
+    console.log('🔄 Tentando processar resposta SSMA');
     const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
     if (processouSSMA) {
+      console.log('✅ Resposta SSMA processada');
       return;
     }
+    console.log('⚠️ Resposta SSMA não processada, enviando resposta padrão');
     
     // Resposta padrão para contatos cadastrados
     if (mensagem.toLowerCase().includes('oi') || mensagem.toLowerCase().includes('olá')) {
