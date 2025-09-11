@@ -44,14 +44,19 @@ async function processarMensagem(message, client) {
       return;
     }
     
+    // Função sendMessage para usar com treinamento
+    const sendMessageForTraining = async (phone, endpoint, body) => {
+      return await sendMessage(phone, endpoint, body);
+    };
+    
     // Verificar se é comando de treinamento SSMA
     if (mensagem.toLowerCase().includes('ssma') || mensagem.toLowerCase().includes('treinamento')) {
-      await treinamentoSSMA.executarTreinamento(telefone, contato, sendMessage);
+      await treinamentoSSMA.executarTreinamento(telefone, contato, sendMessageForTraining);
       return;
     }
     
     // Tentar processar resposta do treinamento SSMA
-    const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessage);
+    const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
     if (processouSSMA) {
       return;
     }
@@ -74,7 +79,8 @@ function setWppClient(client) {
     wppClient = client;
 }
 
-// Inicializar cliente WhatsApp direto
+// DESABILITADO - usando apenas wppconnect-server
+/*
 wppconnect.create({
   session: 'WHATSAPP_BOT_DIRECT',
   headless: true,
@@ -131,6 +137,7 @@ wppconnect.create({
 }).catch(err => {
   console.error('❌ Erro Bot Cliente:', err);
 });
+*/
 
 // Função sendMessage usando cliente direto
 async function sendMessage(phone, endpoint, body = {}) {
