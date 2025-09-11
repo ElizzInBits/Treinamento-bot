@@ -1533,13 +1533,17 @@ function removerTreinamento(id) {
     })
     .catch(() => mostrarAlerta('Erro ao remover treinamento.', 'error'));
 }
-// Formata os dados dos treinamentos
-const treinamentosSheet = treinamentos.map(treinamento => ({
-  ID: treinamento.id,
-  Nome: treinamento.nome,
-  Descricao: treinamento.descricao,
-  Total_Contatos: contatos.filter(c => c.treinamentoId === treinamento.id).length
-}));
+  // Formata os dados dos treinamentos
+  const treinamentosSheet = treinamentos.map(treinamento => ({
+    ID: treinamento.id,
+    Nome: treinamento.nome || 'N/A',
+    Modalidade: treinamento.modalidade || 'N/A',
+    Carga_Horaria: treinamento.carga_horaria || 'N/A',
+    Tipo: treinamento.tipo || 'N/A',
+    Instrutor: treinamento.instrutor_principal || 'N/A',
+    Descricao: treinamento.descricao || treinamento.conteudo_programatico || 'N/A',
+    Total_Contatos: contatos.filter(c => c.treinamentoId === treinamento.id).length
+  }));
 
 // Exportar dados em XLS
 function exportarDadosXLS() {
@@ -1566,16 +1570,16 @@ function exportarDadosXLS() {
     const treinamento = mapaTreinamentos[contato.treinamentoId] || {};
     return {
       ID: contato.id,
-      Nome: contato.nome,
-      Telefone: contato.telefone,
-      Email: contato.email,
-      CPF: contato.cpf,
-      Status_Treinamento: contato.statusTreinamento,
-      Treinamento_ID: contato.treinamentoId,
+      Nome: contato.nome || 'N/A',
+      Telefone: contato.telefone || 'N/A',
+      Email: contato.email || 'N/A',
+      CPF: contato.cpf || 'N/A',
+      Status_Treinamento: contato.statusTreinamento || 'N/A',
+      Treinamento_ID: contato.treinamentoId || 'N/A',
       Treinamento_Nome: treinamento.nome || "Sem treinamento",
-      Empresa_ID: contato.empresaId,
-      Empresa_Razao_Social: empresa.razao_social || "Desconhecida",
-      Ultima_Interacao: contato.ultimaInteracao
+      Empresa_ID: contato.empresaId || 'N/A',
+      Nome_Empresa: contato.nomeEmpresa || empresa.razao_social || empresa.razaoSocial || "Empresa não encontrada",
+      Ultima_Interacao: contato.ultimaInteracao || 'N/A'
     };
   });
 
@@ -1594,10 +1598,33 @@ function exportarDadosXLS() {
   XLSX.utils.book_append_sheet(wb, wsContatos, "Contatos");
   XLSX.utils.book_append_sheet(wb, wsTreinamentos, "Treinamentos");
 
-  // Salva o arquivo XLS com nome baseado na data atual
-  XLSX.writeFile(wb, `gestao-treinamentos-${new Date().toISOString().split('T')[0]}.xlsx`);
+  // Adicionar uma aba de resumo
+  const resumoSheet = [{
+    Estatistica: 'Total de Empresas',
+    Valor: empresasSheet.length
+  }, {
+    Estatistica: 'Total de Contatos',
+    Valor: contatosSheet.length
+  }, {
+    Estatistica: 'Total de Treinamentos',
+    Valor: treinamentosSheet.length
+  }, {
+    Estatistica: 'Contatos com Treinamento',
+    Valor: contatosSheet.filter(c => c.Treinamento_ID && c.Treinamento_ID !== 'N/A').length
+  }, {
+    Estatistica: 'Data da Exportação',
+    Valor: new Date().toLocaleString('pt-BR')
+  }];
+  
+  const wsResumo = XLSX.utils.json_to_sheet(resumoSheet);
+  XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
 
-  mostrarAlerta('Dados exportados com sucesso!', 'success');
+  // Salva o arquivo XLS com nome baseado na data atual
+  const dataAtual = new Date().toISOString().split('T')[0];
+  const nomeArquivo = `gestao-treinamentos-${dataAtual}.xlsx`;
+  XLSX.writeFile(wb, nomeArquivo);
+
+  mostrarAlerta(`Dados exportados com sucesso! Arquivo: ${nomeArquivo}`, 'success');
 }
 
 // Carregar empresas
