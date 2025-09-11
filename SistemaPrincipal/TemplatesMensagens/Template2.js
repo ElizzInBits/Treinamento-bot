@@ -63,7 +63,7 @@ async function processarMensagem(message, client) {
     }
     
     if (!contato) {
-      // Mensagens de boas-vindas Salubritá
+      // Mensagens de boas-vindas Salubritá - ORDEM CORRETA
       await client.sendText(message.from, '👋 Olá! Seja muito bem-vindo(a)!\n\n🤖 Eu sou um bot de treinamentos da Salubritá! 🚀');
       
       setTimeout(async () => {
