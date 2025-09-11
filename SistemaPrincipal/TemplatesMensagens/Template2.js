@@ -1,7 +1,60 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
+const { connectDB, sequelize } = require('../BancoDeDados/database');
+const ContatoModel = require('../BancoDeDados/models/contato');
+
+// Inicializar modelo
+let Contato = null;
 
 // Cliente WhatsApp direto
 let wppClient = null;
+
+// Conectar ao banco
+(async () => {
+  try {
+    await connectDB();
+    Contato = ContatoModel(sequelize);
+    console.log('✅ Banco conectado - Template2');
+  } catch (error) {
+    console.error('❌ Erro no banco - Template2:', error);
+  }
+})();
+
+// Função para processar mensagens
+async function processarMensagem(message, client) {
+  const telefone = message.from.replace('@c.us', '');
+  const mensagem = message.body.trim();
+  
+  console.log(`💬 Processando: "${mensagem}" de ${telefone}`);
+  
+  try {
+    // Verificar se o modelo está carregado
+    if (!Contato) {
+      console.log('⚠️ Modelo Contato não carregado, enviando resposta genérica');
+      await client.sendText(message.from, '😊 Olá! Recebi sua mensagem. Nossa equipe entrará em contato em breve!');
+      return;
+    }
+    
+    // Buscar contato no banco
+    let contato = await Contato.findOne({ where: { telefone } });
+    
+    if (!contato) {
+      // Resposta para contatos não cadastrados
+      await client.sendText(message.from, '😊 Olá! Para utilizar nossos treinamentos, você precisa estar cadastrado.\n\nEntre em contato com nossa equipe para se cadastrar!');
+      return;
+    }
+    
+    // Resposta simples para contatos cadastrados
+    if (mensagem.toLowerCase().includes('oi') || mensagem.toLowerCase().includes('olá')) {
+      await client.sendText(message.from, `😊 Olá ${contato.nome}! Como posso ajudar você hoje?`);
+    } else {
+      await client.sendText(message.from, `💬 Olá ${contato.nome}! Recebi sua mensagem: "${mensagem}"\n\nEm breve nossa equipe entrará em contato!`);
+    }
+    
+  } catch (error) {
+    console.error('❌ Erro ao processar mensagem:', error);
+    await client.sendText(message.from, '❌ Desculpe, ocorreu um erro. Tente novamente em alguns instantes.');
+  }
+}
 
 // Função para definir cliente
 function setWppClient(client) {
@@ -34,6 +87,21 @@ wppconnect.create({
   wppClient = c;
   setWppClient(c);
   console.log('✅ Bot Cliente conectado!');
+  
+  // Listener de mensagens
+  c.onMessage(async (message) => {
+    if (!message.body) return;
+    if (message.isGroupMsg) return;
+    if (message.fromMe) return;
+    
+    console.log('📨 Mensagem recebida:', message.body, 'de:', message.from);
+    
+    try {
+      await processarMensagem(message, c);
+    } catch (error) {
+      console.error('❌ Erro ao processar mensagem:', error.message);
+    }
+  });
   
   // Bloqueador de chamadas
   c.onIncomingCall(async (call) => {
@@ -94,4 +162,4 @@ async function sendMessage(phone, endpoint, body = {}) {
     }
 }
 
-module.exports = { sendMessage, setWppClient };
+module.exports = { sendMessage, setWppClient, processarMensagem };
