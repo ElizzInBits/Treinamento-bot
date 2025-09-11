@@ -116,6 +116,11 @@ async function processarMensagem(message, client) {
     
     // Verificar se é seleção do menu de treinamentos
     if (message.selectedRowId === 'ssma_basico' || mensagem.toLowerCase().includes('treinamento básico de ssma')) {
+      // Verificar se já concluiu o treinamento
+      if (contato.statusTreinamento === 'concluido') {
+        await client.sendText(message.from, `🎆 Olá ${contato.nome}!\n\n✅ Você já concluiu o treinamento SSMA com sucesso!\n\n📜 Caso precise revisar o conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
+        return;
+      }
       console.log('🚀 Iniciando treinamento SSMA');
       await treinamentoSSMA.executarTreinamento(telefone, contato, sendMessageForTraining);
       return;
@@ -123,19 +128,26 @@ async function processarMensagem(message, client) {
     
     // Verificar se é comando de treinamento SSMA
     if (mensagem.toLowerCase().includes('ssma') || mensagem.toLowerCase().includes('treinamento')) {
+      // Verificar se já concluiu o treinamento
+      if (contato.statusTreinamento === 'concluido') {
+        await client.sendText(message.from, `🎆 Olá ${contato.nome}!\n\n✅ Você já concluiu o treinamento SSMA com sucesso!\n\n📜 Caso precise revisar o conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
+        return;
+      }
       console.log('🚀 Iniciando treinamento SSMA');
       await treinamentoSSMA.executarTreinamento(telefone, contato, sendMessageForTraining);
       return;
     }
     
-    // Tentar processar resposta do treinamento SSMA
-    console.log('🔄 Tentando processar resposta SSMA');
-    const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
-    if (processouSSMA) {
-      console.log('✅ Resposta SSMA processada');
-      return;
+    // Tentar processar resposta do treinamento SSMA (apenas se não concluiu)
+    if (contato.statusTreinamento !== 'concluido') {
+      console.log('🔄 Tentando processar resposta SSMA');
+      const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
+      if (processouSSMA) {
+        console.log('✅ Resposta SSMA processada');
+        return;
+      }
+      console.log('⚠️ Resposta SSMA não processada, enviando resposta padrão');
     }
-    console.log('⚠️ Resposta SSMA não processada, enviando resposta padrão');
     
     // Mensagem de boas-vindas para contatos cadastrados
     await client.sendText(message.from, `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`);
@@ -144,20 +156,25 @@ async function processarMensagem(message, client) {
       await client.sendText(message.from, '📚 Aqui estão os treinamentos disponíveis');
       
       setTimeout(async () => {
-        // Enviar menu de treinamentos em vez de iniciar automaticamente
-        await client.sendListMessage(message.from, {
-          title: 'Escolha qual treinamento deseja iniciar:',
-          description: '',
-          buttonText: 'Selecione uma opção:',
-          sections: [{
-            title: 'Treinamentos Disponíveis',
-            rows: [{
-              rowId: 'ssma_basico',
-              title: 'Treinamento Básico de SSMA',
-              description: 'Segurança, Saúde e Meio Ambiente'
+        // Verificar status do treinamento
+        if (contato.statusTreinamento === 'concluido') {
+          await client.sendText(message.from, `🎆 Parabéns ${contato.nome}!\n\n✅ Você já concluiu todos os treinamentos disponíveis!\n\n📜 Caso precise revisar algum conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
+        } else {
+          // Enviar menu de treinamentos
+          await client.sendListMessage(message.from, {
+            title: 'Escolha qual treinamento deseja iniciar:',
+            description: '',
+            buttonText: 'Selecione uma opção:',
+            sections: [{
+              title: 'Treinamentos Disponíveis',
+              rows: [{
+                rowId: 'ssma_basico',
+                title: 'Treinamento Básico de SSMA',
+                description: 'Segurança, Saúde e Meio Ambiente'
+              }]
             }]
-          }]
-        });
+          });
+        }
       }, 1000);
     }, 1000);
     
