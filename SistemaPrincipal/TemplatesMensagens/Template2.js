@@ -57,9 +57,21 @@ async function processarMensagem(message, client) {
     
     // Debug: mostrar alguns contatos do banco
     if (!contato) {
-      const todosContatos = await Contato.findAll({ limit: 3 });
+      const todosContatos = await Contato.findAll({ limit: 5 });
       console.log('📋 Exemplos de contatos no banco:');
       todosContatos.forEach(c => console.log(`  - ${c.telefone} (${c.nome})`));
+      
+      // Tentar buscar por parte do número
+      const buscaParcial = await Contato.findAll({ 
+        where: { 
+          telefone: { 
+            [require('sequelize').Op.like]: `%${telefone.slice(-8)}%` 
+          } 
+        },
+        limit: 3
+      });
+      console.log('🔍 Busca parcial (8 últimos dígitos):');
+      buscaParcial.forEach(c => console.log(`  - ${c.telefone} (${c.nome})`));
     }
     
     if (!contato) {
