@@ -18,7 +18,7 @@ let client = null;
 
 // Inicializar cliente
 wppconnect.create({
-  session: 'WPPCONNECT_SERVER',
+  session: 'NERDWHATS_AMERICA',
   headless: true,
   disableWelcome: true,
   updatesLog: false,
@@ -183,7 +183,7 @@ app.get('/status', async (req, res) => {
   if (!client) {
     return res.json({ 
       status: 'disconnected',
-      session: 'WPPCONNECT_SERVER'
+      session: 'NERDWHATS_AMERICA'
     });
   }
   
@@ -191,7 +191,7 @@ app.get('/status', async (req, res) => {
     const isConnected = await client.isConnected();
     res.json({ 
       status: isConnected ? 'connected' : 'disconnected',
-      session: 'WPPCONNECT_SERVER'
+      session: 'NERDWHATS_AMERICA'
     });
   } catch (error) {
     res.json({ 
