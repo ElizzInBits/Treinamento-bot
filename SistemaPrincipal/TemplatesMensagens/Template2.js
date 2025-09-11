@@ -80,7 +80,7 @@ async function processarMensagem(message, client) {
     
     if (!contato) {
       // Mensagens de boas-vindas Salubritá - ORDEM CORRETA
-      await client.sendText(message.from, '👋 Olá! Seja muito bem-vindo(a)!\n\n🤖 Eu sou um bot de treinamentos da Salubritá! 🚀');
+      await client.sendText(message.from, '👋 Olá! Seja bem-vindo(a) ao futuro dos treinamentos normativos.\n\nEu sou a Eliza, a sua assistente virtual\n\nJá imaginou fazer um curso oficial de saúde e segurança direto pelo WhatsApp? 📱');
       
       setTimeout(async () => {
         await client.sendText(message.from, '🏢 Estou aqui para aplicar treinamentos de segurança e saúde no trabalho de forma rápida e eficiente!\n\n🎓 Nossos treinamentos são certificados e reconhecidos nacionalmente.');
