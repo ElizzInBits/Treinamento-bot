@@ -141,16 +141,21 @@ async function processarMensagem(message, client) {
       return;
     }
     
-    // Tentar processar resposta do treinamento SSMA (apenas se não concluiu)
-    if (contato.statusTreinamento !== 'concluído' && contato.statusTreinamento !== 'concluido') {
-      console.log('🔄 Tentando processar resposta SSMA');
-      const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
-      if (processouSSMA) {
-        console.log('✅ Resposta SSMA processada');
-        return;
-      }
-      console.log('⚠️ Resposta SSMA não processada, enviando resposta padrão');
+    // Verificar se treinamento foi concluído ANTES de processar
+    if (contato.statusTreinamento === 'concluído' || contato.statusTreinamento === 'concluido') {
+      console.log('✅ Treinamento já concluído - não processando mensagens');
+      await client.sendText(message.from, `🎆 Olá ${contato.nome}!\n\n✅ Você já concluiu o treinamento SSMA com sucesso!\n\n📜 Caso precise revisar o conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
+      return;
     }
+    
+    // Tentar processar resposta do treinamento SSMA
+    console.log('🔄 Tentando processar resposta SSMA');
+    const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
+    if (processouSSMA) {
+      console.log('✅ Resposta SSMA processada');
+      return;
+    }
+    console.log('⚠️ Resposta SSMA não processada, enviando resposta padrão');
     
     // Mensagem de boas-vindas para contatos cadastrados
     await client.sendText(message.from, `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`);
