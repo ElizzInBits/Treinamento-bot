@@ -71,16 +71,22 @@ async function processarMensagem(message, client) {
       }, 1000);
       
       setTimeout(async () => {
-        await client.sendText(message.from, '🤔 Humm, parece que você ainda não fez seu cadastro em nossa plataforma.\n\n📝 Para iniciar seu treinamento, é necessário se cadastrar primeiro.\n\n👉 Clique no link abaixo para se cadastrar:\n\nhttps://abrir.link/kAgON\n\n✨ Após o cadastro, volte aqui e me envie qualquer mensagem para começarmos!');
+        try {
+          await client.sendText(message.from, '🤔 Humm, parece que você ainda não fez seu cadastro em nossa plataforma.\n\n📝 Para iniciar seu treinamento, é necessário se cadastrar primeiro.\n\n👉 Clique no link abaixo para se cadastrar:\n\nhttps://abrir.link/kAgON\n\n✨ Após o cadastro, volte aqui e me envie qualquer mensagem para começarmos!');
+          
+          // SÓ DEPOIS que o link foi enviado, enviar as mensagens de ATENÇÃO
+          setTimeout(async () => {
+            await client.sendText(message.from, 'ATENÇÃO:\nUse o MESMO NÚMERO que você utilizará para conversar com o bot de treinamento no WhatsApp.');
+            
+            setTimeout(async () => {
+              await client.sendText(message.from, '💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.');
+            }, 1000);
+          }, 1000);
+          
+        } catch (error) {
+          console.error('❌ Erro ao enviar mensagem de cadastro:', error);
+        }
       }, 2000);
-      
-      setTimeout(async () => {
-        await client.sendText(message.from, 'ATENÇÃO:\nUse o MESMO NÚMERO que você utilizará para conversar com o bot de treinamento no WhatsApp.');
-      }, 3000);
-      
-      setTimeout(async () => {
-        await client.sendText(message.from, '💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.');
-      }, 4000);
       
       return;
     }
