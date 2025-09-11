@@ -114,6 +114,13 @@ async function processarMensagem(message, client) {
     
     console.log(`🎯 Processando mensagem: "${mensagem}" para ${contato.nome}`);
     
+    // Verificar se é seleção do menu de treinamentos
+    if (message.selectedRowId === 'ssma_basico' || mensagem.toLowerCase().includes('treinamento básico de ssma')) {
+      console.log('🚀 Iniciando treinamento SSMA');
+      await treinamentoSSMA.executarTreinamento(telefone, contato, sendMessageForTraining);
+      return;
+    }
+    
     // Verificar se é comando de treinamento SSMA
     if (mensagem.toLowerCase().includes('ssma') || mensagem.toLowerCase().includes('treinamento')) {
       console.log('🚀 Iniciando treinamento SSMA');
@@ -137,7 +144,20 @@ async function processarMensagem(message, client) {
       await client.sendText(message.from, '📚 Aqui estão os treinamentos disponíveis');
       
       setTimeout(async () => {
-        await treinamentoSSMA.executarTreinamento(telefone, contato, sendMessageForTraining);
+        // Enviar menu de treinamentos em vez de iniciar automaticamente
+        await client.sendListMessage(message.from, {
+          title: 'Escolha qual treinamento deseja iniciar:',
+          description: '',
+          buttonText: 'Selecione uma opção:',
+          sections: [{
+            title: 'Treinamentos Disponíveis',
+            rows: [{
+              rowId: 'ssma_basico',
+              title: 'Treinamento Básico de SSMA',
+              description: 'Segurança, Saúde e Meio Ambiente'
+            }]
+          }]
+        });
       }, 1000);
     }, 1000);
     
