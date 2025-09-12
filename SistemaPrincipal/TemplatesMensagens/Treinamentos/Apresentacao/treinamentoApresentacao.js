@@ -1,4 +1,4 @@
-const { Contato, Interacao } = require('../../../BancoDeDados/models');
+const { Contato, const { Contato, Interacao } = require('../../../BancoDeDados/models');
 const { Op } = require('sequelize');
 
 /**
@@ -9,13 +9,16 @@ async function processarRespostaApresentacao(sender, text, selectedId, contato, 
     
     // Verificar se já existe interação anterior
     const ultimaInteracao = await obterUltimaInteracao(sender);
+    console.log(`🔍 Última interação encontrada:`, ultimaInteracao ? ultimaInteracao.tipo : 'NENHUMA');
     
     if (ultimaInteracao) {
         // Já tem interação - processar baseado no estado
+        console.log('🔄 Processando estado existente');
         return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
     }
     
     // Primeira interação - enviar mensagem inicial
+    console.log('🎆 PRIMEIRA INTERAÇÃO - Enviando mensagem de boas-vindas');
     return await iniciarFluxoBoasVindas(sender, sendMessage);
 }
 
