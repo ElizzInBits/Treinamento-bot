@@ -3819,6 +3819,16 @@ function abrirDetalhesEmpresa(empresaId) {
               </button>
             </div>
             
+            <!-- Botão de exclusão -->
+            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+              <button class="btn-error" onclick="excluirEmpresa(${empresaId})" style="width: 100%;">
+                🗑️ Excluir Empresa
+              </button>
+              <p style="font-size: 0.8rem; color: var(--gray-500); text-align: center; margin-top: 0.5rem;">
+                ⚠️ Esta ação não pode ser desfeita
+              </p>
+            </div>
+            
             <!-- Progresso visual -->
             <div class="progress-indicator" style="margin-top: 1.5rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -3941,4 +3951,41 @@ function salvarEmpresa(empresaId) {
 
 function fecharModalDetalhesEmpresa() {
   document.getElementById('modalDetalhesEmpresa').style.display = 'none';
+}
+
+function excluirEmpresa(empresaId) {
+  const empresa = empresas.find(e => e.id === empresaId);
+  if (!empresa) return;
+  
+  const nomeEmpresa = empresa.razao_social || empresa.razaoSocial || 'esta empresa';
+  
+  if (!confirm(`🗑️ EXCLUIR EMPRESA\n\nTem certeza que deseja excluir "${nomeEmpresa}"?\n\n⚠️ Esta ação irá:\n• Remover a empresa permanentemente\n• Remover todos os contatos associados\n• Remover todas as associações de treinamento\n\nEsta ação NÃO PODE ser desfeita.`)) {
+    return;
+  }
+  
+  authenticatedFetch(`/api/empresas/${empresaId}`, {
+    method: 'DELETE'
+  })
+  .then(res => {
+    if (!res.ok) throw new Error();
+    return res.json();
+  })
+  .then(() => {
+    mostrarAlerta(`🗑️ Empresa "${nomeEmpresa}" foi excluída com sucesso!`);
+    fecharModalDetalhesEmpresa();
+    
+    // Recarregar dados
+    Promise.all([
+      carregarEmpresas(),
+      carregarContatos()
+    ]).then(() => {
+      renderizarEmpresas();
+      atualizarEstatisticasEmpresas();
+      atualizarSelectEmpresa();
+      atualizarEstatisticasMapeamento();
+    });
+  })
+  .catch(() => {
+    mostrarAlerta('❌ Erro ao excluir empresa.', 'error');
+  });
 }

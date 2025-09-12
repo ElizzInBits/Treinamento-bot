@@ -224,17 +224,40 @@ router.put('/:id', async (req, res) => {
 
 // Deletar empresa
 router.delete('/:id', async (req, res) => {
+  const transaction = await sequelize.transaction();
+  
   try {
     const empresa = await Empresa.findByPk(req.params.id);
 
     if (!empresa) {
+      await transaction.rollback();
       return res.status(404).json({ error: 'Empresa não encontrada' });
     }
 
-    await empresa.destroy();
-    res.json({ message: 'Empresa deletada com sucesso' });
+    console.log(`🗑️ Excluindo empresa: ${empresa.razaoSocial}`);
+    
+    // Excluir associações de treinamento
+    await EmpresaTreinamento.destroy({
+      where: { empresa_id: req.params.id },
+      transaction
+    });
+    
+    // Excluir contatos da empresa
+    await Contato.destroy({
+      where: { empresaId: req.params.id },
+      transaction
+    });
+    
+    // Excluir a empresa
+    await empresa.destroy({ transaction });
+    
+    await transaction.commit();
+    
+    console.log(`✅ Empresa ${empresa.razaoSocial} excluída com sucesso`);
+    res.json({ message: 'Empresa excluída com sucesso' });
   } catch (error) {
-    console.error('Erro ao deletar empresa:', error);
+    await transaction.rollback();
+    console.error('❌ Erro ao excluir empresa:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
