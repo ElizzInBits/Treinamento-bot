@@ -3854,22 +3854,37 @@ function abrirDetalhesEmpresa(empresaId) {
 }
 
 function salvarEmpresa(empresaId) {
-  const dados = {
-    razao_social: document.getElementById('editRazaoSocial').value.trim(),
-    cnpj: document.getElementById('editCnpj').value.trim() || null,
-    email: document.getElementById('editEmail').value.trim() || null,
-    contato: document.getElementById('editTelefone').value.trim() || null,
-    endereco: document.getElementById('editEndereco').value.trim() || null,
-    cep: document.getElementById('editCep').value.trim() || null
-  };
+  // Obter valores dos campos
+  const razaoSocial = document.getElementById('editRazaoSocial').value.trim();
+  const cnpj = document.getElementById('editCnpj').value.trim();
+  const email = document.getElementById('editEmail').value.trim();
+  const telefone = document.getElementById('editTelefone').value.trim();
+  const endereco = document.getElementById('editEndereco').value.trim();
+  const cep = document.getElementById('editCep').value.trim();
   
   // Validar campos obrigatórios
-  if (!dados.razao_social) {
+  if (!razaoSocial) {
     mostrarAlerta('Razão social é obrigatória.', 'error');
     return;
   }
   
-  console.log('📤 Enviando dados para API:', dados);
+  // Preparar dados com conversão para null de campos vazios
+  const dados = {
+    razao_social: razaoSocial,
+    cnpj: cnpj || null,
+    email: email || null,
+    contato: telefone || null,
+    endereco: endereco || null,
+    cep: cep || null
+  };
+  
+  console.log('📤 Dados a serem enviados:', dados);
+  
+  // Mostrar feedback visual
+  const botaoSalvar = event.target;
+  const textoOriginal = botaoSalvar.innerHTML;
+  botaoSalvar.innerHTML = '⏳ Salvando...';
+  botaoSalvar.disabled = true;
   
   authenticatedFetch(`/api/empresas/${empresaId}`, {
     method: 'PUT',
@@ -3877,6 +3892,7 @@ function salvarEmpresa(empresaId) {
     body: JSON.stringify(dados)
   })
   .then(res => {
+    console.log('📡 Status da resposta:', res.status);
     if (!res.ok) {
       return res.text().then(errorText => {
         console.error('❌ Erro da API:', errorText);
@@ -3886,30 +3902,40 @@ function salvarEmpresa(empresaId) {
     return res.json();
   })
   .then((empresaAtualizada) => {
-    console.log('✅ Empresa atualizada:', empresaAtualizada);
-    mostrarAlerta('Empresa atualizada com sucesso!');
+    console.log('✅ Resposta da API:', empresaAtualizada);
     
-    // Atualizar dados locais
+    // Atualizar dados locais imediatamente
     const index = empresas.findIndex(e => e.id === empresaId);
     if (index !== -1) {
-      empresas[index] = { ...empresas[index], ...empresaAtualizada };
+      empresas[index] = { ...empresas[index], ...dados, id: empresaId };
+      console.log('📝 Dados locais atualizados:', empresas[index]);
     }
     
+    // Atualizar interface imediatamente
+    renderizarEmpresas();
+    atualizarEstatisticasEmpresas();
+    atualizarSelectEmpresa();
+    
+    mostrarAlerta('✅ Empresa atualizada com sucesso!');
     fecharModalDetalhesEmpresa();
     
-    // Recarregar e atualizar interface
-    Promise.all([
-      carregarEmpresas(),
-      carregarContatos()
-    ]).then(() => {
+    // Recarregar dados do servidor em background
+    carregarEmpresas().then(() => {
+      console.log('🔄 Dados recarregados do servidor');
       renderizarEmpresas();
-      atualizarEstatisticasEmpresas();
       atualizarSelectEmpresa();
+    }).catch(err => {
+      console.warn('⚠️ Erro ao recarregar dados:', err);
     });
   })
   .catch((error) => {
     console.error('❌ Erro completo:', error);
-    mostrarAlerta(`Erro ao atualizar empresa: ${error.message}`, 'error');
+    mostrarAlerta(`❌ Erro ao atualizar empresa: ${error.message}`, 'error');
+  })
+  .finally(() => {
+    // Restaurar botão
+    botaoSalvar.innerHTML = textoOriginal;
+    botaoSalvar.disabled = false;
   });
 }
 
