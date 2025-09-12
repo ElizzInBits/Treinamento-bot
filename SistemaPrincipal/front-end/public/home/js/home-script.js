@@ -3855,7 +3855,7 @@ function abrirDetalhesEmpresa(empresaId) {
 
 function salvarEmpresa(empresaId) {
   const dados = {
-    razaoSocial: document.getElementById('editRazaoSocial').value,
+    razao_social: document.getElementById('editRazaoSocial').value,
     cnpj: document.getElementById('editCnpj').value,
     email: document.getElementById('editEmail').value,
     contato: document.getElementById('editTelefone').value,
