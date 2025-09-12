@@ -7,19 +7,16 @@ const { Op } = require('sequelize');
 async function processarRespostaApresentacao(sender, text, selectedId, contato, sendMessage) {
     console.log(`🎯 Processando resposta: "${text}" de ${sender}`);
     
-    // Se não há contato, é primeira interação
-    if (!contato) {
-        return await iniciarFluxoBoasVindas(sender, sendMessage);
-    }
-    
-    // Processar respostas baseadas no estado atual
+    // Verificar se já existe interação anterior
     const ultimaInteracao = await obterUltimaInteracao(sender);
     
-    if (!ultimaInteracao) {
-        return await iniciarFluxoBoasVindas(sender, sendMessage);
+    if (ultimaInteracao) {
+        // Já tem interação - processar baseado no estado
+        return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
     }
     
-    return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
+    // Primeira interação - enviar mensagem inicial
+    return await iniciarFluxoBoasVindas(sender, sendMessage);
 }
 
 /**
@@ -42,8 +39,13 @@ async function iniciarFluxoBoasVindas(sender, sendMessage) {
  * Processa o estado atual baseado na última interação
  */
 async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage) {
+    console.log(`🔍 Última interação: ${ultimaInteracao.tipo}`);
+    console.log(`📝 Mensagem da interação: ${ultimaInteracao.mensagem}`);
+    
     const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
     const etapa = dados.etapa;
+    
+    console.log(`🎯 Etapa atual: ${etapa}`);
     
     switch (etapa) {
         case 'opcao_inicial':
@@ -53,6 +55,7 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
         case 'mostrar_recursos':
             return await processarMostrarRecursos(sender, text, sendMessage);
         default:
+            console.log(`⚠️ Etapa não reconhecida: ${etapa}, reiniciando fluxo`);
             return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
 }
@@ -62,9 +65,12 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
  */
 async function processarOpcaoInicial(sender, text, contato, sendMessage) {
     const opcao = text.trim();
+    console.log(`🔢 Opção recebida: "${opcao}", Contato: ${contato ? contato.nome : 'NÃO CADASTRADO'}`);
     
     if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
+        console.log('✅ Usuário escolheu opção 1 (SIM)');
         if (!contato) {
+            console.log('📝 Enviando link de cadastro para usuário não cadastrado');
             // Não cadastrado - enviar link de cadastro
             await sendMessage(sender, 'send-message', {
                 message: '🤔 Hum, que tal fazer o seu cadastro na nossa plataforma antes, hein?\nÉ muito simples, basta clicar no link abaixo e assim que finalizar é só voltar aqui e me envie qualquer mensagem para começarmos!\n\nhttps://abrir.link/kAgON\n\nATENÇÃO:\nNo Cadastro use o MESMO NÚMERO que você utilizará para conversar aqui comigo.\n\n💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.'
@@ -72,18 +78,22 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
             
             await salvarInteracao(sender, 'aguardando_cadastro', JSON.stringify({ etapa: 'aguardando_cadastro' }));
         } else {
+            console.log('🎉 Usuário cadastrado, mostrando como funciona');
             // Cadastrado - mostrar como funciona
             await mostrarComoFunciona(sender, contato.nome, sendMessage);
         }
         return true;
     } else if (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('nao')) {
+        console.log('❌ Usuário escolheu opção 2 (NÃO), insistindo');
         // Insistir de forma amigável
         await sendMessage(sender, 'send-message', {
             message: '😄 Ahh Vai!!! Leva só um minutinho, prometo que vai ser legal!\n\n👉 Quer que eu te mostre como funciona?\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
         });
+        // Manter o mesmo estado para aguardar nova resposta
         return true;
     }
     
+    console.log('⚠️ Resposta não reconhecida, pedindo para escolher novamente');
     // Resposta não reconhecida
     await sendMessage(sender, 'send-message', {
         message: 'Por favor, escolha uma das opções:\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
@@ -178,9 +188,9 @@ async function salvarInteracao(telefone, tipo, mensagem) {
         await Interacao.create({
             telefone: telefone,
             tipo: tipo,
-            mensagem: mensagem,
-            dataHora: new Date()
+            mensagem: mensagem
         });
+        console.log(`✅ Interação salva: ${tipo} para ${telefone}`);
     } catch (error) {
         console.error('❌ Erro ao salvar interação:', error);
     }
@@ -193,7 +203,7 @@ async function obterUltimaInteracao(telefone) {
     try {
         return await Interacao.findOne({
             where: { telefone: telefone },
-            order: [['dataHora', 'DESC']]
+            order: [['createdAt', 'DESC']]
         });
     } catch (error) {
         console.error('❌ Erro ao obter interação:', error);
