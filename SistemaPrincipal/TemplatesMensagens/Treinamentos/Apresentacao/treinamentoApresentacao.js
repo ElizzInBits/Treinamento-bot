@@ -3,29 +3,33 @@ const { Contato, Interacao } = require('../../../BancoDeDados/models');
 async function processarRespostaApresentacao(sender, text, selectedId, contato, sendMessage) {
     console.log(`🎯 Processando resposta: "${text}" de ${sender}`);
     
-    // Se não há contato cadastrado, sempre começar com saudação
+    // Verificar se é uma saudação genérica
+    const saudacoes = ['olá', 'oi', 'ola', 'hello', 'hi', 'bom dia', 'boa tarde', 'boa noite'];
+    const ehSaudacao = saudacoes.some(s => text.toLowerCase().includes(s));
+    
+    // Se não há contato cadastrado
     if (!contato) {
         const ultimaInteracao = await obterUltimaInteracao(sender);
         
-        // Se não há interação anterior, enviar saudação
-        if (!ultimaInteracao) {
-            console.log('🎆 PRIMEIRA INTERAÇÃO - Enviando mensagem de boas-vindas');
+        // Se é uma saudação OU não há interação anterior, enviar saudação
+        if (ehSaudacao || !ultimaInteracao) {
+            console.log('🎆 SAUDAÇÃO DETECTADA - Enviando mensagem de boas-vindas');
             return await iniciarFluxoBoasVindas(sender, sendMessage);
         }
         
-        // Se já tem interação, processar baseado no estado
+        // Se já tem interação e não é saudação, processar baseado no estado
         return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
     }
     
-    // Para contatos cadastrados, verificar interações
+    // Para contatos cadastrados
     const ultimaInteracao = await obterUltimaInteracao(sender);
     
-    if (ultimaInteracao) {
-        return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
+    if (ehSaudacao || !ultimaInteracao) {
+        console.log('🎆 SAUDAÇÃO CADASTRADO - Enviando mensagem de boas-vindas');
+        return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
     
-    console.log('🎆 PRIMEIRA INTERAÇÃO CADASTRADO - Enviando mensagem de boas-vindas');
-    return await iniciarFluxoBoasVindas(sender, sendMessage);
+    return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
 }
 
 async function iniciarFluxoBoasVindas(sender, sendMessage) {
