@@ -2,7 +2,7 @@ const wppconnect = require('@wppconnect-team/wppconnect');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const ContatoModel = require('../BancoDeDados/models/contato');
 const treinamentoSSMA = require('./Treinamentos/LCM/treinamentoSSMA');
-const treinamentoApresentacao = require('./Treinamentos/apresentacao/treinamentoApresentacao');
+const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamentoApresentacao');
 
 // Inicializar modelo
 let Contato = null;
