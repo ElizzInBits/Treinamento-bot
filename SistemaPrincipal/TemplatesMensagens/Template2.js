@@ -79,17 +79,17 @@ async function processarMensagem(message, client) {
       buscaParcial.forEach(c => console.log(`  - ${c.telefone} (${c.nome})`));
     }
     
+    // Função sendMessage para usar com treinamento
+    const sendMessageForTraining = async (phone, endpoint, body) => {
+      return await sendMessage(phone, endpoint, body);
+    };
+    
     if (!contato) {
       // Usar treinamento de apresentação para contatos não cadastrados
       console.log('🚀 Iniciando fluxo de apresentação para contato não cadastrado');
       await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, null, sendMessageForTraining);
       return;
     }
-    
-    // Função sendMessage para usar com treinamento
-    const sendMessageForTraining = async (phone, endpoint, body) => {
-      return await sendMessage(phone, endpoint, body);
-    };
     
     // Recarregar contato do banco para ter status atualizado
     await contato.reload();
@@ -177,21 +177,9 @@ async function processarMensagem(message, client) {
     }
     console.log('⚠️ Resposta não processada, enviando resposta padrão');
     
-    // Verificar se é primeira interação do contato cadastrado
-    const ultimaInteracao = await require('sequelize').models.Interacao?.findOne({
-      where: { telefone: telefone },
-      order: [['dataHora', 'DESC']]
-    });
-    
-    if (!ultimaInteracao) {
-      // Primeira interação - usar fluxo de apresentação
-      console.log('🚀 Primeira interação - iniciando fluxo de apresentação');
-      await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
-    } else {
-      // Já teve interação antes - continuar fluxo
-      await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
-    }
-    
+    // Usar treinamento de apresentação para contatos cadastrados também
+    console.log('🚀 Iniciando fluxo de apresentação para contato cadastrado');
+    await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
   } catch (error) {
     console.error('❌ Erro ao processar mensagem:', error);
     await client.sendText(message.from, '❌ Desculpe, ocorreu um erro. Tente novamente em alguns instantes.');
