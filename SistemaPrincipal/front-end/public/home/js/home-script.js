@@ -3855,13 +3855,21 @@ function abrirDetalhesEmpresa(empresaId) {
 
 function salvarEmpresa(empresaId) {
   const dados = {
-    razao_social: document.getElementById('editRazaoSocial').value,
-    cnpj: document.getElementById('editCnpj').value,
-    email: document.getElementById('editEmail').value,
-    contato: document.getElementById('editTelefone').value,
-    endereco: document.getElementById('editEndereco').value,
-    cep: document.getElementById('editCep').value
+    razao_social: document.getElementById('editRazaoSocial').value.trim(),
+    cnpj: document.getElementById('editCnpj').value.trim() || null,
+    email: document.getElementById('editEmail').value.trim() || null,
+    contato: document.getElementById('editTelefone').value.trim() || null,
+    endereco: document.getElementById('editEndereco').value.trim() || null,
+    cep: document.getElementById('editCep').value.trim() || null
   };
+  
+  // Validar campos obrigatórios
+  if (!dados.razao_social) {
+    mostrarAlerta('Razão social é obrigatória.', 'error');
+    return;
+  }
+  
+  console.log('📤 Enviando dados para API:', dados);
   
   authenticatedFetch(`/api/empresas/${empresaId}`, {
     method: 'PUT',
