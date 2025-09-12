@@ -3877,15 +3877,40 @@ function salvarEmpresa(empresaId) {
     body: JSON.stringify(dados)
   })
   .then(res => {
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      return res.text().then(errorText => {
+        console.error('❌ Erro da API:', errorText);
+        throw new Error(`Erro ${res.status}: ${errorText}`);
+      });
+    }
     return res.json();
   })
-  .then(() => {
+  .then((empresaAtualizada) => {
+    console.log('✅ Empresa atualizada:', empresaAtualizada);
     mostrarAlerta('Empresa atualizada com sucesso!');
+    
+    // Atualizar dados locais
+    const index = empresas.findIndex(e => e.id === empresaId);
+    if (index !== -1) {
+      empresas[index] = { ...empresas[index], ...empresaAtualizada };
+    }
+    
     fecharModalDetalhesEmpresa();
-    carregarEmpresas().then(() => renderizarEmpresas());
+    
+    // Recarregar e atualizar interface
+    Promise.all([
+      carregarEmpresas(),
+      carregarContatos()
+    ]).then(() => {
+      renderizarEmpresas();
+      atualizarEstatisticasEmpresas();
+      atualizarSelectEmpresa();
+    });
   })
-  .catch(() => mostrarAlerta('Erro ao atualizar empresa.', 'error'));
+  .catch((error) => {
+    console.error('❌ Erro completo:', error);
+    mostrarAlerta(`Erro ao atualizar empresa: ${error.message}`, 'error');
+  });
 }
 
 function fecharModalDetalhesEmpresa() {
