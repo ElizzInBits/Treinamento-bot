@@ -78,20 +78,18 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
             message: '😄 Ahh Vai!!! Leva só um minutinho, prometo que vai ser legal!\n\n👉 Quer que eu te mostre como funciona?\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
         });
         
-        // Enviar GIF do gatinho
+        // Enviar GIF do gatinho como sticker
         setTimeout(async () => {
             try {
                 const path = require('path');
                 const gifPath = path.join(__dirname, 'medias', 'gatinho-porfavor.gif');
-                console.log(`🖼️ Tentando enviar GIF: ${gifPath}`);
+                console.log(`🖼️ Tentando enviar GIF como sticker: ${gifPath}`);
                 
-                await sendMessage(sender, 'send-file', {
-                    path: gifPath,
-                    filename: 'gatinho-porfavor.gif',
-                    caption: ''
+                await sendMessage(sender, 'send-sticker-gif', {
+                    path: gifPath
                 });
             } catch (error) {
-                console.error('❌ Erro ao enviar GIF:', error);
+                console.error('❌ Erro ao enviar GIF sticker:', error);
                 // Fallback: enviar emoji
                 await sendMessage(sender, 'send-message', {
                     message: '😿'

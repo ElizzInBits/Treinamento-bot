@@ -278,6 +278,10 @@ async function sendMessage(phone, endpoint, body = {}) {
                 result = await wppClient.sendImage(phone, body.path, body.filename || 'image.png', body.caption || '');
                 break;
                 
+            case 'send-sticker-gif':
+                result = await wppClient.sendImageAsSticker(phone, body.path);
+                break;
+                
             default:
                 return false;
         }
