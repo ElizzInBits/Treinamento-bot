@@ -80,11 +80,23 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
         
         // Enviar GIF do gatinho
         setTimeout(async () => {
-            await sendMessage(sender, 'send-file', {
-                path: 'c:\\Treinamento-bot\\SistemaPrincipal\\TemplatesMensagens\\Treinamentos\\Apresentacao\\medias\\gatinho-porfavor.gif',
-                filename: 'gatinho-porfavor.gif',
-                caption: ''
-            });
+            try {
+                const path = require('path');
+                const gifPath = path.join(__dirname, 'medias', 'gatinho-porfavor.gif');
+                console.log(`🖼️ Tentando enviar GIF: ${gifPath}`);
+                
+                await sendMessage(sender, 'send-file', {
+                    path: gifPath,
+                    filename: 'gatinho-porfavor.gif',
+                    caption: ''
+                });
+            } catch (error) {
+                console.error('❌ Erro ao enviar GIF:', error);
+                // Fallback: enviar emoji
+                await sendMessage(sender, 'send-message', {
+                    message: '😿'
+                });
+            }
         }, 500);
         return true;
     }
