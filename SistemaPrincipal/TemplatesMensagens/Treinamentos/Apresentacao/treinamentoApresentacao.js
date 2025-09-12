@@ -3,14 +3,28 @@ const { Contato, Interacao } = require('../../../BancoDeDados/models');
 async function processarRespostaApresentacao(sender, text, selectedId, contato, sendMessage) {
     console.log(`🎯 Processando resposta: "${text}" de ${sender}`);
     
+    // Se não há contato cadastrado, sempre começar com saudação
+    if (!contato) {
+        const ultimaInteracao = await obterUltimaInteracao(sender);
+        
+        // Se não há interação anterior, enviar saudação
+        if (!ultimaInteracao) {
+            console.log('🎆 PRIMEIRA INTERAÇÃO - Enviando mensagem de boas-vindas');
+            return await iniciarFluxoBoasVindas(sender, sendMessage);
+        }
+        
+        // Se já tem interação, processar baseado no estado
+        return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
+    }
+    
+    // Para contatos cadastrados, verificar interações
     const ultimaInteracao = await obterUltimaInteracao(sender);
-    console.log(`🔍 Última interação:`, ultimaInteracao ? ultimaInteracao.tipo : 'NENHUMA');
     
     if (ultimaInteracao) {
         return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
     }
     
-    console.log('🎆 PRIMEIRA INTERAÇÃO - Enviando mensagem de boas-vindas');
+    console.log('🎆 PRIMEIRA INTERAÇÃO CADASTRADO - Enviando mensagem de boas-vindas');
     return await iniciarFluxoBoasVindas(sender, sendMessage);
 }
 
