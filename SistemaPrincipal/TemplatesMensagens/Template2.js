@@ -2,6 +2,7 @@ const wppconnect = require('@wppconnect-team/wppconnect');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
 const ContatoModel = require('../BancoDeDados/models/contato');
 const treinamentoSSMA = require('./Treinamentos/LCM/treinamentoSSMA');
+const treinamentoApresentacao = require('./Treinamentos/apresentacao/treinamentoApresentacao');
 
 // Inicializar modelo
 let Contato = null;
@@ -79,31 +80,9 @@ async function processarMensagem(message, client) {
     }
     
     if (!contato) {
-      // Mensagens de boas-vindas Salubritá - ORDEM CORRETA
-      await client.sendText(message.from, '👋 Olá! Seja bem-vindo(a) ao futuro dos treinamentos normativos.\n\nEu sou a Eliza, a sua assistente virtual\n\nJá imaginou fazer um curso oficial de saúde e segurança direto pelo WhatsApp? 📱');
-      
-      setTimeout(async () => {
-        await client.sendText(message.from, '🏢 Estou aqui para aplicar treinamentos de segurança e saúde no trabalho de forma rápida e eficiente!\n\n🎓 Nossos treinamentos são certificados e reconhecidos nacionalmente.');
-      }, 1000);
-      
-      setTimeout(async () => {
-        try {
-          await client.sendText(message.from, '🤔 Humm, parece que você ainda não fez seu cadastro em nossa plataforma.\n\n📝 Para iniciar seu treinamento, é necessário se cadastrar primeiro.\n\n👉 Clique no link abaixo para se cadastrar:\n\nhttps://abrir.link/kAgON\n\n✨ Após o cadastro, volte aqui e me envie qualquer mensagem para começarmos!');
-          
-          // SÓ DEPOIS que o link foi enviado, enviar as mensagens de ATENÇÃO
-          setTimeout(async () => {
-            await client.sendText(message.from, 'ATENÇÃO:\nUse o MESMO NÚMERO que você utilizará para conversar com o bot de treinamento no WhatsApp.');
-            
-            setTimeout(async () => {
-              await client.sendText(message.from, '💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.');
-            }, 1000);
-          }, 1000);
-          
-        } catch (error) {
-          console.error('❌ Erro ao enviar mensagem de cadastro:', error);
-        }
-      }, 2000);
-      
+      // Usar treinamento de apresentação para contatos não cadastrados
+      console.log('🚀 Iniciando fluxo de apresentação para contato não cadastrado');
+      await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, null, sendMessageForTraining);
       return;
     }
     
@@ -135,8 +114,20 @@ async function processarMensagem(message, client) {
       return;
     }
     
+    // Verificar se é seleção do treinamento de apresentação
+    if (message.selectedRowId === 'apresentacao_basica' || mensagem.toLowerCase().includes('treinamento de apresentação')) {
+      // Verificar se já concluiu o treinamento
+      if (contato.statusTreinamento === 'concluído' || contato.statusTreinamento === 'concluido') {
+        await client.sendText(message.from, `🎆 Olá ${contato.nome}!\n\n✅ Você já concluiu o treinamento de Apresentação com sucesso!\n\n📜 Caso precise revisar o conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
+        return;
+      }
+      console.log('🚀 Iniciando treinamento de Apresentação');
+      await treinamentoApresentacao.iniciarTreinamentoApresentacao(telefone, sendMessageForTraining);
+      return;
+    }
+    
     // Verificar se é comando de treinamento SSMA
-    if (mensagem.toLowerCase().includes('ssma') || mensagem.toLowerCase().includes('treinamento')) {
+    if (mensagem.toLowerCase().includes('ssma')) {
       // Verificar se já concluiu o treinamento
       if (contato.statusTreinamento === 'concluído' || contato.statusTreinamento === 'concluido') {
         await client.sendText(message.from, `🎆 Olá ${contato.nome}!\n\n✅ Você já concluiu o treinamento SSMA com sucesso!\n\n📜 Caso precise revisar o conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
@@ -147,6 +138,18 @@ async function processarMensagem(message, client) {
       return;
     }
     
+    // Verificar se é comando de treinamento de apresentação
+    if (mensagem.toLowerCase().includes('apresentação') || mensagem.toLowerCase().includes('apresentacao')) {
+      // Verificar se já concluiu o treinamento
+      if (contato.statusTreinamento === 'concluído' || contato.statusTreinamento === 'concluido') {
+        await client.sendText(message.from, `🎆 Olá ${contato.nome}!\n\n✅ Você já concluiu o treinamento de Apresentação com sucesso!\n\n📜 Caso precise revisar o conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
+        return;
+      }
+      console.log('🚀 Iniciando treinamento de Apresentação');
+      await treinamentoApresentacao.iniciarTreinamentoApresentacao(telefone, sendMessageForTraining);
+      return;
+    }
+    
     // Verificar se treinamento foi concluído ANTES de processar
     if (contato.statusTreinamento === 'concluído' || contato.statusTreinamento === 'concluido') {
       console.log('✅ Treinamento já concluído - não processando mensagens');
@@ -154,43 +157,40 @@ async function processarMensagem(message, client) {
       return;
     }
     
-    // Tentar processar resposta do treinamento SSMA
-    console.log('🔄 Tentando processar resposta SSMA');
-    const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
-    if (processouSSMA) {
-      console.log('✅ Resposta SSMA processada');
-      return;
+    // Verificar qual treinamento está ativo baseado no treinamentoId
+    if (contato.treinamentoId === 14) {
+      // Tentar processar resposta do treinamento SSMA
+      console.log('🔄 Tentando processar resposta SSMA');
+      const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
+      if (processouSSMA) {
+        console.log('✅ Resposta SSMA processada');
+        return;
+      }
+    } else if (contato.treinamentoId === 15) {
+      // Tentar processar resposta do treinamento de apresentação
+      console.log('🔄 Tentando processar resposta Apresentação');
+      const processouApresentacao = await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
+      if (processouApresentacao) {
+        console.log('✅ Resposta Apresentação processada');
+        return;
+      }
     }
-    console.log('⚠️ Resposta SSMA não processada, enviando resposta padrão');
+    console.log('⚠️ Resposta não processada, enviando resposta padrão');
     
-    // Mensagem de boas-vindas para contatos cadastrados
-    await client.sendText(message.from, `👋 Olá, ${contato.nome}! Seja bem-vindo(a)`);
+    // Verificar se é primeira interação do contato cadastrado
+    const ultimaInteracao = await require('sequelize').models.Interacao?.findOne({
+      where: { telefone: telefone },
+      order: [['dataHora', 'DESC']]
+    });
     
-    setTimeout(async () => {
-      await client.sendText(message.from, '📚 Aqui estão os treinamentos disponíveis');
-      
-      setTimeout(async () => {
-        // Verificar status do treinamento
-        if (contato.statusTreinamento === 'concluído' || contato.statusTreinamento === 'concluido') {
-          await client.sendText(message.from, `🎆 Parabéns ${contato.nome}!\n\n✅ Você já concluiu todos os treinamentos disponíveis!\n\n📜 Caso precise revisar algum conteúdo ou tenha dúvidas, entre em contato com nossa equipe.`);
-        } else {
-          // Enviar menu de treinamentos
-          await client.sendListMessage(message.from, {
-            title: 'Escolha qual treinamento deseja iniciar:',
-            description: '',
-            buttonText: 'Selecione uma opção:',
-            sections: [{
-              title: 'Treinamentos Disponíveis',
-              rows: [{
-                rowId: 'ssma_basico',
-                title: 'Treinamento Básico de SSMA',
-                description: 'Segurança, Saúde e Meio Ambiente'
-              }]
-            }]
-          });
-        }
-      }, 1000);
-    }, 1000);
+    if (!ultimaInteracao) {
+      // Primeira interação - usar fluxo de apresentação
+      console.log('🚀 Primeira interação - iniciando fluxo de apresentação');
+      await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
+    } else {
+      // Já teve interação antes - continuar fluxo
+      await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
+    }
     
   } catch (error) {
     console.error('❌ Erro ao processar mensagem:', error);

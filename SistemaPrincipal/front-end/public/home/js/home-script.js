@@ -1988,7 +1988,7 @@ document.getElementById('contatoForm')?.addEventListener('submit', function (e) 
     telefone,
     email: email || null,
     cpf: cpf || null,
-    empresaId: parseInt(empresaId),
+    empresaId: empresaId ? parseInt(empresaId) : 3,
     treinamentoId: treinamentoId ? parseInt(treinamentoId) : null,
     statusTreinamento: treinamentoId ? 'ativo' : 'sem_treinamento'
   };

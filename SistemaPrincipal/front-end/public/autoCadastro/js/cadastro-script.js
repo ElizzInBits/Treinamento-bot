@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cpf: cpf.replace(/\D/g, ''),
       email: email,
       telefone: telefoneCompleto,
-      empresaId: 1,
+      empresaId: 3,
       nomeEmpresa: nomeEmpresa
     };
 

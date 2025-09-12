@@ -19,6 +19,13 @@
     "nr35": {
       "modulo1_inicio": "🏗️ *MÓDULO 1 - TRABALHO EM ALTURA*\n\nVamos aprender sobre segurança em trabalhos em altura.",
       "treinamento_finalizado": "🎉 *TREINAMENTO NR-35 CONCLUÍDO!*\n\n🏆 Agora você está capacitado para trabalhos em altura com segurança!"
+    },
+    "apresentacao": {
+      "boas_vindas": "🎯 *BEM-VINDO AO TREINAMENTO DE APRESENTAÇÃO!*\n\n👋 Olá! Eu sou sua instrutora virtual e vou te ensinar as melhores técnicas para fazer apresentações eficazes e impactantes.\n\n📚 *O que você vai aprender:*\n• Estruturação de apresentações\n• Técnicas de comunicação\n• Controle de nervosismo\n• Uso eficaz de recursos visuais\n• Interação com a audiência\n\n🚀 Vamos começar?",
+      "modulo1_inicio": "📖 *MÓDULO 1 - FUNDAMENTOS DA APRESENTAÇÃO*\n\n🎯 Neste módulo você aprenderá:\n• Objetivos de uma apresentação\n• Estrutura básica\n• Importância do planejamento\n• Conhecendo sua audiência\n\n💡 *Dica:* Uma boa apresentação começa com um bom planejamento!",
+      "modulo2_inicio": "🎯 *MÓDULO 2 - TÉCNICAS AVANÇADAS*\n\n🚀 Agora vamos aprofundar:\n• Design de slides eficazes\n• Linguagem corporal\n• Controle da voz\n• Gestão de perguntas\n• Técnicas de engajamento\n\n✨ *Lembre-se:* A prática leva à perfeição!",
+      "consideracoes_finais": "🎆 *CONSIDERAÇÕES FINAIS*\n\n🎯 *Principais Pontos para Lembrar:*\n• Prepare-se sempre com antecedência\n• Conheça sua audiência\n• Pratique, pratique, pratique!\n• Mantenha contato visual\n• Use recursos visuais com moderação\n• Seja autêntico e confiante\n\n💡 *Dica Final:* O medo de falar em público é normal. Com prática e preparação, você se tornará um apresentador confiante!",
+      "treinamento_finalizado": "🎉 *TREINAMENTO DE APRESENTAÇÃO CONCLUÍDO!*\n\n🏆 Parabéns! Você completou com sucesso o treinamento de técnicas de apresentação.\n\n🎯 *Agora você está preparado para:*\n• Estruturar apresentações eficazes\n• Comunicar-se com confiança\n• Engajar sua audiência\n• Usar recursos visuais adequadamente\n\n🚀 *Próximos passos:* Coloque em prática o que aprendeu e continue se desenvolvendo!"
     }
   },
   "images": {
@@ -36,6 +43,11 @@
       "ALTURA": "",
       "EPI_ALTURA": "",
       "ANCORAGEM": ""
+    },
+    "apresentacao": {
+      "APRESENTACAO": "",
+      "SLIDES": "",
+      "COMUNICACAO": ""
     },
     "global": {
       "LOGO_EMPRESA": "",
