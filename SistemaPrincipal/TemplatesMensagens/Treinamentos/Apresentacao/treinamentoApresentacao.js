@@ -77,6 +77,15 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
         await sendMessage(sender, 'send-message', {
             message: '😄 Ahh Vai!!! Leva só um minutinho, prometo que vai ser legal!\n\n👉 Quer que eu te mostre como funciona?\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
         });
+        
+        // Enviar GIF do gatinho
+        setTimeout(async () => {
+            await sendMessage(sender, 'send-file', {
+                path: 'c:\\Treinamento-bot\\SistemaPrincipal\\TemplatesMensagens\\Treinamentos\\Apresentacao\\medias\\gatinho-porfavor.gif',
+                filename: 'gatinho-porfavor.gif',
+                caption: ''
+            });
+        }, 500);
         return true;
     }
     
