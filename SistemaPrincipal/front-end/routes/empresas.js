@@ -85,32 +85,49 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     console.log('📥 Dados recebidos:', req.body);
-    const { razaoSocial, cnpj, porte, endereco, cep, contato, email } = req.body;
+    
+    // Aceitar tanto camelCase quanto snake_case
+    const { 
+      razaoSocial, razao_social,
+      cnpj, 
+      porte, porte_empresa,
+      endereco, 
+      cep, 
+      contato, 
+      email 
+    } = req.body;
+    
+    const razaoSocialFinal = razaoSocial || razao_social;
+    const porteFinal = porte || porte_empresa;
 
-    if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !email) {
-      return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos.' });
+    if (!razaoSocialFinal) {
+      return res.status(400).json({ error: 'Razão social é obrigatória.' });
     }
 
-    const cnpjLimpo = limparCNPJ(cnpj);
-
-    const jaExiste = await Empresa.findOne({ where: { cnpj: cnpjLimpo } });
-    if (jaExiste) {
-      return res.status(400).json({ error: 'CNPJ já cadastrado.' });
+    let cnpjLimpo = null;
+    if (cnpj) {
+      cnpjLimpo = limparCNPJ(cnpj);
+      const jaExiste = await Empresa.findOne({ where: { cnpj: cnpjLimpo } });
+      if (jaExiste) {
+        return res.status(400).json({ error: 'CNPJ já cadastrado.' });
+      }
     }
 
-    const emailExiste = await Empresa.findOne({ where: { email } });
-    if (emailExiste) {
-      return res.status(400).json({ error: 'Email já cadastrado.' });
+    if (email) {
+      const emailExiste = await Empresa.findOne({ where: { email } });
+      if (emailExiste) {
+        return res.status(400).json({ error: 'Email já cadastrado.' });
+      }
     }
 
     const novaEmpresa = await Empresa.create({
-      razaoSocial: razaoSocial.trim(),
+      razaoSocial: razaoSocialFinal.trim(),
       cnpj: cnpjLimpo,
-      porteEmpresa: porte,
-      endereco,
-      cep,
-      contato,
-      email,
+      porteEmpresa: porteFinal,
+      endereco: endereco || null,
+      cep: cep || null,
+      contato: contato || null,
+      email: email || null,
       criadoEm: new Date()
     });
 
@@ -136,12 +153,26 @@ router.post('/', async (req, res) => {
 // Atualizar empresa
 router.put('/:id', async (req, res) => {
   try {
+    console.log('📥 Dados recebidos para atualização:', req.body);
+    
     const empresa = await Empresa.findByPk(req.params.id);
     if (!empresa) {
       return res.status(404).json({ error: 'Empresa não encontrada.' });
     }
 
-    const { razaoSocial, cnpj, porte, endereco, cep, contato, email } = req.body;
+    // Aceitar tanto camelCase quanto snake_case
+    const { 
+      razaoSocial, razao_social, 
+      cnpj, 
+      porte, porte_empresa,
+      endereco, 
+      cep, 
+      contato, 
+      email 
+    } = req.body;
+    
+    const razaoSocialFinal = razaoSocial || razao_social;
+    const porteFinal = porte || porte_empresa;
 
     if (cnpj) {
       const cnpjLimpo = limparCNPJ(cnpj);
@@ -170,17 +201,23 @@ router.put('/:id', async (req, res) => {
       empresa.email = email;
     }
 
-    if (razaoSocial) empresa.razaoSocial = razaoSocial.trim();
-    if (porte) empresa.porteEmpresa = porte;
-    if (endereco) empresa.endereco = endereco;
-    if (cep) empresa.cep = cep;
+    // Atualizar campos
+    if (razaoSocialFinal) empresa.razaoSocial = razaoSocialFinal.trim();
+    if (porteFinal) empresa.porteEmpresa = porteFinal;
+    if (endereco !== undefined) empresa.endereco = endereco;
+    if (cep !== undefined) empresa.cep = cep;
     if (contato !== undefined) empresa.contato = contato;
 
     await empresa.save();
+    
+    console.log('✅ Empresa atualizada:', empresa.toJSON());
 
-    res.json({ message: 'Empresa atualizada com sucesso.', empresa });
+    res.json({ 
+      message: 'Empresa atualizada com sucesso.', 
+      empresa: empresa.toJSON()
+    });
   } catch (error) {
-    console.error('Erro ao atualizar empresa:', error);
+    console.error('❌ Erro ao atualizar empresa:', error);
     res.status(500).json({ error: 'Erro interno do servidor.' });
   }
 });
