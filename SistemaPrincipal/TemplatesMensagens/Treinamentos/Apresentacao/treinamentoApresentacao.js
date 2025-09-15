@@ -65,10 +65,12 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
     
     if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
         if (!contato) {
-            await sendMessage(sender, 'send-message', {
-                message: '🤔 Hum, que tal fazer o seu cadastro na nossa plataforma antes, hein?\nÉ muito simples, basta clicar no link abaixo e assim que finalizar é só voltar aqui e me envie qualquer mensagem para começarmos!\n\nhttps://abrir.link/kAgON\n\nATENÇÃO:\nNo Cadastro use o MESMO NÚMERO que você utilizará para conversar aqui comigo.\n\n💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.'
-            });
-            await salvarInteracao(sender, 'aguardando_cadastro', JSON.stringify({ etapa: 'aguardando_cadastro' }));
+            setTimeout(async () => {
+                await sendMessage(sender, 'send-message', {
+                    message: '🤔 Hum, que tal fazer o seu cadastro na nossa plataforma antes, hein?\nÉ muito simples, basta clicar no link abaixo e assim que finalizar é só voltar aqui e me envie qualquer mensagem para começarmos!\n\nhttps://abrir.link/kAgON\n\nATENÇÃO:\nNo Cadastro use o MESMO NÚMERO que você utilizará para conversar aqui comigo.\n\n💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.'
+                });
+                await salvarInteracao(sender, 'aguardando_cadastro', JSON.stringify({ etapa: 'aguardando_cadastro' }));
+            }, 300);
         } else {
             await mostrarComoFunciona(sender, contato.nome, sendMessage);
         }
@@ -131,8 +133,8 @@ async function mostrarComoFunciona(sender, nome, sendMessage) {
                 message: 'Quer ver os recursos que posso usar?\n1️⃣ Sim, mostra aí.\n2️⃣ Pula essa parte.'
             });
             await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ etapa: 'mostrar_recursos' }));
-        }, 1000);
-    }, 2000);
+        }, 500);
+    }, 800);
 }
 
 async function processarMostrarRecursos(sender, text, sendMessage) {
@@ -150,7 +152,7 @@ async function processarMostrarRecursos(sender, text, sendMessage) {
     
     setTimeout(async () => {
         await iniciarTreinamentoReal(sender, sendMessage);
-    }, 2000);
+    }, 800);
     
     return true;
 }
@@ -164,7 +166,7 @@ async function iniciarTreinamentoReal(sender, sendMessage) {
         await sendMessage(sender, 'send-message', {
             message: '🎉 Parabéns! Você concluiu a demonstração do sistema de treinamentos!\n\n✨ Em breve teremos mais conteúdos disponíveis.\n\n📞 Entre em contato conosco para mais informações!'
         });
-    }, 3000);
+    }, 1500);
 }
 
 async function salvarInteracao(telefone, tipo, mensagem) {
