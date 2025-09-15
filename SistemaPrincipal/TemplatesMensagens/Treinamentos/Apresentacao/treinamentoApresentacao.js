@@ -24,17 +24,24 @@ async function processarRespostaApresentacao(sender, text, selectedId, contato, 
     // Para contatos cadastrados
     const ultimaInteracao = await obterUltimaInteracao(sender);
     
-    if (ehSaudacao || !ultimaInteracao) {
+    // Se é uma saudação E não há interação anterior, enviar saudação
+    if (ehSaudacao && !ultimaInteracao) {
         console.log('🎆 SAUDAÇÃO CADASTRADO - Enviando mensagem de boas-vindas');
         return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
     
-    return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
+    // Se há interação anterior, processar baseado no estado
+    if (ultimaInteracao) {
+        return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
+    }
+    
+    // Se não há interação anterior, iniciar fluxo
+    return await iniciarFluxoBoasVindas(sender, sendMessage);
 }
 
 async function iniciarFluxoBoasVindas(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: '👋 Olá! Seja bem-vindo(a) ao futuro dos treinamentos normativos.\nEu sou a Eliza, a sua assistente virtual 🤖\nJá imaginou fazer um curso oficial de saúde e segurança direto pelo WhatsApp? 📱\n👉 Quer que eu te mostre como funciona?\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
+        message: '👋 Olá! Seja bem-vindo(a) ao futuro dos treinamentos normativos.\nEu sou a *Eliza*, a sua *assistente virtual* 🤖\n\nJá imaginou fazer um curso oficial de saúde e segurança direto pelo WhatsApp? 📱\n\n👉 Quer que eu te mostre como funciona?\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
     });
     
     await salvarInteracao(sender, 'aguardando_opcao_inicial', JSON.stringify({ etapa: 'opcao_inicial' }));
@@ -109,6 +116,7 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
 
 async function processarAposCadastro(sender, text, contato, sendMessage) {
     if (contato) {
+        console.log(`🎉 USUÁRIO CADASTRADO RETORNOU: ${contato.nome}`);
         await mostrarComoFunciona(sender, contato.nome, sendMessage);
     } else {
         await sendMessage(sender, 'send-message', {
