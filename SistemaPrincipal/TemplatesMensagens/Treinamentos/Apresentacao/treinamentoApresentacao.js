@@ -70,6 +70,16 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
     const opcao = text.trim();
     console.log(`🔢 Opção: "${opcao}", Contato: ${contato ? contato.nome : 'NÃO CADASTRADO'}`);
     
+    // Se é uma saudação e o usuário está cadastrado, prosseguir automaticamente
+    const saudacoes = ['olá', 'oi', 'ola', 'hello', 'hi', 'bom dia', 'boa tarde', 'boa noite'];
+    const ehSaudacao = saudacoes.some(s => opcao.toLowerCase().includes(s));
+    
+    if (ehSaudacao && contato) {
+        console.log(`🎉 SAUDAÇÃO DE USUÁRIO CADASTRADO: ${contato.nome} - Prosseguindo automaticamente`);
+        await mostrarComoFunciona(sender, contato.nome, sendMessage);
+        return true;
+    }
+    
     if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
         if (!contato) {
             setTimeout(async () => {
@@ -105,6 +115,14 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
                 });
             }
         }, 500);
+        return true;
+    }
+    
+    // Se chegou aqui e é uma saudação mas não está cadastrado, pedir para escolher opção
+    if (ehSaudacao && !contato) {
+        await sendMessage(sender, 'send-message', {
+            message: 'Por favor, escolha uma das opções:\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
+        });
         return true;
     }
     
