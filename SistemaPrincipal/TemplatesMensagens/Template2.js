@@ -279,7 +279,7 @@ async function sendMessage(phone, endpoint, body = {}) {
                 break;
                 
             case 'send-sticker-gif':
-                result = await wppClient.sendImageAsSticker(phone, body.path);
+                result = await wppClient.sendImageAsStickerGif(phone, body.path);
                 break;
                 
             default:
