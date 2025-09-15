@@ -59,6 +59,10 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
             return await processarOpcaoInicial(sender, text, contato, sendMessage);
         case 'aguardando_cadastro':
             return await processarAposCadastro(sender, text, contato, sendMessage);
+        case 'processando_cadastrado':
+            // Ignorar mensagens enquanto processa cadastrado
+            console.log('🔄 Ignorando mensagem - usuário já sendo processado');
+            return true;
         case 'mostrar_recursos':
             return await processarMostrarRecursos(sender, text, sendMessage);
         default:
@@ -135,13 +139,16 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
 async function processarAposCadastro(sender, text, contato, sendMessage) {
     if (contato) {
         console.log(`🎉 USUÁRIO CADASTRADO RETORNOU: ${contato.nome}`);
+        // Atualizar estado imediatamente para evitar processamento duplicado
+        await salvarInteracao(sender, 'processando_cadastrado', JSON.stringify({ etapa: 'processando_cadastrado' }));
         await mostrarComoFunciona(sender, contato.nome, sendMessage);
+        return true;
     } else {
         await sendMessage(sender, 'send-message', {
             message: '🤔 Parece que você ainda não finalizou o cadastro. Após se cadastrar, volte aqui e me envie qualquer mensagem!\n\nhttps://abrir.link/kAgON'
         });
+        return true;
     }
-    return true;
 }
 
 async function mostrarComoFunciona(sender, nome, sendMessage) {
@@ -151,15 +158,9 @@ async function mostrarComoFunciona(sender, nome, sendMessage) {
     
     setTimeout(async () => {
         await sendMessage(sender, 'send-message', {
-            message: '🎉 [Aqui seria enviado um sticker/gif animado]'
+            message: 'Quer ver os recursos que posso usar?\n1️⃣ Sim, mostra aí.\n2️⃣ Pula essa parte.'
         });
-        
-        setTimeout(async () => {
-            await sendMessage(sender, 'send-message', {
-                message: 'Quer ver os recursos que posso usar?\n1️⃣ Sim, mostra aí.\n2️⃣ Pula essa parte.'
-            });
-            await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ etapa: 'mostrar_recursos' }));
-        }, 500);
+        await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ etapa: 'mostrar_recursos' }));
     }, 800);
 }
 
