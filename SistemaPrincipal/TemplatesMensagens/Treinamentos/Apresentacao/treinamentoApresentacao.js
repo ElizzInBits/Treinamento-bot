@@ -187,13 +187,33 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
         message: '🎯 Olha só o que cabe dentro de um treinamento no WhatsApp:\n\n• 📹 Vídeos curtos\n• 🎤 Áudios explicativos\n• 🖼️ Imagens e infográficos\n• 📑 Arquivos PDF e procedimentos\n• 📝 Testes e avaliações\n\n👉 Fácil, rápido e na palma da mão.'
     });
     
-    const path = require('path');
-    const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'Video01.mp4');
-    
-    await sendMessage(sender, 'send-video', {
-        path: videoPath,
-        caption: 'Aqui está um exemplo de vídeo que pode ser usado em um treinamento:'
-    });
+    try {
+        const path = require('path');
+        const fs = require('fs');
+        const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'Video01.mp4');
+        
+        console.log(`🎥 Tentando enviar vídeo: ${videoPath}`);
+        
+        // Verificar se o arquivo existe
+        if (fs.existsSync(videoPath)) {
+            console.log('✅ Arquivo de vídeo encontrado');
+            await sendMessage(sender, 'send-video', {
+                path: videoPath,
+                caption: 'Aqui está um exemplo de vídeo que pode ser usado em um treinamento:'
+            });
+            console.log('✅ Vídeo enviado com sucesso');
+        } else {
+            console.log('❌ Arquivo de vídeo não encontrado, enviando mensagem alternativa');
+            await sendMessage(sender, 'send-message', {
+                message: '🎥 [Vídeo exemplo seria enviado aqui]\n\nAqui está um exemplo de vídeo que pode ser usado em um treinamento.'
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao enviar vídeo:', error);
+        await sendMessage(sender, 'send-message', {
+            message: '🎥 [Vídeo exemplo seria enviado aqui]\n\nAqui está um exemplo de vídeo que pode ser usado em um treinamento.'
+        });
+    }
     setTimeout(async () => {
         await sendMessage(sender, 'send-message', {
             message: 'Quer saber quando e onde você pode usar?\n1️⃣ Quero sim.\n2️⃣ Vamos direto para exemplos de treinamentos.'
