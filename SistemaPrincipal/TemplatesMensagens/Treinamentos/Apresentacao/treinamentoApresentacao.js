@@ -41,7 +41,7 @@ async function processarRespostaApresentacao(sender, text, selectedId, contato, 
 
 async function iniciarFluxoBoasVindas(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: '👋 Olá! Seja bem-vindo(a) ao futuro dos treinamentos normativos.\nEu sou a *Eliza*, a sua *assistente virtual* 🤖\n\nJá imaginou fazer um curso oficial de saúde e segurança direto pelo WhatsApp? 📱\n\n👉 Quer que eu te mostre como funciona?\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
+        message: '👋 Olá! Seja bem-vindo(a) ao futuro dos treinamentos normativos.\nEu sou a Eliza, a sua assistente virtual \nJá imaginou fazer um curso oficial de saúde e segurança direto pelo WhatsApp? 📱\n👉 Quer que eu te mostre como funciona?\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
     });
     
     await salvarInteracao(sender, 'aguardando_opcao_inicial', JSON.stringify({ etapa: 'opcao_inicial' }));
@@ -60,11 +60,20 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
         case 'aguardando_cadastro':
             return await processarAposCadastro(sender, text, contato, sendMessage);
         case 'processando_cadastrado':
-            // Ignorar mensagens enquanto processa cadastrado
             console.log('🔄 Ignorando mensagem - usuário já sendo processado');
             return true;
         case 'mostrar_recursos':
             return await processarMostrarRecursos(sender, text, sendMessage);
+        case 'recursos_detalhados':
+            return await processarRecursosDetalhados(sender, text, sendMessage);
+        case 'quando_onde':
+            return await processarQuandoOnde(sender, text, sendMessage);
+        case 'exemplos_treinamentos':
+            return await processarExemplosTrainamentos(sender, text, sendMessage);
+        case 'outras_aplicacoes':
+            return await processarOutrasAplicacoes(sender, text, sendMessage);
+        case 'contato_comercial':
+            return await processarContatoComercial(sender, text, sendMessage);
         default:
             return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
@@ -113,7 +122,6 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
                 });
             } catch (error) {
                 console.error('❌ Erro ao enviar GIF sticker:', error);
-                // Fallback: enviar emoji
                 await sendMessage(sender, 'send-message', {
                     message: '😿'
                 });
@@ -122,7 +130,6 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
         return true;
     }
     
-    // Se chegou aqui e é uma saudação mas não está cadastrado, pedir para escolher opção
     if (ehSaudacao && !contato) {
         await sendMessage(sender, 'send-message', {
             message: 'Por favor, escolha uma das opções:\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
@@ -139,7 +146,6 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
 async function processarAposCadastro(sender, text, contato, sendMessage) {
     if (contato) {
         console.log(`🎉 USUÁRIO CADASTRADO RETORNOU: ${contato.nome}`);
-        // Atualizar estado imediatamente para evitar processamento duplicado
         await salvarInteracao(sender, 'processando_cadastrado', JSON.stringify({ etapa: 'processando_cadastrado' }));
         await mostrarComoFunciona(sender, contato.nome, sendMessage);
         return true;
@@ -153,7 +159,7 @@ async function processarAposCadastro(sender, text, contato, sendMessage) {
 
 async function mostrarComoFunciona(sender, nome, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: `😃 Muito bem ${nome}! Aqui o treinamento acontece como uma conversa rápida:\n• Mensagens curtas 💬\n• Linguagem simples ✅\n• Interatividade o tempo todo ⚡\n👉 E tudo com validade legal 📜`
+        message: `😃 Muito bem ${nome}! Aqui o treinamento acontece como uma conversa rápida:\n• Mensagens curtas 💬\n• Linguagem simples ✅\n• Interatividade o tempo todo ⚡\n👉 E tudo com validade legal`
     });
     
     setTimeout(async () => {
@@ -168,32 +174,141 @@ async function processarMostrarRecursos(sender, text, sendMessage) {
     const opcao = text.trim();
     
     if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
-        await sendMessage(sender, 'send-message', {
-            message: '🚀 Recursos disponíveis:\n\n📱 Mensagens interativas\n🖼️ Imagens e vídeos\n📊 Quizzes dinâmicos\n📋 Certificados digitais\n⚡ Respostas instantâneas\n\n✨ Tudo isso para tornar seu aprendizado mais eficaz!'
-        });
+        await mostrarRecursosDetalhados(sender, sendMessage);
     } else {
-        await sendMessage(sender, 'send-message', {
-            message: '👍 Perfeito! Vamos direto ao que interessa então!'
-        });
+        await mostrarQuandoOnde(sender, sendMessage);
     }
-    
-    setTimeout(async () => {
-        await iniciarTreinamentoReal(sender, sendMessage);
-    }, 800);
     
     return true;
 }
 
-async function iniciarTreinamentoReal(sender, sendMessage) {
+async function mostrarRecursosDetalhados(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: '🎯 Agora vamos começar seu treinamento!\n\nEste é um curso completo sobre técnicas de apresentação eficaz.\n\n📚 Você está pronto para começar?'
+        message: '🎯 Olha só o que cabe dentro de um treinamento no WhatsApp:\n\n• 📹 Vídeos curtos\n• 🎤 Áudios explicativos\n• 🖼️ Imagens e infográficos\n• 📑 Arquivos PDF e procedimentos\n• 📝 Testes e avaliações\n\n👉 Fácil, rápido e na palma da mão.'
     });
     
     setTimeout(async () => {
         await sendMessage(sender, 'send-message', {
-            message: '🎉 Parabéns! Você concluiu a demonstração do sistema de treinamentos!\n\n✨ Em breve teremos mais conteúdos disponíveis.\n\n📞 Entre em contato conosco para mais informações!'
+            message: 'Quer saber quando e onde você pode usar?\n1️⃣ Quero sim.\n2️⃣ Vamos direto para exemplos de treinamentos.'
         });
-    }, 1500);
+        await salvarInteracao(sender, 'recursos_detalhados', JSON.stringify({ etapa: 'recursos_detalhados' }));
+    }, 1000);
+}
+
+async function processarRecursosDetalhados(sender, text, sendMessage) {
+    const opcao = text.trim();
+    
+    if (opcao === '1' || opcao.toLowerCase().includes('quero')) {
+        await mostrarQuandoOnde(sender, sendMessage);
+    } else {
+        await mostrarExemplosTrainamentos(sender, sendMessage);
+    }
+    
+    return true;
+}
+
+async function mostrarQuandoOnde(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '⏰ Você pode fazer o curso:\n\n• No intervalo do café ☕\n• No ônibus ou metrô 🚎\n• Em qualquer lugar, a qualquer hora 🌍\n\nTudo com registro, certificado e validade normativa.'
+    });
+    
+    setTimeout(async () => {
+        await sendMessage(sender, 'send-message', {
+            message: '👉 Quer exemplos de treinamentos que já temos no WhatsApp?\n1️⃣ Sim!\n2️⃣ Não, quero ver outra aplicação.'
+        });
+        await salvarInteracao(sender, 'quando_onde', JSON.stringify({ etapa: 'quando_onde' }));
+    }, 1200);
+}
+
+async function processarQuandoOnde(sender, text, sendMessage) {
+    const opcao = text.trim();
+    
+    if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
+        await mostrarExemplosTrainamentos(sender, sendMessage);
+    } else {
+        await mostrarOutrasAplicacoes(sender, sendMessage);
+    }
+    
+    return true;
+}
+
+async function mostrarExemplosTrainamentos(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '📚 Olha só alguns exemplos que já estão rodando no zap:\n\n• NR01 – Gerenciamento de Riscos\n• NR06 – EPC & EPI\n• NR10 – Segurança em Eletricidade ⚡\n• NR12 – Segurança em Máquinas\n• NR35 – Trabalho em Altura 🧗'
+    });
+    
+    setTimeout(async () => {
+        await sendMessage(sender, 'send-message', {
+            message: '👉 Quer ver outras aplicações práticas além dos treinamentos?\n\n1️⃣ Sim, me mostra.\n2️⃣ Já estou convencido(a)!'
+        });
+        await salvarInteracao(sender, 'exemplos_treinamentos', JSON.stringify({ etapa: 'exemplos_treinamentos' }));
+    }, 1000);
+}
+
+async function processarExemplosTrainamentos(sender, text, sendMessage) {
+    const opcao = text.trim();
+    
+    if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
+        await mostrarOutrasAplicacoes(sender, sendMessage);
+    } else {
+        await mostrarContatoComercial(sender, sendMessage);
+    }
+    
+    return true;
+}
+
+async function mostrarOutrasAplicacoes(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '🚪 Imagine a sua portaria com um treinamento relâmpago para visitantes.\nEles fazem o curso pelo WhatsApp e saem com certificado na hora ✅.'
+    });
+    
+    setTimeout(async () => {
+        await sendMessage(sender, 'send-message', {
+            message: 'Ou aquele terceiro que vem de longe: recebe o link, faz o cadastro e conclui o treinamento completo com certificado direto no e-mail 📧.'
+        });
+        
+        setTimeout(async () => {
+            await sendMessage(sender, 'send-message', {
+                message: '👉 Quer conversar um pouco mais com nosso comercial e ver como podemos fechar esta parceria?\n1️⃣ Sim, quero conversar com o comercial\n2️⃣ Prefiro falar com o time técnico primeiro.'
+            });
+            await salvarInteracao(sender, 'outras_aplicacoes', JSON.stringify({ etapa: 'outras_aplicacoes' }));
+        }, 800);
+    }, 1000);
+}
+
+async function processarOutrasAplicacoes(sender, text, sendMessage) {
+    const opcao = text.trim();
+    
+    if (opcao === '1' || opcao.toLowerCase().includes('comercial')) {
+        await mostrarContatoComercial(sender, sendMessage);
+    } else {
+        await mostrarContatoTecnico(sender, sendMessage);
+    }
+    
+    return true;
+}
+
+async function mostrarContatoComercial(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '🙌 Maravilha! É só clicar no link abaixo e chamar o nosso comercial:\n\n🔗 https://wa.me/5531999999999?text=Olá,%20vim%20do%20bot%20e%20quero%20saber%20mais%20sobre%20treinamentos%20no%20WhatsApp'
+    });
+    
+    await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+    return true;
+}
+
+async function mostrarContatoTecnico(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '🤝 Sem problema! Se quiser conversar com nosso time técnico ou tirar dúvidas:\n\n📧 treinamentos@salubrita.com.br\n📞 (31) 3166-9006'
+    });
+    
+    await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+    return true;
+}
+
+async function processarContatoComercial(sender, text, sendMessage) {
+    // Conversa finalizada, qualquer mensagem reinicia
+    return await iniciarFluxoBoasVindas(sender, sendMessage);
 }
 
 async function salvarInteracao(telefone, tipo, mensagem) {
