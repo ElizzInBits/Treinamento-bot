@@ -7,6 +7,9 @@ const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamento
 // Inicializar modelo
 let Contato = null;
 
+// Cache simples para contatos
+const contatoCache = new Map();
+
 // Cliente WhatsApp direto
 let wppClient = null;
 
@@ -36,26 +39,27 @@ async function processarMensagem(message, client) {
       return;
     }
     
-    // Buscar contato no banco - tentar TODOS os formatos possíveis
-    const formatosTelefone = [
-      telefone,                           // 553399595511
-      `${telefone.substring(0, 4)}9${telefone.substring(4)}`, // 5533999595511 (adicionar 9)
-      telefone.replace(/^(55\d{2})9/, '$1'), // 553399595511 -> 5533995511 (remover 9)
-      telefone.substring(2),              // 3399595511  
-      `${telefone.substring(2, 4)}9${telefone.substring(4)}`, // 33999595511 (DDD + 9)
-      telefone.substring(2).replace(/^(\d{2})9/, '$1'), // 3399595511 -> 33995511 (remover 9 do DDD)
-      `+${telefone}`,                     // +553399595511
-      `+${telefone.substring(0, 4)}9${telefone.substring(4)}`, // +5533999595511
-    ];
+    // Cache simples para evitar consultas repetidas
+    const cacheKey = `contato_${telefone}`;
+    let contato = contatoCache.get(cacheKey);
     
-    let contato = null;
-    for (const formato of formatosTelefone) {
-      contato = await Contato.findOne({ where: { telefone: formato } });
-      if (contato) {
-        console.log(`✅ Contato encontrado com formato: ${formato}`);
-        break;
+    if (!contato) {
+      // Buscar contato no banco - formatos mais comuns primeiro
+      const formatosTelefone = [
+        telefone,                           // 553399595511
+        telefone.substring(2),              // 3399595511  
+        `${telefone.substring(0, 4)}9${telefone.substring(4)}`, // 5533999595511 (adicionar 9)
+      ];
+      
+      for (const formato of formatosTelefone) {
+        contato = await Contato.findOne({ where: { telefone: formato } });
+        if (contato) {
+          console.log(`✅ Contato encontrado com formato: ${formato}`);
+          contatoCache.set(cacheKey, contato);
+          break;
+        }
+        console.log(`❌ Tentativa: ${formato}`);
       }
-      console.log(`❌ Tentativa: ${formato}`);
     }
     
     console.log(`📋 RESULTADO FINAL:`, contato ? `${contato.nome} (ID: ${contato.id})` : 'NÃO ENCONTRADO');
@@ -280,6 +284,10 @@ async function sendMessage(phone, endpoint, body = {}) {
                 
             case 'send-sticker-gif':
                 result = await wppClient.sendImageAsStickerGif(phone, body.path);
+                break;
+                
+            case 'send-video':
+                result = await wppClient.sendVideoAsGif(phone, body.path, body.filename || 'video.mp4', body.caption || '');
                 break;
                 
             default:
