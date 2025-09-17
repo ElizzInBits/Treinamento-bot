@@ -203,6 +203,18 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                     caption: 'Aqui está um exemplo de vídeo que pode ser usado em um treinamento:'
                 });
                 console.log('✅ Vídeo enviado com sucesso');
+                
+                // Enviar imagem após o vídeo
+                setTimeout(async () => {
+                    const imagePath = path.join(__dirname, 'material_apresentacao', 'Imagens', 'Vantagens.png');
+                    if (fs.existsSync(imagePath)) {
+                        await sendMessage(sender, 'send-image', {
+                            path: imagePath,
+                            caption: ''
+                        });
+                        console.log('✅ Imagem enviada com sucesso');
+                    }
+                }, 2000);
             } else {
                 console.log('❌ Arquivo de vídeo não encontrado, enviando mensagem alternativa');
                 await sendMessage(sender, 'send-message', {
