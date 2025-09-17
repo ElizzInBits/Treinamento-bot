@@ -287,7 +287,7 @@ async function sendMessage(phone, endpoint, body = {}) {
                 break;
                 
             case 'send-video':
-                result = await wppClient.sendVideoAsGif(phone, body.path, body.filename || 'video.mp4', body.caption || '');
+                result = await wppClient.sendFile(phone, body.path, body.filename || 'video.mp4', body.caption || '');
                 break;
                 
             default:
