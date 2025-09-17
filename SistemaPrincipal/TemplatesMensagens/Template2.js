@@ -38,13 +38,25 @@ async function processarMensagem(message, client) {
       return;
     }
     
-    // Buscar contato no banco - apenas formato original
-    let contato = await Contato.findOne({ where: { telefone: telefone } });
+    // Buscar contato no banco - formatos mais comuns
+    const formatosTelefone = [
+      telefone,                           // 553399595511
+      telefone.substring(2),              // 3399595511  
+      `${telefone.substring(0, 4)}9${telefone.substring(4)}`, // 5533999595511 (adicionar 9)
+      telefone.length === 13 ? telefone.substring(0, 4) + telefone.substring(5) : telefone, // 5533999595511 -> 553399595511 (remover 9º dígito)
+    ];
+    
+    let contato = null;
+    for (const formato of formatosTelefone) {
+      contato = await Contato.findOne({ where: { telefone: formato } });
+      if (contato) {
+        console.log(`✅ Contato encontrado: ${contato.nome} (formato: ${formato})`);
+        break;
+      }
+    }
     
     if (!contato) {
       console.log(`❌ Contato não encontrado: ${telefone}`);
-    } else {
-      console.log(`✅ Contato encontrado: ${contato.nome}`);
     }
     
     console.log(`📋 RESULTADO:`, contato ? `${contato.nome}` : 'NÃO ENCONTRADO');
