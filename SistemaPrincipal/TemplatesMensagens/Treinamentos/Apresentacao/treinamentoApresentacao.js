@@ -215,13 +215,15 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                 message: '🎥 [Vídeo exemplo seria enviado aqui]\n\nAqui está um exemplo de vídeo que pode ser usado em um treinamento.'
             });
         }
+        
+        // Enviar próxima pergunta após o vídeo
+        setTimeout(async () => {
+            await sendMessage(sender, 'send-message', {
+                message: 'Quer saber quando e onde você pode usar?\n1️⃣ Quero sim.\n2️⃣ Vamos direto para exemplos de treinamentos.'
+            });
+            await salvarInteracao(sender, 'recursos_detalhados', JSON.stringify({ etapa: 'recursos_detalhados' }));
+        }, 1000);
     }, 1500);
-    setTimeout(async () => {
-        await sendMessage(sender, 'send-message', {
-            message: 'Quer saber quando e onde você pode usar?\n1️⃣ Quero sim.\n2️⃣ Vamos direto para exemplos de treinamentos.'
-        });
-        await salvarInteracao(sender, 'recursos_detalhados', JSON.stringify({ etapa: 'recursos_detalhados' }));
-    }, 1000);
 }
 
 async function processarRecursosDetalhados(sender, text, sendMessage) {
