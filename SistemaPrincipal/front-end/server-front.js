@@ -177,7 +177,7 @@ app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     
     // Credenciais do admin via env
-    if (username === (process.env.ADMIN_USERNAME || 'Administrador') && password === (process.env.ADMIN_PASSWORD || 'maduroabacaxi')) {
+    if (username === (process.env.ADMIN_USERNAME || 'Administrador') && password === (process.env.ADMIN_PASSWORD || 'salubrita')) {
         const token = jwt.sign({ 
             username: 'Administrador',
             loginTime: Date.now()
