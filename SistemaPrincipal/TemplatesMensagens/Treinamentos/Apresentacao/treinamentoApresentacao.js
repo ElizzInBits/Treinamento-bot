@@ -64,8 +64,7 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
             return true;
         case 'mostrar_recursos':
             return await processarMostrarRecursos(sender, text, sendMessage);
-        case 'recursos_detalhados':
-            return await processarRecursosDetalhados(sender, text, sendMessage);
+
         case 'quando_onde':
             return await processarQuandoOnde(sender, text, sendMessage);
         case 'exemplos_treinamentos':
@@ -176,7 +175,7 @@ async function processarMostrarRecursos(sender, text, sendMessage) {
     if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
         await mostrarRecursosDetalhados(sender, sendMessage);
     } else {
-        await mostrarQuandoOnde(sender, sendMessage);
+        await mostrarExemplosTrainamentos(sender, sendMessage);
     }
     
     return true;
@@ -191,11 +190,11 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
         try {
             const path = require('path');
             const fs = require('fs');
-            const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'Video01.mp4');
             
+            // 1. Enviar vídeo primeiro
+            const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'Video01.mp4');
             console.log(`🎥 Tentando enviar vídeo: ${videoPath}`);
             
-            // Verificar se o arquivo existe
             if (fs.existsSync(videoPath)) {
                 console.log('✅ Arquivo de vídeo encontrado');
                 await sendMessage(sender, 'send-video', {
@@ -203,59 +202,45 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                     caption: 'Aqui está um exemplo de vídeo que pode ser usado em um treinamento:'
                 });
                 console.log('✅ Vídeo enviado com sucesso');
-                
-
-                // Enviar mensagem de áudio após o vídeo
-                setTimeout(async () => {
-                    await sendMessage(sender, 'send-message', {
-                        message: '• 🎤 Áudios explicativos'
-                    });
-                    
-                    // Enviar áudio após a mensagem
-                    setTimeout(async () => {
-                        const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
-                        if (fs.existsSync(audioPath)) {
-                            await sendMessage(sender, 'send-file', {
-                                path: audioPath,
-                                filename: 'audio.mp3',
-                                caption: 'Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
-                            });
-                            console.log('✅ Áudio enviado com sucesso');
-                        }
-                        
-                        // Enviar imagem após o áudio
-                        setTimeout(async () => {
-                            const imagePath = path.join(__dirname, 'material_apresentacao', 'Imagens', 'Vantagens.png');
-                            if (fs.existsSync(imagePath)) {
-                                await sendMessage(sender, 'send-image', {
-                                    path: imagePath,
-                                    caption: ''
-                                });
-                                console.log('✅ Imagem enviada com sucesso');
-                            }
-                        }, 1500);
-                    }, 1000);
-                }, 2000);
-            } else {
-                console.log('❌ Arquivo de vídeo não encontrado, enviando mensagem alternativa');
-                await sendMessage(sender, 'send-message', {
-                    message: '🎥 [Vídeo exemplo seria enviado aqui]\n\nAqui está um exemplo de vídeo que pode ser usado em um treinamento.'
-                });
             }
+            
+            // 2. Enviar imagem após o vídeo
+            setTimeout(async () => {
+                const imagePath = path.join(__dirname, 'material_apresentacao', 'Imagens', 'Vantagens.png');
+                if (fs.existsSync(imagePath)) {
+                    await sendMessage(sender, 'send-image', {
+                        path: imagePath,
+                        caption: ''
+                    });
+                    console.log('✅ Imagem enviada com sucesso');
+                }
+                
+                // 3. Enviar áudio por último
+                setTimeout(async () => {
+                    const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
+                    if (fs.existsSync(audioPath)) {
+                        await sendMessage(sender, 'send-file', {
+                            path: audioPath,
+                            filename: 'audio.mp3',
+                            caption: 'Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
+                        });
+                        console.log('✅ Áudio enviado com sucesso');
+                    }
+                    
+                    // Ir para exemplos de treinamentos após todos os arquivos
+                    setTimeout(async () => {
+                        await mostrarExemplosTrainamentos(sender, sendMessage);
+                    }, 1000);
+                }, 1500);
+            }, 2000);
+            
         } catch (error) {
-            console.error('❌ Erro ao enviar vídeo:', error);
-            await sendMessage(sender, 'send-message', {
-                message: '🎥 [Vídeo exemplo seria enviado aqui]\n\nAqui está um exemplo de vídeo que pode ser usado em um treinamento.'
-            });
+            console.error('❌ Erro ao enviar arquivos:', error);
+            // Em caso de erro, ir direto para exemplos
+            setTimeout(async () => {
+                await mostrarExemplosTrainamentos(sender, sendMessage);
+            }, 1000);
         }
-        
-        // Enviar próxima pergunta após o vídeo
-        setTimeout(async () => {
-            await sendMessage(sender, 'send-message', {
-                message: 'Quer saber quando e onde você pode usar?\n1️⃣ Quero sim.\n2️⃣ Vamos direto para exemplos de treinamentos.'
-            });
-            await salvarInteracao(sender, 'recursos_detalhados', JSON.stringify({ etapa: 'recursos_detalhados' }));
-        }, 1000);
     }, 1500);
 }
 
