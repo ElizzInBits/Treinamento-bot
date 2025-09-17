@@ -194,7 +194,7 @@ app.post('/api/login', (req, res) => {
     console.log('  - Senha padrão fallback: salubrita');
     
     // Credenciais do admin via env
-    if (username === (process.env.ADMIN_USERNAME || 'Administrador') && password === (process.env.ADMIN_PASSWORD || 'salubrita')) {
+    if (username === (process.env.ADMIN_USERNAME || 'Administrador') && password === 'salubrita') {
         const token = jwt.sign({ 
             username: 'Administrador',
             loginTime: Date.now()
