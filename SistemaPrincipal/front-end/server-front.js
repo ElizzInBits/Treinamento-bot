@@ -1,4 +1,14 @@
+// Debug: verificar qual arquivo .env está sendo carregado
+console.log('🔍 DEBUG ENV:');
+console.log('  - Diretório atual:', __dirname);
+console.log('  - Arquivo .env local:', require('path').join(__dirname, '.env'));
+console.log('  - Arquivo .env raiz:', require('path').join(__dirname, '..', '..', '.env'));
+
 require('dotenv').config();
+
+// Debug: mostrar variáveis carregadas
+console.log('  - ADMIN_USERNAME carregado:', process.env.ADMIN_USERNAME);
+console.log('  - ADMIN_PASSWORD carregado:', process.env.ADMIN_PASSWORD);
 const cors = require('cors');
 const path = require('path');
 const express = require('express');
@@ -175,6 +185,13 @@ const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 1 hora em ms
 // Rota de login
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
+    
+    // Debug: mostrar qual senha está sendo usada
+    console.log('🔐 DEBUG LOGIN:');
+    console.log('  - Username recebido:', username);
+    console.log('  - ADMIN_USERNAME env:', process.env.ADMIN_USERNAME);
+    console.log('  - ADMIN_PASSWORD env:', process.env.ADMIN_PASSWORD);
+    console.log('  - Senha padrão fallback: salubrita');
     
     // Credenciais do admin via env
     if (username === (process.env.ADMIN_USERNAME || 'Administrador') && password === (process.env.ADMIN_PASSWORD || 'salubrita')) {
