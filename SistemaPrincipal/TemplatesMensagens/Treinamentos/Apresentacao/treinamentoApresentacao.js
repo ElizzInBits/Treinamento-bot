@@ -204,16 +204,37 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                 });
                 console.log('✅ Vídeo enviado com sucesso');
                 
-                // Enviar imagem após o vídeo
+                
+                // Enviar mensagem de áudio após o vídeo
                 setTimeout(async () => {
-                    const imagePath = path.join(__dirname, 'material_apresentacao', 'Imagens', 'Vantagens.png');
-                    if (fs.existsSync(imagePath)) {
-                        await sendMessage(sender, 'send-image', {
-                            path: imagePath,
-                            caption: ''
-                        });
-                        console.log('✅ Imagem enviada com sucesso');
-                    }
+                    await sendMessage(sender, 'send-message', {
+                        message: '• 🎤 Áudios explicativos'
+                    });
+                    
+                    // Enviar áudio após a mensagem
+                    setTimeout(async () => {
+                        const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
+                        if (fs.existsSync(audioPath)) {
+                            await sendMessage(sender, 'send-file', {
+                                path: audioPath,
+                                filename: 'audio.mp3',
+                                caption: 'Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
+                            });
+                            console.log('✅ Áudio enviado com sucesso');
+                        }
+                        
+                        // Enviar imagem após o áudio
+                        setTimeout(async () => {
+                            const imagePath = path.join(__dirname, 'material_apresentacao', 'Imagens', 'Vantagens.png');
+                            if (fs.existsSync(imagePath)) {
+                                await sendMessage(sender, 'send-image', {
+                                    path: imagePath,
+                                    caption: ''
+                                });
+                                console.log('✅ Imagem enviada com sucesso');
+                            }
+                        }, 1500);
+                    }, 1000);
                 }, 2000);
             } else {
                 console.log('❌ Arquivo de vídeo não encontrado, enviando mensagem alternativa');

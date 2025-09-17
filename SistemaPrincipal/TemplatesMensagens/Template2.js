@@ -7,8 +7,7 @@ const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamento
 // Inicializar modelo
 let Contato = null;
 
-// Cache simples para contatos
-const contatoCache = new Map();
+
 
 // Cliente WhatsApp direto
 let wppClient = null;
@@ -39,49 +38,16 @@ async function processarMensagem(message, client) {
       return;
     }
     
-    // Cache simples para evitar consultas repetidas
-    const cacheKey = `contato_${telefone}`;
-    let contato = contatoCache.get(cacheKey);
+    // Buscar contato no banco - apenas formato original
+    let contato = await Contato.findOne({ where: { telefone: telefone } });
     
     if (!contato) {
-      // Buscar contato no banco - formatos mais comuns primeiro
-      const formatosTelefone = [
-        telefone,                           // 553399595511
-        telefone.substring(2),              // 3399595511  
-        `${telefone.substring(0, 4)}9${telefone.substring(4)}`, // 5533999595511 (adicionar 9)
-      ];
-      
-      for (const formato of formatosTelefone) {
-        contato = await Contato.findOne({ where: { telefone: formato } });
-        if (contato) {
-          console.log(`✅ Contato encontrado com formato: ${formato}`);
-          contatoCache.set(cacheKey, contato);
-          break;
-        }
-        console.log(`❌ Tentativa: ${formato}`);
-      }
+      console.log(`❌ Contato não encontrado: ${telefone}`);
+    } else {
+      console.log(`✅ Contato encontrado: ${contato.nome}`);
     }
     
-    console.log(`📋 RESULTADO FINAL:`, contato ? `${contato.nome} (ID: ${contato.id})` : 'NÃO ENCONTRADO');
-    
-    // Debug: mostrar alguns contatos do banco
-    if (!contato) {
-      const todosContatos = await Contato.findAll({ limit: 5 });
-      console.log('📋 Exemplos de contatos no banco:');
-      todosContatos.forEach(c => console.log(`  - ${c.telefone} (${c.nome})`));
-      
-      // Tentar buscar por parte do número
-      const buscaParcial = await Contato.findAll({ 
-        where: { 
-          telefone: { 
-            [require('sequelize').Op.like]: `%${telefone.slice(-8)}%` 
-          } 
-        },
-        limit: 3
-      });
-      console.log('🔍 Busca parcial (8 últimos dígitos):');
-      buscaParcial.forEach(c => console.log(`  - ${c.telefone} (${c.nome})`));
-    }
+    console.log(`📋 RESULTADO:`, contato ? `${contato.nome}` : 'NÃO ENCONTRADO');
     
     // Função sendMessage para usar com treinamento
     const sendMessageForTraining = async (phone, endpoint, body) => {
