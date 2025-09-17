@@ -28,6 +28,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             body: JSON.stringify({ username, password })
         });
         
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
         const data = await response.json();
         
         if (data.success) {
