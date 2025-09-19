@@ -200,6 +200,10 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                     console.log('✅ Imagem enviada com sucesso');
                 }
                 
+
+                await sendMessage(sender, 'send-message', {
+                    message: 'Áudio com o texto: Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
+                });
                 // 3. Enviar áudio diretamente
                 setTimeout(async () => {
                     const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
