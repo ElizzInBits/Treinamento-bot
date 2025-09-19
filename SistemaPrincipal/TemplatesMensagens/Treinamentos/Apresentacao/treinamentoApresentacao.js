@@ -3,7 +3,17 @@ const { Contato, Interacao } = require('../../../BancoDeDados/models');
 async function processarRespostaApresentacao(sender, text, selectedId, contato, sendMessage) {
     console.log(`🎯 Processando resposta: "${text}" de ${sender}`);
     
+    // Verificar se é uma saudação para reiniciar o fluxo
+    const saudacoes = ['olá', 'oi', 'ola', 'hello', 'hi', 'bom dia', 'boa tarde', 'boa noite'];
+    const ehSaudacao = saudacoes.some(s => text.toLowerCase().includes(s));
+    
     const ultimaInteracao = await obterUltimaInteracao(sender);
+    
+    // Se é saudação OU conversa foi finalizada, reiniciar
+    if (ehSaudacao || !ultimaInteracao || (ultimaInteracao && JSON.parse(ultimaInteracao.mensagem || '{}').etapa === 'finalizado')) {
+        console.log('🎆 REINICIANDO FLUXO - Saudação detectada ou conversa finalizada');
+        return await iniciarFluxoBoasVindas(sender, sendMessage);
+    }
     
     // Se há interação anterior, processar baseado no estado
     if (ultimaInteracao) {
@@ -340,7 +350,7 @@ async function mostrarContatoComercial(sender, sendMessage) {
         message: '🙌 Maravilha! É só clicar no link abaixo e chamar o nosso comercial:\n\n🔗 https://wa.me/5531999999999?text=Olá,%20vim%20do%20bot%20e%20quero%20saber%20mais%20sobre%20treinamentos%20no%20WhatsApp'
     });
     
-    await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+    await salvarInteracao(sender, 'finalizado', JSON.stringify({ etapa: 'finalizado' }));
     return true;
 }
 
@@ -349,7 +359,7 @@ async function mostrarContatoTecnico(sender, sendMessage) {
         message: '🤝 Sem problema! Se quiser conversar com nosso time técnico ou tirar dúvidas:\n\n📧 treinamentos@salubrita.com.br\n📞 (31) 3166-9006'
     });
     
-    await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+    await salvarInteracao(sender, 'finalizado', JSON.stringify({ etapa: 'finalizado' }));
     return true;
 }
 
