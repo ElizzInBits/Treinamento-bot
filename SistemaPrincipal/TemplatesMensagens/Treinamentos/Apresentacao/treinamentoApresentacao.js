@@ -206,8 +206,10 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                     console.log(`🎵 Tentando enviar áudio: ${audioPath}`);
                     
                     if (fs.existsSync(audioPath)) {
-                        await sendMessage(sender, 'send-voice', {
-                            path: audioPath
+                        await sendMessage(sender, 'send-file', {
+                            path: audioPath,
+                            filename: 'audio.mp3',
+                            caption: '🎤 Áudios explicativos'
                         });
                         console.log('✅ Áudio enviado com sucesso');
                     } else {
