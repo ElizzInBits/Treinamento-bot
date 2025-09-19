@@ -196,29 +196,40 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                         message: '• 🎤 Áudios explicativos'
                     });
                     
-                    // Enviar áudio após a mensagem
+                    // Enviar mensagem explicativa e depois áudio
                     setTimeout(async () => {
-                        const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
-                        if (fs.existsSync(audioPath)) {
-                            await sendMessage(sender, 'send-audio', {
-                                path: audioPath
-                            });
-                            console.log('✅ Áudio enviado com sucesso');
-                            
-                            // Enviar mensagem após o áudio
-                            setTimeout(async () => {
-                                await sendMessage(sender, 'send-message', {
-                                    message: '• 🎤 Áudios explicativos ☝🏾'
-                                });
-                            }, 500);
-                        }
+                        await sendMessage(sender, 'send-message', {
+                            message: 'Áudio com o texto: Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
+                        });
                         
-                        // Ir para exemplos de treinamentos após todos os arquivos
+                        // Enviar áudio após a mensagem explicativa
                         setTimeout(async () => {
-                            await mostrarExemplosTrainamentos(sender, sendMessage);
-                        }, 1500);
+                            const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
+                            console.log(`🎵 Tentando enviar áudio: ${audioPath}`);
+                            
+                            if (fs.existsSync(audioPath)) {
+                                await sendMessage(sender, 'send-audio', {
+                                    path: audioPath
+                                });
+                                console.log('✅ Áudio enviado com sucesso');
+                                
+                                // Enviar mensagem após o áudio
+                                setTimeout(async () => {
+                                    await sendMessage(sender, 'send-message', {
+                                        message: '• 🎤 Áudios explicativos ☝🏾'
+                                    });
+                                }, 500);
+                            } else {
+                                console.log('❌ Arquivo de áudio não encontrado');
+                            }
+                        }, 800);
                     }, 1000);
                 }, 1500);
+                
+                // Ir para exemplos de treinamentos após todos os arquivos
+                setTimeout(async () => {
+                    await mostrarExemplosTrainamentos(sender, sendMessage);
+                }, 5000);
             }, 2000);
             
         } catch (error) {
