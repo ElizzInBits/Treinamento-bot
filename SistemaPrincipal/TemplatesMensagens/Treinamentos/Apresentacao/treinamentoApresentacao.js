@@ -226,8 +226,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                         const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
                         if (fs.existsSync(audioPath)) {
                             await sendMessage(sender, 'send-audio', {
-                                path: audioPath,
-                                caption: 'Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
+                                path: audioPath
                             });
                             console.log('✅ Áudio enviado com sucesso');
                             
