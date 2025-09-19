@@ -139,28 +139,8 @@ async function processarMensagem(message, client) {
       return;
     }
     
-    // Verificar qual treinamento está ativo baseado no treinamentoId
-    if (contato.treinamentoId === 14) {
-      // Tentar processar resposta do treinamento SSMA
-      console.log('🔄 Tentando processar resposta SSMA');
-      const processouSSMA = await treinamentoSSMA.processarRespostaSSMA(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
-      if (processouSSMA) {
-        console.log('✅ Resposta SSMA processada');
-        return;
-      }
-    } else if (contato.treinamentoId === 15) {
-      // Tentar processar resposta do treinamento de apresentação
-      console.log('🔄 Tentando processar resposta Apresentação');
-      const processouApresentacao = await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
-      if (processouApresentacao) {
-        console.log('✅ Resposta Apresentação processada');
-        return;
-      }
-    }
-    console.log('⚠️ Resposta não processada, enviando resposta padrão');
-    
-    // Usar treinamento de apresentação para contatos cadastrados também
-    console.log('🚀 Iniciando fluxo de apresentação para contato cadastrado');
+    // Sempre processar treinamento de apresentação para contatos cadastrados
+    console.log('🚀 Processando treinamento de apresentação para contato cadastrado');
     await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, contato, sendMessageForTraining);
   } catch (error) {
     console.error('❌ Erro ao processar mensagem:', error);
