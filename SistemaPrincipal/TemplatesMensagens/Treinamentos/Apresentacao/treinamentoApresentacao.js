@@ -3,32 +3,7 @@ const { Contato, Interacao } = require('../../../BancoDeDados/models');
 async function processarRespostaApresentacao(sender, text, selectedId, contato, sendMessage) {
     console.log(`🎯 Processando resposta: "${text}" de ${sender}`);
     
-    // Verificar se é uma saudação genérica
-    const saudacoes = ['olá', 'oi', 'ola', 'hello', 'hi', 'bom dia', 'boa tarde', 'boa noite'];
-    const ehSaudacao = saudacoes.some(s => text.toLowerCase().includes(s));
-    
-    // Se não há contato cadastrado
-    if (!contato) {
-        const ultimaInteracao = await obterUltimaInteracao(sender);
-        
-        // Se é uma saudação OU não há interação anterior, enviar saudação
-        if (ehSaudacao || !ultimaInteracao) {
-            console.log('🎆 SAUDAÇÃO DETECTADA - Enviando mensagem de boas-vindas');
-            return await iniciarFluxoBoasVindas(sender, sendMessage);
-        }
-        
-        // Se já tem interação e não é saudação, processar baseado no estado
-        return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
-    }
-    
-    // Para contatos cadastrados
     const ultimaInteracao = await obterUltimaInteracao(sender);
-    
-    // Se é uma saudação E não há interação anterior, enviar saudação
-    if (ehSaudacao && !ultimaInteracao) {
-        console.log('🎆 SAUDAÇÃO CADASTRADO - Enviando mensagem de boas-vindas');
-        return await iniciarFluxoBoasVindas(sender, sendMessage);
-    }
     
     // Se há interação anterior, processar baseado no estado
     if (ultimaInteracao) {
@@ -368,8 +343,19 @@ async function mostrarContatoTecnico(sender, sendMessage) {
 }
 
 async function processarContatoComercial(sender, text, sendMessage) {
-    // Conversa finalizada, qualquer mensagem reinicia
-    return await iniciarFluxoBoasVindas(sender, sendMessage);
+    // Verificar se é uma saudação para reiniciar
+    const saudacoes = ['olá', 'oi', 'ola', 'hello', 'hi', 'bom dia', 'boa tarde', 'boa noite', 'ola', 'oi'];
+    const ehSaudacao = saudacoes.some(s => text.toLowerCase().includes(s));
+    
+    if (ehSaudacao) {
+        return await iniciarFluxoBoasVindas(sender, sendMessage);
+    }
+    
+    // Para outras mensagens, apenas responder que a conversa foi finalizada
+    await sendMessage(sender, 'send-message', {
+        message: '😊 Obrigada pelo interesse! Se quiser conversar novamente, é só me mandar um "oi" que recomeçamos!'
+    });
+    return true;
 }
 
 async function salvarInteracao(telefone, tipo, mensagem) {
