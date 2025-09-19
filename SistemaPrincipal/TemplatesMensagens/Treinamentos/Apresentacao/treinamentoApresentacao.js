@@ -199,7 +199,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                 console.log('✅ Arquivo de vídeo encontrado');
                 await sendMessage(sender, 'send-video', {
                     path: videoPath,
-                    caption: 'Aqui está um exemplo de vídeo que pode ser usado em um treinamento:'
+                    caption: '📹 Vídeos curtos'
                 });
                 console.log('✅ Vídeo enviado com sucesso');
             }
@@ -210,26 +210,39 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                 if (fs.existsSync(imagePath)) {
                     await sendMessage(sender, 'send-image', {
                         path: imagePath,
-                        caption: ''
+                        caption: '🖼️ Imagens e infográficos'
                     });
                     console.log('✅ Imagem enviada com sucesso');
                 }
                 
-                // 3. Enviar áudio por último
+                // 3. Enviar mensagem de texto e depois áudio
                 setTimeout(async () => {
-                    const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
-                    if (fs.existsSync(audioPath)) {
-                        await sendMessage(sender, 'send-file', {
-                            path: audioPath,
-                            filename: 'audio.mp3',
-                            caption: 'Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
-                        });
-                        console.log('✅ Áudio enviado com sucesso');
-                    }
+                    await sendMessage(sender, 'send-message', {
+                        message: '• 🎤 Áudios explicativos'
+                    });
                     
-                    // Ir para exemplos de treinamentos após todos os arquivos
+                    // Enviar áudio após a mensagem
                     setTimeout(async () => {
-                        await mostrarExemplosTrainamentos(sender, sendMessage);
+                        const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
+                        if (fs.existsSync(audioPath)) {
+                            await sendMessage(sender, 'send-audio', {
+                                path: audioPath,
+                                caption: 'Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
+                            });
+                            console.log('✅ Áudio enviado com sucesso');
+                            
+                            // Enviar mensagem após o áudio
+                            setTimeout(async () => {
+                                await sendMessage(sender, 'send-message', {
+                                    message: '• 🎤 Áudios explicativos ☝🏾'
+                                });
+                            }, 500);
+                        }
+                        
+                        // Ir para exemplos de treinamentos após todos os arquivos
+                        setTimeout(async () => {
+                            await mostrarExemplosTrainamentos(sender, sendMessage);
+                        }, 1500);
                     }, 1000);
                 }, 1500);
             }, 2000);
