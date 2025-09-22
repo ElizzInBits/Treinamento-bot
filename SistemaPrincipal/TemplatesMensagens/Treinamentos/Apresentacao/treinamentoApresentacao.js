@@ -201,6 +201,9 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                 }
                 
 
+                await sendMessage(sender, 'send-message', {     
+                    message: '• 🎤 Áudios explicativos'
+                });
                 await sendMessage(sender, 'send-message', {
                     message: 'Áudio com o texto: Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
                 });
@@ -293,7 +296,7 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
     if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
         await mostrarOutrasAplicacoes(sender, sendMessage);
     } else {
-        await mostrarContatoComercial(sender, sendMessage);
+        await finalizarApresentacao(sender, sendMessage);
     }
     
     return true;
@@ -310,10 +313,7 @@ async function mostrarOutrasAplicacoes(sender, sendMessage) {
         });
         
         setTimeout(async () => {
-            await sendMessage(sender, 'send-message', {
-                message: '👉 Quer conversar um pouco mais com nosso comercial e ver como podemos fechar esta parceria?\n1️⃣ Sim, quero conversar com o comercial\n2️⃣ Prefiro falar com o time técnico primeiro.'
-            });
-            await salvarInteracao(sender, 'outras_aplicacoes', JSON.stringify({ etapa: 'outras_aplicacoes' }));
+            await finalizarApresentacao(sender, sendMessage);
         }, 800);
     }, 1000);
 }
@@ -321,27 +321,13 @@ async function mostrarOutrasAplicacoes(sender, sendMessage) {
 async function processarOutrasAplicacoes(sender, text, sendMessage) {
     const opcao = text.trim();
     
-    if (opcao === '1' || opcao.toLowerCase().includes('comercial')) {
-        await mostrarContatoComercial(sender, sendMessage);
-    } else {
-        await mostrarContatoTecnico(sender, sendMessage);
-    }
-    
+    await finalizarApresentacao(sender, sendMessage);
     return true;
 }
 
-async function mostrarContatoComercial(sender, sendMessage) {
+async function finalizarApresentacao(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: '🙌 Maravilha! É só clicar no link abaixo e chamar o nosso comercial:\n\n🔗 https://wa.me/5531999999999?text=Olá,%20vim%20do%20bot%20e%20quero%20saber%20mais%20sobre%20treinamentos%20no%20WhatsApp'
-    });
-    
-    await salvarInteracao(sender, 'finalizado', JSON.stringify({ etapa: 'finalizado' }));
-    return true;
-}
-
-async function mostrarContatoTecnico(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '🤝 Sem problema! Se quiser conversar com nosso time técnico ou tirar dúvidas:\n\n📧 treinamentos@salubrita.com.br\n📞 (31) 3166-9006'
+        message: '🎆 Obrigada por conhecer nossos treinamentos no WhatsApp!\n\n🚀 Essa é realmente uma revolução na forma de treinar equipes.\n\n😊 Se quiser conversar novamente, é só me mandar um "oi" que recomeçamos!'
     });
     
     await salvarInteracao(sender, 'finalizado', JSON.stringify({ etapa: 'finalizado' }));
