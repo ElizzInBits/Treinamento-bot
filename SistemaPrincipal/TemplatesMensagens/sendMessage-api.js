@@ -1,9 +1,9 @@
 const axios = require('axios');
 
 // Configuração da API
-const API_BASE = 'http://127.0.0.1:21465/api';
+const API_HOST = 'http://127.0.0.1:21465';
 const SESSION = 'NERDWHATS_AMERICA';
-const TOKEN = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
+const SECRET_KEY = '$2b$10$QJj4k9BAruwyrQDV9QWKG.miYnqybtAg9BFlDeAknsAglzsndDivu';
 
 // Função sendMessage usando APENAS a API
 async function sendMessage(phone, endpoint, body = {}) {
@@ -15,33 +15,33 @@ async function sendMessage(phone, endpoint, body = {}) {
         
         switch (endpoint) {
             case 'send-message':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-message`, {
+                response = await axios.post(`${API_HOST}/api/${SECRET_KEY}/${SESSION}/send-message`, {
                     phone: phoneNumber,
                     message: body.message
                 }, {
-                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    headers: { 'Content-Type': 'application/json' },
                     timeout: 3000
                 });
                 break;
                 
             case 'send-list-message':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-list-message`, {
+                response = await axios.post(`${API_HOST}/api/${SECRET_KEY}/${SESSION}/send-list-message`, {
                     phone: phoneNumber,
                     ...body
                 }, {
-                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    headers: { 'Content-Type': 'application/json' },
                     timeout: 3000
                 });
                 break;
                 
             case 'send-file':
-                response = await axios.post(`${API_BASE}/${SESSION}/send-file`, {
+                response = await axios.post(`${API_HOST}/api/${SECRET_KEY}/${SESSION}/send-file`, {
                     phone: phoneNumber,
                     path: body.path,
                     filename: body.filename,
                     caption: body.caption
                 }, {
-                    headers: { 'Authorization': `Bearer ${TOKEN}` },
+                    headers: { 'Content-Type': 'application/json' },
                     timeout: 5000
                 });
                 break;

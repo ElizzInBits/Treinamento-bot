@@ -14,6 +14,7 @@ module.exports = {
       error_file: './logs/wppconnect-error.log',
       out_file: './logs/wppconnect-out.log',
       log_file: './logs/wppconnect-combined.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       time: true,
       max_restarts: 3,
       restart_delay: 5000
@@ -31,6 +32,7 @@ module.exports = {
       error_file: './logs/whatsapp-bot-error.log',
       out_file: './logs/whatsapp-bot-out.log',
       log_file: './logs/whatsapp-bot-combined.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       time: true,
       max_restarts: 3,
       restart_delay: 5000,
@@ -50,6 +52,7 @@ module.exports = {
       error_file: './logs/frontend-error.log',
       out_file: './logs/frontend-out.log',
       log_file: './logs/frontend-combined.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       time: true,
       max_restarts: 3,
       restart_delay: 5000
