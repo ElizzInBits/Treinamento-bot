@@ -56,6 +56,25 @@ module.exports = {
       time: true,
       max_restarts: 3,
       restart_delay: 5000
+    },
+    {
+      name: 'multi-sessions',
+      cwd: './',
+      script: 'node',
+      args: 'start-multi-sessions.js',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production'
+      },
+      error_file: './logs/multi-sessions-error.log',
+      out_file: './logs/multi-sessions-out.log',
+      log_file: './logs/multi-sessions-combined.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      time: true,
+      max_restarts: 5,
+      restart_delay: 10000,
+      watch: false
     }
   ]
 };
