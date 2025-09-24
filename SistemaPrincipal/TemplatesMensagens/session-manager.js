@@ -1,69 +1,146 @@
-const { createSession, getSessionStatus, SESSIONS } = require('./multi-session-api');
+const { 
+    createSession, 
+    getSessionStatus, 
+    checkAllSessions,
+    getSessionQR,
+    closeSession,
+    getAvailableSession,
+    SESSIONS,
+    sessionStatus 
+} = require('./multi-session-api');
 
 class SessionManager {
     constructor() {
         this.activeSessions = new Set();
         this.sessionQueue = [];
+        this.autoCheckInterval = null;
+        this.startAutoCheck();
+    }
+
+    // Iniciar verificação automática das sessões
+    startAutoCheck() {
+        if (this.autoCheckInterval) return;
+        
+        this.autoCheckInterval = setInterval(async () => {
+            await this.checkAllSessions();
+        }, 30000); // Verifica a cada 30 segundos
+        
+        console.log('🔄 Verificação automática de sessões iniciada');
+    }
+
+    // Parar verificação automática
+    stopAutoCheck() {
+        if (this.autoCheckInterval) {
+            clearInterval(this.autoCheckInterval);
+            this.autoCheckInterval = null;
+            console.log('⏹️ Verificação automática de sessões parada');
+        }
     }
 
     // Inicializar todas as sessões
     async initAllSessions() {
         console.log('🔄 Inicializando todas as sessões...');
         
-        for (const [name, sessionId] of Object.entries(SESSIONS)) {
+        for (const sessionName of Object.keys(SESSIONS)) {
             try {
-                await this.initSession(name, sessionId);
-                await new Promise(resolve => setTimeout(resolve, 5000)); // Aguarda 5s entre sessões
+                await this.initSession(sessionName);
+                await new Promise(resolve => setTimeout(resolve, 3000)); // Aguarda 3s entre sessões
             } catch (error) {
-                console.error(`❌ Erro ao inicializar ${name}:`, error.message);
+                console.error(`❌ Erro ao inicializar ${sessionName}:`, error.message);
             }
         }
+        
+        // Verificar status após inicialização
+        setTimeout(() => this.checkAllSessions(), 5000);
     }
 
     // Inicializar sessão específica
-    async initSession(sessionName, sessionId) {
+    async initSession(sessionName) {
         console.log(`🔄 Inicializando sessão ${sessionName}...`);
         
-        const status = await getSessionStatus(sessionId);
+        const status = await getSessionStatus(sessionName);
         
         if (!status || status.status !== 'CONNECTED') {
-            const result = await createSession(sessionId);
+            const result = await createSession(sessionName);
             if (result) {
                 console.log(`✅ Sessão ${sessionName} iniciada. Escaneie o QR Code.`);
-                this.activeSessions.add(sessionName);
+                return true;
             }
         } else {
             console.log(`✅ Sessão ${sessionName} já conectada`);
             this.activeSessions.add(sessionName);
+            return true;
         }
+        
+        return false;
+    }
+
+    // Obter QR Code de uma sessão
+    async getQRCode(sessionName) {
+        return await getSessionQR(sessionName);
+    }
+
+    // Fechar sessão específica
+    async closeSession(sessionName) {
+        const result = await closeSession(sessionName);
+        if (result) {
+            this.activeSessions.delete(sessionName);
+        }
+        return result;
     }
 
     // Obter sessão disponível
     getAvailableSession() {
-        const sessions = Array.from(this.activeSessions);
-        if (sessions.length === 0) return 'PRINCIPAL';
-        
-        // Rotacionar entre sessões disponíveis
-        const session = sessions[Math.floor(Math.random() * sessions.length)];
-        return session;
+        return getAvailableSession();
     }
 
     // Verificar status de todas as sessões
     async checkAllSessions() {
-        const statusReport = {};
+        const statusReport = await checkAllSessions();
         
-        for (const [name, sessionId] of Object.entries(SESSIONS)) {
-            const status = await getSessionStatus(sessionId);
-            statusReport[name] = status;
-            
-            if (status && status.status === 'CONNECTED') {
-                this.activeSessions.add(name);
-            } else {
-                this.activeSessions.delete(name);
+        // Atualizar sessões ativas
+        this.activeSessions.clear();
+        for (const [sessionName, info] of Object.entries(statusReport)) {
+            if (info.connected) {
+                this.activeSessions.add(sessionName);
             }
         }
         
         return statusReport;
+    }
+
+    // Obter estatísticas das sessões
+    getSessionStats() {
+        const connected = Array.from(this.activeSessions);
+        const total = Object.keys(SESSIONS).length;
+        
+        return {
+            total,
+            connected: connected.length,
+            disconnected: total - connected.length,
+            activeSessions: connected,
+            sessionStatus
+        };
+    }
+
+    // Reiniciar sessão específica
+    async restartSession(sessionName) {
+        console.log(`🔄 Reiniciando sessão ${sessionName}...`);
+        
+        // Fechar sessão atual
+        await this.closeSession(sessionName);
+        
+        // Aguardar um pouco
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Inicializar novamente
+        return await this.initSession(sessionName);
+    }
+
+    // Destruir o gerenciador
+    destroy() {
+        this.stopAutoCheck();
+        this.activeSessions.clear();
     }
 }
 
