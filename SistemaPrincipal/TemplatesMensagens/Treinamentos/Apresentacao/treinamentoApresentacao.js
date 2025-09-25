@@ -31,6 +31,7 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
     const etapa = dados.etapa;
     
     console.log(`🎯 Etapa atual: ${etapa}`);
+    console.log(`📝 Text: "${text}", SelectedId: "${selectedId}"`);
     
     switch (etapa) {
         case 'opcao_inicial':
@@ -43,6 +44,7 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
         case 'mostrar_recursos':
             return await processarMostrarRecursos(sender, text, sendMessage);
         case 'testes_avaliacoes':
+            console.log('📝 Entrando em processarTestesAvaliacoes');
             return await processarTestesAvaliacoes(sender, text, sendMessage);
         case 'perguntar_quando_onde':
             return await processarPerguntaQuandoOnde(sender, text, sendMessage);
@@ -238,6 +240,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                         
                         // 5. Enviar lista de opções
                         setTimeout(async () => {
+                            console.log('📝 Enviando lista de testes e avaliações');
                             await sendMessage(sender, 'send-list', {
                                 title: 'Escolha sua resposta:',
                                 description: 'Selecione uma das opções abaixo',
@@ -260,6 +263,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                                     ]
                                 }]
                             });
+                            console.log('✅ Lista de testes e avaliações enviada');
                             await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
                         }, 1000);
                     }, 2000);
@@ -270,10 +274,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
             
         } catch (error) {
             console.error('❌ Erro ao enviar arquivos:', error);
-            // Em caso de erro, ir direto para exemplos
-            setTimeout(async () => {
-                await mostrarExemplosTrainamentos(sender, sendMessage);
-            }, 1000);
+            // Em caso de erro, ainda aguardar interação do usuário
         }
     }, 1500);
 }
@@ -282,6 +283,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
 
 async function processarTestesAvaliacoes(sender, text, sendMessage) {
     const opcao = text.trim();
+    console.log(`📝 Processando resposta dos testes: "${opcao}"`);
     
     // Independente da resposta, vai para a próxima pergunta
     await perguntarQuandoOnde(sender, sendMessage);
