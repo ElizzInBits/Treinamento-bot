@@ -265,10 +265,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                     }, 2000);
                 }, 1500);
                 
-                // Ir para exemplos de treinamentos após todos os arquivos
-                setTimeout(async () => {
-                    await mostrarExemplosTrainamentos(sender, sendMessage);
-                }, 9000);
+                // Não ir direto para exemplos - aguardar interação do usuário com a lista
             }, 2000);
             
         } catch (error) {
