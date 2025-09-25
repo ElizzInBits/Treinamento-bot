@@ -6,11 +6,11 @@ const path = require('path');
 const fs = require('fs');
 
 // Verificar se o arquivo principal existe
-const mainServerFile = path.join(__dirname, 'server-front.js');
+const mainServerFile = path.join(__dirname, 'front-end', 'server-front.js');
 
 if (fs.existsSync(mainServerFile)) {
     console.log('✅ Carregando servidor principal...');
-    require('./server-front.js');
+    require('./front-end/server-front.js');
 } else {
     console.log('❌ Arquivo server-front.js não encontrado');
     console.log('📁 Arquivos disponíveis:');
