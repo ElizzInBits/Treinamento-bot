@@ -232,47 +232,42 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                         console.log('❌ Arquivo de áudio não encontrado');
                     }
                     
-                    // 4. Enviar mensagem de testes e avaliações após o áudio
-                    setTimeout(async () => {
-                        console.log('📝 Enviando mensagem de testes e avaliações');
-                        await sendMessage(sender, 'send-message', {
-                            message: '• 📝 Testes e avaliações\n\nVocê concorda em realizar treinamentos normativos no WhatsApp em sua empresa? (Texto, também em áudio)'
+                    // 4. Enviar testes IMEDIATAMENTE após o áudio
+                    console.log('📝 EXECUTANDO: Enviando testes e avaliações');
+                    await sendMessage(sender, 'send-message', {
+                        message: '• 📝 Testes e avaliações'
+                    });
+                    
+                    console.log('📝 EXECUTANDO: Enviando lista de testes');
+                    try {
+                        await sendMessage(sender, 'send-list-message', {
+                            description: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa? (Texto, também em áudio)',
+                            buttonText: 'Ver opções',
+                            sections: [{
+                                title: 'Suas opções',
+                                rows: [
+                                    {
+                                        rowId: '1',
+                                        title: '🟢 1 - SIM',
+                                        description: 'Concordo com os treinamentos'
+                                    },
+                                    {
+                                        rowId: '2', 
+                                        title: '🔵 2 - COM CERTEZA',
+                                        description: 'Definitivamente concordo'
+                                    }
+                                ]
+                            }]
                         });
-                        console.log('✅ Mensagem de testes e avaliações enviada');
-                        
-                        // 5. Enviar lista de opções
-                        console.log('📝 Enviando lista de testes e avaliações');
-                        try {
-                            await sendMessage(sender, 'send-list-message', {
-                                description: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa? (Texto, também em áudio)',
-                                buttonText: 'Ver opções',
-                                sections: [{
-                                    title: 'Suas opções',
-                                    rows: [
-                                        {
-                                            rowId: '1',
-                                            title: '🟢 1 - SIM',
-                                            description: 'Concordo com os treinamentos'
-                                        },
-                                        {
-                                            rowId: '2', 
-                                            title: '🔵 2 - COM CERTEZA',
-                                            description: 'Definitivamente concordo'
-                                        }
-                                    ]
-                                }]
-                            });
-                            console.log('✅ Lista de testes enviada');
-                            await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
-                        } catch (error) {
-                            console.error('❌ Erro ao enviar lista:', error);
-                            // Fallback para mensagem simples
-                            await sendMessage(sender, 'send-message', {
-                                message: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?\n\n1️⃣ SIM\n2️⃣ COM CERTEZA'
-                            });
-                            await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
-                        }
-                    }, 2000);
+                        console.log('✅ SUCESSO: Lista de testes enviada');
+                        await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
+                    } catch (error) {
+                        console.error('❌ ERRO: Falha ao enviar lista:', error);
+                        await sendMessage(sender, 'send-message', {
+                            message: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?\n\n1️⃣ SIM\n2️⃣ COM CERTEZA'
+                        });
+                        await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
+                    }
                 }, 1500);
                 
                 // Aguardar interação do usuário com a lista - NÃO continuar automaticamente
