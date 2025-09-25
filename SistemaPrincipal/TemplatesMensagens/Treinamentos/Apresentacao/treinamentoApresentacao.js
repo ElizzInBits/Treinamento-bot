@@ -45,7 +45,7 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
             return await processarMostrarRecursos(sender, text, sendMessage);
         case 'testes_avaliacoes':
             console.log('📝 Entrando em processarTestesAvaliacoes');
-            return await processarTestesAvaliacoes(sender, text, sendMessage);
+            return await processarTestesAvaliacoes(sender, text, selectedId, sendMessage);
         case 'perguntar_quando_onde':
             return await processarPerguntaQuandoOnde(sender, text, sendMessage);
         case 'exemplos_treinamentos':
@@ -194,7 +194,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                 console.log('✅ Arquivo de vídeo encontrado');
                 await sendMessage(sender, 'send-video', {
                     path: videoPath,
-                    caption: '📹 Vídeos curtos'
+                    caption: '📹 *Vídeos curtos*'
                 });
                 console.log('✅ Vídeo enviado com sucesso');
             }
@@ -205,16 +205,16 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                 if (fs.existsSync(imagePath)) {
                     await sendMessage(sender, 'send-image', {
                         path: imagePath,
-                        caption: '🖼️ Imagens e infográficos'
+                        caption: '🖼️ *Imagens e infográficos*'
                     });
                     console.log('✅ Imagem enviada com sucesso');
                 }
                 
                 await sendMessage(sender, 'send-message', {     
-                    message: '• 🎤 Áudios explicativos'
+                    message: ''
                 });
                 await sendMessage(sender, 'send-message', {
-                    message: 'Áudio com o texto: Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
+                    message: '• 🎤 *Áudios explicativos*\nÁudio com o texto: Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
                 });
                 
                 // 3. Enviar áudio diretamente
@@ -242,18 +242,20 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                     console.log('📝 EXECUTANDO: Enviando lista de testes');
                     try {
                         await sendMessage(sender, 'send-list-message', {
+                            title: '',
                             description: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa? (Texto, também em áudio)',
                             buttonText: 'Ver opções',
+                            listType: 'SINGLE_SELECT',
                             sections: [{
                                 title: 'Suas opções',
                                 rows: [
                                     {
-                                        rowId: '1',
+                                        id: 'sim_concordo',
                                         title: '🟢 1 - SIM',
                                         description: 'Concordo com os treinamentos'
                                     },
                                     {
-                                        rowId: '2', 
+                                        id: 'com_certeza', 
                                         title: '🔵 2 - COM CERTEZA',
                                         description: 'Definitivamente concordo'
                                     }
@@ -283,9 +285,14 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
 
 // ==================== PROCESSAMENTO DE TESTES E AVALIAÇÕES ====================
 
-async function processarTestesAvaliacoes(sender, text, sendMessage) {
+async function processarTestesAvaliacoes(sender, text, selectedId, sendMessage) {
     const opcao = text.trim();
-    console.log(`📝 Processando resposta dos testes: "${opcao}"`);
+    console.log(`📝 Processando resposta dos testes: "${opcao}", selectedId: "${selectedId}"`);
+    
+    // Processar tanto texto quanto selectedId
+    if (selectedId === 'sim_concordo' || selectedId === 'com_certeza' || opcao === '1' || opcao === '2' || opcao.toLowerCase().includes('sim') || opcao.toLowerCase().includes('certeza')) {
+        console.log('✅ Resposta positiva detectada - continuando fluxo');
+    }
     
     // Independente da resposta, vai para a próxima pergunta
     await perguntarQuandoOnde(sender, sendMessage);
@@ -443,24 +450,29 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
 
 async function mostrarOutrasAplicacoes(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: '🚪 Imagine a sua portaria com um treinamento relâmpago para visitantes.\nEles fazem o curso pelo WhatsApp e saem com certificado na hora ✅.'
+        message: '📊 *Outras aplicações práticas:*\n\n• 📝 Integração de terceiros\n• 📈 Comunicação de acidentes\n• 📊 Pesquisas de clima organizacional\n• 📝 Procedimentos operacionais\n• 📅 Lembretes de segurança'
     });
     
     setTimeout(async () => {
         await sendMessage(sender, 'send-message', {
-            message: 'Ou aquele terceiro que vem de longe: recebe o link, faz o cadastro e conclui o treinamento completo com certificado direto no e-mail 📧.'
+            message: 'Agora que você já viu tudo, quer conversar com nosso time comercial?\n\n1️⃣ Sim, quero mais informações!\n2️⃣ Não, obrigado.'
         });
-        
-        setTimeout(async () => {
-            await finalizarApresentacao(sender, sendMessage);
-        }, 800);
+        await salvarInteracao(sender, 'outras_aplicacoes', JSON.stringify({ etapa: 'outras_aplicacoes' }));
     }, 1000);
 }
 
 async function processarOutrasAplicacoes(sender, text, sendMessage) {
     const opcao = text.trim();
     
-    await finalizarApresentacao(sender, sendMessage);
+    if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
+        await finalizarApresentacao(sender, sendMessage);
+    } else {
+        await sendMessage(sender, 'send-message', {
+            message: '😊 Obrigada pelo seu tempo! Se mudar de ideia, é só me mandar um "oi" que recomeçamos!'
+        });
+        await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+    }
+    
     return true;
 }
 
@@ -468,16 +480,19 @@ async function processarOutrasAplicacoes(sender, text, sendMessage) {
 
 async function finalizarApresentacao(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: '🎆 Obrigada por conhecer nossos treinamentos no WhatsApp!\n\n🚀 Essa é realmente uma revolução na forma de treinar equipes.\n\n😊 Se quiser conversar novamente, é só me mandar um "oi" que recomeçamos!'
+        message: '🎉 *Perfeito!*\n\nNosso time comercial entrará em contato com você em breve para apresentar as soluções personalizadas para sua empresa.\n\n📞 *Contato:* (11) 99999-9999\n📧 *E-mail:* comercial@empresa.com\n\n🚀 Obrigada por conhecer o futuro dos treinamentos normativos!'
     });
     
-    await salvarInteracao(sender, 'finalizado', JSON.stringify({ etapa: 'finalizado' }));
-    return true;
+    await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
 }
+
+
+
+
 
 async function processarContatoComercial(sender, text, sendMessage) {
     // Verificar se é uma saudação para reiniciar
-    const saudacoes = ['olá', 'oi', 'ola', 'hello', 'hi', 'bom dia', 'boa tarde', 'boa noite', 'ola', 'oi'];
+    const saudacoes = ['olá', 'oi', 'ola', 'hello', 'hi', 'bom dia', 'boa tarde', 'boa noite'];
     const ehSaudacao = saudacoes.some(s => text.toLowerCase().includes(s));
     
     if (ehSaudacao) {
