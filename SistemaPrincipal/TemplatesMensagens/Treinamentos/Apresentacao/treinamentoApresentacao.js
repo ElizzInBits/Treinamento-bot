@@ -216,7 +216,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                         await sendMessage(sender, 'send-file', {
                             path: audioPath,
                             filename: 'audio.mp3',
-                            caption: '🎤 Áudios explicativos'
+                            caption: ' Áudios explicativos'
                         });
                         console.log('✅ Áudio enviado com sucesso');
                     } else {
@@ -284,7 +284,7 @@ async function mostrarExemplosTrainamentos(sender, sendMessage) {
     
     setTimeout(async () => {
         await sendMessage(sender, 'send-message', {
-            message: '👉 Quer ver outras aplicações práticas além dos treinamentos?\n\n1️⃣ Sim, me mostra.\n2️⃣ Já estou convencido(a)!'
+            message: 'Quer ver outras aplicações práticas além dos treinamentos?\n\n1️⃣ Sim, me mostra.\n2️⃣ Já estou convencido(a)!'
         });
         await salvarInteracao(sender, 'exemplos_treinamentos', JSON.stringify({ etapa: 'exemplos_treinamentos' }));
     }, 1000);
@@ -294,12 +294,40 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
     const opcao = text.trim();
     
     if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
-        await mostrarOutrasAplicacoes(sender, sendMessage);
+        await enviarVideoTreinamentoMotorista(sender, sendMessage);
     } else {
         await finalizarApresentacao(sender, sendMessage);
     }
     
     return true;
+}
+
+async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
+    try {
+        const path = require('path');
+        const fs = require('fs');
+        
+        const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'treinamento-motorista.mp4');
+        console.log(`🎥 Tentando enviar vídeo: ${videoPath}`);
+        
+        if (fs.existsSync(videoPath)) {
+            await sendMessage(sender, 'send-video', {
+                path: videoPath,
+                caption: '🚗 Exemplo prático: Treinamento para motoristas'
+            });
+            console.log('✅ Vídeo de treinamento motorista enviado com sucesso');
+        } else {
+            console.log('❌ Arquivo de vídeo não encontrado');
+        }
+        
+        setTimeout(async () => {
+            await mostrarOutrasAplicacoes(sender, sendMessage);
+        }, 2000);
+        
+    } catch (error) {
+        console.error('❌ Erro ao enviar vídeo:', error);
+        await mostrarOutrasAplicacoes(sender, sendMessage);
+    }
 }
 
 async function mostrarOutrasAplicacoes(sender, sendMessage) {
