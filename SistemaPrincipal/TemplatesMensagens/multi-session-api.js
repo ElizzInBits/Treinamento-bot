@@ -61,6 +61,7 @@ async function sendMessageWithSession(phone, endpoint, body = {}, sessionName = 
                 });
                 break;
                 
+            case 'send-list':
             case 'send-list-message':
                 response = await axios.post(`${API_HOST}/api/${SECRET_KEY}/${session}/send-list-message`, {
                     phone: phoneNumber,
