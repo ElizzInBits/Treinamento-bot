@@ -234,42 +234,53 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                     
                     // 4. Enviar mensagem de testes e avaliações após o áudio
                     setTimeout(async () => {
+                        console.log('📝 Enviando mensagem de testes e avaliações');
                         await sendMessage(sender, 'send-message', {
                             message: '• 📝 Testes e avaliações\n\nVocê concorda em realizar treinamentos normativos no WhatsApp em sua empresa? (Texto, também em áudio)'
                         });
+                        console.log('✅ Mensagem de testes e avaliações enviada');
                         
                         // 5. Enviar lista de opções
                         setTimeout(async () => {
                             console.log('📝 Enviando lista de testes e avaliações');
-                            await sendMessage(sender, 'send-list', {
-                                title: 'Escolha sua resposta:',
-                                description: 'Selecione uma das opções abaixo',
-                                buttonText: 'Ver opções',
-                                sections: [{
-                                    title: 'Suas opções',
-                                    rows: [
-                                        {
-                                            id: '1',
-                                            title: '🟢 1 - SIM',
-                                            description: 'Concordo com os treinamentos',
-                                            color: '#00FF00'
-                                        },
-                                        {
-                                            id: '2', 
-                                            title: '🔵 2 - COM CERTEZA',
-                                            description: 'Definitivamente concordo',
-                                            color: '#0000FF'
-                                        }
-                                    ]
-                                }]
-                            });
-                            console.log('✅ Lista de testes e avaliações enviada');
-                            await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
+                            try {
+                                await sendMessage(sender, 'send-list', {
+                                    title: 'Escolha sua resposta:',
+                                    description: 'Selecione uma das opções abaixo',
+                                    buttonText: 'Ver opções',
+                                    sections: [{
+                                        title: 'Suas opções',
+                                        rows: [
+                                            {
+                                                id: '1',
+                                                title: '🟢 1 - SIM',
+                                                description: 'Concordo com os treinamentos',
+                                                color: '#00FF00'
+                                            },
+                                            {
+                                                id: '2', 
+                                                title: '🔵 2 - COM CERTEZA',
+                                                description: 'Definitivamente concordo',
+                                                color: '#0000FF'
+                                            }
+                                        ]
+                                    }]
+                                });
+                                console.log('✅ Lista de testes e avaliações enviada com sucesso');
+                                await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
+                            } catch (error) {
+                                console.error('❌ Erro ao enviar lista:', error);
+                                // Se falhar, enviar mensagem simples
+                                await sendMessage(sender, 'send-message', {
+                                    message: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?\n\n1️⃣ SIM\n2️⃣ COM CERTEZA'
+                                });
+                                await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
+                            }
                         }, 1000);
                     }, 2000);
                 }, 1500);
                 
-                // Não ir direto para exemplos - aguardar interação do usuário com a lista
+                // Aguardar interação do usuário com a lista - NÃO continuar automaticamente
             }, 2000);
             
         } catch (error) {
