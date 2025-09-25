@@ -390,9 +390,7 @@ async function mostrarQuandoOnde(sender, sendMessage) {
         }
     }, 500);
     
-    setTimeout(async () => {
-        await mostrarExemplosTrainamentos(sender, sendMessage);
-    }, 6000);
+    // Aguardar interação do usuário - NÃO continuar automaticamente
 }
 
 // ==================== EXEMPLOS DE TREINAMENTOS ====================
