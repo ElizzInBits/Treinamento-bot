@@ -9,8 +9,11 @@ async function startBot() {
     console.log('✅ Bot WhatsApp iniciado com sucesso!');
     console.log('📱 Aguardando mensagens...');
     
-    // Aqui você pode adicionar lógica do bot se necessário
-    // Por exemplo, listeners de mensagens, etc.
+    // Manter o processo ativo com um loop infinito
+    setInterval(() => {
+        // Heartbeat para manter o processo vivo
+        // console.log('💓 Bot ativo:', new Date().toISOString());
+    }, 30000); // A cada 30 segundos
 }
 
 // Iniciar o bot
@@ -22,4 +25,12 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
+process.on('SIGTERM', () => {
+    console.log('🛑 Recebido SIGTERM, parando WhatsApp Bot...');
+    process.exit(0);
+});
+
 console.log('🚀 WhatsApp Bot está rodando...');
+
+// Evitar que o processo termine
+process.stdin.resume();
