@@ -108,8 +108,9 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
                 const gifPath = path.join(__dirname, 'medias', 'gatinho-porfavor.gif');
                 console.log(`🖼️ Tentando enviar GIF como sticker: ${gifPath}`);
                 
-                await sendMessage(sender, 'send-sticker-gif', {
-                    path: gifPath
+                await sendMessage(sender, 'send-file', {
+                    path: gifPath,
+                    filename: 'gatinho-porfavor.gif'
                 });
             } catch (error) {
                 console.error('❌ Erro ao enviar GIF sticker:', error);
