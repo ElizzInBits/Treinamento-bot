@@ -1,5 +1,7 @@
 const { Contato, Interacao } = require('../../../BancoDeDados/models');
 
+// ==================== FUNÇÃO PRINCIPAL ====================
+
 async function processarRespostaApresentacao(sender, text, selectedId, contato, sendMessage) {
     console.log(`🎯 Processando resposta: "${text}" de ${sender}`);
     
@@ -24,15 +26,6 @@ async function processarRespostaApresentacao(sender, text, selectedId, contato, 
     return await iniciarFluxoBoasVindas(sender, sendMessage);
 }
 
-async function iniciarFluxoBoasVindas(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '👋 Olá! Seja bem-vindo(a) ao futuro dos treinamentos normativos.\nEu sou a Eliza, a sua assistente virtual \nJá imaginou fazer um curso oficial de saúde e segurança direto pelo WhatsApp? 📱\n👉 Quer que eu te mostre como funciona?\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
-    });
-    
-    await salvarInteracao(sender, 'aguardando_opcao_inicial', JSON.stringify({ etapa: 'opcao_inicial' }));
-    return true;
-}
-
 async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage) {
     const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
     const etapa = dados.etapa;
@@ -49,9 +42,10 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
             return true;
         case 'mostrar_recursos':
             return await processarMostrarRecursos(sender, text, sendMessage);
-
-        case 'quando_onde':
-            return await processarQuandoOnde(sender, text, sendMessage);
+        case 'testes_avaliacoes':
+            return await processarTestesAvaliacoes(sender, text, sendMessage);
+        case 'perguntar_quando_onde':
+            return await processarPerguntaQuandoOnde(sender, text, sendMessage);
         case 'exemplos_treinamentos':
             return await processarExemplosTrainamentos(sender, text, sendMessage);
         case 'outras_aplicacoes':
@@ -61,6 +55,17 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
         default:
             return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
+}
+
+// ==================== FLUXO INICIAL ====================
+
+async function iniciarFluxoBoasVindas(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '👋 Olá! Seja bem-vindo(a) ao futuro dos treinamentos normativos.\nEu sou a Eliza, a sua assistente virtual \nJá imaginou fazer um curso oficial de saúde e segurança direto pelo WhatsApp? 📱\n👉 Quer que eu te mostre como funciona?\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
+    });
+    
+    await salvarInteracao(sender, 'aguardando_opcao_inicial', JSON.stringify({ etapa: 'opcao_inicial' }));
+    return true;
 }
 
 async function processarOpcaoInicial(sender, text, contato, sendMessage) {
@@ -141,6 +146,8 @@ async function processarAposCadastro(sender, text, contato, sendMessage) {
     }
 }
 
+// ==================== APRESENTAÇÃO DOS RECURSOS ====================
+
 async function mostrarComoFunciona(sender, nome, sendMessage) {
     await sendMessage(sender, 'send-message', {
         message: `😃 Muito bem ${nome}! Aqui o treinamento acontece como uma conversa rápida:\n• Mensagens curtas 💬\n• Linguagem simples ✅\n• Interatividade o tempo todo ⚡\n👉 E tudo com validade legal`
@@ -200,13 +207,13 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                     console.log('✅ Imagem enviada com sucesso');
                 }
                 
-
                 await sendMessage(sender, 'send-message', {     
                     message: '• 🎤 Áudios explicativos'
                 });
                 await sendMessage(sender, 'send-message', {
                     message: 'Áudio com o texto: Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
                 });
+                
                 // 3. Enviar áudio diretamente
                 setTimeout(async () => {
                     const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
@@ -222,12 +229,46 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                     } else {
                         console.log('❌ Arquivo de áudio não encontrado');
                     }
+                    
+                    // 4. Enviar mensagem de testes e avaliações após o áudio
+                    setTimeout(async () => {
+                        await sendMessage(sender, 'send-message', {
+                            message: '• 📝 Testes e avaliações\n\nVocê concorda em realizar treinamentos normativos no WhatsApp em sua empresa? (Texto, também em áudio)'
+                        });
+                        
+                        // 5. Enviar lista de opções
+                        setTimeout(async () => {
+                            await sendMessage(sender, 'send-list', {
+                                title: 'Escolha sua resposta:',
+                                description: 'Selecione uma das opções abaixo',
+                                buttonText: 'Ver opções',
+                                sections: [{
+                                    title: 'Suas opções',
+                                    rows: [
+                                        {
+                                            id: '1',
+                                            title: '🟢 1 - SIM',
+                                            description: 'Concordo com os treinamentos',
+                                            color: '#00FF00'
+                                        },
+                                        {
+                                            id: '2', 
+                                            title: '🔵 2 - COM CERTEZA',
+                                            description: 'Definitivamente concordo',
+                                            color: '#0000FF'
+                                        }
+                                    ]
+                                }]
+                            });
+                            await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
+                        }, 1000);
+                    }, 2000);
                 }, 1500);
                 
                 // Ir para exemplos de treinamentos após todos os arquivos
                 setTimeout(async () => {
                     await mostrarExemplosTrainamentos(sender, sendMessage);
-                }, 5000);
+                }, 9000);
             }, 2000);
             
         } catch (error) {
@@ -240,7 +281,26 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
     }, 1500);
 }
 
-async function processarRecursosDetalhados(sender, text, sendMessage) {
+// ==================== PROCESSAMENTO DE TESTES E AVALIAÇÕES ====================
+
+async function processarTestesAvaliacoes(sender, text, sendMessage) {
+    const opcao = text.trim();
+    
+    // Independente da resposta, vai para a próxima pergunta
+    await perguntarQuandoOnde(sender, sendMessage);
+    return true;
+}
+
+// ==================== QUANDO E ONDE USAR ====================
+
+async function perguntarQuandoOnde(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: 'Quer saber quando e onde você pode usar?\n\n1️⃣ Quero sim.\n2️⃣ Vamos direto para exemplos de treinamentos.'
+    });
+    await salvarInteracao(sender, 'perguntar_quando_onde', JSON.stringify({ etapa: 'perguntar_quando_onde' }));
+}
+
+async function processarPerguntaQuandoOnde(sender, text, sendMessage) {
     const opcao = text.trim();
     
     if (opcao === '1' || opcao.toLowerCase().includes('quero')) {
@@ -254,28 +314,78 @@ async function processarRecursosDetalhados(sender, text, sendMessage) {
 
 async function mostrarQuandoOnde(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: '⏰ Você pode fazer o curso:\n\n• No intervalo do café ☕\n• No ônibus ou metrô 🚎\n• Em qualquer lugar, a qualquer hora 🌍\n\nTudo com registro, certificado e validade normativa.'
+        message: '⏰ *Você pode fazer o curso:*'
     });
+
+    setTimeout(async () => {
+        try {
+            const path = require('path');
+            const fs = require('fs');
+            
+            // 1. Enviar imagem da moça no café
+            const imagemCafe = path.join(__dirname, 'material_apresentacao', 'Imagens', 'nocafe.png');
+            if (fs.existsSync(imagemCafe)) {
+                await sendMessage(sender, 'send-image', {
+                    path: imagemCafe,
+                    caption: '☕ No intervalo do café'
+                });
+            }
+            
+            // 2. Enviar imagem do cara no ônibus
+            setTimeout(async () => {
+                const imagemMetro = path.join(__dirname, 'material_apresentacao', 'Imagens', 'nometro.png');
+                if (fs.existsSync(imagemMetro)) {
+                    await sendMessage(sender, 'send-image', {
+                        path: imagemMetro,
+                        caption: '🚎 No ônibus ou metrô'
+                    });
+                }
+            }, 1000);
+            
+            // 3. Enviar imagem do trabalho
+            setTimeout(async () => {
+                const imagemTrabalho = path.join(__dirname, 'material_apresentacao', 'Imagens', 'notrabalho.png');
+                if (fs.existsSync(imagemTrabalho)) {
+                    await sendMessage(sender, 'send-image', {
+                        path: imagemTrabalho,
+                        caption: '🌍 Em qualquer lugar, a qualquer hora'
+                    });
+                }
+            }, 2000);
+            
+            // 4. Enviar mensagem após as imagens
+            setTimeout(async () => {
+                await sendMessage(sender, 'send-message', {
+                    message: 'Tudo com registro, certificado e validade normativa.'
+                });
+            }, 3000);
+            
+            // 5. Enviar áudio após a mensagem
+            setTimeout(async () => {
+                const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'norma-atendida.mp3');
+                if (fs.existsSync(audioPath)) {
+                    await sendMessage(sender, 'send-file', {
+                        path: audioPath,
+                        filename: 'norma-atendida.mp3',
+                        caption: ' Validade normativa'
+                    });
+                    console.log('✅ Áudio norma-atendida enviado com sucesso');
+                } else {
+                    console.log('❌ Arquivo de áudio norma-atendida não encontrado');
+                }
+            }, 4000);
+            
+        } catch (error) {
+            console.error('❌ Erro ao enviar imagens:', error);
+        }
+    }, 500);
     
     setTimeout(async () => {
-        await sendMessage(sender, 'send-message', {
-            message: '👉 Quer exemplos de treinamentos que já temos no WhatsApp?\n1️⃣ Sim!\n2️⃣ Não, quero ver outra aplicação.'
-        });
-        await salvarInteracao(sender, 'quando_onde', JSON.stringify({ etapa: 'quando_onde' }));
-    }, 1200);
+        await mostrarExemplosTrainamentos(sender, sendMessage);
+    }, 6000);
 }
 
-async function processarQuandoOnde(sender, text, sendMessage) {
-    const opcao = text.trim();
-    
-    if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
-        await mostrarExemplosTrainamentos(sender, sendMessage);
-    } else {
-        await mostrarOutrasAplicacoes(sender, sendMessage);
-    }
-    
-    return true;
-}
+// ==================== EXEMPLOS DE TREINAMENTOS ====================
 
 async function mostrarExemplosTrainamentos(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
@@ -330,6 +440,8 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
     }
 }
 
+// ==================== OUTRAS APLICAÇÕES ====================
+
 async function mostrarOutrasAplicacoes(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
         message: '🚪 Imagine a sua portaria com um treinamento relâmpago para visitantes.\nEles fazem o curso pelo WhatsApp e saem com certificado na hora ✅.'
@@ -352,6 +464,8 @@ async function processarOutrasAplicacoes(sender, text, sendMessage) {
     await finalizarApresentacao(sender, sendMessage);
     return true;
 }
+
+// ==================== FINALIZAÇÃO ====================
 
 async function finalizarApresentacao(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
@@ -377,6 +491,8 @@ async function processarContatoComercial(sender, text, sendMessage) {
     });
     return true;
 }
+
+// ==================== FUNÇÕES AUXILIARES ====================
 
 async function salvarInteracao(telefone, tipo, mensagem) {
     try {
@@ -406,6 +522,8 @@ async function obterUltimaInteracao(telefone) {
 async function iniciarTreinamentoApresentacao(sender, sendMessage) {
     return await processarRespostaApresentacao(sender, '', null, null, sendMessage);
 }
+
+// ==================== EXPORTS ====================
 
 module.exports = {
     processarRespostaApresentacao,
