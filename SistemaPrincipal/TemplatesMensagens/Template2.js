@@ -153,63 +153,101 @@ function setWppClient(client) {
     wppClient = client;
 }
 
-// Cliente direto ativado
-wppconnect.create({
-  session: 'WHATSAPP_BOT_DIRECT',
-  headless: true,
-  disableWelcome: true,
-  updatesLog: false,
-  autoClose: 0,
-  puppeteerOptions: {
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu'
-    ]
-  },
-  catchQR: (base64Qr, asciiQR) => {
-    console.log('\n📱 QR CODE Bot Cliente:');
-    console.log(asciiQR);
-  },
-  statusFind: (status) => {
-    console.log('📶 Bot Cliente Status:', status);
+// Função para inicializar o bot com reconexão automática
+async function inicializarBot() {
+  try {
+    const client = await wppconnect.create({
+      session: 'WHATSAPP_BOT_DIRECT',
+      headless: true,
+      disableWelcome: true,
+      updatesLog: false,
+      autoClose: 0,
+      puppeteerOptions: {
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
+        ],
+        protocolTimeout: 300000 // 5 minutos
+      },
+      catchQR: (base64Qr, asciiQR) => {
+        console.log('\n📱 QR CODE Bot Cliente:');
+        console.log(asciiQR);
+      },
+      statusFind: (status) => {
+        console.log('📶 Bot Cliente Status:', status);
+        
+        // Reconectar se desconectado
+        if (status === 'browserClose' || status === 'disconnected') {
+          console.log('🔄 Reconectando em 5 segundos...');
+          setTimeout(() => {
+            inicializarBot();
+          }, 5000);
+        }
+      }
+    });
+    
+    wppClient = client;
+    setWppClient(client);
+    console.log('✅ Bot Cliente conectado!');
+    
+    // Listener de mensagens
+    client.onMessage(async (message) => {
+      if (!message.body) return;
+      if (message.isGroupMsg) return;
+      if (message.fromMe) return;
+      
+      console.log('📨 Mensagem recebida:', message.body, 'de:', message.from);
+      
+      try {
+        await processarMensagem(message, client);
+      } catch (error) {
+        console.error('❌ Erro ao processar mensagem:', error.message);
+      }
+    });
+    
+    // Bloqueador de chamadas
+    client.onIncomingCall(async (call) => {
+      console.log('📞 Chamada recebida de:', call.peerJid);
+      try {
+        await client.rejectCall(call.id);
+        await client.sendText(call.peerJid, '🚫 *Chamadas não são aceitas*\n\nEnvie mensagem de texto! 😊');
+        console.log('✅ Chamada bloqueada');
+      } catch (error) {
+        console.error('❌ Erro ao bloquear:', error.message);
+      }
+    });
+    
+    // Heartbeat para manter conexão ativa
+    setInterval(async () => {
+      try {
+        if (client && client.getConnectionState) {
+          const state = await client.getConnectionState();
+          if (state !== 'CONNECTED') {
+            console.log('⚠️ Conexão perdida, tentando reconectar...');
+            inicializarBot();
+          }
+        }
+      } catch (error) {
+        console.log('🔄 Erro no heartbeat, reconectando...');
+        inicializarBot();
+      }
+    }, 30000); // Verificar a cada 30 segundos
+    
+  } catch (error) {
+    console.error('❌ Erro Bot Cliente:', error);
+    console.log('🔄 Tentando reconectar em 10 segundos...');
+    setTimeout(() => {
+      inicializarBot();
+    }, 10000);
   }
-}).then(c => {
-  wppClient = c;
-  setWppClient(c);
-  console.log('✅ Bot Cliente conectado!');
-  
-  // Listener de mensagens
-  c.onMessage(async (message) => {
-    if (!message.body) return;
-    if (message.isGroupMsg) return;
-    if (message.fromMe) return;
-    
-    console.log('📨 Mensagem recebida:', message.body, 'de:', message.from);
-    
-    try {
-      await processarMensagem(message, c);
-    } catch (error) {
-      console.error('❌ Erro ao processar mensagem:', error.message);
-    }
-  });
-  
-  // Bloqueador de chamadas
-  c.onIncomingCall(async (call) => {
-    console.log('📞 Chamada recebida de:', call.peerJid);
-    try {
-      await c.rejectCall(call.id);
-      await c.sendText(call.peerJid, '🚫 *Chamadas não são aceitas*\n\nEnvie mensagem de texto! 😊');
-      console.log('✅ Chamada bloqueada');
-    } catch (error) {
-      console.error('❌ Erro ao bloquear:', error.message);
-    }
-  });
-  
-}).catch(err => {
-  console.error('❌ Erro Bot Cliente:', err);
-});
+}
+
+// Inicializar o bot
+inicializarBot();
 
 // Função sendMessage usando cliente direto
 async function sendMessage(phone, endpoint, body = {}) {
@@ -221,6 +259,14 @@ async function sendMessage(phone, endpoint, body = {}) {
     }
     
     try {
+        // Verificar se o cliente ainda está conectado
+        const state = await wppClient.getConnectionState().catch(() => 'DISCONNECTED');
+        if (state !== 'CONNECTED') {
+            console.log('⚠️ Cliente desconectado, tentando reconectar...');
+            inicializarBot();
+            return false;
+        }
+        
         let result;
         
         switch (endpoint) {
@@ -258,6 +304,13 @@ async function sendMessage(phone, endpoint, body = {}) {
     } catch (error) {
         const duration = Date.now() - sendStart;
         console.error(`❌ ${endpoint} (${duration}ms):`, error.message);
+        
+        // Se erro de conexão, tentar reconectar
+        if (error.message.includes('Protocol error') || error.message.includes('Session closed')) {
+            console.log('🔄 Erro de protocolo detectado, reconectando...');
+            inicializarBot();
+        }
+        
         return false;
     }
 }
