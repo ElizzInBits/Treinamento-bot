@@ -446,26 +446,14 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
             } else {
                 console.log(`📤 Enviando vídeo de ${fileSizeInMB.toFixed(2)}MB...`);
                 
-                const videoPromise = sendMessage(sender, 'send-video', {
-                    path: videoPath,
-                    caption: '🚗 Exemplo prático: Treinamento para motoristas'
-                });
-                
-                // Timeout de 5 minutos para vídeos grandes
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Timeout')), 300000)
-                );
-                
                 try {
-                    await Promise.race([videoPromise, timeoutPromise]);
+                    await sendMessage(sender, 'send-video', {
+                        path: videoPath,
+                        caption: '🚗 Exemplo prático: Treinamento para motoristas'
+                    });
                     console.log('✅ Vídeo enviado com sucesso');
                 } catch (error) {
-                    if (error.message === 'Timeout') {
-                        console.log('⚠️ Timeout no vídeo após 5 minutos, enviando mensagem alternativa');
-                    } else {
-                        console.log('⚠️ Erro no vídeo, enviando mensagem alternativa');
-                    }
-                    
+                    console.log('⚠️ Erro no vídeo, enviando mensagem alternativa:', error.message);
                     await sendMessage(sender, 'send-message', {
                         message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
                     });
@@ -514,21 +502,14 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
             } else {
                 console.log(`📤 Enviando vídeo de terceiros de ${fileSizeInMB.toFixed(2)}MB...`);
                 
-                const videoPromise = sendMessage(sender, 'send-video', {
-                    path: videoPath,
-                    caption: '👥 Exemplo prático: Treinamento de Terceiros'
-                });
-                
-                // Timeout de 5 minutos para vídeos grandes
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Timeout')), 300000)
-                );
-                
                 try {
-                    await Promise.race([videoPromise, timeoutPromise]);
+                    await sendMessage(sender, 'send-video', {
+                        path: videoPath,
+                        caption: '👥 Exemplo prático: Treinamento de Terceiros'
+                    });
                     console.log('✅ Vídeo de terceiros enviado com sucesso');
                 } catch (error) {
-                    console.log('⚠️ Erro no vídeo de terceiros, enviando mensagem alternativa');
+                    console.log('⚠️ Erro no vídeo de terceiros, enviando mensagem alternativa:', error.message);
                     await sendMessage(sender, 'send-message', {
                         message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
                     });
