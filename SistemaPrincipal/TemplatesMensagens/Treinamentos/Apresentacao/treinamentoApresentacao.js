@@ -438,22 +438,22 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
             
             console.log(`📄 Tamanho do vídeo: ${fileSizeInMB.toFixed(2)}MB`);
             
-            if (fileSizeInMB > 15) {
-                // Se vídeo muito grande, enviar mensagem alternativa
-                console.log('⚠️ Vídeo muito grande, enviando mensagem alternativa');
+            if (fileSizeInMB > 70) {
+                console.log(`⚠️ Vídeo muito grande (${fileSizeInMB.toFixed(2)}MB > 70MB), enviando mensagem alternativa`);
                 await sendMessage(sender, 'send-message', {
                     message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
                 });
             } else {
-                // Tentar enviar vídeo com timeout
+                console.log(`📤 Enviando vídeo de ${fileSizeInMB.toFixed(2)}MB...`);
+                
                 const videoPromise = sendMessage(sender, 'send-video', {
                     path: videoPath,
                     caption: '🚗 Exemplo prático: Treinamento para motoristas'
                 });
                 
-                // Timeout de 30 segundos
+                // Timeout de 5 minutos para vídeos grandes
                 const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Timeout')), 30000)
+                    setTimeout(() => reject(new Error('Timeout')), 300000)
                 );
                 
                 try {
@@ -461,7 +461,7 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
                     console.log('✅ Vídeo enviado com sucesso');
                 } catch (error) {
                     if (error.message === 'Timeout') {
-                        console.log('⚠️ Timeout no vídeo, enviando mensagem alternativa');
+                        console.log('⚠️ Timeout no vídeo após 5 minutos, enviando mensagem alternativa');
                     } else {
                         console.log('⚠️ Erro no vídeo, enviando mensagem alternativa');
                     }
@@ -506,19 +506,22 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
             
             console.log(`📄 Tamanho do vídeo terceiros: ${fileSizeInMB.toFixed(2)}MB`);
             
-            if (fileSizeInMB > 15) {
-                console.log('⚠️ Vídeo de terceiros muito grande, enviando mensagem alternativa');
+            if (fileSizeInMB > 70) {
+                console.log(`⚠️ Vídeo de terceiros muito grande (${fileSizeInMB.toFixed(2)}MB > 70MB), enviando mensagem alternativa`);
                 await sendMessage(sender, 'send-message', {
                     message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
                 });
             } else {
+                console.log(`📤 Enviando vídeo de terceiros de ${fileSizeInMB.toFixed(2)}MB...`);
+                
                 const videoPromise = sendMessage(sender, 'send-video', {
                     path: videoPath,
                     caption: '👥 Exemplo prático: Treinamento de Terceiros'
                 });
                 
+                // Timeout de 5 minutos para vídeos grandes
                 const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Timeout')), 30000)
+                    setTimeout(() => reject(new Error('Timeout')), 300000)
                 );
                 
                 try {
