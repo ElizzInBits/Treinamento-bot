@@ -239,38 +239,40 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                         message: '• 📝 Testes e avaliações'
                     });
                     
-                    console.log('📝 EXECUTANDO: Enviando lista de testes');
-                    try {
-                        await sendMessage(sender, 'send-list-message', {
-                            title: '',
-                            description: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa? (Texto, também em áudio)',
-                            buttonText: 'Ver opções',
-                            listType: 'SINGLE_SELECT',
-                            sections: [{
-                                title: 'Suas opções',
-                                rows: [
-                                    {
-                                        id: 'sim_concordo',
-                                        title: '🟢 1 - SIM',
-                                        description: 'Concordo com os treinamentos'
-                                    },
-                                    {
-                                        id: 'com_certeza', 
-                                        title: '🔵 2 - COM CERTEZA',
-                                        description: 'Definitivamente concordo'
-                                    }
-                                ]
-                            }]
-                        });
-                        console.log('✅ SUCESSO: Lista de testes enviada');
-                        await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
-                    } catch (error) {
-                        console.error('❌ ERRO: Falha ao enviar lista:', error);
-                        await sendMessage(sender, 'send-message', {
-                            message: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?\n\n1️⃣ SIM\n2️⃣ COM CERTEZA'
-                        });
-                        await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
-                    }
+                    setTimeout(async () => {
+                        console.log('📝 EXECUTANDO: Enviando lista de testes');
+                        try {
+                            await sendMessage(sender, 'send-list-message', {
+                                title: '',
+                                description: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?',
+                                buttonText: 'Ver opções',
+                                listType: 'SINGLE_SELECT',
+                                sections: [{
+                                    title: 'Suas opções',
+                                    rows: [
+                                        {
+                                            id: 'sim_concordo',
+                                            title: '🟢 1 - SIM',
+                                            description: 'Concordo com os treinamentos'
+                                        },
+                                        {
+                                            id: 'com_certeza', 
+                                            title: '🔵 2 - COM CERTEZA',
+                                            description: 'Definitivamente concordo'
+                                        }
+                                    ]
+                                }]
+                            });
+                            console.log('✅ SUCESSO: Lista de testes enviada');
+                            await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
+                        } catch (error) {
+                            console.error('❌ ERRO: Falha ao enviar lista:', error);
+                            await sendMessage(sender, 'send-message', {
+                                message: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?\n\n1️⃣ SIM\n2️⃣ COM CERTEZA'
+                            });
+                            await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
+                        }
+                    }, 1000);
                 }, 1500);
                 
                 // Aguardar interação do usuário com a lista - NÃO continuar automaticamente
@@ -322,73 +324,8 @@ async function processarPerguntaQuandoOnde(sender, text, sendMessage) {
 
 async function mostrarQuandoOnde(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: '⏰ *Você pode fazer o curso:*'
+        message: '⏰ *Você pode fazer o curso:*\n\n☕ No intervalo do café\n🚎 No ônibus ou metrô\n🌍 Em qualquer lugar, a qualquer hora\n\nTudo com registro, certificado e validade normativa.'
     });
-
-    setTimeout(async () => {
-        try {
-            const path = require('path');
-            const fs = require('fs');
-            
-            // 1. Enviar imagem da moça no café
-            const imagemCafe = path.join(__dirname, 'material_apresentacao', 'Imagens', 'nocafe.png');
-            if (fs.existsSync(imagemCafe)) {
-                await sendMessage(sender, 'send-image', {
-                    path: imagemCafe,
-                    caption: '☕ No intervalo do café'
-                });
-            }
-            
-            // 2. Enviar imagem do cara no ônibus
-            setTimeout(async () => {
-                const imagemMetro = path.join(__dirname, 'material_apresentacao', 'Imagens', 'nometro.png');
-                if (fs.existsSync(imagemMetro)) {
-                    await sendMessage(sender, 'send-image', {
-                        path: imagemMetro,
-                        caption: '🚎 No ônibus ou metrô'
-                    });
-                }
-            }, 1000);
-            
-            // 3. Enviar imagem do trabalho
-            setTimeout(async () => {
-                const imagemTrabalho = path.join(__dirname, 'material_apresentacao', 'Imagens', 'notrabalho.png');
-                if (fs.existsSync(imagemTrabalho)) {
-                    await sendMessage(sender, 'send-image', {
-                        path: imagemTrabalho,
-                        caption: '🌍 Em qualquer lugar, a qualquer hora'
-                    });
-                }
-            }, 2000);
-            
-            // 4. Enviar mensagem após as imagens
-            setTimeout(async () => {
-                await sendMessage(sender, 'send-message', {
-                    message: 'Tudo com registro, certificado e validade normativa.'
-                });
-            }, 3000);
-            
-            // 5. Enviar áudio após a mensagem
-            setTimeout(async () => {
-                const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'norma-atendida.mp3');
-                if (fs.existsSync(audioPath)) {
-                    await sendMessage(sender, 'send-file', {
-                        path: audioPath,
-                        filename: 'norma-atendida.mp3',
-                        caption: ' Validade normativa'
-                    });
-                    console.log('✅ Áudio norma-atendida enviado com sucesso');
-                } else {
-                    console.log('❌ Arquivo de áudio norma-atendida não encontrado');
-                }
-            }, 4000);
-            
-        } catch (error) {
-            console.error('❌ Erro ao enviar imagens:', error);
-        }
-    }, 500);
-    
-    // Aguardar interação do usuário - NÃO continuar automaticamente
 }
 
 // ==================== EXEMPLOS DE TREINAMENTOS ====================
@@ -419,31 +356,16 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
 }
 
 async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
-    try {
-        const path = require('path');
-        const fs = require('fs');
-        
-        const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'treinamento-motorista.mp4');
-        console.log(`🎥 Tentando enviar vídeo: ${videoPath}`);
-        
-        if (fs.existsSync(videoPath)) {
-            await sendMessage(sender, 'send-video', {
-                path: videoPath,
-                caption: '🚗 Exemplo prático: Treinamento para motoristas'
-            });
-            console.log('✅ Vídeo de treinamento motorista enviado com sucesso');
-        } else {
-            console.log('❌ Arquivo de vídeo não encontrado');
-        }
-        
-        setTimeout(async () => {
-            await mostrarOutrasAplicacoes(sender, sendMessage);
-        }, 2000);
-        
-    } catch (error) {
-        console.error('❌ Erro ao enviar vídeo:', error);
+    // Enviar apenas mensagem de texto para evitar timeouts
+    console.log('🎥 Enviando exemplo de treinamento (texto)');
+    
+    await sendMessage(sender, 'send-message', {
+        message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
+    });
+    
+    setTimeout(async () => {
         await mostrarOutrasAplicacoes(sender, sendMessage);
-    }
+    }, 1000);
 }
 
 // ==================== OUTRAS APLICAÇÕES ====================
