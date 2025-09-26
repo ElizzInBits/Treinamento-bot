@@ -153,12 +153,38 @@ function setWppClient(client) {
     wppClient = client;
 }
 
+// Variável para controlar reconexões
+let reconectando = false;
+
+// Função para limpar arquivos de lock
+function limparLockFiles() {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const lockPath = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT', 'SingletonLock');
+    if (fs.existsSync(lockPath)) {
+      fs.unlinkSync(lockPath);
+      console.log('🧹 Arquivo de lock removido');
+    }
+  } catch (error) {
+    console.log('⚠️ Erro ao limpar lock:', error.message);
+  }
+}
+
 // Função para inicializar o bot com reconexão automática
 async function inicializarBot() {
+  if (reconectando) {
+    console.log('⏳ Reconexão já em andamento, aguardando...');
+    return;
+  }
+  
+  reconectando = true;
+  limparLockFiles();
+  
   try {
     const client = await wppconnect.create({
       session: 'WHATSAPP_BOT_DIRECT',
-      headless: true,
+      headless: 'new',
       disableWelcome: true,
       updatesLog: false,
       autoClose: 0,
@@ -169,9 +195,10 @@ async function inicializarBot() {
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--disable-web-security',
-          '--disable-features=VizDisplayCompositor'
+          '--disable-features=VizDisplayCompositor',
+          '--single-process'
         ],
-        protocolTimeout: 300000 // 5 minutos
+        protocolTimeout: 300000
       },
       catchQR: (base64Qr, asciiQR) => {
         console.log('\n📱 QR CODE Bot Cliente:');
@@ -179,19 +206,12 @@ async function inicializarBot() {
       },
       statusFind: (status) => {
         console.log('📶 Bot Cliente Status:', status);
-        
-        // Reconectar se desconectado
-        if (status === 'browserClose' || status === 'disconnected') {
-          console.log('🔄 Reconectando em 5 segundos...');
-          setTimeout(() => {
-            inicializarBot();
-          }, 5000);
-        }
       }
     });
     
     wppClient = client;
     setWppClient(client);
+    reconectando = false;
     console.log('✅ Bot Cliente conectado!');
     
     // Listener de mensagens
@@ -221,28 +241,13 @@ async function inicializarBot() {
       }
     });
     
-    // Heartbeat para manter conexão ativa
-    setInterval(async () => {
-      try {
-        if (client && client.getConnectionState) {
-          const state = await client.getConnectionState();
-          if (state !== 'CONNECTED') {
-            console.log('⚠️ Conexão perdida, tentando reconectar...');
-            inicializarBot();
-          }
-        }
-      } catch (error) {
-        console.log('🔄 Erro no heartbeat, reconectando...');
-        inicializarBot();
-      }
-    }, 30000); // Verificar a cada 30 segundos
-    
   } catch (error) {
     console.error('❌ Erro Bot Cliente:', error);
-    console.log('🔄 Tentando reconectar em 10 segundos...');
+    reconectando = false;
+    console.log('🔄 Tentando reconectar em 15 segundos...');
     setTimeout(() => {
       inicializarBot();
-    }, 10000);
+    }, 15000);
   }
 }
 
