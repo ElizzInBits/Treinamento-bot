@@ -34,7 +34,7 @@ async function gerarCertificado(nome, email, sendMessage = null, sender = null) 
     
     page.drawText(nomeCompleto, { 
       x: nomeX, 
-      y: 600, 
+      y: 800, 
       size: nomeSize, 
       font: helvetica, 
       color: rgb(0, 0, 0) 
