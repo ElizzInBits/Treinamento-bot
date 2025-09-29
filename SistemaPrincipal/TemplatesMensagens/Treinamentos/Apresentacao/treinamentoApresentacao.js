@@ -186,12 +186,18 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
             const path = require('path');
             const fs = require('fs');
             
-            // 1. Enviar vídeo do Google Drive
-            console.log('🎥 Enviando vídeo do Google Drive');
-            await sendMessage(sender, 'send-message', {
-                message: '📹 *Vídeos curtos*\n\nhttps://youtu.be/UV9w7-rqIrk?si=QcAV1id8oKzzBtfw'
-            });
-            console.log('✅ Link do vídeo enviado com sucesso');
+            // 1. Enviar vídeo primeiro
+            const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'Video01.mp4');
+            console.log(`🎥 Tentando enviar vídeo: ${videoPath}`);
+            
+            if (fs.existsSync(videoPath)) {
+                console.log('✅ Arquivo de vídeo encontrado');
+                await sendMessage(sender, 'send-video', {
+                    path: videoPath,
+                    caption: '📹 *Vídeos curtos*'
+                });
+                console.log('✅ Vídeo enviado com sucesso');
+            }
             
             // 2. Enviar imagem após o vídeo
             setTimeout(async () => {
@@ -421,11 +427,24 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
 
 async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
     try {
-        // Enviar vídeo do Google Drive
-        console.log('🎥 Enviando vídeo de treinamento de motoristas do Google Drive');
-        await sendMessage(sender, 'send-message', {
-            message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\nhttps://youtu.be/rkc0dCAZaic?si=2fN5WueTKMB2bFI9\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido'
-        });
+        const path = require('path');
+        const fs = require('fs');
+        
+        const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'treinamento-motorista.mp4');
+        console.log(`🎥 Tentando enviar vídeo: ${videoPath}`);
+        
+        if (fs.existsSync(videoPath)) {
+            await sendMessage(sender, 'send-video', {
+                path: videoPath,
+                caption: '🎥 Exemplo prático: Treinamento para motoristas'
+            });
+            console.log('✅ Vídeo de motoristas enviado com sucesso');
+        } else {
+            console.log('❌ Arquivo de vídeo não encontrado, enviando mensagem alternativa');
+            await sendMessage(sender, 'send-message', {
+                message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
+            });
+        }
 
         
         // Enviar segundo vídeo após o primeiro
@@ -444,11 +463,24 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
 
 async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
     try {
-        // Enviar vídeo do Google Drive
-        console.log('🎥 Enviando vídeo de terceiros do Google Drive');
-        await sendMessage(sender, 'send-message', {
-            message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\nhttps://youtu.be/FL4PvUWEMDI?si=WI-0PO0OYvcK899y\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais'
-        });
+        const path = require('path');
+        const fs = require('fs');
+        
+        const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'Treinamento de Terceiros via WhatsApp.mp4');
+        console.log(`🎥 Tentando enviar vídeo de terceiros: ${videoPath}`);
+        
+        if (fs.existsSync(videoPath)) {
+            await sendMessage(sender, 'send-video', {
+                path: videoPath,
+                caption: '🎥 Exemplo prático: Treinamento de Terceiros'
+            });
+            console.log('✅ Vídeo de terceiros enviado com sucesso');
+        } else {
+            console.log('❌ Arquivo de vídeo de terceiros não encontrado, enviando mensagem alternativa');
+            await sendMessage(sender, 'send-message', {
+                message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
+            });
+        }
 
         
         setTimeout(async () => {
