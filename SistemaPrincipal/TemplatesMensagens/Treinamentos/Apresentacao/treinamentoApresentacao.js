@@ -438,27 +438,10 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
             
             console.log(`📄 Tamanho do vídeo: ${fileSizeInMB.toFixed(2)}MB`);
             
-            if (fileSizeInMB > 70) {
-                console.log(`⚠️ Vídeo muito grande (${fileSizeInMB.toFixed(2)}MB > 70MB), enviando mensagem alternativa`);
-                await sendMessage(sender, 'send-message', {
-                    message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
-                });
-            } else {
-                console.log(`📤 Enviando vídeo de ${fileSizeInMB.toFixed(2)}MB...`);
-                
-                try {
-                    await sendMessage(sender, 'send-video', {
-                        path: videoPath,
-                        caption: '🚗 Exemplo prático: Treinamento para motoristas'
-                    });
-                    console.log('✅ Vídeo enviado com sucesso');
-                } catch (error) {
-                    console.log('⚠️ Erro no vídeo, enviando mensagem alternativa:', error.message);
-                    await sendMessage(sender, 'send-message', {
-                        message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
-                    });
-                }
-            }
+            console.log(`📄 Vídeo de ${fileSizeInMB.toFixed(2)}MB - enviando descrição devido ao tamanho`);
+            await sendMessage(sender, 'send-message', {
+                message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
+            });
         } else {
             console.log('❌ Arquivo de vídeo não encontrado, enviando mensagem alternativa');
             await sendMessage(sender, 'send-message', {
@@ -494,27 +477,10 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
             
             console.log(`📄 Tamanho do vídeo terceiros: ${fileSizeInMB.toFixed(2)}MB`);
             
-            if (fileSizeInMB > 70) {
-                console.log(`⚠️ Vídeo de terceiros muito grande (${fileSizeInMB.toFixed(2)}MB > 70MB), enviando mensagem alternativa`);
-                await sendMessage(sender, 'send-message', {
-                    message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
-                });
-            } else {
-                console.log(`📤 Enviando vídeo de terceiros de ${fileSizeInMB.toFixed(2)}MB...`);
-                
-                try {
-                    await sendMessage(sender, 'send-video', {
-                        path: videoPath,
-                        caption: '👥 Exemplo prático: Treinamento de Terceiros'
-                    });
-                    console.log('✅ Vídeo de terceiros enviado com sucesso');
-                } catch (error) {
-                    console.log('⚠️ Erro no vídeo de terceiros, enviando mensagem alternativa:', error.message);
-                    await sendMessage(sender, 'send-message', {
-                        message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
-                    });
-                }
-            }
+            console.log(`📄 Vídeo de terceiros de ${fileSizeInMB.toFixed(2)}MB - enviando descrição devido ao tamanho`);
+            await sendMessage(sender, 'send-message', {
+                message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
+            });
         } else {
             console.log('❌ Arquivo de vídeo de terceiros não encontrado, enviando mensagem alternativa');
             await sendMessage(sender, 'send-message', {
