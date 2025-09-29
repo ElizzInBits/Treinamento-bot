@@ -425,49 +425,43 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
 
 // ==================== COMPRESSÃO DE VÍDEO ====================
 
-const VIDEO_CONFIG = require('./videoConfig');
-const { limparVideosComprimidos, verificarFFmpeg } = require('./videoUtils');
 const { enviarVideoBase64, enviarVideoEmPartes } = require('./videoFallback');
+const { comprimirVideoSimples } = require('./videoCompressor');
 
-// Limpar vídeos comprimidos antigos na inicialização
-limparVideosComprimidos();
+// ==================== COMPRESSÃO SIMPLES SEM FFMPEG ====================
 
-// Verificar se FFmpeg está disponível
-const FFMPEG_DISPONIVEL = verificarFFmpeg();
-
-async function comprimirVideo(inputPath, outputPath, useHeavyCompression = false) {
-    const ffmpeg = require('fluent-ffmpeg');
-    
-    // Verificar se FFmpeg está disponível
-    if (!verificarFFmpeg()) {
-        throw new Error('FFmpeg não está disponível');
-    }
-    
-    const config = useHeavyCompression ? VIDEO_CONFIG.HEAVY_COMPRESSION : VIDEO_CONFIG.COMPRESSION;
-    
-    return new Promise((resolve, reject) => {
-        ffmpeg(inputPath)
-            .videoCodec(config.videoCodec)
-            .audioCodec(config.audioCodec)
-            .size(config.size)
-            .videoBitrate(config.videoBitrate)
-            .audioBitrate(config.audioBitrate)
-            .format(config.format)
-            .save(outputPath)
-            .on('progress', (progress) => {
-                if (progress.percent) {
-                    console.log(`🔄 Comprimindo: ${Math.round(progress.percent)}%`);
-                }
-            })
-            .on('end', () => {
-                console.log('✅ Vídeo comprimido com sucesso');
-                resolve(outputPath);
-            })
-            .on('error', (err) => {
-                console.error('❌ Erro na compressão:', err);
-                reject(err);
+async function tentarCompressaoSimples(sender, sendMessage, videoPath, compressedPath, tipoTreinamento) {
+    try {
+        const fs = require('fs');
+        console.log('🔧 Tentando compressão simples sem FFmpeg...');
+        
+        // Tentar compressão simples
+        await comprimirVideoSimples(videoPath, compressedPath, 0.3); // 30% do tamanho original
+        
+        const compressedStats = fs.statSync(compressedPath);
+        const compressedSizeMB = compressedStats.size / (1024 * 1024);
+        
+        console.log(`✅ Compressão simples concluída: ${compressedSizeMB.toFixed(2)}MB`);
+        
+        if (compressedSizeMB <= 15) {
+            await sendMessage(sender, 'send-file', {
+                path: compressedPath,
+                filename: `${tipoTreinamento.toLowerCase().replace(/\s+/g, '-')}.mp4`,
+                caption: `🎥 Exemplo prático: ${tipoTreinamento}`
             });
-    });
+            
+            console.log('✅ Vídeo comprimido enviado com sucesso');
+        } else {
+            throw new Error('Vídeo ainda muito grande após compressão simples');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro na compressão simples:', error);
+        
+        // Fallback para envio alternativo
+        const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
+        await tentarEnvioAlternativo(sender, sendMessage, videoPath, tipoTreinamento);
+    }
 }
 
 async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
@@ -486,43 +480,19 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
             
             console.log(`📄 Tamanho do vídeo: ${fileSizeInMB.toFixed(2)}MB`);
             
-            // Para vídeos grandes (>5MB), sempre comprimir primeiro
-            if (fileSizeInMB > 5 && FFMPEG_DISPONIVEL) {
+            // Para vídeos grandes, comprimir
+            if (fileSizeInMB > 15) {
                 console.log(`🔄 Comprimindo vídeo de ${fileSizeInMB.toFixed(2)}MB...`);
-                
+                await tentarCompressaoSimples(sender, sendMessage, videoPath, compressedPath, 'Treinamento para motoristas');
+            } else {
+                // Vídeo pequeno - enviar diretamente
                 try {
-                    await comprimirVideo(videoPath, compressedPath, fileSizeInMB > 30);
-                    
-                    const compressedStats = fs.statSync(compressedPath);
-                    const compressedSizeMB = compressedStats.size / (1024 * 1024);
-                    
-                    console.log(`✅ Vídeo comprimido de ${fileSizeInMB.toFixed(2)}MB para ${compressedSizeMB.toFixed(2)}MB`);
-                    
                     await sendMessage(sender, 'send-file', {
-                        path: compressedPath,
+                        path: videoPath,
                         filename: 'treinamento-motorista.mp4',
                         caption: '🎥 Exemplo prático: Treinamento para motoristas'
                     });
-                    
-                } catch (compressionError) {
-                    console.error('❌ Erro na compressão:', compressionError);
-                    const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
-                    await tentarEnvioAlternativo(sender, sendMessage, videoPath, 'Treinamento para motoristas');
-                }
-            } else {
-                // Vídeo pequeno ou sem FFmpeg - tentar envio direto
-                try {
-                    console.log(`📤 Enviando vídeo de ${fileSizeInMB.toFixed(2)}MB...`);
-                    
-                    await sendMessage(sender, 'send-video', {
-                        path: videoPath,
-                        caption: '🎥 Exemplo prático: Treinamento para motoristas'
-                    });
-                    
-                    console.log('✅ Vídeo enviado com sucesso');
-                    
                 } catch (sendError) {
-                    console.error('❌ Erro ao enviar vídeo:', sendError);
                     const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
                     await tentarEnvioAlternativo(sender, sendMessage, videoPath, 'Treinamento para motoristas');
                 }
@@ -564,43 +534,19 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
             
             console.log(`📄 Tamanho do vídeo terceiros: ${fileSizeInMB.toFixed(2)}MB`);
             
-            // Para vídeos grandes (>5MB), sempre comprimir primeiro
-            if (fileSizeInMB > 5 && FFMPEG_DISPONIVEL) {
-                console.log(`🔄 Comprimindo vídeo de terceiros ${fileSizeInMB.toFixed(2)}MB...`);
-                
+            // Para vídeos grandes, comprimir
+            if (fileSizeInMB > 15) {
+                console.log(`🔄 Comprimindo vídeo terceiros de ${fileSizeInMB.toFixed(2)}MB...`);
+                await tentarCompressaoSimples(sender, sendMessage, videoPath, compressedPath, 'Treinamento de Terceiros');
+            } else {
+                // Vídeo pequeno - enviar diretamente
                 try {
-                    await comprimirVideo(videoPath, compressedPath, fileSizeInMB > 30);
-                    
-                    const compressedStats = fs.statSync(compressedPath);
-                    const compressedSizeMB = compressedStats.size / (1024 * 1024);
-                    
-                    console.log(`✅ Vídeo terceiros comprimido de ${fileSizeInMB.toFixed(2)}MB para ${compressedSizeMB.toFixed(2)}MB`);
-                    
                     await sendMessage(sender, 'send-file', {
-                        path: compressedPath,
+                        path: videoPath,
                         filename: 'treinamento-terceiros.mp4',
                         caption: '🎥 Exemplo prático: Treinamento de Terceiros'
                     });
-                    
-                } catch (compressionError) {
-                    console.error('❌ Erro na compressão terceiros:', compressionError);
-                    const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
-                    await tentarEnvioAlternativo(sender, sendMessage, videoPath, 'Treinamento de Terceiros');
-                }
-            } else {
-                // Vídeo pequeno ou sem FFmpeg - tentar envio direto
-                try {
-                    console.log(`📤 Enviando vídeo de terceiros ${fileSizeInMB.toFixed(2)}MB...`);
-                    
-                    await sendMessage(sender, 'send-video', {
-                        path: videoPath,
-                        caption: '🎥 Exemplo prático: Treinamento de Terceiros'
-                    });
-                    
-                    console.log('✅ Vídeo de terceiros enviado com sucesso');
-                    
                 } catch (sendError) {
-                    console.error('❌ Erro ao enviar vídeo terceiros:', sendError);
                     const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
                     await tentarEnvioAlternativo(sender, sendMessage, videoPath, 'Treinamento de Terceiros');
                 }
