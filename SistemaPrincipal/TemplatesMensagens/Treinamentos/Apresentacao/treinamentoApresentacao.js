@@ -189,7 +189,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
             // 1. Enviar vídeo do Google Drive
             console.log('🎥 Enviando vídeo do Google Drive');
             await sendMessage(sender, 'send-message', {
-                message: '📹 *Vídeos curtos*\n\nhttps://drive.google.com/file/d/1lYgcpJPLYxiAQL3bYbV5UqzE4bNsw-DG/view?usp=drive_link'
+                message: '📹 *Vídeos curtos*\n\nhttps://youtu.be/UV9w7-rqIrk?si=QcAV1id8oKzzBtfw'
             });
             console.log('✅ Link do vídeo enviado com sucesso');
             
@@ -424,7 +424,7 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
         // Enviar vídeo do Google Drive
         console.log('🎥 Enviando vídeo de treinamento de motoristas do Google Drive');
         await sendMessage(sender, 'send-message', {
-            message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\nhttps://drive.google.com/file/d/113QZRttml6qFRznC9E3nGXZrBPSRzuZS/view?usp=drive_link\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido'
+            message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\nhttps://youtu.be/rkc0dCAZaic?si=2fN5WueTKMB2bFI9\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido'
         });
 
         
@@ -447,7 +447,7 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
         // Enviar vídeo do Google Drive
         console.log('🎥 Enviando vídeo de terceiros do Google Drive');
         await sendMessage(sender, 'send-message', {
-            message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\nhttps://drive.google.com/file/d/19jV1jeSIS-Or-T0u7YMzfDr0C2pGk2AJ/view?usp=drive_link\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais'
+            message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\nhttps://youtu.be/FL4PvUWEMDI?si=WI-0PO0OYvcK899y\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais'
         });
 
         
