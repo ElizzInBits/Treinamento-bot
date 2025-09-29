@@ -1,4 +1,5 @@
 const { Contato, Interacao } = require('../../../BancoDeDados/models');
+const { gerarCertificado } = require('../../Certificados/gerarCertificado');
 
 // ==================== FUNÇÃO PRINCIPAL ====================
 
@@ -52,6 +53,8 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
             return await processarExemplosTrainamentos(sender, text, sendMessage);
         case 'outras_aplicacoes':
             return await processarOutrasAplicacoes(sender, text, sendMessage);
+        case 'confirmar_dados_certificado':
+            return await processarConfirmacaoDados(sender, text, sendMessage);
         case 'contato_comercial':
             return await processarContatoComercial(sender, text, sendMessage);
         default:
@@ -484,7 +487,7 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
 
         
         setTimeout(async () => {
-            await mostrarOutrasAplicacoes(sender, sendMessage);
+            await perguntarDadosCertificado(sender, sendMessage);
         }, 2000);
         
     } catch (error) {
@@ -492,8 +495,74 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
         await sendMessage(sender, 'send-message', {
             message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
         });
-        await mostrarOutrasAplicacoes(sender, sendMessage);
+        await perguntarDadosCertificado(sender, sendMessage);
     }
+}
+
+// ==================== CONFIRMAÇÃO DE DADOS PARA CERTIFICADO ====================
+
+await sendMessage(sender, 'send-message', {
+    message: "Cerificados também pode ser gerado automaticamente após o treinamento!"
+});
+
+async function perguntarDadosCertificado(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '🎓 *Certificado de Participação*\n\nPara emitir seu certificado de participação nesta apresentação, preciso confirmar alguns dados:\n\n📝 Por favor, envie:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+    });
+    
+    await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ etapa: 'confirmar_dados_certificado' }));
+}
+
+async function processarConfirmacaoDados(sender, text, sendMessage) {
+    const linhas = text.trim().split('\n').filter(linha => linha.trim());
+    
+    if (linhas.length >= 2) {
+        const nome = linhas[0].trim();
+        const email = linhas[1].trim();
+        
+        // Validar email básico
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            await sendMessage(sender, 'send-message', {
+                message: '❌ E-mail inválido. Por favor, envie novamente:\n\n*Nome completo:*\n*E-mail válido:*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+            });
+            return true;
+        }
+        
+        await sendMessage(sender, 'send-message', {
+            message: '⏳ Gerando seu certificado...'
+        });
+        
+        try {
+            const resultado = await gerarCertificado(nome, email);
+            
+            if (resultado.sucesso) {
+                await sendMessage(sender, 'send-message', {
+                    message: `✅ *Certificado gerado com sucesso!*\n\n📧 Enviado para: ${email}\n\n⚠️ *IMPORTANTE:* Este certificado é apenas demonstrativo e não possui validade legal para treinamentos normativos ou conformidade regulatória.`
+                });
+            } else {
+                await sendMessage(sender, 'send-message', {
+                    message: `❌ Erro ao gerar certificado: ${resultado.erro}`
+                });
+            }
+        } catch (error) {
+            console.error('❌ Erro ao gerar certificado:', error);
+            await sendMessage(sender, 'send-message', {
+                message: '❌ Erro interno ao gerar certificado. Tente novamente mais tarde.'
+            });
+        }
+        
+        setTimeout(async () => {
+            await mostrarOutrasAplicacoes(sender, sendMessage);
+        }, 1000);
+        
+    } else {
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Dados incompletos. Por favor, envie:\n\n*Nome completo:*\n*E-mail:*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+        });
+    }
+    
+    return true;
 }
 
 // ==================== OUTRAS APLICAÇÕES ====================
@@ -530,7 +599,7 @@ async function processarOutrasAplicacoes(sender, text, sendMessage) {
 
 async function finalizarApresentacao(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: '🎉 *Perfeito!*\n\nNosso time comercial entrará em contato com você em breve para apresentar as soluções personalizadas para sua empresa.\n\n📞 *Contato:* (11) 99999-9999\n📧 *E-mail:* comercial@empresa.com\n\n🚀 Obrigada por conhecer o futuro dos treinamentos normativos!'
+        message: '🎉 *Perfeito!*\n\nNosso time comercial entrará em contato com você em breve para apresentar as soluções personalizadas para sua empresa.\n\n📞 *Contato:* (31) 3166-9006\n📧 *E-mail:* treinamentos@salubrita.com.br\n\n🚀 Obrigada por conhecer o futuro dos treinamentos normativos!'
     });
     
     await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
