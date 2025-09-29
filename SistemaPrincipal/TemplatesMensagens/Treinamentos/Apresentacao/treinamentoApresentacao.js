@@ -338,7 +338,7 @@ async function mostrarQuandoOnde(sender, sendMessage) {
             if (fs.existsSync(imagemCafe)) {
                 await sendMessage(sender, 'send-image', {
                     path: imagemCafe,
-                    caption: '☕ No intervalo do café'
+                    caption: '☕ Quando estiver tomando um cafezinho'
                 });
             }
             

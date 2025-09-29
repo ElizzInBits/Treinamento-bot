@@ -22,6 +22,12 @@ async function gerarCertificado(nome, email, sendMessage = null, sender = null) 
 
     const templateBytes = fs.readFileSync(templatePath);
     const pdfDoc = await PDFDocument.load(templateBytes);
+    
+    // Definir título do documento
+    pdfDoc.setTitle('Certificado de Participação');
+    pdfDoc.setSubject('Certificado de Participação em Treinamento');
+    pdfDoc.setAuthor('Salubrita Treinamentos');
+    
     const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const page = pdfDoc.getPages()[0];
 
