@@ -507,9 +507,25 @@ async function perguntarDadosCertificado(sender, sendMessage) {
     });
     
     try {
-        // Buscar dados do contato no sistema
+        // Buscar dados do contato no sistema - mesma lógica do Template2
         console.log(`🔍 Buscando contato para telefone: ${sender}`);
-        const contato = await Contato.findOne({ where: { telefone: sender } });
+        
+        const formatosTelefone = [
+            sender,                           // 553399595511
+            sender.substring(2),              // 3399595511  
+            `${sender.substring(0, 4)}9${sender.substring(4)}`, // 5533999595511 (adicionar 9)
+            sender.length === 13 ? sender.substring(0, 4) + sender.substring(5) : sender, // 5533999595511 -> 553399595511 (remover 9º dígito)
+        ];
+        
+        let contato = null;
+        for (const formato of formatosTelefone) {
+            contato = await Contato.findOne({ where: { telefone: formato } });
+            if (contato) {
+                console.log(`✅ Contato encontrado: ${contato.nome || contato.nomeCompleto} (formato: ${formato})`);
+                break;
+            }
+        }
+        
         console.log(`📊 Contato encontrado:`, contato ? 'SIM' : 'NÃO');
         
         if (contato) {
