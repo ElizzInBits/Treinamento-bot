@@ -484,79 +484,47 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
             const stats = fs.statSync(videoPath);
             const fileSizeInMB = stats.size / (1024 * 1024);
             
-            console.log(`📄 Tamanho do vídeo original: ${fileSizeInMB.toFixed(2)}MB`);
+            console.log(`📄 Tamanho do vídeo: ${fileSizeInMB.toFixed(2)}MB`);
             
-            if (fileSizeInMB > VIDEO_CONFIG.MAX_SIZE_MB) {
-                console.log(`🔄 Vídeo muito grande (${fileSizeInMB.toFixed(2)}MB), comprimindo...`);
+            // Para vídeos grandes (>5MB), sempre comprimir primeiro
+            if (fileSizeInMB > 5 && FFMPEG_DISPONIVEL) {
+                console.log(`🔄 Comprimindo vídeo de ${fileSizeInMB.toFixed(2)}MB...`);
                 
                 try {
-                    // Tentar compressão normal primeiro
-                    await comprimirVideo(videoPath, compressedPath, false);
+                    await comprimirVideo(videoPath, compressedPath, fileSizeInMB > 30);
                     
-                    let compressedStats = fs.statSync(compressedPath);
-                    let compressedSizeMB = compressedStats.size / (1024 * 1024);
+                    const compressedStats = fs.statSync(compressedPath);
+                    const compressedSizeMB = compressedStats.size / (1024 * 1024);
                     
-                    // Se ainda estiver muito grande, tentar compressão pesada
-                    if (compressedSizeMB > VIDEO_CONFIG.MAX_SIZE_MB) {
-                        console.log(`🔄 Ainda muito grande (${compressedSizeMB.toFixed(2)}MB), aplicando compressão pesada...`);
-                        const heavyCompressedPath = compressedPath.replace('.mp4', '_heavy.mp4');
-                        
-                        await comprimirVideo(videoPath, heavyCompressedPath, true);
-                        
-                        compressedStats = fs.statSync(heavyCompressedPath);
-                        compressedSizeMB = compressedStats.size / (1024 * 1024);
-                        
-                        if (compressedSizeMB <= VIDEO_CONFIG.MAX_SIZE_MB) {
-                            console.log(`✅ Vídeo comprimido para ${compressedSizeMB.toFixed(2)}MB`);
-                            
-                            await sendMessage(sender, 'send-file', {
-                                path: heavyCompressedPath,
-                                filename: 'treinamento-motorista.mp4',
-                                caption: '🎥 Exemplo prático: Treinamento para motoristas'
-                            });
-                        } else {
-                            throw new Error('Vídeo ainda muito grande após compressão pesada');
-                        }
-                    } else {
-                        console.log(`✅ Vídeo comprimido para ${compressedSizeMB.toFixed(2)}MB`);
-                        
-                        await sendMessage(sender, 'send-file', {
-                            path: compressedPath,
-                            filename: 'treinamento-motorista.mp4',
-                            caption: '🎥 Exemplo prático: Treinamento para motoristas'
-                        });
-                    }
+                    console.log(`✅ Vídeo comprimido de ${fileSizeInMB.toFixed(2)}MB para ${compressedSizeMB.toFixed(2)}MB`);
                     
-                } catch (compressionError) {
-                    console.error('❌ Erro na compressão, enviando mensagem alternativa:', compressionError);
-                    await sendMessage(sender, 'send-message', {
-                        message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
-                    });
-                }
-            } else {
-                console.log('✅ Vídeo dentro do limite, enviando diretamente');
-                try {
                     await sendMessage(sender, 'send-file', {
-                        path: videoPath,
+                        path: compressedPath,
                         filename: 'treinamento-motorista.mp4',
                         caption: '🎥 Exemplo prático: Treinamento para motoristas'
                     });
+                    
+                } catch (compressionError) {
+                    console.error('❌ Erro na compressão:', compressionError);
+                    const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
+                    await tentarEnvioAlternativo(sender, sendMessage, videoPath, 'Treinamento para motoristas');
+                }
+            } else {
+                // Vídeo pequeno ou sem FFmpeg - tentar envio direto
+                try {
+                    console.log(`📤 Enviando vídeo de ${fileSizeInMB.toFixed(2)}MB...`);
+                    
+                    await sendMessage(sender, 'send-video', {
+                        path: videoPath,
+                        caption: '🎥 Exemplo prático: Treinamento para motoristas'
+                    });
+                    
+                    console.log('✅ Vídeo enviado com sucesso');
+                    
                 } catch (sendError) {
-                    console.error('❌ Erro ao enviar vídeo diretamente, tentando base64:', sendError);
-                    
-                    const sucessoBase64 = await enviarVideoBase64(
-                        sender, 
-                        sendMessage, 
-                        videoPath, 
-                        '🎥 Exemplo prático: Treinamento para motoristas',
-                        'treinamento-motorista.mp4'
-                    );
-                    
-                    if (!sucessoBase64) {
-                        await sendMessage(sender, 'send-message', {
-                            message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
-                        });
-                    }
+                    console.error('❌ Erro ao enviar vídeo:', sendError);
+                    const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
+                    await tentarEnvioAlternativo(sender, sendMessage, videoPath, 'Treinamento para motoristas');
                 }
             }
         } else {
@@ -596,60 +564,46 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
             
             console.log(`📄 Tamanho do vídeo terceiros: ${fileSizeInMB.toFixed(2)}MB`);
             
-            if (fileSizeInMB > VIDEO_CONFIG.MAX_SIZE_MB) {
-                console.log(`🔄 Vídeo de terceiros muito grande (${fileSizeInMB.toFixed(2)}MB), comprimindo...`);
+            // Para vídeos grandes (>5MB), sempre comprimir primeiro
+            if (fileSizeInMB > 5 && FFMPEG_DISPONIVEL) {
+                console.log(`🔄 Comprimindo vídeo de terceiros ${fileSizeInMB.toFixed(2)}MB...`);
                 
                 try {
-                    // Tentar compressão normal primeiro
-                    await comprimirVideo(videoPath, compressedPath, false);
+                    await comprimirVideo(videoPath, compressedPath, fileSizeInMB > 30);
                     
-                    let compressedStats = fs.statSync(compressedPath);
-                    let compressedSizeMB = compressedStats.size / (1024 * 1024);
+                    const compressedStats = fs.statSync(compressedPath);
+                    const compressedSizeMB = compressedStats.size / (1024 * 1024);
                     
-                    // Se ainda estiver muito grande, tentar compressão pesada
-                    if (compressedSizeMB > VIDEO_CONFIG.MAX_SIZE_MB) {
-                        console.log(`🔄 Ainda muito grande (${compressedSizeMB.toFixed(2)}MB), aplicando compressão pesada...`);
-                        const heavyCompressedPath = compressedPath.replace('.mp4', '_heavy.mp4');
-                        
-                        await comprimirVideo(videoPath, heavyCompressedPath, true);
-                        
-                        compressedStats = fs.statSync(heavyCompressedPath);
-                        compressedSizeMB = compressedStats.size / (1024 * 1024);
-                        
-                        if (compressedSizeMB <= VIDEO_CONFIG.MAX_SIZE_MB) {
-                            console.log(`✅ Vídeo de terceiros comprimido para ${compressedSizeMB.toFixed(2)}MB`);
-                            
-                            await sendMessage(sender, 'send-file', {
-                                path: heavyCompressedPath,
-                                filename: 'treinamento-terceiros.mp4',
-                                caption: '🎥 Exemplo prático: Treinamento de Terceiros'
-                            });
-                        } else {
-                            throw new Error('Vídeo ainda muito grande após compressão pesada');
-                        }
-                    } else {
-                        console.log(`✅ Vídeo de terceiros comprimido para ${compressedSizeMB.toFixed(2)}MB`);
-                        
-                        await sendMessage(sender, 'send-file', {
-                            path: compressedPath,
-                            filename: 'treinamento-terceiros.mp4',
-                            caption: '🎥 Exemplo prático: Treinamento de Terceiros'
-                        });
-                    }
+                    console.log(`✅ Vídeo terceiros comprimido de ${fileSizeInMB.toFixed(2)}MB para ${compressedSizeMB.toFixed(2)}MB`);
+                    
+                    await sendMessage(sender, 'send-file', {
+                        path: compressedPath,
+                        filename: 'treinamento-terceiros.mp4',
+                        caption: '🎥 Exemplo prático: Treinamento de Terceiros'
+                    });
                     
                 } catch (compressionError) {
-                    console.error('❌ Erro na compressão do vídeo de terceiros, enviando mensagem alternativa:', compressionError);
-                    await sendMessage(sender, 'send-message', {
-                        message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
-                    });
+                    console.error('❌ Erro na compressão terceiros:', compressionError);
+                    const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
+                    await tentarEnvioAlternativo(sender, sendMessage, videoPath, 'Treinamento de Terceiros');
                 }
             } else {
-                console.log('✅ Vídeo de terceiros dentro do limite, enviando diretamente');
-                await sendMessage(sender, 'send-file', {
-                    path: videoPath,
-                    filename: 'treinamento-terceiros.mp4',
-                    caption: '🎥 Exemplo prático: Treinamento de Terceiros'
-                });
+                // Vídeo pequeno ou sem FFmpeg - tentar envio direto
+                try {
+                    console.log(`📤 Enviando vídeo de terceiros ${fileSizeInMB.toFixed(2)}MB...`);
+                    
+                    await sendMessage(sender, 'send-video', {
+                        path: videoPath,
+                        caption: '🎥 Exemplo prático: Treinamento de Terceiros'
+                    });
+                    
+                    console.log('✅ Vídeo de terceiros enviado com sucesso');
+                    
+                } catch (sendError) {
+                    console.error('❌ Erro ao enviar vídeo terceiros:', sendError);
+                    const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
+                    await tentarEnvioAlternativo(sender, sendMessage, videoPath, 'Treinamento de Terceiros');
+                }
             }
         } else {
             console.log('❌ Arquivo de vídeo de terceiros não encontrado, enviando mensagem alternativa');
