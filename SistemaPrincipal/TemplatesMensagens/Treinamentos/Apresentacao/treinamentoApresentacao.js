@@ -501,11 +501,10 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
 
 // ==================== CONFIRMAÇÃO DE DADOS PARA CERTIFICADO ====================
 
-await sendMessage(sender, 'send-message', {
-    message: "Cerificados também pode ser gerado automaticamente após o treinamento!"
-});
-
 async function perguntarDadosCertificado(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: "🎓 Certificados também podem ser gerados automaticamente após o treinamento!"
+    });
     await sendMessage(sender, 'send-message', {
         message: '🎓 *Certificado de Participação*\n\nPara emitir seu certificado de participação nesta apresentação, preciso confirmar alguns dados:\n\n📝 Por favor, envie:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
     });
