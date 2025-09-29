@@ -509,14 +509,17 @@ async function perguntarDadosCertificado(sender, sendMessage) {
     // Buscar dados do contato no sistema
     const contato = await Contato.findOne({ where: { telefone: sender } });
     
-    if (contato && contato.nomeCompleto && contato.email) {
+    if (contato) {
+        const nome = contato.nomeCompleto || contato.nome || 'Não informado';
+        const email = contato.email || 'Não informado';
+        
         await sendMessage(sender, 'send-message', {
-            message: `🎓 *Certificado de Participação*\n\nEncontrei seus dados no sistema:\n\n👤 *Nome:* ${contato.nomeCompleto}\n📧 *E-mail:* ${contato.email}\n\nEstão corretos?\n\n1️⃣ Sim, estão corretos\n2️⃣ Não, preciso alterar`
+            message: `🎓 *Certificado de Participação*\n\nDados cadastrados no sistema:\n\n👤 *Nome:* ${nome}\n📧 *E-mail:* ${email}\n\nEstão corretos?\n\n1️⃣ Sim, estão corretos\n2️⃣ Não, quero corrigir`
         });
         await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ 
             etapa: 'confirmar_dados_certificado', 
-            nome: contato.nomeCompleto, 
-            email: contato.email 
+            nome: nome, 
+            email: email 
         }));
     } else {
         await sendMessage(sender, 'send-message', {
@@ -538,9 +541,9 @@ async function processarConfirmacaoDados(sender, text, sendMessage) {
     }
     
     // Se usuário quer alterar ou não tem dados salvos
-    if (dados.nome && dados.email && (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('alterar'))) {
+    if (dados.nome && dados.email && (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('corrigir'))) {
         await sendMessage(sender, 'send-message', {
-            message: '📝 Por favor, me informe os dados corretos:\n\n*Nome completo:*\n*E-mail:*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+            message: '📝 Por favor, envie os dados corretos:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
         });
         await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ etapa: 'confirmar_dados_certificado' }));
         return true;
