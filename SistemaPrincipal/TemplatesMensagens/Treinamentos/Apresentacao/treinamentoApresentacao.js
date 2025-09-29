@@ -620,23 +620,7 @@ async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
                 message: `✅ *Certificado gerado com sucesso!*\n\n📧 Enviado para: ${email}\n📱 Também enviado aqui no chat\n\n⚠️ *IMPORTANTE:* Este certificado é apenas demonstrativo e não possui validade legal para treinamentos normativos ou conformidade regulatória.`
             });
             
-            // Enviar GIF de palmas como sticker animado
-            setTimeout(async () => {
-                try {
-                    const path = require('path');
-                    const gifPath = path.join(__dirname, 'medias', 'palmas.gif');
-                    console.log(`🖼️ Tentando enviar GIF de palmas como sticker: ${gifPath}`);
-                    
-                    await sendMessage(sender, 'send-sticker-gif', {
-                        path: gifPath
-                    });
-                } catch (error) {
-                    console.error('❌ Erro ao enviar GIF de palmas:', error);
-                    await sendMessage(sender, 'send-message', {
-                        message: '👏👏👏'
-                    });
-                }
-            }, 500);
+
         } else {
             await sendMessage(sender, 'send-message', {
                 message: `❌ Erro ao gerar certificado: ${resultado.erro}`
@@ -687,11 +671,29 @@ async function processarOutrasAplicacoes(sender, text, sendMessage) {
 // ==================== FINALIZAÇÃO ====================
 
 async function finalizarApresentacao(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '🎉 *Perfeito!*\n\nNosso time comercial entrará em contato com você em breve para apresentar as soluções personalizadas para sua empresa.\n\n📞 *Contato:* (31) 3166-9006\n📧 *E-mail:* treinamentos@salubrita.com.br\n\n🚀 Obrigada por conhecer o futuro dos treinamentos normativos!'
-    });
+    // Enviar GIF de palmas como sticker animado antes da mensagem final
+    try {
+        const path = require('path');
+        const gifPath = path.join(__dirname, 'medias', 'palmas.gif');
+        console.log(`🖼️ Tentando enviar GIF de palmas como sticker: ${gifPath}`);
+        
+        await sendMessage(sender, 'send-sticker-gif', {
+            path: gifPath
+        });
+    } catch (error) {
+        console.error('❌ Erro ao enviar GIF de palmas:', error);
+        await sendMessage(sender, 'send-message', {
+            message: '👏👏👏'
+        });
+    }
     
-    await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+    setTimeout(async () => {
+        await sendMessage(sender, 'send-message', {
+            message: '🎉 *Perfeito!*\n\nNosso time comercial entrará em contato com você em breve para apresentar as soluções personalizadas para sua empresa.\n\n📞 *Contato:* (31) 3166-9006\n📧 *E-mail:* treinamentos@salubrita.com.br\n\n🚀 Obrigada por conhecer o futuro dos treinamentos normativos!'
+        });
+        
+        await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+    }, 1000);
 }
 
 
