@@ -620,16 +620,15 @@ async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
                 message: `✅ *Certificado gerado com sucesso!*\n\n📧 Enviado para: ${email}\n📱 Também enviado aqui no chat\n\n⚠️ *IMPORTANTE:* Este certificado é apenas demonstrativo e não possui validade legal para treinamentos normativos ou conformidade regulatória.`
             });
             
-            // Enviar GIF de palmas da mesma forma que o gatinho
+            // Enviar GIF de palmas como sticker animado
             setTimeout(async () => {
                 try {
                     const path = require('path');
                     const gifPath = path.join(__dirname, 'medias', 'palmas.gif');
                     console.log(`🖼️ Tentando enviar GIF de palmas como sticker: ${gifPath}`);
                     
-                    await sendMessage(sender, 'send-file', {
-                        path: gifPath,
-                        filename: 'palmas.gif'
+                    await sendMessage(sender, 'send-sticker-gif', {
+                        path: gifPath
                     });
                 } catch (error) {
                     console.error('❌ Erro ao enviar GIF de palmas:', error);
