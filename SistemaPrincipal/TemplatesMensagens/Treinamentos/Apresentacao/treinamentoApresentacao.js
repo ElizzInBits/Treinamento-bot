@@ -506,22 +506,39 @@ async function perguntarDadosCertificado(sender, sendMessage) {
         message: "🎓 Certificados também podem ser gerados automaticamente após o treinamento!"
     });
     
-    // Buscar dados do contato no sistema
-    const contato = await Contato.findOne({ where: { telefone: sender } });
-    
-    if (contato) {
-        const nome = contato.nomeCompleto || contato.nome || 'Não informado';
-        const email = contato.email || 'Não informado';
+    try {
+        // Buscar dados do contato no sistema
+        console.log(`🔍 Buscando contato para telefone: ${sender}`);
+        const contato = await Contato.findOne({ where: { telefone: sender } });
+        console.log(`📊 Contato encontrado:`, contato ? 'SIM' : 'NÃO');
         
+        if (contato) {
+            const nome = contato.nomeCompleto || contato.nome || null;
+            const email = contato.email || null;
+            
+            console.log(`📝 Dados do contato - Nome: ${nome}, Email: ${email}`);
+            
+            if (nome && email && nome !== 'Não informado' && email !== 'Não informado') {
+                await sendMessage(sender, 'send-message', {
+                    message: `🎓 *Certificado de Participação*\n\nDados cadastrados no sistema:\n\n👤 *Nome:* ${nome}\n📧 *E-mail:* ${email}\n\nEstão corretos?\n\n1️⃣ Sim, estão corretos\n2️⃣ Não, quero corrigir`
+                });
+                await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ 
+                    etapa: 'confirmar_dados_certificado', 
+                    nome: nome, 
+                    email: email 
+                }));
+                return;
+            }
+        }
+        
+        // Se não encontrou contato ou dados estão incompletos
         await sendMessage(sender, 'send-message', {
-            message: `🎓 *Certificado de Participação*\n\nDados cadastrados no sistema:\n\n👤 *Nome:* ${nome}\n📧 *E-mail:* ${email}\n\nEstão corretos?\n\n1️⃣ Sim, estão corretos\n2️⃣ Não, quero corrigir`
+            message: '🎓 *Certificado de Participação*\n\nPara emitir seu certificado, preciso de alguns dados:\n\n📝 Por favor, envie:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
         });
-        await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ 
-            etapa: 'confirmar_dados_certificado', 
-            nome: nome, 
-            email: email 
-        }));
-    } else {
+        await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ etapa: 'confirmar_dados_certificado' }));
+        
+    } catch (error) {
+        console.error('❌ Erro ao buscar contato:', error);
         await sendMessage(sender, 'send-message', {
             message: '🎓 *Certificado de Participação*\n\nPara emitir seu certificado, preciso de alguns dados:\n\n📝 Por favor, envie:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
         });
