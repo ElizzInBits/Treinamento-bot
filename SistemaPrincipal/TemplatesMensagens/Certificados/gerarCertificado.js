@@ -12,10 +12,10 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-async function gerarCertificado(nome, email) {
+async function gerarCertificado(nome, email, sendMessage = null, sender = null) {
   try {
     // Carregar modelo do certificado
-    const templatePath = path.join(__dirname, 'Modelo Certificado-Base.pdf');
+    const templatePath = path.join(__dirname, 'certificado-modelo-generico.pdf');
     if (!fs.existsSync(templatePath)) {
       throw new Error('❌ Modelo de certificado não encontrado.');
     }
@@ -27,7 +27,7 @@ async function gerarCertificado(nome, email) {
 
     // Nome em CAPS LOCK centralizado
     const nomeCompleto = nome.toUpperCase();
-    const nomeSize = 16;
+    const nomeSize = 20;
     const { width: larguraPagina } = page.getSize();
     const larguraNome = helvetica.widthOfTextAtSize(nomeCompleto, nomeSize);
     const nomeX = (larguraPagina / 2) - (larguraNome / 2);
@@ -55,6 +55,15 @@ async function gerarCertificado(nome, email) {
     // Enviar por email
     if (email) {
       await enviarCertificadoPorEmail(email, nome, caminhoArquivo);
+    }
+
+    // Enviar no chat se sendMessage foi fornecido
+    if (sendMessage && sender) {
+      await sendMessage(sender, 'send-file', {
+        path: caminhoArquivo,
+        filename: `certificado_${nome.replace(/\s+/g, '_')}.pdf`,
+        caption: '🎓 Seu Certificado de Participação'
+      });
     }
 
     return {

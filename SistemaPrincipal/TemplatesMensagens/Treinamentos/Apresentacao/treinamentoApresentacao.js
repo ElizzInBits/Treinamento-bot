@@ -505,21 +505,54 @@ async function perguntarDadosCertificado(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
         message: "🎓 Certificados também podem ser gerados automaticamente após o treinamento!"
     });
-    await sendMessage(sender, 'send-message', {
-        message: '🎓 *Certificado de Participação*\n\nPara emitir seu certificado de participação nesta apresentação, preciso confirmar alguns dados:\n\n📝 Por favor, envie:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
-    });
     
-    await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ etapa: 'confirmar_dados_certificado' }));
+    // Buscar dados do contato no sistema
+    const contato = await Contato.findOne({ where: { telefone: sender } });
+    
+    if (contato && contato.nomeCompleto && contato.email) {
+        await sendMessage(sender, 'send-message', {
+            message: `🎓 *Certificado de Participação*\n\nEncontrei seus dados no sistema:\n\n👤 *Nome:* ${contato.nomeCompleto}\n📧 *E-mail:* ${contato.email}\n\nEstão corretos?\n\n1️⃣ Sim, estão corretos\n2️⃣ Não, preciso alterar`
+        });
+        await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ 
+            etapa: 'confirmar_dados_certificado', 
+            nome: contato.nomeCompleto, 
+            email: contato.email 
+        }));
+    } else {
+        await sendMessage(sender, 'send-message', {
+            message: '🎓 *Certificado de Participação*\n\nPara emitir seu certificado, preciso de alguns dados:\n\n📝 Por favor, envie:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+        });
+        await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ etapa: 'confirmar_dados_certificado' }));
+    }
 }
 
 async function processarConfirmacaoDados(sender, text, sendMessage) {
+    const ultimaInteracao = await obterUltimaInteracao(sender);
+    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const opcao = text.trim();
+    
+    // Se tem dados salvos (do sistema) e usuário confirmou
+    if (dados.nome && dados.email && (opcao === '1' || opcao.toLowerCase().includes('sim') || opcao.toLowerCase().includes('correto'))) {
+        await gerarEEnviarCertificado(dados.nome, dados.email, sender, sendMessage);
+        return true;
+    }
+    
+    // Se usuário quer alterar ou não tem dados salvos
+    if (dados.nome && dados.email && (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('alterar'))) {
+        await sendMessage(sender, 'send-message', {
+            message: '📝 Por favor, me informe os dados corretos:\n\n*Nome completo:*\n*E-mail:*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+        });
+        await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ etapa: 'confirmar_dados_certificado' }));
+        return true;
+    }
+    
+    // Processar dados informados manualmente
     const linhas = text.trim().split('\n').filter(linha => linha.trim());
     
     if (linhas.length >= 2) {
         const nome = linhas[0].trim();
         const email = linhas[1].trim();
         
-        // Validar email básico
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             await sendMessage(sender, 'send-message', {
@@ -528,33 +561,7 @@ async function processarConfirmacaoDados(sender, text, sendMessage) {
             return true;
         }
         
-        await sendMessage(sender, 'send-message', {
-            message: '⏳ Gerando seu certificado...'
-        });
-        
-        try {
-            const resultado = await gerarCertificado(nome, email);
-            
-            if (resultado.sucesso) {
-                await sendMessage(sender, 'send-message', {
-                    message: `✅ *Certificado gerado com sucesso!*\n\n📧 Enviado para: ${email}\n\n⚠️ *IMPORTANTE:* Este certificado é apenas demonstrativo e não possui validade legal para treinamentos normativos ou conformidade regulatória.`
-                });
-            } else {
-                await sendMessage(sender, 'send-message', {
-                    message: `❌ Erro ao gerar certificado: ${resultado.erro}`
-                });
-            }
-        } catch (error) {
-            console.error('❌ Erro ao gerar certificado:', error);
-            await sendMessage(sender, 'send-message', {
-                message: '❌ Erro interno ao gerar certificado. Tente novamente mais tarde.'
-            });
-        }
-        
-        setTimeout(async () => {
-            await mostrarOutrasAplicacoes(sender, sendMessage);
-        }, 1000);
-        
+        await gerarEEnviarCertificado(nome, email, sender, sendMessage);
     } else {
         await sendMessage(sender, 'send-message', {
             message: '❌ Dados incompletos. Por favor, envie:\n\n*Nome completo:*\n*E-mail:*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
@@ -562,6 +569,35 @@ async function processarConfirmacaoDados(sender, text, sendMessage) {
     }
     
     return true;
+}
+
+async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '⏳ Gerando seu certificado...'
+    });
+    
+    try {
+        const resultado = await gerarCertificado(nome, email, sendMessage, sender);
+        
+        if (resultado.sucesso) {
+            await sendMessage(sender, 'send-message', {
+                message: `✅ *Certificado gerado com sucesso!*\n\n📧 Enviado para: ${email}\n📱 Também enviado aqui no chat\n\n⚠️ *IMPORTANTE:* Este certificado é apenas demonstrativo e não possui validade legal para treinamentos normativos ou conformidade regulatória.`
+            });
+        } else {
+            await sendMessage(sender, 'send-message', {
+                message: `❌ Erro ao gerar certificado: ${resultado.erro}`
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao gerar certificado:', error);
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Erro interno ao gerar certificado. Tente novamente mais tarde.'
+        });
+    }
+    
+    setTimeout(async () => {
+        await mostrarOutrasAplicacoes(sender, sendMessage);
+    }, 1000);
 }
 
 // ==================== OUTRAS APLICAÇÕES ====================
