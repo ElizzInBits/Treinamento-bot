@@ -186,18 +186,12 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
             const path = require('path');
             const fs = require('fs');
             
-            // 1. Enviar vídeo primeiro
-            const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'Video01.mp4');
-            console.log(`🎥 Tentando enviar vídeo: ${videoPath}`);
-            
-            if (fs.existsSync(videoPath)) {
-                console.log('✅ Arquivo de vídeo encontrado');
-                await sendMessage(sender, 'send-video', {
-                    path: videoPath,
-                    caption: '📹 *Vídeos curtos*'
-                });
-                console.log('✅ Vídeo enviado com sucesso');
-            }
+            // 1. Enviar vídeo do Google Drive
+            console.log('🎥 Enviando vídeo do Google Drive');
+            await sendMessage(sender, 'send-message', {
+                message: '📹 *Vídeos curtos*\n\nhttps://drive.google.com/file/d/1lYgcpJPLYxiAQL3bYbV5UqzE4bNsw-DG/view?usp=drive_link'
+            });
+            console.log('✅ Link do vídeo enviado com sucesso');
             
             // 2. Enviar imagem após o vídeo
             setTimeout(async () => {
@@ -423,86 +417,16 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
     return true;
 }
 
-// ==================== COMPRESSÃO DE VÍDEO ====================
-
-const { enviarVideoBase64, enviarVideoEmPartes } = require('./videoFallback');
-const { comprimirVideoSimples } = require('./videoCompressor');
-
-// ==================== COMPRESSÃO SIMPLES SEM FFMPEG ====================
-
-async function tentarCompressaoSimples(sender, sendMessage, videoPath, compressedPath, tipoTreinamento) {
-    try {
-        const fs = require('fs');
-        console.log('🔧 Tentando compressão simples sem FFmpeg...');
-        
-        // Tentar compressão simples
-        await comprimirVideoSimples(videoPath, compressedPath, 0.3); // 30% do tamanho original
-        
-        const compressedStats = fs.statSync(compressedPath);
-        const compressedSizeMB = compressedStats.size / (1024 * 1024);
-        
-        console.log(`✅ Compressão simples concluída: ${compressedSizeMB.toFixed(2)}MB`);
-        
-        if (compressedSizeMB <= 15) {
-            await sendMessage(sender, 'send-file', {
-                path: compressedPath,
-                filename: `${tipoTreinamento.toLowerCase().replace(/\s+/g, '-')}.mp4`,
-                caption: `🎥 Exemplo prático: ${tipoTreinamento}`
-            });
-            
-            console.log('✅ Vídeo comprimido enviado com sucesso');
-        } else {
-            throw new Error('Vídeo ainda muito grande após compressão simples');
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro na compressão simples:', error);
-        
-        // Fallback para envio alternativo
-        const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
-        await tentarEnvioAlternativo(sender, sendMessage, videoPath, tipoTreinamento);
-    }
-}
+// ==================== ENVIO DE VÍDEOS ====================
 
 async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
     try {
-        const path = require('path');
-        const fs = require('fs');
-        
-        const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'treinamento-motorista.mp4');
-        const compressedPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'compressed_treinamento-motorista.mp4');
-        
-        console.log(`🎥 Tentando enviar vídeo: ${videoPath}`);
-        
-        if (fs.existsSync(videoPath)) {
-            const stats = fs.statSync(videoPath);
-            const fileSizeInMB = stats.size / (1024 * 1024);
-            
-            console.log(`📄 Tamanho do vídeo: ${fileSizeInMB.toFixed(2)}MB`);
-            
-            // Para vídeos grandes, comprimir
-            if (fileSizeInMB > 15) {
-                console.log(`🔄 Comprimindo vídeo de ${fileSizeInMB.toFixed(2)}MB...`);
-                await tentarCompressaoSimples(sender, sendMessage, videoPath, compressedPath, 'Treinamento para motoristas');
-            } else {
-                // Vídeo pequeno - enviar diretamente
-                try {
-                    await sendMessage(sender, 'send-file', {
-                        path: videoPath,
-                        filename: 'treinamento-motorista.mp4',
-                        caption: '🎥 Exemplo prático: Treinamento para motoristas'
-                    });
-                } catch (sendError) {
-                    const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
-                    await tentarEnvioAlternativo(sender, sendMessage, videoPath, 'Treinamento para motoristas');
-                }
-            }
-        } else {
-            console.log('❌ Arquivo de vídeo não encontrado, enviando mensagem alternativa');
-            await sendMessage(sender, 'send-message', {
-                message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
-            });
-        }
+        // Enviar vídeo do Google Drive
+        console.log('🎥 Enviando vídeo de treinamento de motoristas do Google Drive');
+        await sendMessage(sender, 'send-message', {
+            message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\nhttps://drive.google.com/file/d/113QZRttml6qFRznC9E3nGXZrBPSRzuZS/view?usp=drive_link\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido'
+        });
+
         
         // Enviar segundo vídeo após o primeiro
         setTimeout(async () => {
@@ -520,43 +444,12 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
 
 async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
     try {
-        const path = require('path');
-        const fs = require('fs');
-        
-        const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'Treinamento de Terceiros via WhatsApp.mp4');
-        const compressedPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'compressed_terceiros.mp4');
-        
-        console.log(`🎥 Tentando enviar vídeo de terceiros: ${videoPath}`);
-        
-        if (fs.existsSync(videoPath)) {
-            const stats = fs.statSync(videoPath);
-            const fileSizeInMB = stats.size / (1024 * 1024);
-            
-            console.log(`📄 Tamanho do vídeo terceiros: ${fileSizeInMB.toFixed(2)}MB`);
-            
-            // Para vídeos grandes, comprimir
-            if (fileSizeInMB > 15) {
-                console.log(`🔄 Comprimindo vídeo terceiros de ${fileSizeInMB.toFixed(2)}MB...`);
-                await tentarCompressaoSimples(sender, sendMessage, videoPath, compressedPath, 'Treinamento de Terceiros');
-            } else {
-                // Vídeo pequeno - enviar diretamente
-                try {
-                    await sendMessage(sender, 'send-file', {
-                        path: videoPath,
-                        filename: 'treinamento-terceiros.mp4',
-                        caption: '🎥 Exemplo prático: Treinamento de Terceiros'
-                    });
-                } catch (sendError) {
-                    const { tentarEnvioAlternativo } = require('./tentarEnvioAlternativo');
-                    await tentarEnvioAlternativo(sender, sendMessage, videoPath, 'Treinamento de Terceiros');
-                }
-            }
-        } else {
-            console.log('❌ Arquivo de vídeo de terceiros não encontrado, enviando mensagem alternativa');
-            await sendMessage(sender, 'send-message', {
-                message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
-            });
-        }
+        // Enviar vídeo do Google Drive
+        console.log('🎥 Enviando vídeo de terceiros do Google Drive');
+        await sendMessage(sender, 'send-message', {
+            message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\nhttps://drive.google.com/file/d/19jV1jeSIS-Or-T0u7YMzfDr0C2pGk2AJ/view?usp=drive_link\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais'
+        });
+
         
         setTimeout(async () => {
             await mostrarOutrasAplicacoes(sender, sendMessage);
