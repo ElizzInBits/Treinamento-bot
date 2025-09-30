@@ -132,7 +132,7 @@ async function processarAposCadastro(sender, text, contato, sendMessage) {
         return true;
     } else {
         await sendMessage(sender, 'send-message', {
-            message: '🤔 Parece que você ainda não finalizou o cadastro. Após se cadastrar, volte aqui e me envie qualquer mensagem!\n\nhttps://abrir.link/kAgON'
+            message: '🤔 Parece que você ainda não finalizou o cadastro. Após se cadastrar, volte aqui e me envie qualquer mensagem!\n\nhttps://abrir.link/ZEeCt'
         });
         return true;
     }
