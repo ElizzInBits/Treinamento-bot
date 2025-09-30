@@ -34,16 +34,6 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
     console.log(`🎯 Etapa atual: ${etapa}`);
     console.log(`📝 Text: "${text}", SelectedId: "${selectedId}"`);
     
-    // Verificar se a mensagem é muito recente (menos de 2 segundos da última interação)
-    const agora = new Date();
-    const ultimaInteracaoTime = new Date(ultimaInteracao.createdAt);
-    const diferencaSegundos = (agora - ultimaInteracaoTime) / 1000;
-    
-    if (diferencaSegundos < 2 && text.trim() === dados.ultimaMensagem) {
-        console.log('🔄 Mensagem duplicada detectada - ignorando');
-        return true;
-    }
-    
     switch (etapa) {
         case 'opcao_inicial':
             return await processarOpcaoInicial(sender, text, contato, sendMessage);
@@ -173,7 +163,7 @@ async function mostrarComoFunciona(sender, nome, sendMessage) {
         await sendMessage(sender, 'send-message', {
             message: 'Quer ver os recursos que posso usar?\n1️⃣ Sim, mostra aí.\n2️⃣ Pula essa parte.'
         });
-        await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ etapa: 'mostrar_recursos' }), text);
+        await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ etapa: 'mostrar_recursos' }));
     }, 800);
 }
 
@@ -263,12 +253,12 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                                             ]
                                         }]
                                     });
-                                    await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }), '');
+                                    await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
                                 } catch (error) {
                                     await sendMessage(sender, 'send-message', {
                                         message: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?\n\n1️⃣ SIM\n2️⃣ COM CERTEZA'
                                     });
-                                    await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }), '');
+                                    await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
                                 }
                             }, 500);
                         }, 1000);
@@ -714,15 +704,12 @@ async function processarContatoComercial(sender, text, sendMessage) {
 
 // ==================== FUNÇÕES AUXILIARES ====================
 
-async function salvarInteracao(telefone, tipo, mensagem, ultimaMensagem = '') {
+async function salvarInteracao(telefone, tipo, mensagem) {
     try {
-        const dados = JSON.parse(mensagem);
-        dados.ultimaMensagem = ultimaMensagem;
-        
         await Interacao.create({
             telefone: telefone,
             tipo: tipo,
-            mensagem: JSON.stringify(dados)
+            mensagem: mensagem
         });
         console.log(`✅ Interação salva: ${tipo} para ${telefone}`);
     } catch (error) {

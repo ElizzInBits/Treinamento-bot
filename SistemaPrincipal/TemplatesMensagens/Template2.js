@@ -4,6 +4,39 @@ const ContatoModel = require('../BancoDeDados/models/contato');
 const treinamentoSSMA = require('./Treinamentos/LCM/treinamentoSSMA');
 const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamentoApresentacao');
 
+// Cache para controle de mensagens duplicadas
+const mensagensProcessando = new Map();
+
+// Função para verificar e controlar mensagens duplicadas
+function verificarMensagemDuplicada(sender, text) {
+    const agora = Date.now();
+    
+    // Verificar se há mensagem similar sendo processada nos últimos 3 segundos
+    const chavesExistentes = Array.from(mensagensProcessando.keys());
+    for (const chave of chavesExistentes) {
+        const [senderChave, textoChave, timestampChave] = chave.split('_');
+        if (senderChave === sender && textoChave === text && (agora - parseInt(timestampChave)) < 3000) {
+            console.log('🔄 Mensagem duplicada detectada - ignorando');
+            return true; // É duplicada
+        }
+        // Limpar mensagens antigas (mais de 10 segundos)
+        if ((agora - parseInt(timestampChave)) > 10000) {
+            mensagensProcessando.delete(chave);
+        }
+    }
+    
+    // Marcar mensagem como sendo processada
+    const chaveMsg = `${sender}_${text}_${agora}`;
+    mensagensProcessando.set(chaveMsg, true);
+    
+    // Remover da lista após 5 segundos
+    setTimeout(() => {
+        mensagensProcessando.delete(chaveMsg);
+    }, 5000);
+    
+    return false; // Não é duplicada
+}
+
 // Inicializar modelo
 let Contato = null;
 
@@ -29,6 +62,11 @@ async function processarMensagem(message, client) {
   const mensagem = message.body.trim();
   
   console.log(`💬 [Template2] Processando: "${mensagem}" de ${telefone}`);
+  
+  // Verificar se é mensagem duplicada
+  if (verificarMensagemDuplicada(telefone, mensagem)) {
+    return; // Ignorar mensagem duplicada
+  }
   
   try {
     // Verificar se o modelo está carregado
@@ -320,4 +358,4 @@ async function sendMessage(phone, endpoint, body = {}) {
     }
 }
 
-module.exports = { sendMessage, setWppClient, processarMensagem };
+module.exports = { sendMessage, setWppClient, processarMensagem, verificarMensagemDuplicada };
