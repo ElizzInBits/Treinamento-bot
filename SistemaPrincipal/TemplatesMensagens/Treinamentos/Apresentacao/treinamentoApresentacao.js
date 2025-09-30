@@ -157,12 +157,21 @@ async function mostrarComoFunciona(sender, nome, sendMessage) {
 }
 
 async function processarMostrarRecursos(sender, text, sendMessage) {
-    const opcao = text.trim();
+    const opcao = text.trim().toLowerCase();
     
-    if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
+    console.log(`🎯 Processando mostrar recursos: "${text}" -> "${opcao}"`);
+    
+    if (opcao === '1' || opcao.includes('sim, mostra')) {
+        console.log('✅ Mostrando recursos detalhados');
         await mostrarRecursosDetalhados(sender, sendMessage);
-    } else {
+    } else if (opcao === '2' || opcao.includes('pula')) {
+        console.log('✅ Pulando recursos - indo para exemplos');
         await mostrarExemplosTrainamentos(sender, sendMessage);
+    } else {
+        console.log('❌ Opção inválida - reenviando');
+        await sendMessage(sender, 'send-message', {
+            message: 'Por favor, escolha uma das opções:\n\n1️⃣ Sim, mostra aí.\n2️⃣ Pula essa parte.'
+        });
     }
     
     return true;
@@ -290,12 +299,21 @@ async function perguntarQuandoOnde(sender, sendMessage) {
 }
 
 async function processarPerguntaQuandoOnde(sender, text, sendMessage) {
-    const opcao = text.trim();
+    const opcao = text.trim().toLowerCase();
     
-    if (opcao === '1' || opcao.toLowerCase().includes('quero')) {
+    console.log(`⏰ Processando quando/onde: "${text}" -> "${opcao}"`);
+    
+    if (opcao === '1' || opcao.includes('quero sim')) {
+        console.log('✅ Mostrando quando/onde usar');
         await mostrarQuandoOnde(sender, sendMessage);
-    } else {
+    } else if (opcao === '2' || opcao.includes('direto') || opcao.includes('exemplos')) {
+        console.log('✅ Indo direto para exemplos');
         await mostrarExemplosTrainamentos(sender, sendMessage);
+    } else {
+        console.log('❌ Opção inválida - reenviando');
+        await sendMessage(sender, 'send-message', {
+            message: 'Por favor, escolha uma das opções:\n\n1️⃣ Quero sim.\n2️⃣ Vamos direto para exemplos de treinamentos.'
+        });
     }
     
     return true;
@@ -393,12 +411,21 @@ async function mostrarExemplosTrainamentos(sender, sendMessage) {
 }
 
 async function processarExemplosTrainamentos(sender, text, sendMessage) {
-    const opcao = text.trim();
+    const opcao = text.trim().toLowerCase();
     
-    if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
+    console.log(`📚 Processando exemplos treinamentos: "${text}" -> "${opcao}"`);
+    
+    if (opcao === '1' || opcao.includes('sim, me mostra') || opcao.includes('mostra')) {
+        console.log('✅ Opção 1 selecionada - enviando vídeos');
         await enviarVideoTreinamentoMotorista(sender, sendMessage);
-    } else {
+    } else if (opcao === '2' || opcao.includes('convencido') || opcao.includes('já estou')) {
+        console.log('✅ Opção 2 selecionada - finalizando');
         await finalizarApresentacao(sender, sendMessage);
+    } else {
+        console.log('❌ Opção inválida - reenviando opções');
+        await sendMessage(sender, 'send-message', {
+            message: 'Por favor, escolha uma das opções:\n\n1️⃣ Sim, me mostra.\n2️⃣ Já estou convencido(a)!'
+        });
     }
     
     return true;
@@ -632,15 +659,24 @@ async function mostrarOutrasAplicacoes(sender, sendMessage) {
 }
 
 async function processarOutrasAplicacoes(sender, text, sendMessage) {
-    const opcao = text.trim();
+    const opcao = text.trim().toLowerCase();
     
-    if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
+    console.log(`📊 Processando outras aplicações: "${text}" -> "${opcao}"`);
+    
+    if (opcao === '1' || opcao.includes('sim, quero') || opcao.includes('mais informações')) {
+        console.log('✅ Finalizando apresentação - contato comercial');
         await finalizarApresentacao(sender, sendMessage);
-    } else {
+    } else if (opcao === '2' || opcao.includes('não, obrigado') || opcao.includes('obrigado')) {
+        console.log('✅ Usuário não quer contato comercial');
         await sendMessage(sender, 'send-message', {
             message: '😊 Obrigada pelo seu tempo! Se mudar de ideia, é só me mandar um "oi" que recomeçamos!'
         });
         await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+    } else {
+        console.log('❌ Opção inválida - reenviando');
+        await sendMessage(sender, 'send-message', {
+            message: 'Por favor, escolha uma das opções:\n\n1️⃣ Sim, quero mais informações!\n2️⃣ Não, obrigado.'
+        });
     }
     
     return true;
