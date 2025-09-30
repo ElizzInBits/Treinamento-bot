@@ -1,109 +1,69 @@
-const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
-const fs = require('fs');
+const { gerarCertificadoBanco } = require('./certificados2');
+const { Contato } = require('../../BancoDeDados/models');
 const path = require('path');
-const nodemailer = require('nodemailer');
+const fs = require('fs');
 
-// Configuração do email
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'inovacao.tecnologiasalub@gmail.com',
-    pass: 'qefl onhz wrgo mobt'
-  }
-});
-
-async function gerarCertificado(nome, email, sendMessage = null, sender = null) {
-  try {
-    // Carregar modelo do certificado
-    const templatePath = path.join(__dirname, 'certificado-modelo-generico.pdf');
-    if (!fs.existsSync(templatePath)) {
-      throw new Error('❌ Modelo de certificado não encontrado.');
+async function gerarCertificado(nome, email, sendMessage, sender) {
+    try {
+        console.log(`🎓 Gerando certificado para: ${nome} (${email})`);
+        
+        // Buscar contato pelo telefone
+        const formatosTelefone = [
+            sender,
+            sender.substring(2),
+            `${sender.substring(0, 4)}9${sender.substring(4)}`,
+            sender.length === 13 ? sender.substring(0, 4) + sender.substring(5) : sender,
+        ];
+        
+        let contato = null;
+        for (const formato of formatosTelefone) {
+            contato = await Contato.findOne({ where: { telefone: formato } });
+            if (contato) {
+                console.log(`✅ Contato encontrado para certificado: ${contato.nome}`);
+                break;
+            }
+        }
+        
+        if (!contato) {
+            throw new Error('Contato não encontrado no banco de dados');
+        }
+        
+        // Atualizar dados do contato se necessário
+        if (contato.email !== email || contato.nomeCompleto !== nome) {
+            await contato.update({
+                email: email,
+                nomeCompleto: nome
+            });
+            console.log('✅ Dados do contato atualizados');
+        }
+        
+        // Gerar certificado usando certificados2.js (já envia por email automaticamente)
+        const caminhoArquivo = await gerarCertificadoBanco(contato.id);
+        
+        // Enviar arquivo via WhatsApp
+        if (fs.existsSync(caminhoArquivo)) {
+            await sendMessage(sender, 'send-file', {
+                path: caminhoArquivo,
+                filename: path.basename(caminhoArquivo),
+                caption: '🎓 Seu certificado de participação!'
+            });
+            console.log('✅ Certificado enviado via WhatsApp');
+        }
+        
+        return {
+            sucesso: true,
+            arquivo: caminhoArquivo
+        };
+        
+    } catch (error) {
+        console.error('❌ Erro ao gerar certificado:', error);
+        return {
+            sucesso: false,
+            erro: error.message
+        };
     }
-
-    const templateBytes = fs.readFileSync(templatePath);
-    const pdfDoc = await PDFDocument.load(templateBytes);
-    
-    // Definir título do documento
-    pdfDoc.setTitle('Certificado de Participação');
-    pdfDoc.setSubject('Certificado de Participação em Treinamento');
-    pdfDoc.setAuthor('Salubrita Treinamentos');
-    
-    const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const page = pdfDoc.getPages()[0];
-
-    // Nome em CAPS LOCK centralizado
-    const nomeCompleto = nome.toUpperCase();
-    const nomeSize = 20;
-    const { width: larguraPagina } = page.getSize();
-    const larguraNome = helvetica.widthOfTextAtSize(nomeCompleto, nomeSize);
-    const nomeX = (larguraPagina / 2) - (larguraNome / 2);
-    
-    page.drawText(nomeCompleto, { 
-      x: nomeX, 
-      y: 300, 
-      size: nomeSize, 
-      font: helvetica, 
-      color: rgb(0, 0, 0) 
-    });
-
-    // Salvar PDF
-    const certificadosDir = path.join(__dirname, 'Certificados');
-    if (!fs.existsSync(certificadosDir)) {
-      fs.mkdirSync(certificadosDir, { recursive: true });
-    }
-
-    const nomeArquivo = `certificado_${nome.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-    const caminhoArquivo = path.join(certificadosDir, nomeArquivo);
-    
-    const pdfBytes = await pdfDoc.save();
-    fs.writeFileSync(caminhoArquivo, pdfBytes);
-
-    // Enviar por email
-    if (email) {
-      await enviarCertificadoPorEmail(email, nome, caminhoArquivo);
-    }
-
-    // Enviar no chat se sendMessage foi fornecido
-    if (sendMessage && sender) {
-      await sendMessage(sender, 'send-file', {
-        path: caminhoArquivo,
-        filename: `certificado_${nome.replace(/\s+/g, '_')}.pdf`,
-        caption: '🎓 Seu Certificado de Participação'
-      });
-    }
-
-    return {
-      sucesso: true,
-      arquivo: caminhoArquivo,
-      mensagem: `✅ Certificado gerado para ${nome}`
-    };
-
-  } catch (error) {
-    return {
-      sucesso: false,
-      erro: error.message
-    };
-  }
 }
 
-async function enviarCertificadoPorEmail(email, nome, caminhoArquivo) {
-  const mailOptions = {
-    from: 'inovacao.tecnologiasalub@gmail.com',
-    to: email,
-    subject: 'Seu Certificado de Participação',
-    html: `
-      <h2>Certificado de Participação</h2>
-      <p>Olá ${nome},</p>
-      <p>Segue em anexo seu certificado de participação no treinamento.</p>
-      <p>Atenciosamente,<br>Equipe Salubrita</p>
-    `,
-    attachments: [{
-      filename: `certificado_${nome.replace(/\s+/g, '_')}.pdf`,
-      path: caminhoArquivo
-    }]
-  };
-
-  await transporter.sendMail(mailOptions);
-}
-
-module.exports = { gerarCertificado };
+module.exports = {
+    gerarCertificado
+};
