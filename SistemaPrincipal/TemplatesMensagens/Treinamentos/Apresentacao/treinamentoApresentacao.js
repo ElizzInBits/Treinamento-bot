@@ -6,15 +6,11 @@ const { gerarCertificado } = require('../../Certificados/gerarCertificado');
 async function processarRespostaApresentacao(sender, text, selectedId, contato, sendMessage) {
     console.log(`🎯 Processando resposta: "${text}" de ${sender}`);
     
-    // Verificar se é uma saudação para reiniciar o fluxo
-    const saudacoes = ['olá', 'oi', 'ola', 'hello', 'hi', 'bom dia', 'boa tarde', 'boa noite'];
-    const ehSaudacao = saudacoes.some(s => text.toLowerCase().includes(s));
-    
     const ultimaInteracao = await obterUltimaInteracao(sender);
     
-    // Se é saudação OU conversa foi finalizada, reiniciar
-    if (ehSaudacao || !ultimaInteracao || (ultimaInteracao && JSON.parse(ultimaInteracao.mensagem || '{}').etapa === 'finalizado')) {
-        console.log('🎆 REINICIANDO FLUXO - Saudação detectada ou conversa finalizada');
+    // Se conversa foi finalizada OU não há interação anterior, reiniciar
+    if (!ultimaInteracao || (ultimaInteracao && JSON.parse(ultimaInteracao.mensagem || '{}').etapa === 'finalizado')) {
+        console.log('🎆 REINICIANDO FLUXO - Conversa finalizada ou primeira interação');
         return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
     
@@ -77,12 +73,9 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
     const opcao = text.trim();
     console.log(`🔢 Opção: "${opcao}", Contato: ${contato ? contato.nome : 'NÃO CADASTRADO'}`);
     
-    // Se é uma saudação e o usuário está cadastrado, prosseguir automaticamente
-    const saudacoes = ['olá', 'oi', 'ola', 'hello', 'hi', 'bom dia', 'boa tarde', 'boa noite'];
-    const ehSaudacao = saudacoes.some(s => opcao.toLowerCase().includes(s));
-    
-    if (ehSaudacao && contato) {
-        console.log(`🎉 SAUDAÇÃO DE USUÁRIO CADASTRADO: ${contato.nome} - Prosseguindo automaticamente`);
+    // Se usuário está cadastrado, prosseguir automaticamente
+    if (contato) {
+        console.log(`🎉 USUÁRIO CADASTRADO: ${contato.nome} - Prosseguindo automaticamente`);
         await mostrarComoFunciona(sender, contato.nome, sendMessage);
         return true;
     }
@@ -122,13 +115,6 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
                 });
             }
         }, 500);
-        return true;
-    }
-    
-    if (ehSaudacao && !contato) {
-        await sendMessage(sender, 'send-message', {
-            message: 'Por favor, escolha uma das opções:\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
-        });
         return true;
     }
     
