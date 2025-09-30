@@ -56,6 +56,9 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
             return await processarConfirmacaoDados(sender, text, sendMessage);
         case 'contato_comercial':
             return await processarContatoComercial(sender, text, sendMessage);
+        case 'finalizando':
+            console.log('🔄 Ignorando mensagem - finalização já em andamento');
+            return true;
         default:
             return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
@@ -691,6 +694,9 @@ async function processarOutrasAplicacoes(sender, text, sendMessage) {
 // ==================== FINALIZAÇÃO ====================
 
 async function finalizarApresentacao(sender, sendMessage) {
+    // Marcar como finalizado ANTES de enviar mensagens para evitar duplicação
+    await salvarInteracao(sender, 'finalizando', JSON.stringify({ etapa: 'finalizando' }));
+    
     // Enviar GIF de palmas como sticker animado antes da mensagem final
     try {
         const path = require('path');
