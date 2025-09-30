@@ -11,16 +11,16 @@ const mensagensProcessando = new Map();
 function verificarMensagemDuplicada(sender, text) {
     const agora = Date.now();
     
-    // Verificar se há mensagem similar sendo processada nos últimos 10 segundos
+    // Verificar se há mensagem similar sendo processada nos últimos 30 segundos
     const chavesExistentes = Array.from(mensagensProcessando.keys());
     for (const chave of chavesExistentes) {
         const [senderChave, textoChave, timestampChave] = chave.split('_');
-        if (senderChave === sender && textoChave === text && (agora - parseInt(timestampChave)) < 10000) {
-            console.log('🔄 Mensagem duplicada detectada - ignorando');
+        if (senderChave === sender && textoChave === text && (agora - parseInt(timestampChave)) < 30000) {
+            console.log(`🔄 Mensagem duplicada detectada de ${sender}: "${text}" - ignorando`);
             return true; // É duplicada
         }
-        // Limpar mensagens antigas (mais de 20 segundos)
-        if ((agora - parseInt(timestampChave)) > 20000) {
+        // Limpar mensagens antigas (mais de 60 segundos)
+        if ((agora - parseInt(timestampChave)) > 60000) {
             mensagensProcessando.delete(chave);
         }
     }
@@ -28,11 +28,12 @@ function verificarMensagemDuplicada(sender, text) {
     // Marcar mensagem como sendo processada
     const chaveMsg = `${sender}_${text}_${agora}`;
     mensagensProcessando.set(chaveMsg, true);
+    console.log(`✅ Processando mensagem de ${sender}: "${text}"`);
     
-    // Remover da lista após 15 segundos
+    // Remover da lista após 45 segundos
     setTimeout(() => {
         mensagensProcessando.delete(chaveMsg);
-    }, 15000);
+    }, 45000);
     
     return false; // Não é duplicada
 }
