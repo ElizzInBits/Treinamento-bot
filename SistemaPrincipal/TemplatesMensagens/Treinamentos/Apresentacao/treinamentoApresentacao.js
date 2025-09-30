@@ -120,12 +120,14 @@ async function processarOpcaoInicial(sender, text, sendMessage, buscarContato = 
             }
         }, 500);
         return true;
+    } else {
+        // Resposta inválida
+        console.log(`❌ Resposta inválida na opção inicial: "${opcao}"`);
+        await sendMessage(sender, 'send-message', {
+            message: '🤔 Não entendi sua resposta. Por favor, escolha uma das opções:\n\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
+        });
+        return true;
     }
-    
-    await sendMessage(sender, 'send-message', {
-        message: 'Por favor, escolha uma das opções:\n1️⃣ Sim, quero conhecer!\n2️⃣ Não, obrigado.'
-    });
-    return true;
 }
 
 async function processarAposCadastro(sender, text, sendMessage, buscarContato = null) {
@@ -283,15 +285,26 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
 // ==================== PROCESSAMENTO DE TESTES E AVALIAÇÕES ====================
 
 async function processarTestesAvaliacoes(sender, text, selectedId, sendMessage) {
-    const opcao = text.trim();
-    console.log(`📝 Processando resposta dos testes: "${opcao}", selectedId: "${selectedId}"`);
+    const opcao = text.trim().toLowerCase();
+    console.log(`📝 Processando resposta dos testes: "${text}", selectedId: "${selectedId}"`);
     
     // Processar tanto texto quanto selectedId
-    if (selectedId === 'sim_concordo' || selectedId === 'com_certeza' || opcao === '1' || opcao === '2' || opcao.toLowerCase().includes('sim') || opcao.toLowerCase().includes('certeza')) {
+    if (selectedId === 'sim_concordo' || selectedId === 'com_certeza' || opcao === '1' || opcao === '2' || opcao.includes('sim') || opcao.includes('certeza')) {
         console.log('✅ Resposta positiva detectada - continuando fluxo');
+        await perguntarQuandoOnde(sender, sendMessage);
+        return true;
     }
     
-    // Independente da resposta, vai para a próxima pergunta
+    // Se resposta inválida
+    if (!selectedId && opcao !== '1' && opcao !== '2' && !opcao.includes('sim') && !opcao.includes('certeza')) {
+        console.log(`❌ Resposta inválida nos testes: "${text}"`);
+        await sendMessage(sender, 'send-message', {
+            message: '🤔 Não entendi sua resposta. Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?\n\n1️⃣ SIM\n2️⃣ COM CERTEZA'
+        });
+        return true;
+    }
+    
+    // Se chegou até aqui, continuar fluxo
     await perguntarQuandoOnde(sender, sendMessage);
     return true;
 }
@@ -591,6 +604,14 @@ async function processarConfirmacaoDados(sender, text, sendMessage) {
             message: '📝 Por favor, envie os dados corretos:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
         });
         await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ etapa: 'confirmar_dados_certificado' }));
+        return true;
+    }
+    
+    // Se tem dados salvos mas resposta é inválida
+    if (dados.nome && dados.email && opcao !== '1' && opcao !== '2' && !opcao.toLowerCase().includes('sim') && !opcao.toLowerCase().includes('correto') && !opcao.toLowerCase().includes('não') && !opcao.toLowerCase().includes('corrigir')) {
+        await sendMessage(sender, 'send-message', {
+            message: '🤔 Não entendi sua resposta. Os dados estão corretos?\n\n1️⃣ Sim, estão corretos\n2️⃣ Não, quero corrigir'
+        });
         return true;
     }
     
