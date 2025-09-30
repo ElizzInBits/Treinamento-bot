@@ -34,13 +34,23 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
     console.log(`🎯 Etapa atual: ${etapa}`);
     console.log(`📝 Text: "${text}", SelectedId: "${selectedId}"`);
     
+    // Verificar se a mensagem é muito recente (menos de 2 segundos da última interação)
+    const agora = new Date();
+    const ultimaInteracaoTime = new Date(ultimaInteracao.createdAt);
+    const diferencaSegundos = (agora - ultimaInteracaoTime) / 1000;
+    
+    if (diferencaSegundos < 2 && text.trim() === dados.ultimaMensagem) {
+        console.log('🔄 Mensagem duplicada detectada - ignorando');
+        return true;
+    }
+    
     switch (etapa) {
         case 'opcao_inicial':
             return await processarOpcaoInicial(sender, text, contato, sendMessage);
         case 'aguardando_cadastro':
             return await processarAposCadastro(sender, text, contato, sendMessage);
         case 'processando_cadastrado':
-            console.log('🔄 Ignorando mensagem - usuário já sendo processado');
+            console.log('🔄 Ignorando mensagem duplicada - usuário já sendo processado');
             return true;
         case 'mostrar_recursos':
             return await processarMostrarRecursos(sender, text, sendMessage);
@@ -163,7 +173,7 @@ async function mostrarComoFunciona(sender, nome, sendMessage) {
         await sendMessage(sender, 'send-message', {
             message: 'Quer ver os recursos que posso usar?\n1️⃣ Sim, mostra aí.\n2️⃣ Pula essa parte.'
         });
-        await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ etapa: 'mostrar_recursos' }));
+        await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ etapa: 'mostrar_recursos' }), text);
     }, 800);
 }
 
@@ -189,20 +199,16 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
             const path = require('path');
             const fs = require('fs');
             
-            // 1. Enviar vídeo primeiro
+            // 1. Enviar vídeo
             const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'Video01.mp4');
-            console.log(`🎥 Tentando enviar vídeo: ${videoPath}`);
-            
             if (fs.existsSync(videoPath)) {
-                console.log('✅ Arquivo de vídeo encontrado');
                 await sendMessage(sender, 'send-video', {
                     path: videoPath,
                     caption: '📹 *Vídeos curtos*'
                 });
-                console.log('✅ Vídeo enviado com sucesso');
             }
             
-            // 2. Enviar imagem após o vídeo
+            // 2. Enviar imagem
             setTimeout(async () => {
                 const imagePath = path.join(__dirname, 'material_apresentacao', 'Imagens', 'Vantagens.png');
                 if (fs.existsSync(imagePath)) {
@@ -210,80 +216,70 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                         path: imagePath,
                         caption: '🖼️ *Imagens e infográficos*'
                     });
-                    console.log('✅ Imagem enviada com sucesso');
                 }
                 
-                await sendMessage(sender, 'send-message', {     
-                    message: ''
-                });
-                await sendMessage(sender, 'send-message', {
-                    message: '• 🎤 *Áudios explicativos*\nÁudio com o texto: Já imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
-                });
-                
-                // 3. Enviar áudio diretamente
+                // 3. Texto do áudio
                 setTimeout(async () => {
-                    const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
-                    console.log(`🎵 Tentando enviar áudio: ${audioPath}`);
-                    
-                    if (fs.existsSync(audioPath)) {
-                        await sendMessage(sender, 'send-file', {
-                            path: audioPath,
-                            filename: 'audio.mp3',
-                            caption: ' Áudios explicativos'
-                        });
-                        console.log('✅ Áudio enviado com sucesso');
-                    } else {
-                        console.log('❌ Arquivo de áudio não encontrado');
-                    }
-                    
-                    // 4. Enviar testes IMEDIATAMENTE após o áudio
-                    console.log('📝 EXECUTANDO: Enviando testes e avaliações');
                     await sendMessage(sender, 'send-message', {
-                        message: '• 📝 Testes e avaliações'
+                        message: '🎤 *Áudios explicativos*\nJá imaginou fazermos um treinamento interativo, simples, com linguagem clara e cheio de Interação? É isso que você terá a oportunidade de participar com os treinamentos normativos no WhatsApp'
                     });
                     
-                    console.log('📝 EXECUTANDO: Enviando lista de testes');
-                    try {
-                        await sendMessage(sender, 'send-list-message', {
-                            title: '',
-                            description: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa? (Texto, também em áudio)',
-                            buttonText: 'Ver opções',
-                            listType: 'SINGLE_SELECT',
-                            sections: [{
-                                title: 'Suas opções',
-                                rows: [
-                                    {
-                                        id: 'sim_concordo',
-                                        title: '🟢 1 - SIM',
-                                        description: 'Concordo com os treinamentos'
-                                    },
-                                    {
-                                        id: 'com_certeza', 
-                                        title: '🔵 2 - COM CERTEZA',
-                                        description: 'Definitivamente concordo'
-                                    }
-                                ]
-                            }]
-                        });
-                        console.log('✅ SUCESSO: Lista de testes enviada');
-                        await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
-                    } catch (error) {
-                        console.error('❌ ERRO: Falha ao enviar lista:', error);
-                        await sendMessage(sender, 'send-message', {
-                            message: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?\n\n1️⃣ SIM\n2️⃣ COM CERTEZA'
-                        });
-                        await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
-                    }
-                }, 1500);
-                
-                // Aguardar interação do usuário com a lista - NÃO continuar automaticamente
-            }, 2000);
+                    // 4. Enviar áudio
+                    setTimeout(async () => {
+                        const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
+                        if (fs.existsSync(audioPath)) {
+                            await sendMessage(sender, 'send-file', {
+                                path: audioPath,
+                                filename: 'audio.mp3'
+                            });
+                        }
+                        
+                        // 5. Testes e avaliações
+                        setTimeout(async () => {
+                            await sendMessage(sender, 'send-message', {
+                                message: '📝 *Testes e avaliações*'
+                            });
+                            
+                            setTimeout(async () => {
+                                try {
+                                    await sendMessage(sender, 'send-list-message', {
+                                        title: '',
+                                        description: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?',
+                                        buttonText: 'Ver opções',
+                                        listType: 'SINGLE_SELECT',
+                                        sections: [{
+                                            title: 'Suas opções',
+                                            rows: [
+                                                {
+                                                    id: 'sim_concordo',
+                                                    title: '🟢 1 - SIM',
+                                                    description: 'Concordo com os treinamentos'
+                                                },
+                                                {
+                                                    id: 'com_certeza', 
+                                                    title: '🔵 2 - COM CERTEZA',
+                                                    description: 'Definitivamente concordo'
+                                                }
+                                            ]
+                                        }]
+                                    });
+                                    await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }), '');
+                                } catch (error) {
+                                    await sendMessage(sender, 'send-message', {
+                                        message: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?\n\n1️⃣ SIM\n2️⃣ COM CERTEZA'
+                                    });
+                                    await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }), '');
+                                }
+                            }, 500);
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            }, 1500);
             
         } catch (error) {
             console.error('❌ Erro ao enviar arquivos:', error);
-            // Em caso de erro, ainda aguardar interação do usuário
         }
-    }, 1500);
+    }, 1000);
 }
 
 // ==================== PROCESSAMENTO DE TESTES E AVALIAÇÕES ====================
@@ -689,7 +685,7 @@ async function finalizarApresentacao(sender, sendMessage) {
     
     setTimeout(async () => {
         await sendMessage(sender, 'send-message', {
-            message: '🎉 *Perfeito!*\n\nNosso time comercial entrará em contato com você em breve para apresentar as soluções personalizadas para sua empresa.\n\n📞 *Contato:* (31) 3166-9006\n📧 *E-mail:* treinamentos@salubrita.com.br\n\n🚀 Obrigada por conhecer o futuro dos treinamentos normativos!'
+            message: '🎉 *Perfeito!*\n\nVou te conectar com nosso time comercial agora mesmo!\n\n👉 Clique no link abaixo para falar diretamente com nossa equipe:\n\nhttps://wa.me/553131669006?text=Ol%C3%A1%2C%20vim%20do%20bot%20da%20Eliza%20e%20quero%20saber%20mais%20sobre%20os%20treinamentos%20normativos%20no%20WhatsApp\n\n📞 *Ou ligue:* (31) 3166-9006\n📧 *E-mail:* treinamentos@salubrita.com.br\n\n🚀 Obrigada por conhecer o futuro dos treinamentos normativos!'
         });
         
         await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
@@ -718,12 +714,15 @@ async function processarContatoComercial(sender, text, sendMessage) {
 
 // ==================== FUNÇÕES AUXILIARES ====================
 
-async function salvarInteracao(telefone, tipo, mensagem) {
+async function salvarInteracao(telefone, tipo, mensagem, ultimaMensagem = '') {
     try {
+        const dados = JSON.parse(mensagem);
+        dados.ultimaMensagem = ultimaMensagem;
+        
         await Interacao.create({
             telefone: telefone,
             tipo: tipo,
-            mensagem: mensagem
+            mensagem: JSON.stringify(dados)
         });
         console.log(`✅ Interação salva: ${tipo} para ${telefone}`);
     } catch (error) {
