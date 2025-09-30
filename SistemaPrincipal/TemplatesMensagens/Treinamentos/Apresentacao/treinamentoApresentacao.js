@@ -38,6 +38,9 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
         case 'processando_cadastrado':
             console.log('🔄 Ignorando mensagem duplicada - usuário já sendo processado');
             return true;
+        case 'processando_recursos':
+            console.log('🔄 Ignorando mensagem - recursos já sendo processados');
+            return true;
         case 'mostrar_recursos':
             return await processarMostrarRecursos(sender, text, sendMessage);
         case 'testes_avaliacoes':
@@ -166,6 +169,9 @@ async function processarMostrarRecursos(sender, text, sendMessage) {
 }
 
 async function mostrarRecursosDetalhados(sender, sendMessage) {
+    // Marcar que está processando recursos para evitar duplicação
+    await salvarInteracao(sender, 'processando_recursos', JSON.stringify({ etapa: 'processando_recursos' }));
+    
     await sendMessage(sender, 'send-message', {
         message: '🎯 Olha só o que cabe dentro de um treinamento no WhatsApp:\n\n• 📹 Vídeos curtos\n• 🎤 Áudios explicativos\n• 🖼️ Imagens e infográficos\n• 📑 Arquivos PDF e procedimentos\n• 📝 Testes e avaliações\n\n👉 Fácil, rápido e na palma da mão.'
     });
