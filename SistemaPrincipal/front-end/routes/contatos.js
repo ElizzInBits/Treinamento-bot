@@ -415,6 +415,93 @@ router.put('/:id', async (req, res) => {
 });
 
 
+// Restart em lote de múltiplos contatos
+router.post('/restart-lote', async (req, res) => {
+    try {
+        const { contatoIds } = req.body;
+        
+        if (!contatoIds || !Array.isArray(contatoIds) || contatoIds.length === 0) {
+            return res.status(400).json({ error: 'Lista de IDs de contatos é obrigatória' });
+        }
+
+        console.log(`🔄 Iniciando restart em lote para ${contatoIds.length} contatos`);
+
+        const resultados = [];
+        const { Interacao } = require('../../BancoDeDados/models');
+
+        for (const id of contatoIds) {
+            try {
+                const contato = await Contato.findByPk(id);
+                if (!contato) {
+                    resultados.push({ id, status: 'erro', mensagem: 'Contato não encontrado' });
+                    continue;
+                }
+
+                // Gerar variações do telefone
+                const variacoesTelefone = gerarVariacoes(contato.telefone);
+
+                // Resetar status
+                await contato.update({
+                    statusTreinamento: 'não iniciado',
+                    treinamentoId: null,
+                    dataUltimaInteracao: null
+                });
+
+                // Limpar interações
+                for (const telefone of variacoesTelefone) {
+                    await Interacao.destroy({ where: { telefone: telefone } });
+                }
+
+                // Limpar cache
+                try {
+                    const cacheContatos = require('../../BancoDeDados/cache-contatos');
+                    for (const telefone of variacoesTelefone) {
+                        cacheContatos.invalidarContato(telefone);
+                    }
+                } catch (cacheError) {
+                    console.log(`⚠️ Erro no cache para ${contato.nome}:`, cacheError.message);
+                }
+
+                resultados.push({ 
+                    id, 
+                    status: 'sucesso', 
+                    nome: contato.nome,
+                    telefone: contato.telefone
+                });
+
+            } catch (error) {
+                console.error(`❌ Erro ao reiniciar contato ${id}:`, error);
+                resultados.push({ id, status: 'erro', mensagem: error.message });
+            }
+        }
+
+        // Emitir evento WebSocket
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('contatosReiniciados', {
+                total: contatoIds.length,
+                sucessos: resultados.filter(r => r.status === 'sucesso').length,
+                erros: resultados.filter(r => r.status === 'erro').length,
+                timestamp: new Date()
+            });
+        }
+
+        console.log(`✅ Restart em lote concluído: ${resultados.filter(r => r.status === 'sucesso').length}/${contatoIds.length} sucessos`);
+
+        res.json({
+            message: 'Restart em lote concluído',
+            resultados: resultados,
+            total: contatoIds.length,
+            sucessos: resultados.filter(r => r.status === 'sucesso').length,
+            erros: resultados.filter(r => r.status === 'erro').length
+        });
+
+    } catch (error) {
+        console.error('❌ Erro no restart em lote:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
 // Restart de treinamento
 router.post('/:id/restart-treinamento', async (req, res) => {
     try {
@@ -423,29 +510,68 @@ router.post('/:id/restart-treinamento', async (req, res) => {
             return res.status(404).json({ error: 'Contato não encontrado' });
         }
 
+        console.log(`🔄 Iniciando restart do contato: ${contato.nome} (${contato.telefone})`);
+
+        // Gerar todas as variações do telefone para limpeza completa
+        const variacoesTelefone = gerarVariacoes(contato.telefone);
+        console.log(`📞 Variações do telefone para limpeza: ${variacoesTelefone.join(', ')}`);
+
         // Resetar status do treinamento
         await contato.update({
             statusTreinamento: 'não iniciado',
-            treinamentoId: null
+            treinamentoId: null,
+            dataUltimaInteracao: null
         });
+        console.log('✅ Status do contato resetado');
 
-        // Limpar todas as interações do usuário
+        // Limpar todas as interações do usuário (todas as variações do telefone)
         const { Interacao } = require('../../BancoDeDados/models');
-        await Interacao.destroy({
-            where: { telefone: contato.telefone }
-        });
+        for (const telefone of variacoesTelefone) {
+            const interacoesRemovidas = await Interacao.destroy({
+                where: { telefone: telefone }
+            });
+            if (interacoesRemovidas > 0) {
+                console.log(`🗑️ Removidas ${interacoesRemovidas} interações para ${telefone}`);
+            }
+        }
 
-        // Limpar cache do contato
-        const cacheContatos = require('../../BancoDeDados/cache-contatos');
-        cacheContatos.invalidarContato(contato.telefone);
+        // Limpar cache do contato (tentar com todas as variações)
+        try {
+            const cacheContatos = require('../../BancoDeDados/cache-contatos');
+            for (const telefone of variacoesTelefone) {
+                cacheContatos.invalidarContato(telefone);
+            }
+            console.log('🧹 Cache limpo para todas as variações');
+        } catch (cacheError) {
+            console.log('⚠️ Cache não disponível ou erro ao limpar:', cacheError.message);
+        }
+
+        // Emitir evento WebSocket para atualização em tempo real
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('contatoReiniciado', {
+                contato: contato,
+                timestamp: new Date()
+            });
+            io.emit('notificacao', {
+                tipo: 'contato_reiniciado',
+                titulo: 'Contato Reiniciado',
+                mensagem: `${contato.nome} teve o treinamento reiniciado`,
+                timestamp: new Date()
+            });
+            console.log('📡 Eventos WebSocket enviados');
+        }
+
+        console.log(`✅ Restart completo do contato ${contato.nome}`);
 
         res.json({ 
             message: 'Treinamento reiniciado com sucesso',
-            contato: contato
+            contato: contato,
+            variacoesLimpas: variacoesTelefone
         });
 
     } catch (error) {
-        console.error('Erro ao reiniciar treinamento:', error);
+        console.error('❌ Erro ao reiniciar treinamento:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });

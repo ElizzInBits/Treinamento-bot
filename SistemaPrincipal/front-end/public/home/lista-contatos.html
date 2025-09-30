@@ -5,6 +5,49 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lista de Contatos</title>
   <link rel="stylesheet" href="/home/css/lista-contatos.css" />
+  <style>
+    .actions-bar {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 5px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    .btn-restart-lote {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-restart-lote:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .btn-restart-lote:hover:not(:disabled) {
+      background: #ff5252;
+    }
+    .btn-restart {
+      background: #ff9800;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .btn-restart:hover {
+      background: #f57c00;
+    }
+    #contadorSelecionados {
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -14,9 +57,17 @@
     </div>
 
     <div class="list-section">
+      <div class="actions-bar">
+        <button id="btnRestartSelecionados" class="btn-restart-lote" disabled>
+          🔄 Reiniciar Selecionados
+        </button>
+        <span id="contadorSelecionados">0 selecionados</span>
+      </div>
+      
       <table id="tabelaContatos">
         <thead>
           <tr>
+            <th><input type="checkbox" id="selectAll"></th>
             <th>Nome</th>
             <th>Telefone</th>
             <th>Email</th>
@@ -24,6 +75,7 @@
             <th>Status</th>
             <th>Empresa</th>
             <th>Última Interação</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>
