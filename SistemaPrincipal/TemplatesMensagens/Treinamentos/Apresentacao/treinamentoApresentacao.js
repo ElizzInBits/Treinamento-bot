@@ -3,7 +3,7 @@ const { gerarCertificado } = require('../../Certificados/gerarCertificado');
 
 // ==================== FUNÇÃO PRINCIPAL ====================
 
-async function processarRespostaApresentacao(sender, text, selectedId, contato, sendMessage) {
+async function processarRespostaApresentacao(sender, text, selectedId, contato, sendMessage, buscarContato = null) {
     console.log(`🎯 Processando resposta: "${text}" de ${sender}`);
     
     const ultimaInteracao = await obterUltimaInteracao(sender);
@@ -16,14 +16,14 @@ async function processarRespostaApresentacao(sender, text, selectedId, contato, 
     
     // Se há interação anterior, processar baseado no estado
     if (ultimaInteracao) {
-        return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage);
+        return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage, buscarContato);
     }
     
     // Se não há interação anterior, iniciar fluxo
     return await iniciarFluxoBoasVindas(sender, sendMessage);
 }
 
-async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage) {
+async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage, buscarContato = null) {
     const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
     const etapa = dados.etapa;
     
@@ -32,9 +32,9 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
     
     switch (etapa) {
         case 'opcao_inicial':
-            return await processarOpcaoInicial(sender, text, contato, sendMessage);
+            return await processarOpcaoInicial(sender, text, sendMessage, buscarContato);
         case 'aguardando_cadastro':
-            return await processarAposCadastro(sender, text, contato, sendMessage);
+            return await processarAposCadastro(sender, text, sendMessage, buscarContato);
         case 'processando_cadastrado':
             console.log('🔄 Ignorando mensagem duplicada - usuário já sendo processado');
             return true;
@@ -72,18 +72,18 @@ async function iniciarFluxoBoasVindas(sender, sendMessage) {
     return true;
 }
 
-async function processarOpcaoInicial(sender, text, contato, sendMessage) {
+async function processarOpcaoInicial(sender, text, sendMessage, buscarContato = null) {
     const opcao = text.trim();
-    console.log(`🔢 Opção: "${opcao}", Contato: ${contato ? contato.nome : 'NÃO CADASTRADO'}`);
-    
-    // Se usuário está cadastrado, prosseguir automaticamente
-    if (contato) {
-        console.log(`🎉 USUÁRIO CADASTRADO: ${contato.nome} - Prosseguindo automaticamente`);
-        await mostrarComoFunciona(sender, contato.nome, sendMessage);
-        return true;
-    }
+    console.log(`🔢 Opção: "${opcao}"`);
     
     if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
+        // Só AGORA identificar o contato após escolher opção 1
+        let contato = null;
+        if (buscarContato) {
+            contato = await buscarContato();
+            console.log(`📋 RESULTADO:`, contato ? `${contato.nome}` : 'NÃO ENCONTRADO');
+        }
+        
         if (!contato) {
             setTimeout(async () => {
                 await sendMessage(sender, 'send-message', {
@@ -92,6 +92,7 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
                 await salvarInteracao(sender, 'aguardando_cadastro', JSON.stringify({ etapa: 'aguardando_cadastro' }));
             }, 300);
         } else {
+            console.log(`🎉 USUÁRIO CADASTRADO: ${contato.nome} - Prosseguindo automaticamente`);
             await mostrarComoFunciona(sender, contato.nome, sendMessage);
         }
         return true;
@@ -127,7 +128,13 @@ async function processarOpcaoInicial(sender, text, contato, sendMessage) {
     return true;
 }
 
-async function processarAposCadastro(sender, text, contato, sendMessage) {
+async function processarAposCadastro(sender, text, sendMessage, buscarContato = null) {
+    // Buscar contato novamente
+    let contato = null;
+    if (buscarContato) {
+        contato = await buscarContato();
+    }
+    
     if (contato) {
         console.log(`🎉 USUÁRIO CADASTRADO RETORNOU: ${contato.nome}`);
         await salvarInteracao(sender, 'processando_cadastrado', JSON.stringify({ etapa: 'processando_cadastrado' }));
