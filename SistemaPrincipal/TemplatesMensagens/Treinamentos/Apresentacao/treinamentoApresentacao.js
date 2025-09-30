@@ -687,19 +687,8 @@ async function finalizarApresentacao(sender, sendMessage) {
 
 
 async function processarContatoComercial(sender, text, sendMessage) {
-    // Verificar se é uma saudação para reiniciar
-    const saudacoes = ['olá', 'oi', 'ola', 'hello', 'hi', 'bom dia', 'boa tarde', 'boa noite'];
-    const ehSaudacao = saudacoes.some(s => text.toLowerCase().includes(s));
-    
-    if (ehSaudacao) {
-        return await iniciarFluxoBoasVindas(sender, sendMessage);
-    }
-    
-    // Para outras mensagens, apenas responder que a conversa foi finalizada
-    await sendMessage(sender, 'send-message', {
-        message: '😊 Obrigada pelo interesse! Se quiser conversar novamente, é só me mandar um "oi" que recomeçamos!'
-    });
-    return true;
+    // Qualquer mensagem reinicia o fluxo
+    return await iniciarFluxoBoasVindas(sender, sendMessage);
 }
 
 // ==================== FUNÇÕES AUXILIARES ====================
