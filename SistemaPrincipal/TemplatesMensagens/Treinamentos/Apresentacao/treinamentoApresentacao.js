@@ -59,9 +59,6 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
         case 'finalizando':
             console.log('🔄 Ignorando mensagem - finalização já em andamento');
             return true;
-        case 'processando_cadastro':
-            console.log('🔄 Ignorando mensagem - cadastro já sendo processado');
-            return true;
         default:
             return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
@@ -91,15 +88,10 @@ async function processarOpcaoInicial(sender, text, sendMessage, buscarContato = 
         }
         
         if (!contato) {
-            // Marcar como processando cadastro para evitar duplicação
-            await salvarInteracao(sender, 'processando_cadastro', JSON.stringify({ etapa: 'processando_cadastro' }));
-            
-            setTimeout(async () => {
-                await sendMessage(sender, 'send-message', {
-                    message: '🤔 Hum, que tal fazer o seu cadastro na nossa plataforma antes, hein?\nÉ muito simples, basta clicar no link abaixo e assim que finalizar é só voltar aqui e me envie qualquer mensagem para começarmos!\n\nhttps://abrir.link/ZEeCt\n\nATENÇÃO:\nNo Cadastro use o MESMO NÚMERO que você utilizará para conversar aqui comigo.\n\n💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.'
-                });
-                await salvarInteracao(sender, 'aguardando_cadastro', JSON.stringify({ etapa: 'aguardando_cadastro' }));
-            }, 300);
+            await sendMessage(sender, 'send-message', {
+                message: '🤔 Hum, que tal fazer o seu cadastro na nossa plataforma antes, hein?\nÉ muito simples, basta clicar no link abaixo e assim que finalizar é só voltar aqui e me envie qualquer mensagem para começarmos!\n\nhttps://abrir.link/ZEeCt\n\nATENÇÃO:\nNo Cadastro use o MESMO NÚMERO que você utilizará para conversar aqui comigo.\n\n💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.'
+            });
+            await salvarInteracao(sender, 'aguardando_cadastro', JSON.stringify({ etapa: 'aguardando_cadastro' }));
         } else {
             console.log(`🎉 USUÁRIO CADASTRADO: ${contato.nome} - Prosseguindo automaticamente`);
             await mostrarComoFunciona(sender, contato.nome, sendMessage);
