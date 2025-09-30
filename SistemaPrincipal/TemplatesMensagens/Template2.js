@@ -64,6 +64,24 @@ async function processarMensagem(message, client) {
   
   console.log(`💬 [Template2] Processando: "${mensagem}" de ${telefone}`);
   
+  // Verificar se é comando de restart
+  if (mensagem.toLowerCase().includes('restart') || mensagem.toLowerCase().includes('reiniciar')) {
+    console.log(`🔄 COMANDO RESTART de ${telefone} - Limpando cache e reiniciando bot`);
+    
+    // Limpar todo o cache de duplicação
+    mensagensProcessando.clear();
+    
+    // Enviar confirmação
+    await client.sendText(message.from, '🔄 *Sistema reiniciado com sucesso!*\n\nCache limpo e bot reiniciado. Você pode começar uma nova conversa.');
+    
+    // Reinicializar o bot após um delay
+    setTimeout(() => {
+      inicializarBot();
+    }, 2000);
+    
+    return;
+  }
+  
   // Verificar se é mensagem duplicada
   if (verificarMensagemDuplicada(telefone, mensagem)) {
     return; // Ignorar mensagem duplicada
