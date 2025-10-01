@@ -54,6 +54,8 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
             return await processarOutrasAplicacoes(sender, text, sendMessage);
         case 'confirmar_dados_certificado':
             return await processarConfirmacaoDados(sender, text, sendMessage);
+        case 'pergunta_conteudo_restante':
+            return await processarPerguntaConteudoRestante(sender, text, sendMessage);
         case 'contato_comercial':
             return await processarContatoComercial(sender, text, sendMessage);
         case 'finalizando':
@@ -658,11 +660,15 @@ async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
     
     if (!progressoCompleto.completo) {
         await sendMessage(sender, 'send-message', {
-            message: `🎓 *Certificado Disponível!*\n\n⚠️ Para emitir seu certificado, você precisa ver todo o conteúdo do treinamento.\n\n📋 *Partes que você ainda não viu:*\n${progressoCompleto.faltando.join('\n')}\n\n🔄 Vou te mostrar apenas as partes que faltam:`
+            message: `🎓 *Certificado Disponível!*\n\n⚠️ Para emitir seu certificado, você precisa ver todo o conteúdo do treinamento.\n\n📋 *Partes que você ainda não viu:*\n${progressoCompleto.faltando.join('\n')}\n\nQuer ver o restante do conteúdo para obter o certificado?\n\n1️⃣ Sim, quero ver o conteúdo\n2️⃣ Não, obrigado`
         });
         
-        // Mostrar apenas as partes que faltam
-        await mostrarParteFaltante(sender, progressoCompleto.proximaParte, sendMessage);
+        await salvarInteracao(sender, 'pergunta_conteudo_restante', JSON.stringify({ 
+            etapa: 'pergunta_conteudo_restante',
+            nome: nome,
+            email: email,
+            proximaParte: progressoCompleto.proximaParte
+        }));
         return;
     }
     
@@ -844,20 +850,63 @@ async function verificarProgressoCompleto(telefone) {
     };
 }
 
-async function mostrarParteFaltante(sender, parte, sendMessage) {
-    switch (parte) {
-        case 'recursos_detalhados':
-            await mostrarRecursosDetalhados(sender, sendMessage);
-            break;
-        case 'quando_onde':
-            await mostrarQuandoOnde(sender, sendMessage);
-            break;
-        case 'videos_exemplos':
-            await enviarVideoTreinamentoMotorista(sender, sendMessage);
-            break;
-        default:
-            await mostrarOutrasAplicacoes(sender, sendMessage);
+async function processarPerguntaConteudoRestante(sender, text, sendMessage) {
+    const ultimaInteracao = await obterUltimaInteracao(sender);
+    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const opcao = text.trim();
+    
+    if (opcao === '1' || opcao.toLowerCase().includes('sim')) {
+        // Mostrar conteúdo faltante
+        await mostrarParteFaltante(sender, dados.proximaParte, sendMessage);
+        return true;
+    } else if (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('obrigado')) {
+        // Usuário não quer ver o conteúdo
+        await sendMessage(sender, 'send-message', {
+            message: '😊 Tudo bem! Quando quiser ver o conteúdo completo e obter seu certificado, é só me mandar um "oi" que recomeçamos!'
+        });
+        await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+        return true;
+    } else {
+        // Resposta inválida
+        await sendMessage(sender, 'send-message', {
+            message: '🤔 Não entendi sua resposta. Quer ver o restante do conteúdo para obter o certificado?\n\n1️⃣ Sim, quero ver o conteúdo\n2️⃣ Não, obrigado'
+        });
+        return true;
     }
+}
+
+async function mostrarParteFaltante(sender, parte, sendMessage) {
+    const progressoAtual = await obterProgresso(sender);
+    
+    // Mostrar apenas a próxima parte que não foi vista
+    if (parte === 'recursos_detalhados' && !progressoAtual.includes('recursos_detalhados')) {
+        await mostrarRecursosDetalhados(sender, sendMessage);
+    } else if (parte === 'quando_onde' && !progressoAtual.includes('quando_onde')) {
+        await mostrarQuandoOnde(sender, sendMessage);
+    } else if (parte === 'videos_exemplos' && !progressoAtual.includes('videos_exemplos')) {
+        await enviarVideoTreinamentoMotorista(sender, sendMessage);
+    } else {
+        // Se a parte atual já foi vista, ir para a próxima
+        const proximaParte = await obterProximaParteNaoVista(sender);
+        if (proximaParte) {
+            await mostrarParteFaltante(sender, proximaParte, sendMessage);
+        } else {
+            // Todas as partes foram vistas, ir para certificado
+            await perguntarDadosCertificado(sender, sendMessage);
+        }
+    }
+}
+
+async function obterProximaParteNaoVista(sender) {
+    const etapasObrigatorias = ['recursos_detalhados', 'quando_onde', 'videos_exemplos'];
+    const progressoAtual = await obterProgresso(sender);
+    
+    for (const etapa of etapasObrigatorias) {
+        if (!progressoAtual.includes(etapa)) {
+            return etapa;
+        }
+    }
+    return null;
 }
 
 // ==================== FUNÇÕES AUXILIARES ====================
