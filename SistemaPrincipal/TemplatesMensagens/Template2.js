@@ -190,6 +190,15 @@ async function inicializarBot() {
       },
       statusFind: (status) => {
         console.log('📶 Bot Cliente Status:', status);
+        
+        // Reconectar automaticamente se desconectar
+        if (status === 'browserClose' || status === 'disconnected' || status === 'notLogged') {
+          console.log('🔄 Status de desconexão detectado, reconectando em 5 segundos...');
+          setTimeout(() => {
+            reconectando = false;
+            inicializarBot();
+          }, 5000);
+        }
       }
     });
     
@@ -197,6 +206,24 @@ async function inicializarBot() {
     setWppClient(client);
     reconectando = false;
     console.log('✅ Bot Cliente conectado!');
+    
+    // Monitorar conexão a cada 30 segundos
+    const monitorInterval = setInterval(async () => {
+      try {
+        const state = await client.getConnectionState().catch(() => 'DISCONNECTED');
+        if (state !== 'CONNECTED') {
+          console.log('⚠️ Conexão perdida, reiniciando...');
+          clearInterval(monitorInterval);
+          reconectando = false;
+          inicializarBot();
+        }
+      } catch (error) {
+        console.log('⚠️ Erro no monitor, reiniciando...');
+        clearInterval(monitorInterval);
+        reconectando = false;
+        inicializarBot();
+      }
+    }, 30000);
     
     // Listener de mensagens
     client.onMessage(async (message) => {
@@ -225,18 +252,39 @@ async function inicializarBot() {
       }
     });
     
+    // Listener para detectar quando o browser fecha
+    client.onStateChange((state) => {
+      console.log('🔄 Estado mudou para:', state);
+      if (state === 'CONFLICT' || state === 'UNPAIRED' || state === 'UNLAUNCHED') {
+        console.log('🔄 Estado crítico detectado, reconectando...');
+        setTimeout(() => {
+          reconectando = false;
+          inicializarBot();
+        }, 3000);
+      }
+    });
+    
   } catch (error) {
     console.error('❌ Erro Bot Cliente:', error);
     reconectando = false;
-    console.log('🔄 Tentando reconectar em 15 segundos...');
+    console.log('🔄 Tentando reconectar em 10 segundos...');
     setTimeout(() => {
       inicializarBot();
-    }, 15000);
+    }, 10000);
   }
 }
 
 // Inicializar o bot
 inicializarBot();
+
+// Verificação global a cada 60 segundos
+setInterval(() => {
+  if (!wppClient || reconectando) {
+    console.log('🔄 Verificação global: Bot desconectado, reiniciando...');
+    reconectando = false;
+    inicializarBot();
+  }
+}, 60000);
 
 // Função sendMessage usando cliente direto
 async function sendMessage(phone, endpoint, body = {}) {
