@@ -245,7 +245,7 @@ async function enviarEmail(destinatario, arquivoPath, treinamento = null) {
       service: 'gmail',
       auth: {
         user: 'inovacao.tecnologiasalub@gmail.com',
-        pass: 'hszz igye owqn ldlz',
+        pass: 'hszz igye owqn ldlz'
       },
     });
 
