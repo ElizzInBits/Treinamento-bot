@@ -175,6 +175,7 @@ async function processarMostrarRecursos(sender, text, sendMessage) {
         await mostrarRecursosDetalhados(sender, sendMessage);
     } else if (opcao === '2' || opcao.includes('pula')) {
         console.log('✅ Pulando recursos - indo para exemplos');
+        // Não marcar progresso se pulou
         await mostrarExemplosTrainamentos(sender, sendMessage);
     } else {
         console.log('❌ Opção inválida - reenviando');
@@ -189,6 +190,9 @@ async function processarMostrarRecursos(sender, text, sendMessage) {
 async function mostrarRecursosDetalhados(sender, sendMessage) {
     // Marcar que está processando recursos para evitar duplicação
     await salvarInteracao(sender, 'processando_recursos', JSON.stringify({ etapa: 'processando_recursos' }));
+    
+    // Marcar progresso
+    await marcarProgressoEtapa(sender, 'recursos_detalhados');
     
     await sendMessage(sender, 'send-message', {
         message: '🎯 Olha só o que cabe dentro de um treinamento no WhatsApp:\n\n• 📹 Vídeos curtos\n• 🎤 Áudios explicativos\n• 🖼️ Imagens e infográficos\n• 📑 Arquivos PDF e procedimentos\n• 📝 Testes e avaliações\n\n👉 Fácil, rápido e na palma da mão.'
@@ -328,6 +332,7 @@ async function processarPerguntaQuandoOnde(sender, text, sendMessage) {
         await mostrarQuandoOnde(sender, sendMessage);
     } else if (opcao === '2' || opcao.includes('direto') || opcao.includes('exemplos')) {
         console.log('✅ Indo direto para exemplos');
+        // Não marcar progresso se pulou
         await mostrarExemplosTrainamentos(sender, sendMessage);
     } else {
         console.log('❌ Opção inválida - reenviando');
@@ -340,6 +345,9 @@ async function processarPerguntaQuandoOnde(sender, text, sendMessage) {
 }
 
 async function mostrarQuandoOnde(sender, sendMessage) {
+    // Marcar progresso
+    await marcarProgressoEtapa(sender, 'quando_onde');
+    
     await sendMessage(sender, 'send-message', {
         message: '⏰ *Você pode fazer o curso:*'
     });
@@ -440,7 +448,8 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
         await enviarVideoTreinamentoMotorista(sender, sendMessage);
     } else if (opcao === '2' || opcao.includes('convencido') || opcao.includes('já estou')) {
         console.log('✅ Opção 2 selecionada - finalizando');
-        await finalizarApresentacao(sender, sendMessage);
+        // Não marcar progresso se pulou
+        await perguntarDadosCertificado(sender, sendMessage);
     } else {
         console.log('❌ Opção inválida - reenviando opções');
         await sendMessage(sender, 'send-message', {
@@ -454,6 +463,9 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
 // ==================== ENVIO DE VÍDEOS ====================
 
 async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
+    // Marcar progresso
+    await marcarProgressoEtapa(sender, 'videos_exemplos');
+    
     try {
         const path = require('path');
         const fs = require('fs');
@@ -641,6 +653,19 @@ async function processarConfirmacaoDados(sender, text, sendMessage) {
 }
 
 async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
+    // Verificar se o usuário completou todo o treinamento
+    const progressoCompleto = await verificarProgressoCompleto(sender);
+    
+    if (!progressoCompleto.completo) {
+        await sendMessage(sender, 'send-message', {
+            message: `🎓 *Certificado Disponível!*\n\n⚠️ Para emitir seu certificado, você precisa ver todo o conteúdo do treinamento.\n\n📋 *Partes que você ainda não viu:*\n${progressoCompleto.faltando.join('\n')}\n\n🔄 Vou te mostrar apenas as partes que faltam:`
+        });
+        
+        // Mostrar apenas as partes que faltam
+        await mostrarParteFaltante(sender, progressoCompleto.proximaParte, sendMessage);
+        return;
+    }
+    
     await sendMessage(sender, 'send-message', {
         message: '⏳ Gerando seu certificado...'
     });
@@ -652,8 +677,6 @@ async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
             await sendMessage(sender, 'send-message', {
                 message: `✅ *Certificado gerado com sucesso!*\n\n📧 Enviado para: ${email}\n📱 Também enviado aqui no chat\n\n⚠️ *IMPORTANTE:* Este certificado é apenas demonstrativo e não possui validade legal para treinamentos normativos ou conformidade regulatória.`
             });
-            
-
         } else {
             await sendMessage(sender, 'send-message', {
                 message: `❌ Erro ao gerar certificado: ${resultado.erro}`
@@ -748,6 +771,93 @@ async function finalizarApresentacao(sender, sendMessage) {
 async function processarContatoComercial(sender, text, sendMessage) {
     // Qualquer mensagem reinicia o fluxo
     return await iniciarFluxoBoasVindas(sender, sendMessage);
+}
+
+// ==================== CONTROLE DE PROGRESSO ====================
+
+async function marcarProgressoEtapa(telefone, etapa) {
+    try {
+        const progressoAtual = await obterProgresso(telefone);
+        if (!progressoAtual.includes(etapa)) {
+            progressoAtual.push(etapa);
+            await salvarProgresso(telefone, progressoAtual);
+            console.log(`✅ Progresso marcado: ${etapa} para ${telefone}`);
+        }
+    } catch (error) {
+        console.error('❌ Erro ao marcar progresso:', error);
+    }
+}
+
+async function obterProgresso(telefone) {
+    try {
+        const interacao = await Interacao.findOne({
+            where: { 
+                telefone: telefone,
+                tipo: 'progresso_treinamento'
+            },
+            order: [['createdAt', 'DESC']]
+        });
+        
+        if (interacao) {
+            const dados = JSON.parse(interacao.mensagem || '{}');
+            return dados.etapas || [];
+        }
+        return [];
+    } catch (error) {
+        console.error('❌ Erro ao obter progresso:', error);
+        return [];
+    }
+}
+
+async function salvarProgresso(telefone, etapas) {
+    try {
+        await Interacao.create({
+            telefone: telefone,
+            tipo: 'progresso_treinamento',
+            mensagem: JSON.stringify({ etapas: etapas })
+        });
+    } catch (error) {
+        console.error('❌ Erro ao salvar progresso:', error);
+    }
+}
+
+async function verificarProgressoCompleto(telefone) {
+    const etapasObrigatorias = [
+        'recursos_detalhados',
+        'quando_onde', 
+        'videos_exemplos'
+    ];
+    
+    const progressoAtual = await obterProgresso(telefone);
+    const faltando = etapasObrigatorias.filter(etapa => !progressoAtual.includes(etapa));
+    
+    const nomeEtapas = {
+        'recursos_detalhados': '• 📱 Recursos do WhatsApp',
+        'quando_onde': '• ⏰ Quando e onde usar',
+        'videos_exemplos': '• 🎥 Vídeos de exemplo'
+    };
+    
+    return {
+        completo: faltando.length === 0,
+        faltando: faltando.map(etapa => nomeEtapas[etapa]),
+        proximaParte: faltando[0] || null
+    };
+}
+
+async function mostrarParteFaltante(sender, parte, sendMessage) {
+    switch (parte) {
+        case 'recursos_detalhados':
+            await mostrarRecursosDetalhados(sender, sendMessage);
+            break;
+        case 'quando_onde':
+            await mostrarQuandoOnde(sender, sendMessage);
+            break;
+        case 'videos_exemplos':
+            await enviarVideoTreinamentoMotorista(sender, sendMessage);
+            break;
+        default:
+            await mostrarOutrasAplicacoes(sender, sendMessage);
+    }
 }
 
 // ==================== FUNÇÕES AUXILIARES ====================
