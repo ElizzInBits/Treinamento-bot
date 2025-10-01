@@ -115,7 +115,7 @@ async function gerarCertificadoBanco(contatoId) {
 
     // Nome do Curso
     page.drawText('Nome do Curso:', { x: 60, y: 467, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.nome, { x: 166, y: 467, size: 10, font: helvetica, color: cor });
+    page.drawText(treinamento.nome, { x: 166, y: 467, size: tamanho, font: helvetica, color: cor });
 
     // Empresa
     page.drawText('Empresa:', { x: 60, y: 429, size: tamanho, font: helvetica, color: cor });
@@ -150,7 +150,7 @@ async function gerarCertificadoBanco(contatoId) {
     const linhasConformidade = quebrarTexto(treinamento.em_conformidade || '', helvetica, 10, 480);
     let yConformidade = 270;
     linhasConformidade.forEach(linha => {
-      page.drawText(linha, { x: 60, y: yConformidade, size: 10, font: helvetica, color: cor });
+      page.drawText(linha, { x: 60, y: yConformidade, size: tamanho, font: helvetica, color: cor });
       yConformidade -= 12;
     });
 
