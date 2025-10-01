@@ -147,11 +147,13 @@ async function gerarCertificadoBanco(contatoId) {
     // Conformidade
     page.drawText('Em conformidade:', { x: 60, y: 285, size: 12, font: helvetica, color: cor });
     
-    const linhasConformidade = quebrarTexto(treinamento.em_conformidade || '', helvetica, 10, 480);
+    const linhasConformidade = quebrarTexto(treinamento.em_conformidade || '', helvetica, 10, 470);
     let yConformidade = 270;
     linhasConformidade.forEach(linha => {
-      page.drawText(linha, { x: 60, y: yConformidade, size: tamanho, font: helvetica, color: cor });
-      yConformidade -= 12;
+      if (yConformidade > 150) { // Evita sair da página
+        page.drawText(linha, { x: 60, y: yConformidade, size: 10, font: helvetica, color: cor });
+        yConformidade -= 12;
+      }
     });
 
     // Data de conclusão (posição mantida)
