@@ -140,9 +140,10 @@ async function gerarCertificadoBanco(contatoId) {
 
     // Período de Treinamento
     const dataAtual = new Date().toLocaleDateString('pt-BR');
+    const periodoTreinamento = `${dataAtual} - ${dataAtual}`;
     page.drawText('Período de', { x: 310, y: 336, size: tamanho, font: helvetica, color: cor });
     page.drawText('Treinamento:', { x: 310, y: 321, size: tamanho, font: helvetica, color: cor });
-    page.drawText(dataAtual, { x: 400, y: 328, size: tamanho, font: helvetica, color: cor });
+    page.drawText(periodoTreinamento, { x: 400, y: 328, size: tamanho, font: helvetica, color: cor });
 
     // Conformidade
     page.drawText('Em conformidade:', { x: 60, y: 285, size: 12, font: helvetica, color: cor });
