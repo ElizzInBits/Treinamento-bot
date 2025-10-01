@@ -4,6 +4,9 @@ const ContatoModel = require('../BancoDeDados/models/contato');
 const treinamentoSSMA = require('./Treinamentos/LCM/treinamentoSSMA');
 const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamentoApresentacao');
 
+// Inicializar sistema de limpeza de certificados
+require('./Certificados/limpezaCertificados');
+
 // Cache para controle de mensagens duplicadas
 const mensagensProcessando = new Map();
 
