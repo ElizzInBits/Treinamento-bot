@@ -139,15 +139,15 @@ async function gerarCertificadoBanco(contatoId) {
     page.drawText(`${cargaHoraria} HORAS`, { x: 166, y: 328, size: tamanho, font: helvetica, color: cor });
 
     // Período de Treinamento
-    const periodoFormatado = formatarDataPeriodo(treinamento.periodo || '');
+    const dataAtual = new Date().toLocaleDateString('pt-BR');
     page.drawText('Período de', { x: 310, y: 336, size: tamanho, font: helvetica, color: cor });
     page.drawText('Treinamento:', { x: 310, y: 321, size: tamanho, font: helvetica, color: cor });
-    page.drawText(periodoFormatado, { x: 400, y: 328, size: tamanho, font: helvetica, color: cor });
+    page.drawText(dataAtual, { x: 400, y: 328, size: tamanho, font: helvetica, color: cor });
 
     // Conformidade
     page.drawText('Em conformidade:', { x: 60, y: 285, size: 12, font: helvetica, color: cor });
     
-    const linhasConformidade = quebrarTexto(treinamento.emConformidade || '', helvetica, 10, 480);
+    const linhasConformidade = quebrarTexto(treinamento.em_conformidade || '', helvetica, 10, 480);
     let yConformidade = 270;
     linhasConformidade.forEach(linha => {
       page.drawText(linha, { x: 60, y: yConformidade, size: 10, font: helvetica, color: cor });
@@ -169,7 +169,7 @@ async function gerarCertificadoBanco(contatoId) {
 
     if (segundaPagina) {
       // Conteúdo Programático
-      const linhasConteudo = quebrarTexto(treinamento.conteudo || 'Conteúdo não informado', helvetica, tamanho, 520);
+      const linhasConteudo = quebrarTexto(treinamento.conteudo_programatico || 'Conteúdo não informado', helvetica, tamanho, 520);
       let yConteudo = 660;
       
       linhasConteudo.forEach(linha => {
@@ -181,27 +181,15 @@ async function gerarCertificadoBanco(contatoId) {
       });
 
       // Instrutor
-      const instrutorInfo = `${treinamento.instrutor || ''} – ${treinamento.qualificacaoInstrutor || ''}`;
+      const instrutorInfo = `${treinamento.instrutor_principal || ''} - ${treinamento.qualificacao_instrutor || ''} - ${treinamento.registro_instrutor || ''}`;
       segundaPagina.drawText(instrutorInfo, { x: 40, y: 430, size: tamanho, font: helvetica, color: cor });
-      
-      if (treinamento.registroInstrutor) {
-        segundaPagina.drawText(`Registro: ${treinamento.registroInstrutor}`, {
-          x: 40, y: 415, size: tamanho, font: helvetica, color: cor
-        });
-      }
 
       // Responsável
-      const responsavelInfo = `${treinamento.responsavel || ''} – ${treinamento.cargoResponsavel || ''}`;
+      const responsavelInfo = `${treinamento.responsavel_treinamento || ''} - ${treinamento.cargo_responsavel || ''} - ${treinamento.registro_responsavel || ''}`;
       segundaPagina.drawText(responsavelInfo, { x: 40, y: 320, size: tamanho, font: helvetica, color: cor });
-      
-      if (treinamento.registroResponsavel) {
-        segundaPagina.drawText(`Registro: ${treinamento.registroResponsavel}`, {
-          x: 40, y: 305, size: tamanho, font: helvetica, color: cor
-        });
-      }
 
       // Aproveitamento
-      segundaPagina.drawText(treinamento.aproveitamento || 'Não há aproveitamento de conteúdo a ser considerado para esta capacitação.', {
+      segundaPagina.drawText(treinamento.aproveitamento_conteudo || 'Não há aproveitamento de conteúdo a ser considerado para esta capacitação.', {
         x: 40, y: 220, size: tamanho, font: helvetica, color: cor, maxWidth: 500
       });
     }
