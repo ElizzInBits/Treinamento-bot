@@ -1,3 +1,2 @@
-2025/10/01-14:41:17.633 16a7ff Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/WHATSAPP_BOT_DIRECT/Default/GCM Store/MANIFEST-000001
-2025/10/01-14:41:17.633 16a7ff Recovering log #3
-2025/10/01-14:41:17.633 16a7ff Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/WHATSAPP_BOT_DIRECT/Default/GCM Store/000003.log 
+2025/10/02-11:33:58.280 1c87e9 Creating DB /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/WHATSAPP_BOT_DIRECT/Default/GCM Store since it was missing.
+2025/10/02-11:33:58.284 1c87e9 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/WHATSAPP_BOT_DIRECT/Default/GCM Store/MANIFEST-000001
