@@ -143,16 +143,53 @@ function setWppClient(client) {
 // Variável para controlar reconexões
 let reconectando = false;
 
-// Função para limpar arquivos de lock
+// Função para limpar arquivos de lock e resolver problema do SingletonLock
 function limparLockFiles() {
   try {
     const fs = require('fs');
     const path = require('path');
-    const lockPath = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT', 'SingletonLock');
-    if (fs.existsSync(lockPath)) {
-      fs.unlinkSync(lockPath);
-      console.log('🧹 Arquivo de lock removido');
+    const { execSync } = require('child_process');
+    
+    console.log('🧹 Iniciando limpeza completa de arquivos de lock...');
+    
+    // Matar processos Chrome/Chromium restantes
+    try {
+      execSync('pkill -9 -f chrome', { stdio: 'ignore' });
+      execSync('pkill -9 -f chromium', { stdio: 'ignore' });
+      console.log('✅ Processos Chrome finalizados');
+    } catch (e) {
+      // Ignorar erro se não houver processos
     }
+    
+    // Remover diretório completo de tokens
+    const tokensPath = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT');
+    if (fs.existsSync(tokensPath)) {
+      fs.rmSync(tokensPath, { recursive: true, force: true });
+      console.log('🧹 Diretório de tokens removido completamente');
+    }
+    
+    // Limpar cache do snap chromium se existir
+    const os = require('os');
+    const snapPath = path.join(os.homedir(), 'snap', 'chromium', 'common', 'chromium');
+    if (fs.existsSync(snapPath)) {
+      try {
+        const files = fs.readdirSync(snapPath);
+        files.forEach(file => {
+          if (file.includes('SingletonLock')) {
+            fs.unlinkSync(path.join(snapPath, file));
+          }
+        });
+        console.log('🧹 Cache do snap chromium limpo');
+      } catch (e) {
+        // Ignorar erros de limpeza do snap
+      }
+    }
+    
+    // Aguardar um pouco para garantir limpeza
+    setTimeout(() => {
+      console.log('✅ Limpeza de lock concluída');
+    }, 1000);
+    
   } catch (error) {
     console.log('⚠️ Erro ao limpar lock:', error.message);
   }
@@ -166,7 +203,12 @@ async function inicializarBot() {
   }
   
   reconectando = true;
+  
+  // Limpeza robusta antes de inicializar
   limparLockFiles();
+  
+  // Aguardar limpeza antes de continuar
+  await new Promise(resolve => setTimeout(resolve, 3000));
   
   try {
     const client = await wppconnect.create({
