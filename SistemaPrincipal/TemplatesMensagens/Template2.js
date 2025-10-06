@@ -204,49 +204,40 @@ async function inicializarBot() {
   
   reconectando = true;
   
-  // Limpeza robusta antes de inicializar
-  limparLockFiles();
+  // Limpar SingletonLock antes de inicializar
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const lockPath = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT', 'SingletonLock');
+    if (fs.existsSync(lockPath)) {
+      fs.unlinkSync(lockPath);
+      console.log('🧹 SingletonLock removido');
+    }
+  } catch (e) {
+    console.log('⚠️ Erro ao limpar lock:', e.message);
+  }
   
-  // Aguardar limpeza antes de continuar
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  // Aguardar antes de inicializar
+  await new Promise(resolve => setTimeout(resolve, 1000));
   
   try {
     const client = await wppconnect.create({
       session: 'WHATSAPP_BOT_DIRECT',
-      headless: 'new',
+      headless: true,
       disableWelcome: true,
       updatesLog: false,
-      autoClose: 0,
+      autoClose: 60000,
+      qrTimeout: 60000,
       puppeteerOptions: {
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
-          '--disable-web-security',
-          '--single-process',
           '--disable-features=VizDisplayCompositor',
-          '--disable-background-networking',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-breakpad',
-          '--disable-client-side-phishing-detection',
-          '--disable-component-update',
-          '--disable-field-trial-config',
-          '--disable-hang-monitor',
-          '--disable-infobars',
-          '--disable-ipc-flooding-protection',
-          '--disable-popup-blocking',
-          '--disable-prompt-on-repost',
-          '--disable-renderer-backgrounding',
-          '--disable-search-engine-choice-screen',
-          '--disable-sync',
-          '--disable-features=Translate,AcceptCHFrame,MediaRouter,OptimizationHints',
-          '--memory-pressure-off',
-          '--max_old_space_size=512'
+          '--user-data-dir=/tmp/chrome-' + Date.now()
         ],
-        protocolTimeout: 300000,
-        slowMo: 100,
+        protocolTimeout: 60000,
         defaultViewport: { width: 800, height: 600 }
       },
       catchQR: (base64Qr, asciiQR) => {
@@ -257,12 +248,12 @@ async function inicializarBot() {
         console.log('📶 Bot Cliente Status:', status);
         
         // Reconectar automaticamente se desconectar
-        if (status === 'browserClose' || status === 'disconnected' || status === 'notLogged') {
-          console.log('🔄 Status de desconexão detectado, reconectando em 5 segundos...');
+        if (status === 'browserClose') {
+          console.log('🔄 Navegador fechado, reconectando em 10 segundos...');
           setTimeout(() => {
             reconectando = false;
             inicializarBot();
-          }, 5000);
+          }, 10000);
         }
       }
     });
@@ -272,23 +263,7 @@ async function inicializarBot() {
     reconectando = false;
     console.log('✅ Bot Cliente conectado!');
     
-    // Monitorar conexão a cada 30 segundos
-    const monitorInterval = setInterval(async () => {
-      try {
-        const state = await client.getConnectionState().catch(() => 'DISCONNECTED');
-        if (state !== 'CONNECTED') {
-          console.log('⚠️ Conexão perdida, reiniciando...');
-          clearInterval(monitorInterval);
-          reconectando = false;
-          inicializarBot();
-        }
-      } catch (error) {
-        console.log('⚠️ Erro no monitor, reiniciando...');
-        clearInterval(monitorInterval);
-        reconectando = false;
-        inicializarBot();
-      }
-    }, 30000);
+    // Monitor de conexão desabilitado para evitar múltiplas instâncias
     
     // Listener de mensagens
     client.onMessage(async (message) => {
@@ -317,15 +292,11 @@ async function inicializarBot() {
       }
     });
     
-    // Listener para detectar quando o browser fecha
+    // Listener para detectar mudanças de estado
     client.onStateChange((state) => {
       console.log('🔄 Estado mudou para:', state);
-      if (state === 'CONFLICT' || state === 'UNPAIRED' || state === 'UNLAUNCHED') {
-        console.log('🔄 Estado crítico detectado, reconectando...');
-        setTimeout(() => {
-          reconectando = false;
-          inicializarBot();
-        }, 3000);
+      if (state === 'CONNECTED') {
+        console.log('✅ WhatsApp conectado com sucesso!');
       }
     });
     
@@ -342,14 +313,7 @@ async function inicializarBot() {
 // Inicializar o bot
 inicializarBot();
 
-// Verificação global a cada 60 segundos
-setInterval(() => {
-  if (!wppClient || reconectando) {
-    console.log('🔄 Verificação global: Bot desconectado, reiniciando...');
-    reconectando = false;
-    inicializarBot();
-  }
-}, 60000);
+// Verificação global desabilitada para evitar múltiplas instâncias
 
 // Função sendMessage usando cliente direto
 async function sendMessage(phone, endpoint, body = {}) {

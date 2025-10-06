@@ -3,6 +3,49 @@ document.addEventListener('DOMContentLoaded', () => {
   const ddiSelect = document.getElementById('ddi');
   const cpfInput = document.getElementById('cpf');
   const cpfError = document.getElementById('cpfError');
+  const empresaSelect = document.getElementById('empresaId');
+  const nomeInput = document.getElementById('nomeCompleto');
+
+  // 🔤 Converter nome para maiúsculo automaticamente
+  nomeInput.addEventListener('input', function(e) {
+    const cursorPosition = e.target.selectionStart;
+    const upperValue = e.target.value.toUpperCase();
+    e.target.value = upperValue;
+    e.target.setSelectionRange(cursorPosition, cursorPosition);
+  });
+
+  // 🏢 Carregar empresas
+  async function carregarEmpresas() {
+    try {
+      empresaSelect.innerHTML = '<option value="">Carregando empresas...</option>';
+      empresaSelect.disabled = true;
+      
+      const response = await fetch('/api/empresas/select/options');
+      const empresas = await response.json();
+      
+      empresaSelect.innerHTML = '<option value="">Selecione sua empresa</option>';
+      
+      if (empresas && empresas.length > 0) {
+        empresas.forEach(empresa => {
+          const option = document.createElement('option');
+          option.value = empresa.id;
+          option.textContent = empresa.razao_social;
+          empresaSelect.appendChild(option);
+        });
+      } else {
+        empresaSelect.innerHTML = '<option value="">Nenhuma empresa encontrada</option>';
+      }
+      
+      empresaSelect.disabled = false;
+    } catch (error) {
+      console.error('Erro ao carregar empresas:', error);
+      empresaSelect.innerHTML = '<option value="">Erro ao carregar empresas</option>';
+      empresaSelect.disabled = false;
+    }
+  }
+
+  // Carregar empresas ao inicializar
+  carregarEmpresas();
 
   // 🔽 Função para formatar CPF
   function formatarCPF(value) {
@@ -132,10 +175,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const email = document.getElementById('email').value.trim();
     const ddi = document.getElementById('ddi').value;
     const telefone = document.getElementById('telefone').value.trim();
-    const nomeEmpresa = document.getElementById('nomeEmpresa').value.trim();
+    const empresaId = document.getElementById('empresaId').value;
 
-    if (!nomeCompleto || !cpf || !email || !ddi || !telefone || !nomeEmpresa) {
+    if (!nomeCompleto || !cpf || !email || !ddi || !telefone || !empresaId) {
       alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    if (empresaId === '') {
+      alert('Por favor, selecione uma empresa.');
+      document.getElementById('empresaId').focus();
       return;
     }
 
@@ -153,8 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cpf: cpf.replace(/\D/g, ''),
       email: email,
       telefone: telefoneCompleto,
-      empresaId: 3,
-      nomeEmpresa: nomeEmpresa
+      empresaId: parseInt(empresaId)
     };
 
     console.log('📝 Dados sendo enviados:', novoUsuario);
@@ -193,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('telefone').placeholder = 'Ex: 31999990000';
         document.getElementById('cpfError').style.display = 'none';
         document.getElementById('cpf').style.borderColor = '';
+        document.getElementById('empresaId').value = '';
         try {
           window.location.href = './voltarWhats-index.html';
         } catch (error) {

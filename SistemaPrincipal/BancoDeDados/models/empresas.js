@@ -61,6 +61,7 @@ module.exports = (sequelize) => {
       otherKey: 'treinamento_id',
       as: 'treinamentos'
     });
+    Empresa.hasOne(models.EmpresaSenha, { foreignKey: 'empresaId', as: 'senha' });
   };
 
   return Empresa;
