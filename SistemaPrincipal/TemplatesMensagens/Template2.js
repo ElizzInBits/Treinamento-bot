@@ -224,10 +224,30 @@ async function inicializarBot() {
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--disable-web-security',
+          '--single-process',
           '--disable-features=VizDisplayCompositor',
-          '--single-process'
+          '--disable-background-networking',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-breakpad',
+          '--disable-client-side-phishing-detection',
+          '--disable-component-update',
+          '--disable-field-trial-config',
+          '--disable-hang-monitor',
+          '--disable-infobars',
+          '--disable-ipc-flooding-protection',
+          '--disable-popup-blocking',
+          '--disable-prompt-on-repost',
+          '--disable-renderer-backgrounding',
+          '--disable-search-engine-choice-screen',
+          '--disable-sync',
+          '--disable-features=Translate,AcceptCHFrame,MediaRouter,OptimizationHints',
+          '--memory-pressure-off',
+          '--max_old_space_size=512'
         ],
-        protocolTimeout: 300000
+        protocolTimeout: 300000,
+        slowMo: 100,
+        defaultViewport: { width: 800, height: 600 }
       },
       catchQR: (base64Qr, asciiQR) => {
         console.log('\n📱 QR CODE Bot Cliente:');
