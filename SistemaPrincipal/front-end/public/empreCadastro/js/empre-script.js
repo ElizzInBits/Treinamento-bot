@@ -1,6 +1,43 @@
 document.addEventListener('DOMContentLoaded', () => {
   const contatoInput = document.getElementById('contato');
   const ddiSelect = document.getElementById('ddi');
+  const razaoSocialInput = document.getElementById('razaoSocial');
+  const enderecoInput = document.getElementById('endereco');
+  const porteSelect = document.getElementById('porte');
+  const senhaInput = document.getElementById('senha');
+  const gerarSenhaBtn = document.getElementById('gerarSenha');
+
+  // 🔤 Converter razão social para maiúsculo
+  razaoSocialInput.addEventListener('input', function(e) {
+    const cursorPosition = e.target.selectionStart;
+    const upperValue = e.target.value.toUpperCase();
+    e.target.value = upperValue;
+    e.target.setSelectionRange(cursorPosition, cursorPosition);
+  });
+
+  // 🔤 Converter endereço para maiúsculo
+  enderecoInput.addEventListener('input', function(e) {
+    const cursorPosition = e.target.selectionStart;
+    const upperValue = e.target.value.toUpperCase();
+    e.target.value = upperValue;
+    e.target.setSelectionRange(cursorPosition, cursorPosition);
+  });
+
+
+
+  // 🔐 Gerar senha aleatória
+  function gerarSenhaForte() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*';
+    let senha = '';
+    for (let i = 0; i < 12; i++) {
+      senha += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return senha;
+  }
+
+  gerarSenhaBtn.addEventListener('click', function() {
+    senhaInput.value = gerarSenhaForte();
+  });
 
   function formatarTelefoneBrasil(value) {
     const numbers = value.replace(/\D/g, '');
@@ -61,11 +98,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const contato = document.getElementById('contato').value.trim();
     const ddi = document.getElementById('ddi').value;
     const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value.trim();
     
-    console.log('📤 Dados do formulário:', { razaoSocial, cnpj, porte, endereco, cep, contato, ddi, email });
+    console.log('📤 Dados do formulário:', { razaoSocial, cnpj, porte, endereco, cep, contato, ddi, email, senha });
 
-    if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !contato || !email) {
+    if (!razaoSocial || !cnpj || !porte || !endereco || !cep || !contato || !email || !senha) {
       alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    if (senha.length < 8) {
+      alert('A senha deve ter pelo menos 8 caracteres.');
       return;
     }
 
@@ -73,13 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const contatoCompleto = `${ddi.replace('+', '')}${contato.replace(/\D/g, '')}`;
 
     const novaEmpresa = {
-      razaoSocial,
+      razaoSocial: razaoSocial.toUpperCase(),
       cnpj,
-      porte,
+      porte: porte.toUpperCase(),
       endereco,
       cep,
       contato: contatoCompleto,
-      email
+      email,
+      senha
     };
 
     fetch('/api/empresas', {
@@ -88,20 +132,24 @@ document.addEventListener('DOMContentLoaded', () => {
       body: JSON.stringify(novaEmpresa)
     })
       .then(async (res) => {
+        console.log('📡 Status da resposta:', res.status);
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Erro ao cadastrar empresa.');
+          const errorText = await res.text();
+          console.error('❌ Erro do servidor:', errorText);
+          throw new Error(errorText || 'Erro ao cadastrar empresa.');
         }
         return res.json();
       })
       .then(data => {
         alert('Cadastro realizado com sucesso!');
+        console.log('✅ Empresa cadastrada:', data);
         document.getElementById('cadastroEmpresaForm').reset();
         ddiSelect.value = '+55';
         contatoInput.placeholder = 'Ex: 11999990000';
-        // Empresa cadastrada com sucesso
+        senhaInput.value = '';
       })
       .catch(error => {
+        console.error('❌ Erro completo:', error);
         alert('Erro: ' + error.message);
       });
   });

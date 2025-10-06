@@ -1,4 +1,4 @@
-const { Empresa, Contato, Treinamento, EmpresaTreinamento, sequelize } = require('../../BancoDeDados/models');
+const { Empresa, Contato, Treinamento, EmpresaTreinamento, EmpresaSenha, sequelize } = require('../../BancoDeDados/models');
 const { fn, col, Op } = require('sequelize');
 const express = require('express');
 const router = express.Router();
@@ -94,7 +94,8 @@ router.post('/', async (req, res) => {
       endereco, 
       cep, 
       contato, 
-      email 
+      email,
+      senha
     } = req.body;
     
     const razaoSocialFinal = razaoSocial || razao_social;
@@ -102,6 +103,10 @@ router.post('/', async (req, res) => {
 
     if (!razaoSocialFinal) {
       return res.status(400).json({ error: 'Razão social é obrigatória.' });
+    }
+
+    if (!senha || senha.length < 8) {
+      return res.status(400).json({ error: 'Senha é obrigatória e deve ter pelo menos 8 caracteres.' });
     }
 
     let cnpjLimpo = null;
@@ -121,15 +126,31 @@ router.post('/', async (req, res) => {
     }
 
     const novaEmpresa = await Empresa.create({
-      razaoSocial: razaoSocialFinal.trim(),
+      razaoSocial: razaoSocialFinal.trim().toUpperCase(),
       cnpj: cnpjLimpo,
-      porteEmpresa: porteFinal,
-      endereco: endereco || null,
+      porteEmpresa: porteFinal ? porteFinal.toUpperCase() : null,
+      endereco: endereco ? endereco.toUpperCase() : null,
       cep: cep || null,
       contato: contato || null,
       email: email || null,
       criadoEm: new Date()
     });
+
+    console.log('✅ Empresa criada:', novaEmpresa.id);
+
+    // Criar senha da empresa
+    try {
+      const novaSenha = await EmpresaSenha.create({
+        empresaId: novaEmpresa.id,
+        nomeEmpresa: novaEmpresa.razaoSocial,
+        senha: senha
+      });
+      console.log('✅ Senha criada:', novaSenha.id);
+    } catch (senhaError) {
+      console.error('❌ Erro ao criar senha:', senhaError.message);
+      console.error('❌ Stack:', senhaError.stack);
+      throw new Error('Empresa criada mas erro ao salvar senha: ' + senhaError.message);
+    }
 
     // Emitir evento para atualização em tempo real
     const io = req.app.get('io');

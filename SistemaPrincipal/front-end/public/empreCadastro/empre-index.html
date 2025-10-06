@@ -34,10 +34,10 @@
           <label for="porte" style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">📈 Porte da Empresa *</label>
           <select id="porte" name="porte" required style="width: 100%; padding: 16px 20px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box; background: #fafafa;">
             <option value="">Selecione o porte</option>
-            <option value="micro">Microempresa</option>
-            <option value="pequeno">Pequeno Porte</option>
-            <option value="medio">Médio Porte</option>
-            <option value="grande">Grande Porte</option>
+            <option value="MICRO">Microempresa</option>
+            <option value="PEQUENO">Pequeno Porte</option>
+            <option value="MEDIO">Médio Porte</option>
+            <option value="GRANDE">Grande Porte</option>
           </select>
         </div>
 
@@ -73,9 +73,18 @@
           <small style="color: #9ca3af; font-size: 12px; margin-top: 6px; display: block;">Digite apenas números, sem parênteses ou traços</small>
         </div>
 
-        <div class="form-group" style="margin-bottom: 32px;">
+        <div class="form-group" style="margin-bottom: 24px;">
           <label for="email" style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">✉️ Email *</label>
           <input type="email" id="email" name="email" required placeholder="contato@empresa.com" style="width: 100%; padding: 16px 20px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box; background: #fafafa;" />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 32px;">
+          <label for="senha" style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">🔐 Senha de Acesso *</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="senha" name="senha" required placeholder="Digite ou gere uma senha" style="flex: 1; padding: 16px 20px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; background: #fafafa;" />
+            <button type="button" id="gerarSenha" style="padding: 16px 20px; background: #6366f1; color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600; white-space: nowrap;">🎲 Gerar</button>
+          </div>
+          <small style="color: #9ca3af; font-size: 12px; margin-top: 6px; display: block;">Mínimo 8 caracteres. Use o botão "Gerar" para criar uma senha forte.</small>
         </div>
 
         <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #0f4c5c 0%, #128c7e 100%); color: white; border: none; padding: 18px 32px; font-size: 16px; font-weight: 600; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 8px 25px rgba(15, 76, 92, 0.25); width: 100%; margin-top: 8px; letter-spacing: 0.5px;">
