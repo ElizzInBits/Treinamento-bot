@@ -223,7 +223,7 @@ async function inicializarBot() {
   try {
     const client = await wppconnect.create({
       session: 'WHATSAPP_BOT_DIRECT',
-      headless: true,
+      headless: 'new',
       disableWelcome: true,
       updatesLog: false,
       autoClose: 60000,

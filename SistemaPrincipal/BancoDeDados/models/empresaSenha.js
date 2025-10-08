@@ -16,11 +16,6 @@ module.exports = (sequelize) => {
         key: 'id'
       }
     },
-    nomeEmpresa: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      field: 'nome_empresa',
-    },
     senha: {
       type: DataTypes.STRING,
       allowNull: false,
