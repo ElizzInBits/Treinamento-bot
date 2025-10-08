@@ -3,43 +3,13 @@ const { connectDB, sequelize } = require('../BancoDeDados/database');
 const ContatoModel = require('../BancoDeDados/models/contato');
 const treinamentoSSMA = require('./Treinamentos/LCM/treinamentoSSMA');
 const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamentoApresentacao');
+const sistemaIdentificacao = require('./sistemaIdentificacao');
+const mantenedorSessao = require('./manterSessao');
 
 // Inicializar sistema de limpeza de certificados
 require('./Certificados/limpezaCertificados');
 
-// Cache para controle de mensagens duplicadas
-const mensagensProcessando = new Map();
 
-// Função para verificar e controlar mensagens duplicadas
-function verificarMensagemDuplicada(sender, text) {
-    const agora = Date.now();
-    
-    // Verificar se há mensagem similar sendo processada nos últimos 2 segundos
-    const chavesExistentes = Array.from(mensagensProcessando.keys());
-    for (const chave of chavesExistentes) {
-        const [senderChave, textoChave, timestampChave] = chave.split('_');
-        if (senderChave === sender && textoChave === text && (agora - parseInt(timestampChave)) < 2000) {
-            console.log(`🔄 Mensagem duplicada detectada de ${sender}: "${text}" - ignorando`);
-            return true; // É duplicada
-        }
-        // Limpar mensagens antigas (mais de 5 segundos)
-        if ((agora - parseInt(timestampChave)) > 5000) {
-            mensagensProcessando.delete(chave);
-        }
-    }
-    
-    // Marcar mensagem como sendo processada
-    const chaveMsg = `${sender}_${text}_${agora}`;
-    mensagensProcessando.set(chaveMsg, true);
-    console.log(`✅ Processando mensagem de ${sender}: "${text}"`);
-    
-    // Remover da lista após 3 segundos
-    setTimeout(() => {
-        mensagensProcessando.delete(chaveMsg);
-    }, 3000);
-    
-    return false; // Não é duplicada
-}
 
 // Inicializar modelo
 let Contato = null;
@@ -48,6 +18,10 @@ let Contato = null;
 
 // Cliente WhatsApp direto
 let wppClient = null;
+
+// Controle de mensagens duplicadas
+const mensagensProcessando = new Map();
+const TIMEOUT_DUPLICADA = 5000; // 5 segundos
 
 // Conectar ao banco
 (async () => {
@@ -67,21 +41,31 @@ async function processarMensagem(message, client) {
   
   console.log(`💬 [Template2] Processando: "${mensagem}" de ${telefone}`);
   
-  // Verificar se é comando de restart
+  // Verificar comandos especiais
   if (mensagem.toLowerCase().includes('restart') || mensagem.toLowerCase().includes('reiniciar')) {
-    console.log(`🔄 COMANDO RESTART de ${telefone} - Limpando cache e reiniciando bot`);
-    
-    // Limpar todo o cache de duplicação
+    console.log(`🔄 COMANDO RESTART de ${telefone}`);
     mensagensProcessando.clear();
-    
-    // Enviar confirmação
-    await client.sendText(message.from, '🔄 *Sistema reiniciado com sucesso!*\n\nCache limpo e bot reiniciado. Você pode começar uma nova conversa.');
-    
-    // Reinicializar o bot após um delay
+    console.log('🧹 Cache de mensagens duplicadas limpo');
+    await client.sendText(message.from, '🔄 *Sistema reiniciado!*\n\nCache limpo. Você pode continuar.');
+    setTimeout(() => inicializarBot(), 2000);
+    return;
+  }
+  
+  if (mensagem.toLowerCase().includes('limpar sessao') || mensagem.toLowerCase().includes('reset sessao')) {
+    console.log(`🧹 COMANDO LIMPAR SESSÃO de ${telefone}`);
+    mantenedorSessao.limparSessao();
+    await client.sendText(message.from, '🧹 *Sessão limpa!*\n\nVocê precisará escanear o QR Code novamente.');
     setTimeout(() => {
-      inicializarBot();
-    }, 2000);
-    
+      process.exit(0); // Forçar restart completo
+    }, 1000);
+    return;
+  }
+  
+  if (mensagem.toLowerCase().includes('status sessao')) {
+    console.log(`📊 COMANDO STATUS SESSÃO de ${telefone}`);
+    const sessao = mantenedorSessao.verificarSessaoExistente();
+    const tokens = mantenedorSessao.verificarTokensWhatsApp();
+    await client.sendText(message.from, `📊 *Status da Sessão:*\n\nSessão ativa: ${sessao ? '✅ Sim' : '❌ Não'}\nTokens: ${tokens ? '✅ Presentes' : '❌ Ausentes'}\nÚltima atividade: ${sessao ? new Date(sessao.ultimoHeartbeat).toLocaleString() : 'N/A'}`);
     return;
   }
   
@@ -89,6 +73,9 @@ async function processarMensagem(message, client) {
   if (verificarMensagemDuplicada(telefone, mensagem)) {
     return; // Ignorar mensagem duplicada
   }
+  
+  // Marcar mensagem como sendo processada
+  marcarMensagemProcessando(telefone, mensagem);
   
   try {
     // Verificar se o modelo está carregado
@@ -124,15 +111,50 @@ async function processarMensagem(message, client) {
       return null;
     };
     
-    // Sempre iniciar com treinamento de apresentação SEM identificar o contato
-    console.log('🚀 Processando treinamento de apresentação');
-    await treinamentoApresentacao.processarRespostaApresentacao(telefone, mensagem, message.selectedRowId, null, sendMessageForTraining, buscarContato);
+    // Usar sistema de identificação para determinar o fluxo
+    console.log('🚀 Processando através do sistema de identificação');
+    await sistemaIdentificacao.processarMensagemInicial(telefone, mensagem, sendMessageForTraining, buscarContato);
     
 
   } catch (error) {
     console.error('❌ Erro ao processar mensagem:', error);
     await client.sendText(message.from, '❌ Desculpe, ocorreu um erro. Tente novamente em alguns instantes.');
+  } finally {
+    // Remover da lista de processamento após conclusão
+    const chave = `${telefone}:${mensagem}`;
+    setTimeout(() => {
+      mensagensProcessando.delete(chave);
+    }, 1000);
   }
+}
+
+// Controle de mensagens duplicadas
+function verificarMensagemDuplicada(telefone, mensagem) {
+  const chave = `${telefone}:${mensagem}`;
+  const agora = Date.now();
+  
+  if (mensagensProcessando.has(chave)) {
+    const timestamp = mensagensProcessando.get(chave);
+    // Se a mensagem foi processada há menos de 5 segundos, é duplicada
+    if (agora - timestamp < TIMEOUT_DUPLICADA) {
+      console.log(`🔄 Mensagem duplicada ignorada: "${mensagem}" de ${telefone}`);
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+function marcarMensagemProcessando(telefone, mensagem) {
+  const chave = `${telefone}:${mensagem}`;
+  const agora = Date.now();
+  
+  mensagensProcessando.set(chave, agora);
+  
+  // Limpar mensagens antigas automaticamente
+  setTimeout(() => {
+    mensagensProcessando.delete(chave);
+  }, TIMEOUT_DUPLICADA);
 }
 
 // Função para definir cliente
@@ -140,8 +162,10 @@ function setWppClient(client) {
     wppClient = client;
 }
 
-// Variável para controlar reconexões
+// Variáveis para controlar reconexões e instância única
 let reconectando = false;
+let instanciaAtiva = false;
+let clienteAtivo = null;
 
 // Função para limpar arquivos de lock e resolver problema do SingletonLock
 function limparLockFiles() {
@@ -195,30 +219,80 @@ function limparLockFiles() {
   }
 }
 
+// Função para limpar SingletonLock de forma agressiva
+async function limparSingletonLock() {
+  const fs = require('fs');
+  const path = require('path');
+  const { execSync } = require('child_process');
+  
+  try {
+    console.log('🧹 Limpando SingletonLock...');
+    
+    // Matar TODOS os processos Chrome/Chromium
+    try {
+      execSync('pkill -9 -f "chrome.*WHATSAPP_BOT_DIRECT"', { stdio: 'ignore' });
+      execSync('pkill -9 -f chromium', { stdio: 'ignore' });
+      execSync('pkill -9 -f chrome', { stdio: 'ignore' });
+      console.log('✅ Processos Chrome finalizados');
+    } catch (e) {}
+    
+    // Aguardar processos terminarem
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Remover SingletonLock específico
+    const lockPath = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT', 'SingletonLock');
+    if (fs.existsSync(lockPath)) {
+      fs.unlinkSync(lockPath);
+      console.log('✅ SingletonLock removido');
+    }
+    
+    // Remover outros arquivos de lock
+    const tokensDir = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT');
+    if (fs.existsSync(tokensDir)) {
+      const files = fs.readdirSync(tokensDir);
+      files.forEach(file => {
+        if (file.includes('lock') || file.includes('Lock')) {
+          try {
+            fs.unlinkSync(path.join(tokensDir, file));
+            console.log(`✅ Removido: ${file}`);
+          } catch (e) {}
+        }
+      });
+    }
+    
+  } catch (error) {
+    console.log('⚠️ Erro ao limpar SingletonLock:', error.message);
+  }
+}
+
 // Função para inicializar o bot com reconexão automática
 async function inicializarBot() {
-  if (reconectando) {
-    console.log('⏳ Reconexão já em andamento, aguardando...');
+  if (reconectando || instanciaAtiva) {
+    console.log('⏳ Instância já em andamento, aguardando...');
     return;
   }
   
   reconectando = true;
+  instanciaAtiva = true;
   
-  // Limpar SingletonLock antes de inicializar
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const lockPath = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT', 'SingletonLock');
-    if (fs.existsSync(lockPath)) {
-      fs.unlinkSync(lockPath);
-      console.log('🧹 SingletonLock removido');
-    }
-  } catch (e) {
-    console.log('⚠️ Erro ao limpar lock:', e.message);
+  // Limpar SingletonLock antes de qualquer coisa
+  await limparSingletonLock();
+  
+  // Verificar sessão existente
+  const fs = require('fs');
+  const path = require('path');
+  
+  const sessaoExistente = mantenedorSessao.verificarSessaoExistente();
+  const temTokens = mantenedorSessao.verificarTokensWhatsApp();
+  
+  if (sessaoExistente && temTokens) {
+    console.log('🔄 Tentando restaurar sessão existente...');
+  } else if (!temTokens) {
+    console.log('🆕 Primeira conexão ou tokens perdidos');
   }
   
   // Aguardar antes de inicializar
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 3000));
   
   try {
     const client = await wppconnect.create({
@@ -226,8 +300,11 @@ async function inicializarBot() {
       headless: 'new',
       disableWelcome: true,
       updatesLog: false,
-      autoClose: 60000,
-      qrTimeout: 60000,
+      autoClose: 0,
+      qrTimeout: 0,
+      tokenStore: 'file',
+      folderNameToken: './tokens',
+      mkdirFolderToken: './tokens',
       puppeteerOptions: {
         args: [
           '--no-sandbox',
@@ -235,10 +312,19 @@ async function inicializarBot() {
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--disable-features=VizDisplayCompositor',
-          '--user-data-dir=/tmp/chrome-' + Date.now()
+          '--disable-web-security',
+          '--disable-features=site-per-process',
+          '--no-first-run',
+          '--disable-default-apps',
+          '--disable-extensions',
+          '--disable-features=VizDisplayCompositor',
+          '--disable-web-security',
+          '--disable-features=site-per-process'
         ],
-        protocolTimeout: 60000,
-        defaultViewport: { width: 800, height: 600 }
+        protocolTimeout: 300000, // 5 minutos
+        defaultViewport: { width: 800, height: 600 },
+        userDataDir: path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT'),
+        executablePath: undefined // Usar Chrome padrão do sistema
       },
       catchQR: (base64Qr, asciiQR) => {
         console.log('\n📱 QR CODE Bot Cliente:');
@@ -248,22 +334,81 @@ async function inicializarBot() {
         console.log('📶 Bot Cliente Status:', status);
         
         // Reconectar automaticamente se desconectar
-        if (status === 'browserClose') {
-          console.log('🔄 Navegador fechado, reconectando em 10 segundos...');
+        if (status === 'browserClose' || status === 'desconnectedMobile') {
+          console.log(`🔄 Status ${status} - Tentando reconectar em 5 segundos...`);
           setTimeout(() => {
             reconectando = false;
             inicializarBot();
-          }, 10000);
+          }, 5000);
+        }
+        
+        // Log de status importantes
+        if (status === 'qrReadSuccess') {
+          console.log('✅ QR Code lido com sucesso!');
+          // Criar backup dos tokens após QR lido
+          setTimeout(() => {
+            mantenedorSessao.backupTokens();
+          }, 5000);
+        }
+        if (status === 'chatsAvailable') {
+          console.log('✅ Chats disponíveis - Sessão ativa!');
+          // Atualizar status da sessão
+          mantenedorSessao.salvarSessao({
+            sessionId: 'WHATSAPP_BOT_DIRECT',
+            status: 'ACTIVE',
+            ultimaAtividade: Date.now()
+          });
+        }
+        if (status === 'desconnectedMobile') {
+          console.log('❌ Desconectado do celular!');
+          mantenedorSessao.pararHeartbeat();
         }
       }
     });
     
+    // Fechar cliente anterior se existir
+    if (clienteAtivo) {
+      try {
+        await clienteAtivo.close();
+      } catch (e) {}
+    }
+    
     wppClient = client;
+    clienteAtivo = client;
     setWppClient(client);
     reconectando = false;
     console.log('✅ Bot Cliente conectado!');
     
-    // Monitor de conexão desabilitado para evitar múltiplas instâncias
+    // Salvar dados da sessão
+    mantenedorSessao.salvarSessao({
+      sessionId: 'WHATSAPP_BOT_DIRECT',
+      status: 'CONNECTED',
+      conectadoEm: Date.now()
+    });
+    
+    // Iniciar sistema de heartbeat
+    mantenedorSessao.iniciarHeartbeat();
+    
+    // Sistema de monitoramento de conexão
+    const monitorarConexao = setInterval(async () => {
+      try {
+        const state = await client.getConnectionState().catch(() => 'DISCONNECTED');
+        if (state !== 'CONNECTED') {
+          console.log(`⚠️ Estado da conexão: ${state}`);
+          if (state === 'DISCONNECTED') {
+            clearInterval(monitorarConexao);
+            mantenedorSessao.pararHeartbeat();
+            console.log('🔄 Conexão perdida - Reiniciando...');
+            setTimeout(() => {
+              reconectando = false;
+              inicializarBot();
+            }, 3000);
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Erro no monitor de conexão:', error.message);
+      }
+    }, 30000); // Verificar a cada 30 segundos
     
     // Listener de mensagens
     client.onMessage(async (message) => {
@@ -297,16 +442,41 @@ async function inicializarBot() {
       console.log('🔄 Estado mudou para:', state);
       if (state === 'CONNECTED') {
         console.log('✅ WhatsApp conectado com sucesso!');
+      } else if (state === 'DISCONNECTED') {
+        console.log('❌ WhatsApp desconectado!');
       }
     });
     
+    // Listener para detectar quando a sessão é fechada
+    client.onInterfaceChange((interfaceChange) => {
+      console.log('🔄 Interface mudou:', interfaceChange);
+    });
+    
   } catch (error) {
-    console.error('❌ Erro Bot Cliente:', error);
+    console.error('❌ Erro Bot Cliente:', error.message || 'Erro desconhecido');
     reconectando = false;
-    console.log('🔄 Tentando reconectar em 10 segundos...');
+    instanciaAtiva = false;
+    
+    // Se for erro de SingletonLock, tentar limpar e reconectar
+    if (error.message && (error.message.includes('SingletonLock') || error.message.includes('Failed to create'))) {
+      console.log('🧹 Erro de SingletonLock detectado - Limpando e tentando novamente...');
+      await limparSingletonLock();
+      setTimeout(() => {
+        inicializarBot();
+      }, 5000);
+      return;
+    }
+    
+    // Não tentar reconectar se for erro de QR timeout
+    if (error.message && (error.message.includes('QR') || error.message.includes('timeout'))) {
+      console.log('⚠️ Erro de QR/Timeout - Aguardando nova tentativa manual');
+      return;
+    }
+    
+    console.log('🔄 Tentando reconectar em 20 segundos...');
     setTimeout(() => {
       inicializarBot();
-    }, 10000);
+    }, 20000);
   }
 }
 
