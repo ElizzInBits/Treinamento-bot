@@ -1,46 +1,99 @@
 // Arquivo de inicialização do bot WhatsApp
 console.log('🤖 Iniciando WhatsApp Bot...');
 
-// Verificar e limpar arquivos de lock antes de iniciar
+const mantenedorSessao = require('./manterSessao');
+const controleInstancia = require('./controleInstancia');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-function verificarELimparLocks() {
+// Função principal async
+async function iniciarBot() {
   try {
-    console.log('🔍 Verificando arquivos de lock...');
+    // Verificar se já existe uma instância rodando
+    if (controleInstancia.verificarInstanciaExistente()) {
+      console.log('⚠️ Já existe uma instância do bot rodando!');
+      console.log('🔄 Aguardando liberação ou forçando limpeza...');
+      await controleInstancia.aguardarLiberacao();
+    }
     
-    // Verificar se existe SingletonLock
-    const lockPath = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT', 'SingletonLock');
-    if (fs.existsSync(lockPath)) {
-      console.log('⚠️ SingletonLock detectado, removendo...');
-      
-      // Matar processos Chrome
+    // Criar lock para esta instância
+    controleInstancia.criarLock();
+    // Verificar estado da sessão
+    console.log('🔍 Verificando estado da sessão...');
+    const sessaoExistente = mantenedorSessao.verificarSessaoExistente();
+    const temTokens = mantenedorSessao.verificarTokensWhatsApp();
+
+    if (sessaoExistente && temTokens) {
+      console.log('✅ Sessão existente encontrada - Restaurando conexão...');
+    } else if (!temTokens) {
+      console.log('🆕 Primeira execução ou tokens perdidos - QR Code será necessário');
+    } else {
+      console.log('🔄 Tentando restaurar sessão...');
+    }
+
+    // Função para limpeza robusta de locks e processos
+    async function limpezaRobusta() {
       try {
-        execSync('pkill -9 -f chrome', { stdio: 'ignore' });
-        execSync('pkill -9 -f chromium', { stdio: 'ignore' });
-      } catch (e) {}
-      
-      // Remover diretório completo
-      const tokensDir = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT');
-      if (fs.existsSync(tokensDir)) {
-        fs.rmSync(tokensDir, { recursive: true, force: true });
-        console.log('✅ Diretório de tokens limpo');
+        console.log('🧹 Executando limpeza robusta...');
+        
+        // Matar processos Chrome órfãos
+        try {
+          execSync('pkill -9 -f "chrome.*WHATSAPP_BOT_DIRECT"', { stdio: 'ignore' });
+          execSync('pkill -9 -f chromium', { stdio: 'ignore' });
+          execSync('pkill -9 -f wppconnect', { stdio: 'ignore' });
+          console.log('✅ Processos Chrome finalizados');
+        } catch (e) {}
+        
+        // Aguardar processos terminarem
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Remover arquivos de lock
+        const tokensDir = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT');
+        if (fs.existsSync(tokensDir)) {
+          const arquivos = fs.readdirSync(tokensDir);
+          arquivos.forEach(arquivo => {
+            if (arquivo.includes('lock') || arquivo.includes('Lock')) {
+              try {
+                fs.unlinkSync(path.join(tokensDir, arquivo));
+                console.log(`✅ Removido: ${arquivo}`);
+              } catch (e) {}
+            }
+          });
+        }
+        
+        // Limpar cache temporário
+        try {
+          execSync('rm -rf /tmp/.org.chromium.* /tmp/chrome_*', { stdio: 'ignore' });
+        } catch (e) {}
+        
+        console.log('✅ Limpeza robusta concluída');
+      } catch (error) {
+        console.log('⚠️ Erro na limpeza robusta:', error.message);
       }
     }
+
+    // Executar limpeza robusta
+    await limpezaRobusta();
+
+    // Aguardar um pouco antes de carregar o sistema principal
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log('🚀 Carregando sistema principal...');
+    require('./Template2.js');
+    
+    console.log('✅ Bot iniciado com sucesso!');
+    console.log(`🆔 PID: ${process.pid}`);
+    
   } catch (error) {
-    console.log('⚠️ Erro na verificação:', error.message);
+    console.error('❌ Erro ao iniciar bot:', error);
+    controleInstancia.limparLock();
+    process.exit(1);
   }
 }
 
-// Executar verificação
-verificarELimparLocks();
-
-// Aguardar um pouco antes de carregar o sistema principal
-setTimeout(() => {
-  // Carregar o processador principal de mensagens
-  require('./Template2.js');
-}, 2000);
+// Iniciar o bot
+iniciarBot();
 
 console.log('✅ Bot WhatsApp iniciado com sucesso!');
 console.log('📱 Aguardando mensagens...');

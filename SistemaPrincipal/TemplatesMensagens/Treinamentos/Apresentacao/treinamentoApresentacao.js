@@ -1,16 +1,29 @@
 const { Contato, Interacao } = require('../../../BancoDeDados/models');
 const { gerarCertificado } = require('../../Certificados/gerarCertificado');
+const { encurtarNome } = require('../../utils/formatarNome');
 
 // ==================== FUNÇÃO PRINCIPAL ====================
 
 async function processarRespostaApresentacao(sender, text, selectedId, contato, sendMessage, buscarContato = null) {
-    console.log(`🎯 Processando resposta: "${text}" de ${sender}`);
+    console.log(`🎯 [APRESENTACAO] Processando resposta: "${text}" de ${sender}`);
+    
+    // Se for comando especial para iniciar apresentação
+    if (text === 'iniciar_apresentacao') {
+        console.log('🎆 INICIANDO FLUXO DE APRESENTAÇÃO');
+        return await mostrarComoFunciona(sender, contato.nome, sendMessage);
+    }
     
     const ultimaInteracao = await obterUltimaInteracao(sender);
     
-    // Se conversa foi finalizada OU não há interação anterior, reiniciar
-    if (!ultimaInteracao || (ultimaInteracao && JSON.parse(ultimaInteracao.mensagem || '{}').etapa === 'finalizado')) {
-        console.log('🎆 REINICIANDO FLUXO - Conversa finalizada ou primeira interação');
+    // Se conversa foi finalizada, reiniciar
+    if (ultimaInteracao && JSON.parse(ultimaInteracao.mensagem || '{}').etapa === 'finalizado') {
+        console.log('🎆 REINICIANDO FLUXO - Conversa finalizada');
+        return await iniciarFluxoBoasVindas(sender, sendMessage);
+    }
+    
+    // Se não há interação anterior, iniciar fluxo
+    if (!ultimaInteracao) {
+        console.log('🎆 PRIMEIRA INTERAÇÃO - Iniciando fluxo');
         return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
     
@@ -43,6 +56,9 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
             return true;
         case 'mostrar_recursos':
             return await processarMostrarRecursos(sender, text, sendMessage);
+        case 'processando_recursos':
+            console.log('🔄 Ignorando mensagem - recursos já sendo processados');
+            return true;
         case 'testes_avaliacoes':
             console.log('📝 Entrando em processarTestesAvaliacoes');
             return await processarTestesAvaliacoes(sender, text, selectedId, sendMessage);
@@ -58,11 +74,14 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
             return await processarPerguntaConteudoRestante(sender, text, sendMessage);
         case 'contato_comercial':
             return await processarContatoComercial(sender, text, sendMessage);
+        case 'treinamentos_pendentes':
+            return await processarTreinamentosPendentes(sender, text, sendMessage);
         case 'finalizando':
-            console.log('🔄 Ignorando mensagem - finalização já em andamento');
-            return true;
-        default:
+            console.log('🔄 Conversa finalizada - reiniciando fluxo');
             return await iniciarFluxoBoasVindas(sender, sendMessage);
+        default:
+            console.log(`⚠️ Etapa desconhecida: ${etapa} - Continuando fluxo`);
+            return true;
     }
 }
 
@@ -96,7 +115,7 @@ async function processarOpcaoInicial(sender, text, sendMessage, buscarContato = 
             await salvarInteracao(sender, 'aguardando_cadastro', JSON.stringify({ etapa: 'aguardando_cadastro' }));
         } else {
             console.log(`🎉 USUÁRIO CADASTRADO: ${contato.nome} - Prosseguindo automaticamente`);
-            await mostrarComoFunciona(sender, contato.nome, sendMessage);
+            await mostrarComoFunciona(sender, encurtarNome(contato.nome), sendMessage);
         }
         return true;
     } else if (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('nao')) {
@@ -142,7 +161,7 @@ async function processarAposCadastro(sender, text, sendMessage, buscarContato = 
     if (contato) {
         console.log(`🎉 USUÁRIO CADASTRADO RETORNOU: ${contato.nome}`);
         await salvarInteracao(sender, 'processando_cadastrado', JSON.stringify({ etapa: 'processando_cadastrado' }));
-        await mostrarComoFunciona(sender, contato.nome, sendMessage);
+        await mostrarComoFunciona(sender, encurtarNome(contato.nome), sendMessage);
         return true;
     } else {
         await sendMessage(sender, 'send-message', {
@@ -155,8 +174,12 @@ async function processarAposCadastro(sender, text, sendMessage, buscarContato = 
 // ==================== APRESENTAÇÃO DOS RECURSOS ====================
 
 async function mostrarComoFunciona(sender, nome, sendMessage) {
+    // LIMPAR PROGRESSO ANTERIOR ao iniciar nova apresentação
+    console.log(`🧹 [PROGRESSO] Limpando progresso anterior para ${sender}`);
+    await limparProgressoAnterior(sender);
+    
     await sendMessage(sender, 'send-message', {
-        message: `😃 Muito bem ${nome}! Aqui o treinamento acontece como uma conversa rápida:\n• Mensagens curtas 💬\n• Linguagem simples ✅\n• Interatividade o tempo todo ⚡\n👉 E tudo com validade legal`
+        message: `😃 Muito bem ${encurtarNome(nome)}! Aqui o treinamento acontece como uma conversa rápida:\n• Mensagens curtas 💬\n• Linguagem simples ✅\n• Interatividade o tempo todo ⚡\n👉 E tudo com validade legal`
     });
     
     setTimeout(async () => {
@@ -172,12 +195,12 @@ async function processarMostrarRecursos(sender, text, sendMessage) {
     
     console.log(`🎯 Processando mostrar recursos: "${text}" -> "${opcao}"`);
     
-    if (opcao === '1' || opcao.includes('sim, mostra')) {
+    if (opcao === '1' || opcao.includes('sim') || opcao.includes('mostra')) {
         console.log('✅ Mostrando recursos detalhados');
         await mostrarRecursosDetalhados(sender, sendMessage);
     } else if (opcao === '2' || opcao.includes('pula')) {
-        console.log('✅ Pulando recursos - indo para exemplos');
-        // Não marcar progresso se pulou
+        console.log('✅ Pulando recursos - NÃO marcando progresso de recursos_detalhados');
+        // NÃO marcar progresso de recursos_detalhados se pulou
         await mostrarExemplosTrainamentos(sender, sendMessage);
     } else {
         console.log('❌ Opção inválida - reenviando');
@@ -271,6 +294,7 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                                     });
                                     await salvarInteracao(sender, 'testes_avaliacoes', JSON.stringify({ etapa: 'testes_avaliacoes' }));
                                 } catch (error) {
+                                    console.error('❌ Erro ao enviar lista:', error);
                                     await sendMessage(sender, 'send-message', {
                                         message: 'Você concorda em realizar treinamentos normativos no WhatsApp em sua empresa?\n\n1️⃣ SIM\n2️⃣ COM CERTEZA'
                                     });
@@ -428,6 +452,8 @@ async function mostrarQuandoOnde(sender, sendMessage) {
 // ==================== EXEMPLOS DE TREINAMENTOS ====================
 
 async function mostrarExemplosTrainamentos(sender, sendMessage) {
+    console.log(`📚 [EXEMPLOS] Mostrando exemplos para ${sender} - NÃO marcando progresso ainda`);
+    
     await sendMessage(sender, 'send-message', {
         message: '📚 Olha só alguns exemplos que já estão rodando no zap:\n\n• NR01 – Gerenciamento de Riscos\n• NR06 – EPC & EPI\n• NR10 – Segurança em Eletricidade ⚡\n• NR12 – Segurança em Máquinas\n• NR35 – Trabalho em Altura 🧗'
     });
@@ -449,8 +475,9 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
         console.log('✅ Opção 1 selecionada - enviando vídeos');
         await enviarVideoTreinamentoMotorista(sender, sendMessage);
     } else if (opcao === '2' || opcao.includes('convencido') || opcao.includes('já estou')) {
-        console.log('✅ Opção 2 selecionada - finalizando');
-        // Não marcar progresso se pulou
+        console.log('✅ Opção 2 selecionada - pulando vídeos');
+        // NÃO marcar progresso de videos_exemplos se pulou
+        // Ir direto para certificado (que vai detectar que faltou conteúdo)
         await perguntarDadosCertificado(sender, sendMessage);
     } else {
         console.log('❌ Opção inválida - reenviando opções');
@@ -465,6 +492,17 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
 // ==================== ENVIO DE VÍDEOS ====================
 
 async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
+    // Verificar se já está processando vídeos para evitar duplicação
+    const chaveProcessamento = `video_motorista_${sender}`;
+    if (global.processandoVideos && global.processandoVideos.has(chaveProcessamento)) {
+        console.log('🔄 Vídeo de motorista já sendo processado, ignorando');
+        return;
+    }
+    
+    // Marcar como processando
+    if (!global.processandoVideos) global.processandoVideos = new Set();
+    global.processandoVideos.add(chaveProcessamento);
+    
     // Marcar progresso
     await marcarProgressoEtapa(sender, 'videos_exemplos');
     
@@ -492,6 +530,8 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
         // Enviar segundo vídeo após o primeiro
         setTimeout(async () => {
             await enviarVideoTreinamentoTerceiros(sender, sendMessage);
+            // Remover da lista de processamento
+            global.processandoVideos.delete(chaveProcessamento);
         }, 3000);
         
     } catch (error) {
@@ -500,10 +540,23 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
             message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
         });
         await mostrarOutrasAplicacoes(sender, sendMessage);
+        // Remover da lista de processamento
+        global.processandoVideos.delete(chaveProcessamento);
     }
 }
 
 async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
+    // Verificar se já está processando vídeos de terceiros
+    const chaveProcessamento = `video_terceiros_${sender}`;
+    if (global.processandoVideos && global.processandoVideos.has(chaveProcessamento)) {
+        console.log('🔄 Vídeo de terceiros já sendo processado, ignorando');
+        return;
+    }
+    
+    // Marcar como processando
+    if (!global.processandoVideos) global.processandoVideos = new Set();
+    global.processandoVideos.add(chaveProcessamento);
+    
     try {
         const path = require('path');
         const fs = require('fs');
@@ -527,6 +580,8 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
         
         setTimeout(async () => {
             await perguntarDadosCertificado(sender, sendMessage);
+            // Remover da lista de processamento
+            global.processandoVideos.delete(chaveProcessamento);
         }, 2000);
         
     } catch (error) {
@@ -535,6 +590,8 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
             message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
         });
         await perguntarDadosCertificado(sender, sendMessage);
+        // Remover da lista de processamento
+        global.processandoVideos.delete(chaveProcessamento);
     }
 }
 
@@ -658,6 +715,10 @@ async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
     // Verificar se o usuário completou todo o treinamento
     const progressoCompleto = await verificarProgressoCompleto(sender);
     
+    console.log(`📋 [CERTIFICADO] Resultado verificação progresso:`);
+    console.log(`📋 Completo: ${progressoCompleto.completo}`);
+    console.log(`📋 Faltando: ${JSON.stringify(progressoCompleto.faltando)}`);
+    
     if (!progressoCompleto.completo) {
         await sendMessage(sender, 'send-message', {
             message: `🎓 *Certificado Disponível!*\n\n⚠️ Para emitir seu certificado, você precisa ver todo o conteúdo do treinamento.\n\n📋 *Partes que você ainda não viu:*\n${progressoCompleto.faltando.join('\n')}\n\nQuer ver o restante do conteúdo para obter o certificado?\n\n1️⃣ Sim, quero ver o conteúdo\n2️⃣ Não, obrigado`
@@ -721,14 +782,11 @@ async function processarOutrasAplicacoes(sender, text, sendMessage) {
     console.log(`📊 Processando outras aplicações: "${text}" -> "${opcao}"`);
     
     if (opcao === '1' || opcao.includes('sim, quero') || opcao.includes('mais informações')) {
-        console.log('✅ Finalizando apresentação - contato comercial');
-        await finalizarApresentacao(sender, sendMessage);
+        console.log('✅ Verificando treinamentos pendentes antes do contato comercial');
+        await verificarTreinamentosPendentes(sender, sendMessage);
     } else if (opcao === '2' || opcao.includes('não, obrigado') || opcao.includes('obrigado')) {
-        console.log('✅ Usuário não quer contato comercial');
-        await sendMessage(sender, 'send-message', {
-            message: '😊 Obrigada pelo seu tempo! Se mudar de ideia, é só me mandar um "oi" que recomeçamos!'
-        });
-        await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+        console.log('✅ Usuário não quer contato comercial - verificando treinamentos pendentes');
+        await verificarTreinamentosPendentes(sender, sendMessage, false);
     } else {
         console.log('❌ Opção inválida - reenviando');
         await sendMessage(sender, 'send-message', {
@@ -737,6 +795,182 @@ async function processarOutrasAplicacoes(sender, text, sendMessage) {
     }
     
     return true;
+}
+
+// ==================== VERIFICAÇÃO DE TREINAMENTOS PENDENTES ====================
+
+async function verificarTreinamentosPendentes(sender, sendMessage, querContato = true) {
+    try {
+        // Buscar dados do contato
+        const formatosTelefone = [
+            sender,
+            sender.substring(2),
+            `${sender.substring(0, 4)}9${sender.substring(4)}`,
+            sender.length === 13 ? sender.substring(0, 4) + sender.substring(5) : sender,
+        ];
+        
+        let contato = null;
+        for (const formato of formatosTelefone) {
+            contato = await Contato.findOne({ where: { telefone: formato } });
+            if (contato) break;
+        }
+        
+        if (!contato || !contato.empresaId) {
+            console.log('📊 Não foi possível identificar empresa - direcionando para contato');
+            if (querContato) {
+                await finalizarApresentacao(sender, sendMessage);
+            } else {
+                await finalizarSemContato(sender, sendMessage);
+            }
+            return;
+        }
+        
+        console.log(`📊 Verificando treinamentos para empresa ID: ${contato.empresaId}, contato ID: ${contato.id}`);
+        
+        // Buscar treinamentos pendentes da empresa, excluindo os já completados pelo usuário
+        const treinamentosPendentes = await verificarTreinamentosEmpresa(contato.empresaId, contato.id);
+        
+        if (treinamentosPendentes && treinamentosPendentes.length > 0) {
+            console.log(`🎓 Encontrados ${treinamentosPendentes.length} treinamentos pendentes`);
+            await direcionarParaTreinamentos(sender, sendMessage, treinamentosPendentes, contato);
+        } else {
+            console.log('📊 Nenhum treinamento pendente encontrado');
+            if (querContato) {
+                await finalizarApresentacao(sender, sendMessage);
+            } else {
+                await finalizarSemContato(sender, sendMessage);
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao verificar treinamentos pendentes:', error);
+        if (querContato) {
+            await finalizarApresentacao(sender, sendMessage);
+        } else {
+            await finalizarSemContato(sender, sendMessage);
+        }
+    }
+}
+
+async function verificarTreinamentosEmpresa(empresaId, contatoId = null) {
+    try {
+        const { Empresa, Treinamento, EmpresaTreinamento, Contato, sequelize } = require('../../../BancoDeDados/models');
+        
+        console.log(`🔍 Consultando treinamentos para empresa ${empresaId}, contato ${contatoId}`);
+        
+        // Buscar empresa com seus treinamentos
+        const empresa = await Empresa.findByPk(empresaId, {
+            include: [{
+                model: Treinamento,
+                as: 'treinamentos',
+                through: {
+                    model: EmpresaTreinamento,
+                    attributes: ['data_atribuicao']
+                }
+            }]
+        });
+        
+        if (!empresa || !empresa.treinamentos || empresa.treinamentos.length === 0) {
+            console.log(`❌ Nenhum treinamento encontrado para empresa ${empresaId}`);
+            return [];
+        }
+        
+        // Se temos o ID do contato, verificar quais treinamentos já foram completados
+        let treinamentosCompletados = [];
+        if (contatoId) {
+            try {
+                const query = `
+                    SELECT treinamentoId 
+                    FROM ContatoTreinamentos 
+                    WHERE contatoId = :contatoId
+                `;
+                const resultados = await sequelize.query(query, {
+                    replacements: { contatoId },
+                    type: sequelize.QueryTypes.SELECT
+                });
+                treinamentosCompletados = resultados.map(r => r.treinamentoId);
+                console.log(`📊 Treinamentos já completados pelo contato ${contatoId}:`, treinamentosCompletados);
+            } catch (error) {
+                console.error('⚠️ Erro ao verificar treinamentos completados:', error);
+            }
+        }
+        
+        // Mapear treinamentos para formato esperado, filtrando apenas os pendentes
+        const treinamentos = empresa.treinamentos
+            .filter(treinamento => !treinamentosCompletados.includes(treinamento.id))
+            .map(treinamento => {
+                // Calcular prazo baseado na data de atribuição (exemplo: 30 dias)
+                const dataAtribuicao = new Date(treinamento.empresa_treinamentos.data_atribuicao);
+                const prazo = new Date(dataAtribuicao);
+                prazo.setDate(prazo.getDate() + 30); // 30 dias para completar
+                
+                return {
+                    id: treinamento.id,
+                    nome: treinamento.nome,
+                    tipo: 'obrigatorio', // Por padrão, todos são obrigatórios
+                    prazo: prazo.toISOString().split('T')[0] // formato YYYY-MM-DD
+                };
+            });
+        
+        console.log(`✅ Empresa ${empresaId} tem ${treinamentos.length} treinamentos pendentes (${empresa.treinamentos.length - treinamentos.length} já completados)`);
+        return treinamentos;
+        
+    } catch (error) {
+        console.error('❌ Erro ao buscar treinamentos da empresa:', error);
+        return [];
+    }
+}
+
+async function direcionarParaTreinamentos(sender, sendMessage, treinamentos, contato) {
+    const nomeContato = encurtarNome(contato.nome || contato.nomeCompleto);
+    
+    let mensagem = `🎓 Ótimo ${nomeContato}! Identifiquei que sua empresa tem treinamentos pendentes:\n\n`;
+    
+    treinamentos.forEach((treinamento, index) => {
+        const prazoFormatado = treinamento.prazo ? ` (prazo: ${treinamento.prazo})` : '';
+        
+        // Determinar ícone baseado no prazo e tipo
+        let icone = '⚠️'; // Padrão para obrigatório
+        
+        if (treinamento.prazo) {
+            const hoje = new Date();
+            const dataPrazo = new Date(treinamento.prazo);
+            const diasRestantes = Math.ceil((dataPrazo - hoje) / (1000 * 60 * 60 * 24));
+            
+            if (diasRestantes < 0) {
+                icone = '🔴'; // Vencido
+            } else if (diasRestantes <= 7) {
+                icone = '🟡'; // Próximo do vencimento
+            } else if (treinamento.tipo === 'reciclagem') {
+                icone = '🔄'; // Reciclagem
+            } else {
+                icone = '⚠️'; // Obrigatório normal
+            }
+        }
+        
+        mensagem += `${icone} ${treinamento.nome}${prazoFormatado}\n`;
+    });
+    
+    mensagem += '\n👉 O que você gostaria de fazer?\n\n';
+    mensagem += '1️⃣ Fazer meus treinamentos agora\n';
+    mensagem += '2️⃣ Lembrar depois\n';
+    mensagem += '3️⃣ Falar com o comercial';
+    
+    await sendMessage(sender, 'send-message', { message: mensagem });
+    
+    await salvarInteracao(sender, 'treinamentos_pendentes', JSON.stringify({ 
+        etapa: 'treinamentos_pendentes',
+        treinamentos: treinamentos,
+        contato_id: contato.id,
+        empresa_id: contato.empresaId
+    }));
+}
+
+async function finalizarSemContato(sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '😊 Obrigada pelo seu tempo! \n\nSe precisar de alguma coisa ou quiser conhecer nossos treinamentos, é só me mandar um "oi" que recomeçamos!\n\n🚀 Até a próxima!'
+    });
+    await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
 }
 
 // ==================== FINALIZAÇÃO ====================
@@ -776,7 +1010,45 @@ async function finalizarApresentacao(sender, sendMessage) {
 
 async function processarContatoComercial(sender, text, sendMessage) {
     // Qualquer mensagem reinicia o fluxo
+    console.log('🔄 Contato comercial finalizado - reiniciando fluxo');
     return await iniciarFluxoBoasVindas(sender, sendMessage);
+}
+
+// Processar resposta dos treinamentos pendentes
+async function processarTreinamentosPendentes(sender, text, sendMessage) {
+    const opcao = text.trim();
+    const ultimaInteracao = await obterUltimaInteracao(sender);
+    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    
+    console.log(`🎓 Processando treinamentos pendentes: "${text}"`);
+    
+    if (opcao === '1' || opcao.toLowerCase().includes('fazer') || opcao.toLowerCase().includes('agora')) {
+        // Iniciar treinamentos
+        console.log('🎓 Direcionando para treinamentos da empresa');
+        await sendMessage(sender, 'send-message', {
+            message: '🎓 Excelente! Vou direcionar você para seus treinamentos pendentes.\n\n🚀 Preparando seu ambiente de treinamento...\n\n⚠️ [EM DESENVOLVIMENTO]\nEm breve você será direcionado automaticamente para o primeiro treinamento da lista.'
+        });
+        await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+        
+    } else if (opcao === '2' || opcao.toLowerCase().includes('depois') || opcao.toLowerCase().includes('lembrar')) {
+        // Lembrar depois
+        await sendMessage(sender, 'send-message', {
+            message: '😊 Perfeito! Vou te lembrar sobre seus treinamentos.\n\n📝 **Treinamentos pendentes salvos!**\n\nQuando quiser fazer, é só me mandar um "oi" que te direciono direto para eles.\n\n⏰ Não esqueça dos prazos!'
+        });
+        await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+        
+    } else if (opcao === '3' || opcao.toLowerCase().includes('comercial')) {
+        // Contato comercial
+        await finalizarApresentacao(sender, sendMessage);
+        
+    } else {
+        // Opção inválida
+        await sendMessage(sender, 'send-message', {
+            message: '🤔 Não entendi sua resposta. O que você gostaria de fazer?\n\n1️⃣ Fazer meus treinamentos agora\n2️⃣ Lembrar depois\n3️⃣ Falar com o comercial'
+        });
+    }
+    
+    return true;
 }
 
 // ==================== CONTROLE DE PROGRESSO ====================
@@ -784,10 +1056,16 @@ async function processarContatoComercial(sender, text, sendMessage) {
 async function marcarProgressoEtapa(telefone, etapa) {
     try {
         const progressoAtual = await obterProgresso(telefone);
+        console.log(`📋 Marcando progresso: ${etapa} para ${telefone}`);
+        console.log(`📋 Progresso antes:`, progressoAtual);
+        
         if (!progressoAtual.includes(etapa)) {
             progressoAtual.push(etapa);
             await salvarProgresso(telefone, progressoAtual);
             console.log(`✅ Progresso marcado: ${etapa} para ${telefone}`);
+            console.log(`📋 Progresso depois:`, progressoAtual);
+        } else {
+            console.log(`🔄 Etapa ${etapa} já marcada para ${telefone}`);
         }
     } catch (error) {
         console.error('❌ Erro ao marcar progresso:', error);
@@ -837,17 +1115,29 @@ async function verificarProgressoCompleto(telefone) {
     const progressoAtual = await obterProgresso(telefone);
     const faltando = etapasObrigatorias.filter(etapa => !progressoAtual.includes(etapa));
     
+    console.log(`📋 [PROGRESSO] ===== VERIFICAÇÃO COMPLETA =====`);
+    console.log(`📋 [PROGRESSO] Telefone: ${telefone}`);
+    console.log(`📋 [PROGRESSO] Etapas obrigatórias:`, etapasObrigatorias);
+    console.log(`📋 [PROGRESSO] Progresso atual:`, progressoAtual);
+    console.log(`📋 [PROGRESSO] Etapas faltando:`, faltando);
+    console.log(`📋 [PROGRESSO] Completo: ${faltando.length === 0}`);
+    console.log(`📋 [PROGRESSO] ================================`);
+    
     const nomeEtapas = {
         'recursos_detalhados': '• 📱 Recursos do WhatsApp',
         'quando_onde': '• ⏰ Quando e onde usar',
         'videos_exemplos': '• 🎥 Vídeos de exemplo'
     };
     
-    return {
+    // Forçar retorno de incompleto se qualquer etapa estiver faltando
+    const resultado = {
         completo: faltando.length === 0,
         faltando: faltando.map(etapa => nomeEtapas[etapa]),
         proximaParte: faltando[0] || null
     };
+    
+    console.log(`📋 [PROGRESSO] Resultado final:`, resultado);
+    return resultado;
 }
 
 async function processarPerguntaConteudoRestante(sender, text, sendMessage) {
@@ -909,6 +1199,22 @@ async function obterProximaParteNaoVista(sender) {
     return null;
 }
 
+// Função para limpar progresso anterior
+async function limparProgressoAnterior(telefone) {
+    try {
+        // Deletar TODOS os registros de progresso anteriores
+        await Interacao.destroy({
+            where: {
+                telefone: telefone,
+                tipo: 'progresso_treinamento'
+            }
+        });
+        console.log(`🧹 [PROGRESSO] Progresso anterior limpo para ${telefone}`);
+    } catch (error) {
+        console.error('❌ Erro ao limpar progresso anterior:', error);
+    }
+}
+
 // ==================== FUNÇÕES AUXILIARES ====================
 
 async function salvarInteracao(telefone, tipo, mensagem) {
@@ -944,5 +1250,6 @@ async function iniciarTreinamentoApresentacao(sender, sendMessage) {
 
 module.exports = {
     processarRespostaApresentacao,
-    iniciarTreinamentoApresentacao
+    iniciarTreinamentoApresentacao,
+    mostrarComoFunciona
 };
