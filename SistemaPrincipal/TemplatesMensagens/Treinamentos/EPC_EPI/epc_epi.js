@@ -1,775 +1,1041 @@
-const { Contato, Interacao, ContatoTreinamentos } = require('../../../BancoDeDados/models');
-const { gerarCertificado } = require('../../Certificados/gerarCertificado');
-const { encurtarNome } = require('../../utils/formatarNome');
+const fs = require('fs');
+const path = require('path');
 
 // ID do treinamento EPC/EPI no sistema
 const TREINAMENTO_ID = 16;
 const NOME_TREINAMENTO = 'NR6 - EPC e EPI - Uso, Guarda e Conservação';
 
-// ==================== FUNÇÃO PRINCIPAL ====================
-
-async function processarTreinamentoEpcEpi(sender, text, selectedId, contato, sendMessage, buscarContato = null) {
-    console.log(`🎯 [EPC_EPI] Processando resposta: "${text}" de ${sender}`);
-    
-    const ultimaInteracao = await obterUltimaInteracao(sender);
-    
-    // Se não há interação anterior, iniciar treinamento
-    if (!ultimaInteracao) {
-        console.log('🎆 PRIMEIRA INTERAÇÃO - Iniciando treinamento EPC/EPI');
-        return await iniciarTreinamento(sender, contato, sendMessage);
+class EPCEPITraining {
+    constructor() {
+        this.sessions = new Map();
+        this.basePath = path.join(__dirname, 'material_treinamento');
     }
-    
-    // Se há interação anterior, processar baseado no estado
-    if (ultimaInteracao) {
-        return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage, buscarContato);
-    }
-    
-    return await iniciarTreinamento(sender, contato, sendMessage);
-}
 
-async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage, buscarContato = null) {
-    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
-    const etapa = dados.etapa;
-    
-    console.log(`🎯 Etapa atual EPC/EPI: ${etapa}`);
-    console.log(`📝 Text: "${text}", SelectedId: "${selectedId}"`);
-    
-    switch (etapa) {
-        case 'introducao':
-            return await processarIntroducao(sender, text, sendMessage);
-        case 'definicoes':
-            return await processarDefinicoes(sender, text, sendMessage);
-        case 'tipos_epc':
-            return await processarTiposEpc(sender, text, sendMessage);
-        case 'tipos_epi':
-            return await processarTiposEpi(sender, text, sendMessage);
-        case 'uso_correto':
-            return await processarUsoCorreto(sender, text, sendMessage);
-        case 'manutencao':
-            return await processarManutencao(sender, text, sendMessage);
-        case 'responsabilidades':
-            return await processarResponsabilidades(sender, text, sendMessage);
-        case 'avaliacao_final':
-            return await processarAvaliacaoFinal(sender, text, selectedId, sendMessage);
-        case 'confirmar_dados_certificado':
-            return await processarConfirmacaoDados(sender, text, sendMessage);
-        case 'finalizado':
-            console.log('🔄 Treinamento finalizado');
-            return true;
-        default:
-            console.log(`⚠️ Etapa desconhecida: ${etapa} - Reiniciando treinamento`);
-            return await iniciarTreinamento(sender, contato, sendMessage);
-    }
-}
-
-// ==================== INÍCIO DO TREINAMENTO ====================
-
-async function iniciarTreinamento(sender, contato, sendMessage) {
-    const nomeContato = encurtarNome(contato.nome || contato.nomeCompleto);
-    
-    await sendMessage(sender, 'send-message', {
-        message: `🎓 *Treinamento NR6 - EPC e EPI*\n\nOlá ${nomeContato}! Bem-vindo ao treinamento sobre Equipamentos de Proteção Coletiva (EPC) e Equipamentos de Proteção Individual (EPI).\n\n🎯 *Objetivo:*\nAprender sobre uso, guarda e conservação de EPCs e EPIs conforme a NR6.\n\n⏱️ *Duração estimada:* 15-20 minutos\n\n👉 Vamos começar?\n\n1️⃣ Sim, vamos começar!\n2️⃣ Não, quero sair`
-    });
-    
-    await salvarInteracao(sender, 'epc_epi_introducao', JSON.stringify({ 
-        etapa: 'introducao',
-        treinamento_id: TREINAMENTO_ID,
-        contato_id: contato.id,
-        nome: nomeContato
-    }));
-    
-    return true;
-}
-
-async function processarIntroducao(sender, text, sendMessage) {
-    const opcao = text.trim();
-    
-    if (opcao === '1' || opcao.toLowerCase().includes('sim') || opcao.toLowerCase().includes('começar')) {
-        await mostrarDefinicoes(sender, sendMessage);
-    } else if (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('sair')) {
-        await sendMessage(sender, 'send-message', {
-            message: '😊 Tudo bem! Quando quiser fazer o treinamento, é só me avisar.\n\nLembre-se: este treinamento é obrigatório para sua segurança!'
+    async iniciarTreinamento(client, message, contato) {
+        const sessionKey = `${contato.numero}_epc_epi`;
+        
+        this.sessions.set(sessionKey, {
+            etapa: 'introducao',
+            pontuacao: 0,
+            respostasCorretas: 0,
+            inicioTreinamento: new Date()
         });
-        await salvarInteracao(sender, 'epc_epi_finalizado', JSON.stringify({ etapa: 'finalizado' }));
-    } else {
-        await sendMessage(sender, 'send-message', {
-            message: '🤔 Não entendi sua resposta. Por favor, escolha uma das opções:\n\n1️⃣ Sim, vamos começar!\n2️⃣ Não, quero sair'
+
+        await this.enviarIntroducao(client, message);
+    }
+
+    async enviarIntroducao(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'Show! Aqui o treinamento acontece como uma conversa rápida:\n\nHoje vamos falar sobre EPC e EPI. Você já ouviu falar deles?\n\n1️⃣ Sim, já sei.\n2️⃣ Não, mas gostaria de saber mais.\n\nDigite o número da sua resposta:'
         });
     }
-    
-    return true;
-}
 
-// ==================== DEFINIÇÕES ====================
-
-async function mostrarDefinicoes(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '📚 *DEFINIÇÕES IMPORTANTES*\n\n🛡️ *EPC - Equipamento de Proteção Coletiva*\nDispositivo que protege um grupo de pessoas simultaneamente.\n\n👤 *EPI - Equipamento de Proteção Individual*\nDispositivo de uso individual para proteção contra riscos.\n\n⚖️ *NR6 - Norma Regulamentadora 6*\nEstabelece os requisitos para EPIs no ambiente de trabalho.'
-    });
-    
-    setTimeout(async () => {
-        await sendMessage(sender, 'send-message', {
-            message: 'Entendeu as definições?\n\n1️⃣ Sim, entendi!\n2️⃣ Preciso rever'
-        });
+    async processarResposta(client, message, contato) {
+        const sessionKey = `${contato.numero}_epc_epi`;
+        const session = this.sessions.get(sessionKey);
         
-        await salvarInteracao(sender, 'epc_epi_definicoes', JSON.stringify({ etapa: 'definicoes' }));
-    }, 2000);
-}
-
-async function processarDefinicoes(sender, text, sendMessage) {
-    const opcao = text.trim();
-    
-    if (opcao === '1' || opcao.toLowerCase().includes('sim') || opcao.toLowerCase().includes('entendi')) {
-        await mostrarTiposEpc(sender, sendMessage);
-    } else if (opcao === '2' || opcao.toLowerCase().includes('rever')) {
-        await mostrarDefinicoes(sender, sendMessage);
-    } else {
-        await sendMessage(sender, 'send-message', {
-            message: 'Por favor, escolha uma das opções:\n\n1️⃣ Sim, entendi!\n2️⃣ Preciso rever'
-        });
-    }
-    
-    return true;
-}
-
-// ==================== TIPOS DE EPC ====================
-
-async function mostrarTiposEpc(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '🛡️ *TIPOS DE EPC*\n\n🚧 *Proteção Coletiva:*\n• Guarda-corpos\n• Redes de proteção\n• Ventilação/exaustão\n• Sinalização de segurança\n• Barreiras de contenção\n• Sistemas de alarme'
-    });
-    
-    setTimeout(async () => {
-        await sendMessage(sender, 'send-message', {
-            message: 'Qual a principal vantagem do EPC?\n\n1️⃣ Protege várias pessoas ao mesmo tempo\n2️⃣ É mais barato que o EPI\n3️⃣ Não precisa de manutenção'
-        });
-        
-        await salvarInteracao(sender, 'epc_epi_tipos_epc', JSON.stringify({ etapa: 'tipos_epc' }));
-    }, 3000);
-}
-
-async function processarTiposEpc(sender, text, sendMessage) {
-    const opcao = text.trim();
-    
-    if (opcao === '1') {
-        await sendMessage(sender, 'send-message', {
-            message: '✅ *Correto!*\n\nA principal vantagem do EPC é proteger várias pessoas simultaneamente, sendo sempre a primeira opção de proteção.'
-        });
-        
-        setTimeout(async () => {
-            await mostrarTiposEpi(sender, sendMessage);
-        }, 2000);
-    } else if (opcao === '2' || opcao === '3') {
-        await sendMessage(sender, 'send-message', {
-            message: '❌ *Incorreto.*\n\nA principal vantagem do EPC é proteger várias pessoas ao mesmo tempo. Vamos continuar!'
-        });
-        
-        setTimeout(async () => {
-            await mostrarTiposEpi(sender, sendMessage);
-        }, 2000);
-    } else {
-        await sendMessage(sender, 'send-message', {
-            message: 'Por favor, escolha uma das opções:\n\n1️⃣ Protege várias pessoas ao mesmo tempo\n2️⃣ É mais barato que o EPI\n3️⃣ Não precisa de manutenção'
-        });
-    }
-    
-    return true;
-}
-
-// ==================== TIPOS DE EPI ====================
-
-async function mostrarTiposEpi(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '👤 *TIPOS DE EPI*\n\n🧢 *Proteção da Cabeça:*\nCapacetes, bonés, toucas\n\n👁️ *Proteção dos Olhos:*\nÓculos, viseiras, máscaras de solda\n\n👂 *Proteção Auditiva:*\nProtetores auriculares, abafadores\n\n🫁 *Proteção Respiratória:*\nMáscaras, respiradores, filtros'
-    });
-    
-    setTimeout(async () => {
-        await sendMessage(sender, 'send-message', {
-            message: '🧤 *Proteção das Mãos:*\nLuvas de diversos materiais\n\n🦶 *Proteção dos Pés:*\nBotas, sapatos de segurança\n\n🦺 *Proteção do Corpo:*\nAventais, macacões, coletes\n\n🪢 *Proteção contra Quedas:*\nCinturões, talabartes, trava-quedas'
-        });
-        
-        setTimeout(async () => {
-            await sendMessage(sender, 'send-message', {
-                message: 'Quando devemos usar EPI?\n\n1️⃣ Sempre, em qualquer situação\n2️⃣ Quando não for possível eliminar o risco com EPC\n3️⃣ Apenas quando o chefe mandar'
-            });
-            
-            await salvarInteracao(sender, 'epc_epi_tipos_epi', JSON.stringify({ etapa: 'tipos_epi' }));
-        }, 3000);
-    }, 3000);
-}
-
-async function processarTiposEpi(sender, text, sendMessage) {
-    const opcao = text.trim();
-    
-    if (opcao === '2') {
-        await sendMessage(sender, 'send-message', {
-            message: '✅ *Correto!*\n\nO EPI deve ser usado quando não for possível eliminar ou controlar o risco através de medidas de proteção coletiva (EPC).'
-        });
-        
-        setTimeout(async () => {
-            await mostrarUsoCorreto(sender, sendMessage);
-        }, 2000);
-    } else if (opcao === '1' || opcao === '3') {
-        await sendMessage(sender, 'send-message', {
-            message: '❌ *Incorreto.*\n\nO EPI deve ser usado quando não for possível eliminar o risco com EPC. Vamos continuar!'
-        });
-        
-        setTimeout(async () => {
-            await mostrarUsoCorreto(sender, sendMessage);
-        }, 2000);
-    } else {
-        await sendMessage(sender, 'send-message', {
-            message: 'Por favor, escolha uma das opções:\n\n1️⃣ Sempre, em qualquer situação\n2️⃣ Quando não for possível eliminar o risco com EPC\n3️⃣ Apenas quando o chefe mandar'
-        });
-    }
-    
-    return true;
-}
-
-// ==================== USO CORRETO ====================
-
-async function mostrarUsoCorreto(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '✅ *USO CORRETO DE EPIs*\n\n📋 *Antes de usar:*\n• Verificar se está em bom estado\n• Conferir se é adequado ao risco\n• Verificar prazo de validade\n• Ajustar corretamente\n\n⚠️ *Durante o uso:*\n• Manter sempre limpo\n• Não emprestar ou trocar\n• Comunicar defeitos imediatamente\n• Seguir instruções do fabricante'
-    });
-    
-    setTimeout(async () => {
-        await sendMessage(sender, 'send-message', {
-            message: 'O que fazer se o EPI estiver danificado?\n\n1️⃣ Usar mesmo assim, é melhor que nada\n2️⃣ Comunicar ao superior e solicitar substituição\n3️⃣ Tentar consertar sozinho'
-        });
-        
-        await salvarInteracao(sender, 'epc_epi_uso_correto', JSON.stringify({ etapa: 'uso_correto' }));
-    }, 4000);
-}
-
-async function processarUsoCorreto(sender, text, sendMessage) {
-    const opcao = text.trim();
-    
-    if (opcao === '2') {
-        await sendMessage(sender, 'send-message', {
-            message: '✅ *Correto!*\n\nSempre comunique defeitos ao superior e solicite substituição. EPI danificado não oferece proteção adequada.'
-        });
-        
-        setTimeout(async () => {
-            await mostrarManutencao(sender, sendMessage);
-        }, 2000);
-    } else if (opcao === '1' || opcao === '3') {
-        await sendMessage(sender, 'send-message', {
-            message: '❌ *Incorreto.*\n\nNunca use EPI danificado! Sempre comunique ao superior e solicite substituição.'
-        });
-        
-        setTimeout(async () => {
-            await mostrarManutencao(sender, sendMessage);
-        }, 2000);
-    } else {
-        await sendMessage(sender, 'send-message', {
-            message: 'Por favor, escolha uma das opções:\n\n1️⃣ Usar mesmo assim, é melhor que nada\n2️⃣ Comunicar ao superior e solicitar substituição\n3️⃣ Tentar consertar sozinho'
-        });
-    }
-    
-    return true;
-}
-
-// ==================== MANUTENÇÃO ====================
-
-async function mostrarManutencao(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '🧽 *MANUTENÇÃO E CONSERVAÇÃO*\n\n🧼 *Limpeza:*\n• Limpar após cada uso\n• Usar produtos adequados\n• Secar completamente\n• Não usar produtos abrasivos\n\n📦 *Armazenamento:*\n• Local limpo e seco\n• Protegido do sol\n• Temperatura adequada\n• Embalagem original quando possível'
-    });
-    
-    setTimeout(async () => {
-        await sendMessage(sender, 'send-message', {
-            message: 'Com que frequência devemos limpar os EPIs?\n\n1️⃣ Uma vez por semana\n2️⃣ Após cada uso\n3️⃣ Apenas quando estiver muito sujo'
-        });
-        
-        await salvarInteracao(sender, 'epc_epi_manutencao', JSON.stringify({ etapa: 'manutencao' }));
-    }, 4000);
-}
-
-async function processarManutencao(sender, text, sendMessage) {
-    const opcao = text.trim();
-    
-    if (opcao === '2') {
-        await sendMessage(sender, 'send-message', {
-            message: '✅ *Correto!*\n\nOs EPIs devem ser limpos após cada uso para manter sua eficácia e durabilidade.'
-        });
-        
-        setTimeout(async () => {
-            await mostrarResponsabilidades(sender, sendMessage);
-        }, 2000);
-    } else if (opcao === '1' || opcao === '3') {
-        await sendMessage(sender, 'send-message', {
-            message: '❌ *Incorreto.*\n\nOs EPIs devem ser limpos após cada uso para garantir proteção e durabilidade.'
-        });
-        
-        setTimeout(async () => {
-            await mostrarResponsabilidades(sender, sendMessage);
-        }, 2000);
-    } else {
-        await sendMessage(sender, 'send-message', {
-            message: 'Por favor, escolha uma das opções:\n\n1️⃣ Uma vez por semana\n2️⃣ Após cada uso\n3️⃣ Apenas quando estiver muito sujo'
-        });
-    }
-    
-    return true;
-}
-
-// ==================== RESPONSABILIDADES ====================
-
-async function mostrarResponsabilidades(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '⚖️ *RESPONSABILIDADES*\n\n🏢 *Do Empregador:*\n• Fornecer EPI adequado e gratuito\n• Treinar sobre uso correto\n• Substituir quando danificado\n• Fiscalizar o uso\n\n👷 *Do Empregado:*\n• Usar conforme orientação\n• Cuidar e conservar\n• Comunicar defeitos\n• Cumprir determinações'
-    });
-    
-    setTimeout(async () => {
-        await sendMessage(sender, 'send-message', {
-            message: '🎯 *Agora vamos para a avaliação final!*\n\nVocê está preparado?\n\n1️⃣ Sim, vamos lá!\n2️⃣ Quero revisar o conteúdo'
-        });
-        
-        await salvarInteracao(sender, 'epc_epi_responsabilidades', JSON.stringify({ etapa: 'responsabilidades' }));
-    }, 4000);
-}
-
-async function processarResponsabilidades(sender, text, sendMessage) {
-    const opcao = text.trim();
-    
-    if (opcao === '1' || opcao.toLowerCase().includes('sim') || opcao.toLowerCase().includes('vamos')) {
-        await iniciarAvaliacaoFinal(sender, sendMessage);
-    } else if (opcao === '2' || opcao.toLowerCase().includes('revisar')) {
-        await sendMessage(sender, 'send-message', {
-            message: '📚 Você pode revisar o conteúdo quando quiser. Por enquanto, vamos continuar com a avaliação!'
-        });
-        
-        setTimeout(async () => {
-            await iniciarAvaliacaoFinal(sender, sendMessage);
-        }, 2000);
-    } else {
-        await sendMessage(sender, 'send-message', {
-            message: 'Por favor, escolha uma das opções:\n\n1️⃣ Sim, vamos lá!\n2️⃣ Quero revisar o conteúdo'
-        });
-    }
-    
-    return true;
-}
-
-// ==================== AVALIAÇÃO FINAL ====================
-
-async function iniciarAvaliacaoFinal(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '📝 *AVALIAÇÃO FINAL*\n\nPergunta 1 de 3:\n\nQual é a principal diferença entre EPC e EPI?'
-    });
-    
-    setTimeout(async () => {
-        try {
-            await sendMessage(sender, 'send-list-message', {
-                title: '',
-                description: 'Escolha a resposta correta:',
-                buttonText: 'Ver opções',
-                listType: 'SINGLE_SELECT',
-                sections: [{
-                    title: 'Opções',
-                    rows: [
-                        {
-                            id: 'opcao_a',
-                            title: 'A) EPC protege grupos, EPI protege indivíduo',
-                            description: 'Proteção coletiva vs individual'
-                        },
-                        {
-                            id: 'opcao_b',
-                            title: 'B) EPC é mais caro que EPI',
-                            description: 'Diferença de custo'
-                        },
-                        {
-                            id: 'opcao_c',
-                            title: 'C) Não há diferença',
-                            description: 'São iguais'
-                        }
-                    ]
-                }]
-            });
-            
-            await salvarInteracao(sender, 'epc_epi_avaliacao', JSON.stringify({ 
-                etapa: 'avaliacao_final',
-                pergunta: 1,
-                acertos: 0
-            }));
-        } catch (error) {
-            console.error('❌ Erro ao enviar lista:', error);
-            await sendMessage(sender, 'send-message', {
-                message: 'Qual é a principal diferença entre EPC e EPI?\n\nA) EPC protege grupos, EPI protege indivíduo\nB) EPC é mais caro que EPI\nC) Não há diferença\n\nResponda com A, B ou C:'
-            });
-            
-            await salvarInteracao(sender, 'epc_epi_avaliacao', JSON.stringify({ 
-                etapa: 'avaliacao_final',
-                pergunta: 1,
-                acertos: 0
-            }));
+        if (!session) {
+            await this.iniciarTreinamento(client, message, contato);
+            return;
         }
-    }, 1000);
-}
 
-async function processarAvaliacaoFinal(sender, text, selectedId, sendMessage) {
-    const ultimaInteracao = await obterUltimaInteracao(sender);
-    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
-    const perguntaAtual = dados.pergunta || 1;
-    let acertos = dados.acertos || 0;
-    
-    // Processar resposta da pergunta atual
-    let respostaCorreta = false;
-    
-    if (perguntaAtual === 1) {
-        if (selectedId === 'opcao_a' || text.toLowerCase().includes('a')) {
-            respostaCorreta = true;
-            acertos++;
-        }
-    } else if (perguntaAtual === 2) {
-        if (selectedId === 'opcao_b' || text.toLowerCase().includes('b')) {
-            respostaCorreta = true;
-            acertos++;
-        }
-    } else if (perguntaAtual === 3) {
-        if (selectedId === 'opcao_a' || text.toLowerCase().includes('a')) {
-            respostaCorreta = true;
-            acertos++;
-        }
-    }
-    
-    // Mostrar resultado da pergunta
-    if (respostaCorreta) {
-        await sendMessage(sender, 'send-message', {
-            message: '✅ Correto!'
-        });
-    } else {
-        await sendMessage(sender, 'send-message', {
-            message: '❌ Incorreto.'
-        });
-    }
-    
-    // Próxima pergunta ou finalizar
-    if (perguntaAtual < 3) {
-        setTimeout(async () => {
-            await enviarProximaPergunta(sender, perguntaAtual + 1, acertos, sendMessage);
-        }, 1500);
-    } else {
-        setTimeout(async () => {
-            await finalizarAvaliacao(sender, acertos, sendMessage);
-        }, 1500);
-    }
-    
-    return true;
-}
+        const resposta = message.selectedButtonId || message.body;
+        console.log(`🔍 [EPC_EPI] Etapa: ${session.etapa} | Resposta: "${resposta}"`);
 
-async function enviarProximaPergunta(sender, numeroPergunta, acertos, sendMessage) {
-    let pergunta = '';
-    let opcoes = [];
-    
-    if (numeroPergunta === 2) {
-        pergunta = 'Pergunta 2 de 3:\n\nQuando devemos usar EPI?';
-        opcoes = [
-            { id: 'opcao_a', title: 'A) Sempre que possível', description: 'Em todas as situações' },
-            { id: 'opcao_b', title: 'B) Quando EPC não elimina o risco', description: 'Como segunda opção' },
-            { id: 'opcao_c', title: 'C) Apenas em emergências', description: 'Só em casos extremos' }
-        ];
-    } else if (numeroPergunta === 3) {
-        pergunta = 'Pergunta 3 de 3:\n\nO que fazer se o EPI estiver danificado?';
-        opcoes = [
-            { id: 'opcao_a', title: 'A) Comunicar e solicitar substituição', description: 'Procedimento correto' },
-            { id: 'opcao_b', title: 'B) Usar mesmo assim', description: 'Continuar usando' },
-            { id: 'opcao_c', title: 'C) Tentar consertar', description: 'Reparar sozinho' }
-        ];
-    }
-    
-    await sendMessage(sender, 'send-message', {
-        message: `📝 *AVALIAÇÃO FINAL*\n\n${pergunta}`
-    });
-    
-    setTimeout(async () => {
-        try {
-            await sendMessage(sender, 'send-list-message', {
-                title: '',
-                description: 'Escolha a resposta correta:',
-                buttonText: 'Ver opções',
-                listType: 'SINGLE_SELECT',
-                sections: [{
-                    title: 'Opções',
-                    rows: opcoes
-                }]
-            });
-        } catch (error) {
-            console.error('❌ Erro ao enviar lista:', error);
-            const textoOpcoes = opcoes.map(op => op.title).join('\n');
-            await sendMessage(sender, 'send-message', {
-                message: `${pergunta}\n\n${textoOpcoes}\n\nResponda com A, B ou C:`
-            });
-        }
-        
-        await salvarInteracao(sender, 'epc_epi_avaliacao', JSON.stringify({ 
-            etapa: 'avaliacao_final',
-            pergunta: numeroPergunta,
-            acertos: acertos
-        }));
-    }, 1000);
-}
-
-async function finalizarAvaliacao(sender, acertos, sendMessage) {
-    const aprovado = acertos >= 2; // Precisa de pelo menos 2 acertos de 3
-    
-    if (aprovado) {
-        await sendMessage(sender, 'send-message', {
-            message: `🎉 *PARABÉNS!*\n\nVocê foi aprovado no treinamento!\n\n📊 *Resultado:*\n✅ Acertos: ${acertos}/3\n📜 Status: APROVADO\n\n🎓 Agora vamos gerar seu certificado!`
-        });
-        
-        setTimeout(async () => {
-            await perguntarDadosCertificado(sender, sendMessage);
-        }, 2000);
-    } else {
-        await sendMessage(sender, 'send-message', {
-            message: `😔 *Não foi dessa vez...*\n\n📊 *Resultado:*\n❌ Acertos: ${acertos}/3\n📜 Status: REPROVADO\n\nVocê precisa de pelo menos 2 acertos para ser aprovado.\n\n🔄 Quer tentar novamente?\n\n1️⃣ Sim, quero refazer\n2️⃣ Não, vou estudar mais`
-        });
-        
-        await salvarInteracao(sender, 'epc_epi_reprovado', JSON.stringify({ 
-            etapa: 'reprovado',
-            acertos: acertos
-        }));
-    }
-}
-
-// ==================== CERTIFICADO ====================
-
-async function perguntarDadosCertificado(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: "🎓 *Certificado de Conclusão*\n\nVamos gerar seu certificado do treinamento NR6 - EPC e EPI!"
-    });
-    
-    try {
-        // Buscar dados do contato no sistema
-        console.log(`🔍 Buscando contato para certificado: ${sender}`);
-        
-        const formatosTelefone = [
-            sender,
-            sender.substring(2),
-            `${sender.substring(0, 4)}9${sender.substring(4)}`,
-            sender.length === 13 ? sender.substring(0, 4) + sender.substring(5) : sender,
-        ];
-        
-        let contato = null;
-        for (const formato of formatosTelefone) {
-            contato = await Contato.findOne({ where: { telefone: formato } });
-            if (contato) {
-                console.log(`✅ Contato encontrado: ${contato.nome || contato.nomeCompleto} (formato: ${formato})`);
+        switch (session.etapa) {
+            case 'introducao':
+                await this.processarIntroducao(client, message, session, resposta);
                 break;
-            }
-        }
-        
-        if (contato) {
-            const nome = contato.nomeCompleto || contato.nome || null;
-            const email = contato.email || null;
-            
-            if (nome && email && nome !== 'Não informado' && email !== 'Não informado') {
-                await sendMessage(sender, 'send-message', {
-                    message: `🎓 *Certificado NR6 - EPC e EPI*\n\nDados cadastrados:\n\n👤 *Nome:* ${nome}\n📧 *E-mail:* ${email}\n\nEstão corretos?\n\n1️⃣ Sim, gerar certificado\n2️⃣ Não, corrigir dados`
-                });
-                
-                await salvarInteracao(sender, 'epc_epi_certificado', JSON.stringify({ 
-                    etapa: 'confirmar_dados_certificado', 
-                    nome: nome, 
-                    email: email,
-                    treinamento_id: TREINAMENTO_ID
-                }));
-                return;
-            }
-        }
-        
-        // Se não encontrou dados completos
-        await sendMessage(sender, 'send-message', {
-            message: '🎓 *Certificado NR6 - EPC e EPI*\n\nPara emitir seu certificado, preciso confirmar seus dados:\n\n📝 Envie no formato:\n\n*Nome completo*\n*E-mail*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
-        });
-        
-        await salvarInteracao(sender, 'epc_epi_certificado', JSON.stringify({ 
-            etapa: 'confirmar_dados_certificado',
-            treinamento_id: TREINAMENTO_ID
-        }));
-        
-    } catch (error) {
-        console.error('❌ Erro ao buscar dados para certificado:', error);
-        await sendMessage(sender, 'send-message', {
-            message: '🎓 *Certificado NR6 - EPC e EPI*\n\nPara emitir seu certificado, preciso de seus dados:\n\n📝 Envie no formato:\n\n*Nome completo*\n*E-mail*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
-        });
-        
-        await salvarInteracao(sender, 'epc_epi_certificado', JSON.stringify({ 
-            etapa: 'confirmar_dados_certificado',
-            treinamento_id: TREINAMENTO_ID
-        }));
-    }
-}
+            case 'audio_confirmacao':
+                await this.processarAudioConfirmacao(client, message, session, resposta);
+                break;
+            case 'pergunta_a':
+                await this.processarPerguntaA(client, message, session, resposta);
+                break;
+            case 'pergunta_b':
+                await this.processarPerguntaB(client, message, session, resposta);
+                break;
+            case 'pergunta_epc':
+                await this.processarPerguntaEPC(client, message, session, resposta);
+                break;
+            case 'pergunta_epi':
+                await this.processarPerguntaEPI(client, message, session, resposta);
+                break;
+            case 'quiz_hierarquia':
+                await this.processarQuizHierarquia(client, message, session, resposta);
+                break;
+            case 'pergunta_relaxar_a':
+                await this.processarPerguntaRelaxarA(client, message, session, resposta);
+                break;
+            case 'pergunta_relaxar_b':
+                await this.processarPerguntaRelaxarB(client, message, session, resposta);
+                break;
+            case 'pergunta_relaxar_c':
+                await this.processarPerguntaRelaxarC(client, message, session, resposta);
+                break;
+            case 'pergunta_relaxar_d':
+                await this.processarPerguntaRelaxarD(client, message, session, resposta);
+                break;
 
-async function processarConfirmacaoDados(sender, text, sendMessage) {
-    const ultimaInteracao = await obterUltimaInteracao(sender);
-    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
-    const opcao = text.trim();
-    
-    // Se tem dados salvos e usuário confirmou
-    if (dados.nome && dados.email && (opcao === '1' || opcao.toLowerCase().includes('sim') || opcao.toLowerCase().includes('gerar'))) {
-        await gerarEEnviarCertificado(dados.nome, dados.email, sender, sendMessage);
-        return true;
-    }
-    
-    // Se usuário quer corrigir ou não tem dados salvos
-    if (dados.nome && dados.email && (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('corrigir'))) {
-        await sendMessage(sender, 'send-message', {
-            message: '📝 Envie os dados corretos:\n\n*Nome completo*\n*E-mail*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
-        });
-        
-        await salvarInteracao(sender, 'epc_epi_certificado', JSON.stringify({ 
-            etapa: 'confirmar_dados_certificado',
-            treinamento_id: TREINAMENTO_ID
-        }));
-        return true;
-    }
-    
-    // Processar dados informados manualmente
-    const linhas = text.trim().split('\n').filter(linha => linha.trim());
-    
-    if (linhas.length >= 2) {
-        const nome = linhas[0].trim();
-        const email = linhas[1].trim();
-        
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            await sendMessage(sender, 'send-message', {
-                message: '❌ E-mail inválido. Envie novamente:\n\n*Nome completo*\n*E-mail válido*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
-            });
-            return true;
-        }
-        
-        await gerarEEnviarCertificado(nome, email, sender, sendMessage);
-    } else {
-        await sendMessage(sender, 'send-message', {
-            message: '❌ Dados incompletos. Envie:\n\n*Nome completo*\n*E-mail*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
-        });
-    }
-    
-    return true;
-}
+            case 'enviar_pdf_nr6':
+            case 'enviar_video_medidas':
+                // Etapas automáticas, não precisam processar resposta
+                break;
 
-async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '⏳ Gerando seu certificado de conclusão...'
-    });
-    
-    try {
-        // Registrar conclusão do treinamento no banco
-        await registrarConclusaoTreinamento(sender, nome, email);
+            case 'pergunta_verdadeiro_falso_a':
+                await this.processarPerguntaVerdadeiroFalsoA(client, message, session, resposta);
+                break;
+
+            case 'pergunta_verdadeiro_falso_b':
+                await this.processarPerguntaVerdadeiroFalsoB(client, message, session, resposta);
+                break;
+
+            case 'pergunta_verdadeiro_falso_c':
+                await this.processarPerguntaVerdadeiroFalsoC(client, message, session, resposta);
+                break;
+
+            case 'pergunta_verdadeiro_falso_d':
+                await this.processarPerguntaVerdadeiroFalsoD(client, message, session, resposta);
+                break;
+
+            case 'pergunta_verdadeiro_falso_e':
+                await this.processarPerguntaVerdadeiroFalsoE(client, message, session, resposta);
+                break;
+
+            case 'tipos_epi_introducao':
+                // Etapa automática, não precisa processar resposta
+                break;
+        }
+    }
+
+    async processarIntroducao(client, message, session, resposta) {
+        console.log(`🔍 [EPC_EPI] Processando introdução: "${resposta}"`);
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        if (resposta === 'epc_epi_sim_sei' || resposta === 'epc_epi_nao_sei' || resposta === '1' || resposta === '2' || respostaNormalizada.includes('sim') || respostaNormalizada.includes('não') || respostaNormalizada.includes('nao')) {
+            console.log(`✅ [EPC_EPI] Avançando para áudio`);
+            session.etapa = 'audio_confirmacao';
+            await this.enviarAudio(client, message);
+        } else {
+            console.log(`⚠️ [EPC_EPI] Resposta não reconhecida na introdução: "${resposta}"`);
+            await this.enviarIntroducao(client, message);
+        }
+    }
+
+    async enviarAudio(client, message) {
+        const audioPath = path.join(this.basePath, 'Audios', 'entendendo_epc-epi.mp3');
         
-        // Gerar certificado específico do treinamento
-        const resultado = await gerarCertificadoTreinamento(nome, email, NOME_TREINAMENTO, sendMessage, sender);
-        
-        if (resultado.sucesso) {
-            await sendMessage(sender, 'send-message', {
-                message: `✅ *Certificado gerado com sucesso!*\n\n🎓 *Treinamento:* ${NOME_TREINAMENTO}\n📧 *Enviado para:* ${email}\n📱 *Também enviado aqui no chat*\n\n🏆 *Parabéns por concluir o treinamento!*\n\n⚠️ *IMPORTANTE:* Este certificado possui validade legal para treinamentos normativos conforme NR6.`
+        if (fs.existsSync(audioPath)) {
+            console.log(`🎧 [EPC_EPI] Enviando áudio: ${audioPath}`);
+            await client.sendMessage(message.from, {
+                audio: { url: audioPath }
             });
         } else {
-            await sendMessage(sender, 'send-message', {
-                message: `❌ Erro ao gerar certificado: ${resultado.erro}`
+            console.log(`⚠️ [EPC_EPI] Áudio não encontrado: ${audioPath}`);
+            await client.sendMessage(message.from, {
+                text: '🎧 Áudio: Entendendo EPC e EPI\n\nExplicação sobre equipamentos de proteção coletiva e individual.'
             });
         }
-    } catch (error) {
-        console.error('❌ Erro ao gerar certificado:', error);
-        await sendMessage(sender, 'send-message', {
-            message: '❌ Erro interno ao gerar certificado. Tente novamente mais tarde.'
+
+        setTimeout(async () => {
+            await this.perguntarProsseguir(client, message);
+        }, 2000);
+    }
+
+    async perguntarProsseguir(client, message) {
+        const sections = [{
+            title: 'Podemos prosseguir?',
+            rows: [
+                { rowId: 'prosseguir_sim', title: '1 – SIM', description: '🟢 Avançar para próxima mensagem' },
+                { rowId: 'prosseguir_nao', title: '2 – NÃO', description: '🟡 Aguardar comando' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            buttonText: 'SELECIONE UMA OPÇÃO',
+            description: 'Podemos prosseguir?',
+            sections: sections
         });
     }
-    
-    setTimeout(async () => {
-        await finalizarTreinamento(sender, sendMessage);
-    }, 2000);
-}
 
-async function registrarConclusaoTreinamento(sender, nome, email) {
-    try {
-        // Buscar contato
-        const formatosTelefone = [
-            sender,
-            sender.substring(2),
-            `${sender.substring(0, 4)}9${sender.substring(4)}`,
-            sender.length === 13 ? sender.substring(0, 4) + sender.substring(5) : sender,
-        ];
+    async processarAudioConfirmacao(client, message, session, resposta) {
+        console.log(`🔍 [EPC_EPI] Processando audio confirmação: "${resposta}"`);
         
-        let contato = null;
-        for (const formato of formatosTelefone) {
-            contato = await Contato.findOne({ where: { telefone: formato } });
-            if (contato) break;
-        }
+        const respostaNormalizada = resposta.toLowerCase().trim();
         
-        if (contato) {
-            // Registrar conclusão na tabela ContatoTreinamentos
-            await ContatoTreinamentos.create({
-                contato_id: contato.id,
-                treinamento_id: TREINAMENTO_ID,
-                data_conclusao: new Date(),
-                certificado_emitido: true,
-                nome_certificado: nome,
-                email_certificado: email
+        if (respostaNormalizada.includes('sim') || respostaNormalizada === '1' || resposta === 'prosseguir_sim') {
+            console.log(`✅ [EPC_EPI] Avançando para próxima etapa`);
+            session.etapa = 'perigo_risco';
+            await this.explicarPerigoRisco(client, message, session);
+        } else if (respostaNormalizada.includes('não') || respostaNormalizada.includes('nao') || respostaNormalizada === '2' || resposta === 'prosseguir_nao') {
+            await client.sendMessage(message.from, {
+                text: 'Aguardo seu comando. É só clicar sim e estarei pronto para começarmos'
             });
             
-            console.log(`✅ Conclusão registrada: Contato ${contato.id}, Treinamento ${TREINAMENTO_ID}`);
+            const buttons = [
+                { buttonId: 'prosseguir_sim', buttonText: { displayText: 'SIM' }, type: 1 }
+            ];
+
+            await client.sendMessage(message.from, {
+                text: 'Pronto para continuar?',
+                buttons: buttons,
+                headerType: 1
+            });
+        } else {
+            console.log(`⚠️ [EPC_EPI] Resposta não reconhecida: "${resposta}"`);
+            await this.perguntarProsseguir(client, message);
         }
-    } catch (error) {
-        console.error('❌ Erro ao registrar conclusão:', error);
+    }
+
+    async explicarPerigoRisco(client, message, session) {
+        const texto = `Ok. Ótimo! Vamos prosseguir. Mas antes vamos a diferença entre Perigo e Risco.\n\n` +
+            `De forma simples e direta:\n\n` +
+            `• *Perigo* 👉 é a fonte de dano. Algo que tem potencial de causar acidente ou doença.\n` +
+            `Exemplo: eletricidade, produto químico, altura.\n\n` +
+            `• *Risco* 👉 é a probabilidade e a gravidade de esse dano realmente acontecer quando há exposição ao perigo.\n` +
+            `Exemplo: trabalhar com eletricidade sem EPI aumenta o risco de choque.\n\n` +
+            `🔑 *Resumindo:*\n` +
+            `➡️ Perigo = o que pode causar dano.\n` +
+            `➡️ Risco = a chance de o dano acontecer quando se é exposto ao perigo.`;
+
+        await client.sendMessage(message.from, { text: texto });
+
+        setTimeout(async () => {
+            await this.enviarImagensPerigo(client, message, session);
+        }, 3000);
+    }
+
+    async enviarImagensPerigo(client, message, session) {
+        const imagens = [
+            'perigo_maquina.jpg',
+            'perigo_eletricidade.jpg', 
+            'perigo_altura.jpg'
+        ];
+
+        for (const imagem of imagens) {
+            const imagemPath = path.join(this.basePath, 'Imagens', imagem);
+            if (fs.existsSync(imagemPath)) {
+                await client.sendMessage(message.from, {
+                    image: { url: imagemPath }
+                });
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_a';
+            await this.enviarPerguntaA(client, message);
+        }, 2000);
+    }
+
+    async enviarPerguntaA(client, message) {
+        const sections = [{
+            title: 'FALA AÍ!',
+            rows: [
+                { rowId: 'pergunta_a_verdadeiro', title: '1 – VERDADEIRO', description: '🟢' },
+                { rowId: 'pergunta_a_falso', title: '2 – FALSO', description: '🟡' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            text: 'A - Com base nas imagens anteriores, podemos dizer que o Perigo é uma característica da atividade ou de uma etapa da atividade.\n\nIsso é verdadeiro ou falso?'
+        });
+        
+        setTimeout(async () => {
+            await client.sendMessage(message.from, {
+                buttonText: 'SELECIONE UMA OPÇÃO',
+                description: 'VERDADRO ou FALSO?',
+                sections: sections
+            });
+        }, 1000);
+    }
+
+    async processarPerguntaA(client, message, session, resposta) {
+        console.log(`🔍 [EPC_EPI] Processando pergunta A: "${resposta}"`);
+        
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'pergunta_a_verdadeiro' || resposta === '1' || respostaNormalizada.includes('verdadeiro')) {
+            await client.sendMessage(message.from, {
+                text: '🎉 Parabéns! Resposta correta!'
+            });
+            session.etapa = 'pergunta_b';
+            setTimeout(async () => {
+                await this.enviarPerguntaB(client, message);
+            }, 1500);
+        } else if (resposta === 'pergunta_a_falso' || resposta === '2' || respostaNormalizada.includes('falso')) {
+            await client.sendMessage(message.from, {
+                text: 'Não é bem isso! Quer dar mais uma olhada nas imagens? Vá lá, olhe! Depois pode tentar responder novamente.'
+            });
+            
+            setTimeout(async () => {
+                await this.enviarPerguntaA(client, message);
+            }, 3000);
+        } else {
+            console.log(`⚠️ [EPC_EPI] Resposta não reconhecida na pergunta A: "${resposta}"`);
+            await this.enviarPerguntaA(client, message);
+        }
+    }
+
+    async enviarPerguntaB(client, message) {
+        const sections = [{
+            title: 'Responda:',
+            rows: [
+                { rowId: 'pergunta_b_verdadeiro', title: '1 – VERDADEIRO', description: '🟢' },
+                { rowId: 'pergunta_b_falso', title: '2 – FALSO', description: '🟡' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            text: 'B - Ainda em relação às imagens e ao conceito de Risco: Chamamos de risco uma situação de exposição ao perigo, mas onde não há chance de acontecer algo ruim.\n\nIsso é verdadeiro ou falso?'
+        });
+        
+        setTimeout(async () => {
+            await client.sendMessage(message.from, {
+                buttonText: 'SELECIONE UMA OPÇÃO',
+                description: 'Responda:',
+                sections: sections
+            });
+        }, 1000);
+    }
+
+    async processarPerguntaB(client, message, session, resposta) {
+        console.log(`🔍 [EPC_EPI] Processando pergunta B: "${resposta}"`);
+        
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'pergunta_b_verdadeiro' || resposta === '1' || respostaNormalizada.includes('verdadeiro')) {
+            await client.sendMessage(message.from, {
+                text: '🎉 Parabéns! Resposta correta!'
+            });
+            session.etapa = 'video';
+            setTimeout(async () => {
+                await this.enviarVideo(client, message, session);
+            }, 1500);
+        } else if (resposta === 'pergunta_b_falso' || resposta === '2' || respostaNormalizada.includes('falso')) {
+            await client.sendMessage(message.from, {
+                text: 'Não é bem isso! Quer dar mais uma olhada nas imagens? Vá lá, olhe! Depois pode tentar responder novamente.'
+            });
+            
+            setTimeout(async () => {
+                await this.enviarPerguntaB(client, message);
+            }, 3000);
+        } else {
+            console.log(`⚠️ [EPC_EPI] Resposta não reconhecida na pergunta B: "${resposta}"`);
+            await this.enviarPerguntaB(client, message);
+        }
+    }
+
+    async enviarVideo(client, message, session) {
+        const videoPath = path.join(this.basePath, 'Videos', 'Medidas de Controle EPC e EPI — Trabalhar com.mp4');
+        
+        console.log(`🎥 [EPC_EPI] Tentando enviar vídeo: ${videoPath}`);
+        
+        if (fs.existsSync(videoPath)) {
+            console.log(`✅ [EPC_EPI] Arquivo de vídeo encontrado, enviando...`);
+            try {
+                await client.sendMessage(message.from, {
+                    video: { path: videoPath },
+                    caption: 'Roteiro de Vídeo Curto'
+                });
+                console.log(`✅ [EPC_EPI] Vídeo enviado com sucesso`);
+            } catch (error) {
+                console.error(`❌ [EPC_EPI] Erro ao enviar vídeo:`, error);
+                await client.sendMessage(message.from, {
+                    text: '🎥 Vídeo: Medidas de Controle EPC e EPI\n\nRoteiro de Vídeo Curto sobre equipamentos de proteção coletiva e individual.'
+                });
+            }
+        } else {
+            console.log(`⚠️ [EPC_EPI] Vídeo não encontrado: ${videoPath}`);
+            await client.sendMessage(message.from, {
+                text: '🎥 Vídeo: Medidas de Controle EPC e EPI\n\nRoteiro de Vídeo Curto sobre equipamentos de proteção coletiva e individual.'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_epc';
+            await this.perguntarEPC(client, message);
+        }, 3000);
+    }
+
+    async perguntarEPC(client, message) {
+        const sections = [{
+            title: 'Escolha a resposta correta:',
+            rows: [
+                { rowId: 'epc_resposta_1', title: '1️⃣ Equipamentos do trabalhador', description: 'São os equipamentos usados pelo trabalhador para se proteger da exposição ao risco.' },
+                { rowId: 'epc_resposta_2', title: '2️⃣ Equipamentos coletivos', description: 'São Equipamentos que protegem um grupo de pessoas ao mesmo tempo.' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            text: 'Lá vamos nós de novo!\n\nCom base no vídeo anterior responda:\n\nA - O que são os EPC?'
+        });
+        
+        setTimeout(async () => {
+            await client.sendMessage(message.from, {
+                buttonText: 'SELECIONE UMA OPÇÃO',
+                description: 'Escolha a resposta correta:',
+                sections: sections
+            });
+        }, 1000);
+    }
+
+    async processarPerguntaEPC(client, message, session, resposta) {
+        console.log(`🔍 [EPC_EPI] Processando pergunta EPC: "${resposta}"`);
+        
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'epc_resposta_1' || resposta === '1' || respostaNormalizada.includes('trabalhador')) {
+            await client.sendMessage(message.from, {
+                text: 'Oh! Oh! Tente de novo, reveja o vídeo e tente outra vez.'
+            });
+            
+            setTimeout(async () => {
+                await this.perguntarEPC(client, message);
+            }, 3000);
+        } else if (resposta === 'epc_resposta_2' || resposta === '2' || respostaNormalizada.includes('grupo')) {
+            await client.sendMessage(message.from, {
+                text: '🎉 Parabéns! Resposta correta! Eba! Acertou mais uma!'
+            });
+            session.etapa = 'pergunta_epi';
+            setTimeout(async () => {
+                await this.perguntarEPI(client, message);
+            }, 2000);
+        } else {
+            console.log(`⚠️ [EPC_EPI] Resposta não reconhecida na pergunta EPC: "${resposta}"`);
+            await this.perguntarEPC(client, message);
+        }
+    }
+
+    async perguntarEPI(client, message) {
+        const sections = [{
+            title: 'Escolha a resposta correta:',
+            rows: [
+                { rowId: 'epi_resposta_1', title: '1️⃣ Equipamentos do trabalhador', description: 'São os equipamentos usados pelo trabalhador para se proteger da exposição ao risco.' },
+                { rowId: 'epi_resposta_2', title: '2️⃣ Equipamentos coletivos', description: 'São equipamentos usados por vários trabalhadores ao mesmo tempo.' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            text: 'B - E o que são os EPI?'
+        });
+        
+        setTimeout(async () => {
+            await client.sendMessage(message.from, {
+                buttonText: 'SELECIONE UMA OPÇÃO',
+                description: 'Escolha a resposta correta:',
+                sections: sections
+            });
+        }, 1000);
+    }
+
+    async processarPerguntaEPI(client, message, session, resposta) {
+        console.log(`🔍 [EPC_EPI] Processando pergunta EPI: "${resposta}"`);
+        
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'epi_resposta_1' || resposta === '1' || respostaNormalizada.includes('trabalhador')) {
+            await client.sendMessage(message.from, {
+                text: '🎉 Parabéns! Resposta correta! Muito Bem! Certa Resposta!'
+            });
+            session.etapa = 'hierarquia';
+            setTimeout(async () => {
+                await this.explicarHierarquia(client, message);
+            }, 2000);
+        } else if (resposta === 'epi_resposta_2' || resposta === '2' || respostaNormalizada.includes('vários')) {
+            await client.sendMessage(message.from, {
+                text: 'Opa! Algo está errado! Reveja o vídeo.'
+            });
+            
+            setTimeout(async () => {
+                await this.perguntarEPI(client, message);
+            }, 3000);
+        } else {
+            console.log(`⚠️ [EPC_EPI] Resposta não reconhecida na pergunta EPI: "${resposta}"`);
+            await this.perguntarEPI(client, message);
+        }
+    }
+
+    async explicarHierarquia(client, message) {
+        const mensagens = [
+            'Agora que você já sabe o que é um EPC e o que é um EPI, posso te contar como a empresa escolhe quais proteções vão ser usadas. 😉',
+            'Existem vários tipos de riscos e também várias formas de controlar esses riscos.',
+            'Mas aí vem a dúvida... 🤔\n👉 Qual delas é melhor?\n👉 Qual dá mais resultado?',
+            'Existe uma ordem a ser seguida na hora de escolher as medidas de controle. 🧩',
+            'Essa hierarquia serve pra garantir o melhor resultado possível em termos de segurança da atividade ou do processo. 💪',
+            'Por isso, a gente sempre começa escolhendo o que traz mais segurança pro trabalhador. 🦺✅',
+            'Então, seguimos a ordem abaixo 👇📋'
+        ];
+
+        for (const mensagem of mensagens) {
+            await client.sendMessage(message.from, { text: mensagem });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
+        const imagemPath = path.join(this.basePath, 'Imagens', 'hierarquia_medidas.jpeg');
+        if (fs.existsSync(imagemPath)) {
+            await client.sendMessage(message.from, {
+                image: { url: imagemPath },
+                caption: '📊 Hierarquia das Medidas de Controle'
+            });
+        }
+
+        setTimeout(async () => {
+            await this.enviarAudiosHierarquia(client, message, session);
+        }, 3000);
+    }
+
+    async enviarAudiosHierarquia(client, message, session) {
+        const audios = [
+            'definir_medida.mp3',
+            'apos_aplicar_medidas.mp3',
+            'ultima_alternativa.mp3'
+        ];
+
+        for (let i = 0; i < audios.length; i++) {
+            const audioPath = path.join(this.basePath, 'Audios', audios[i]);
+            if (fs.existsSync(audioPath)) {
+                await client.sendMessage(message.from, {
+                    audio: { url: audioPath }
+                });
+            }
+            if (i < audios.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'quiz_hierarquia';
+            await this.enviarQuizHierarquia(client, message);
+        }, 2000);
+    }
+
+    async enviarQuizHierarquia(client, message) {
+        const sections = [{
+            title: 'É Hora da pergunta!',
+            rows: [
+                { rowId: 'quiz_h_individual', title: '1️⃣ Medidas individuais', description: 'São as medidas de proteção individual pois impedem que o trabalhador sofra uma lesão.' },
+                { rowId: 'quiz_h_eliminam', title: '2️⃣ Eliminam o risco', description: 'São aquelas que eliminam completamente o risco da atividade.' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            text: 'A – Qual das medidas de controle de riscos é a mais efetiva? Ou seja, garante a maior segurança?'
+        });
+        
+        setTimeout(async () => {
+            await client.sendMessage(message.from, {
+                buttonText: 'SELECIONE UMA OPÇÃO',
+                description: 'É Hora da pergunta!',
+                sections: sections
+            });
+        }, 1000);
+    }
+
+    async processarQuizHierarquia(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'quiz_h_individual' || resposta === '1' || respostaNormalizada.includes('individual')) {
+            await client.sendMessage(message.from, {
+                text: 'Não é bem isso, embora proteja o trabalhador e é super importante, a medida individual não modifica o risco, sendo esta a medida de menor efetividade para a segurança. Ouça os áudios novamente.'
+            });
+            
+            setTimeout(async () => {
+                await this.enviarAudiosHierarquia(client, message, session);
+            }, 3000);
+        } else if (resposta === 'quiz_h_eliminam' || resposta === '2' || respostaNormalizada.includes('eliminam')) {
+            await client.sendMessage(message.from, {
+                text: '🎉 Parabéns! Resposta correta!'
+            });
+            
+            setTimeout(async () => {
+                await client.sendMessage(message.from, {
+                    text: 'Isso aí! Correto! As medidas que eliminem o risco são sempre as que garantem total segurança.'
+                });
+                
+                setTimeout(async () => {
+                    await this.explicarNR6(client, message, session);
+                }, 2000);
+            }, 1500);
+        } else {
+            await this.enviarQuizHierarquia(client, message);
+        }
+    }
+
+    async explicarNR6(client, message, session) {
+        const mensagens = [
+            'A norma que fala sobre EPI é a NR6 – Equipamentos de Proteção Individual. 🧤👷‍♂️',
+            'Ela foi criada pelo Ministério do Trabalho e é a base de todas as regras sobre o uso de EPI no Brasil.',
+            'Vamos ver agora um pouquinho mais sobre a NR6? 📘👉'
+        ];
+
+        for (const mensagem of mensagens) {
+            await client.sendMessage(message.from, { text: mensagem });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
+        setTimeout(async () => {
+            await this.enviarAudioNR6(client, message, session);
+        }, 1000);
+    }
+
+    async enviarAudioNR6(client, message, session) {
+        const audioPath = path.join(this.basePath, 'Audios', 'NR6_traz.mpeg');
+        
+        if (fs.existsSync(audioPath)) {
+            await client.sendMessage(message.from, {
+                audio: { url: audioPath }
+            });
+        }
+
+        setTimeout(async () => {
+            await this.explicarEPI(client, message, session);
+        }, 3000);
+    }
+
+    async explicarEPI(client, message, session) {
+        await client.sendMessage(message.from, {
+            text: 'Para a NR6, EPI – Equipamento de Proteção Individual é:'
+        });
+
+        setTimeout(async () => {
+            const imagemPath = path.join(this.basePath, 'Imagens', 'equipamento_individual.jpg');
+            if (fs.existsSync(imagemPath)) {
+                await client.sendMessage(message.from, {
+                    image: { url: imagemPath }
+                });
+            }
+
+            setTimeout(async () => {
+                await client.sendMessage(message.from, {
+                    text: 'Resumindo: EPI é todo utensílio, de uso individual, destinado a proteger a saúde do trabalhador.'
+                });
+
+                setTimeout(async () => {
+                    await this.enviarGif(client, message, session);
+                }, 2000);
+            }, 2000);
+        }, 1000);
+    }
+
+    async enviarGif(client, message, session) {
+        const gifPath = path.join(this.basePath, 'Videos', 'gif.mp4');
+        
+        if (fs.existsSync(gifPath)) {
+            await client.sendMessage(message.from, {
+                video: { path: gifPath }
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_relaxar_a';
+            await this.perguntaRelaxarA(client, message);
+        }, 3000);
+    }
+
+    async perguntaRelaxarA(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'Que tal uma perguntinha pra relaxar?\n\nPara as opções abaixo escolha 1 quando for EPC e escolha 2 quando for EPI:\n\nA – Grade de Proteção em parte móvel de máquina ou equipamento.\n\n1️⃣ EPC\n2️⃣ EPI\n\nDigite o número da sua resposta:'
+        });
+    }
+
+    async processarPerguntaRelaxarA(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === '1' || respostaNormalizada.includes('epc')) {
+            await client.sendMessage(message.from, {
+                text: '🎉 Correto!'
+            });
+        } else {
+            await client.sendMessage(message.from, {
+                text: '❌ Errou!'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_relaxar_b';
+            await this.perguntaRelaxarB(client, message);
+        }, 1500);
+    }
+
+    async perguntaRelaxarB(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'B – Luvas de raspa, perneira de raspa e avental de raspa.\n\n1️⃣ EPC\n2️⃣ EPI\n\nDigite o número da sua resposta:'
+        });
+    }
+
+    async processarPerguntaRelaxarB(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === '2' || respostaNormalizada.includes('epi')) {
+            await client.sendMessage(message.from, {
+                text: '🎉 Correto!'
+            });
+        } else {
+            await client.sendMessage(message.from, {
+                text: '❌ Errou!'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_relaxar_c';
+            await this.perguntaRelaxarC(client, message);
+        }, 1500);
+    }
+
+    async perguntaRelaxarC(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'C – Máscara facial, colete de sinalização e avental de PVC.\n\n1️⃣ EPC\n2️⃣ EPI\n\nDigite o número da sua resposta:'
+        });
+    }
+
+    async processarPerguntaRelaxarC(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === '2' || respostaNormalizada.includes('epi')) {
+            await client.sendMessage(message.from, {
+                text: '🎉 Correto!'
+            });
+        } else {
+            await client.sendMessage(message.from, {
+                text: '❌ Errou!'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_relaxar_d';
+            await this.perguntaRelaxarD(client, message);
+        }, 1500);
+    }
+
+    async perguntaRelaxarD(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'D – Sistema de exaustão com filtro para partículas sólidas.\n\n1️⃣ EPC\n2️⃣ EPI\n\nDigite o número da sua resposta:'
+        });
+    }
+
+    async processarPerguntaRelaxarD(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === '1' || respostaNormalizada.includes('epc')) {
+            await client.sendMessage(message.from, {
+                text: '🎉 Correto!'
+            });
+        } else {
+            await client.sendMessage(message.from, {
+                text: '❌ Errou!'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'enviar_pdf_nr6';
+            await this.enviarPdfNR6(client, message, session);
+        }, 1500);
+    }
+
+    async enviarPdfNR6(client, message, session) {
+        const pdfPath = path.join(this.basePath, 'material_treinamento', 'NR6.pdf');
+        
+        if (fs.existsSync(pdfPath)) {
+            await client.sendMessage(message.from, {
+                document: { url: pdfPath },
+                mimetype: 'application/pdf',
+                fileName: 'NR6.pdf'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'enviar_video_medidas';
+            await this.enviarVideoMedidas(client, message, session);
+        }, 2000);
+    }
+
+    async enviarVideoMedidas(client, message, session) {
+        const videoPath = path.join(this.basePath, 'material_treinamento', 'Videos', 'Medidas de Controle EPC e EPI — Trabalhar com.mp4');
+        
+        if (fs.existsSync(videoPath)) {
+            await client.sendMessage(message.from, {
+                video: { path: videoPath }
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_verdadeiro_falso_a';
+            await this.iniciarPerguntasVerdadeiroFalso(client, message, session);
+        }, 3000);
+    }
+
+    async iniciarPerguntasVerdadeiroFalso(client, message, session) {
+        await client.sendMessage(message.from, {
+            text: 'Mais perguntas, por favor!\n\nResponda Verdadeiro ou Falso para as frases abaixo:'
+        });
+
+        setTimeout(async () => {
+            await this.perguntaVerdadeiroFalsoA(client, message);
+        }, 1000);
+    }
+
+    async perguntaVerdadeiroFalsoA(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'A – A norma NR6 determina as diretrizes para funcionamento das Proteções Individuais.\n\n1️⃣ Verdadeiro\n2️⃣ Falso\n\nDigite o número da sua resposta:'
+        });
+    }
+
+    async processarPerguntaVerdadeiroFalsoA(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === '1' || respostaNormalizada.includes('verdadeiro')) {
+            await client.sendMessage(message.from, {
+                text: 'Muito bem a NR6 determina as determinações normativas para os EPI.'
+            });
+        } else {
+            await client.sendMessage(message.from, {
+                text: 'Errado! A NR6 é sim a norma que define as diretrizes para os EPI.'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_verdadeiro_falso_b';
+            await this.perguntaVerdadeiroFalsoB(client, message);
+        }, 2000);
+    }
+
+    async perguntaVerdadeiroFalsoB(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'B – EPI é todo dispositivo usado para proteção do trabalhador, ele pode ser de uso individual ou coletivo (compartilhado).\n\n1️⃣ Verdadeiro\n2️⃣ Falso\n\nDigite o número da sua resposta:'
+        });
+    }
+
+    async processarPerguntaVerdadeiroFalsoB(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === '1' || respostaNormalizada.includes('verdadeiro')) {
+            await client.sendMessage(message.from, {
+                text: 'Errado! O EPI é de uso individual, não deve ser compartilhado.'
+            });
+        } else {
+            await client.sendMessage(message.from, {
+                text: 'Correto! O EPI é de uso individual, não deve ser compartilhado.'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_verdadeiro_falso_c';
+            await this.perguntaVerdadeiroFalsoC(client, message);
+        }, 2000);
+    }
+
+    async perguntaVerdadeiroFalsoC(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'C – É atribuição da empresa fornecer, gratuitamente, EPI adequado ao risco a que o trabalhador está exposto.\n\n1️⃣ Verdadeiro\n2️⃣ Falso\n\nDigite o número da sua resposta:'
+        });
+    }
+
+    async processarPerguntaVerdadeiroFalsoC(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === '1' || respostaNormalizada.includes('verdadeiro')) {
+            await client.sendMessage(message.from, {
+                text: 'Correto! Esta é uma das obrigações da empresa quanto ao EPI.'
+            });
+        } else {
+            await client.sendMessage(message.from, {
+                text: 'Errado! Esta é uma das obrigações da empresa quanto ao EPI.'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_verdadeiro_falso_d';
+            await this.perguntaVerdadeiroFalsoD(client, message);
+        }, 2000);
+    }
+
+    async perguntaVerdadeiroFalsoD(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'D – É uma obrigação do trabalhador usar o EPI, de forma adequada, sempre que necessário.\n\n1️⃣ Verdadeiro\n2️⃣ Falso\n\nDigite o número da sua resposta:'
+        });
+    }
+
+    async processarPerguntaVerdadeiroFalsoD(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === '1' || respostaNormalizada.includes('verdadeiro')) {
+            await client.sendMessage(message.from, {
+                text: 'Correto! Essa é a principal obrigação do trabalhador quanto ao EPI.'
+            });
+        } else {
+            await client.sendMessage(message.from, {
+                text: 'Errado! Essa é a principal obrigação do trabalhador quanto ao EPI.'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'pergunta_verdadeiro_falso_e';
+            await this.perguntaVerdadeiroFalsoE(client, message);
+        }, 2000);
+    }
+
+    async perguntaVerdadeiroFalsoE(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'E – O Certificado de Aprovação – CA – é o documento emitido comprovando o tempo de validade do EPI.\n\n1️⃣ Verdadeiro\n2️⃣ Falso\n\nDigite o número da sua resposta:'
+        });
+    }
+
+    async processarPerguntaVerdadeiroFalsoE(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === '1' || respostaNormalizada.includes('verdadeiro')) {
+            await client.sendMessage(message.from, {
+                text: 'Errado! O CA é o documento emitido, após a realização de testes, atestando que o EPI foi aprovado e está em condições de uso pelo trabalhador.'
+            });
+        } else {
+            await client.sendMessage(message.from, {
+                text: 'Correto! O CA é o documento emitido, após a realização de testes, atestando que o EPI foi aprovado e está em condições de uso pelo trabalhador.'
+            });
+        }
+
+        setTimeout(async () => {
+            session.etapa = 'tipos_epi_introducao';
+            await this.iniciarTiposEPI(client, message, session);
+        }, 2000);
+    }
+
+    async iniciarTiposEPI(client, message, session) {
+        await client.sendMessage(message.from, {
+            text: 'Bom, existem vários tipos de EPI, e cada um tem suas características de uso, limitações e cuidados na hora de guardar e conservar o equipamento. 🧤👷♀️'
+        });
+
+        setTimeout(async () => {
+            await client.sendMessage(message.from, {
+                text: 'Bora ver agora os EPI\'s mais comuns e quais são suas principais características? 👇🔍'
+            });
+
+            setTimeout(async () => {
+                await client.sendMessage(message.from, {
+                    text: 'EPI para proteção da cabeça:'
+                });
+
+                setTimeout(async () => {
+                    await this.enviarAudiosProtecaoCabeca(client, message, session);
+                }, 2000);
+            }, 2000);
+        }, 2000);
+    }
+
+    async enviarAudiosProtecaoCabeca(client, message, session) {
+        const audios = [
+            'risco_em_atividade.mp3',
+            'risco_em_atividade.mp3'
+        ];
+
+        for (let i = 0; i < audios.length; i++) {
+            const audioPath = path.join(this.basePath, 'Audios', audios[i]);
+            if (fs.existsSync(audioPath)) {
+                await client.sendMessage(message.from, {
+                    audio: { url: audioPath }
+                });
+            }
+            if (i < audios.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+        }
+
+        setTimeout(async () => {
+            await this.finalizarTreinamento(client, message);
+        }, 2000);
+    }
+
+    async finalizarTreinamento(client, message) {
+        await client.sendMessage(message.from, {
+            text: '🎉 Parabéns! Você concluiu o treinamento de EPC e EPI!\n\nAgora você já sabe a diferença entre Perigo e Risco, e conhece os equipamentos de proteção coletiva e individual.'
+        });
     }
 }
 
-async function gerarCertificadoTreinamento(nome, email, nomeTrainamento, sendMessage, sender) {
-    // Esta função deve ser implementada para gerar certificado específico do treinamento
-    // Por enquanto, usar a função genérica
-    return await gerarCertificado(nome, email, sendMessage, sender, nomeTrainamento);
-}
+// Instância global da classe
+const epcEpiTraining = new EPCEPITraining();
 
-async function finalizarTreinamento(sender, sendMessage) {
-    await sendMessage(sender, 'send-message', {
-        message: '🎉 *Treinamento Concluído!*\n\nVocê completou com sucesso o treinamento NR6 - EPC e EPI.\n\n📋 *Lembre-se:*\n• Use sempre os EPIs adequados\n• Mantenha-os limpos e conservados\n• Comunique defeitos imediatamente\n• A segurança é responsabilidade de todos!\n\n🚀 Obrigado por participar!'
-    });
+// Função de compatibilidade para o sistema existente
+async function processarTreinamentoEpcEpi(sender, text, selectedId, contato, sendMessage, buscarContato = null) {
+    console.log(`🎓 [EPC_EPI] Processando: "${text}" | selectedId: "${selectedId}" de ${sender}`);
     
-    await salvarInteracao(sender, 'epc_epi_finalizado', JSON.stringify({ 
-        etapa: 'finalizado',
-        data_conclusao: new Date().toISOString()
-    }));
-}
-
-// ==================== FUNÇÕES AUXILIARES ====================
-
-async function salvarInteracao(telefone, tipo, mensagem) {
+    // Verificar se já está processando para evitar loops
+    const chaveProcessamento = `epc_epi_${sender}`;
+    if (global.processandoTreinamentos && global.processandoTreinamentos.has(chaveProcessamento)) {
+        console.log('🔄 Treinamento EPC/EPI já sendo processado, ignorando');
+        return true;
+    }
+    
+    // Marcar como processando
+    if (!global.processandoTreinamentos) global.processandoTreinamentos = new Set();
+    global.processandoTreinamentos.add(chaveProcessamento);
+    
     try {
-        await Interacao.create({
-            telefone: telefone,
-            tipo: tipo,
-            mensagem: mensagem
-        });
-        console.log(`✅ Interação EPC/EPI salva: ${tipo} para ${telefone}`);
+        const client = {
+            sendMessage: async (to, options) => {
+                if (options.text) {
+                    await sendMessage(sender, 'send-message', { message: options.text });
+                } else if (options.audio) {
+                    await sendMessage(sender, 'send-file', { path: options.audio.url, filename: 'audio.mp3' });
+                } else if (options.video) {
+                    await sendMessage(sender, 'send-video', { path: options.video.path, caption: options.caption });
+                } else if (options.image) {
+                    await sendMessage(sender, 'send-image', { path: options.image.url, caption: options.caption });
+                } else if (options.document) {
+                    await sendMessage(sender, 'send-file', { path: options.document.url, filename: options.fileName || 'document.pdf' });
+                } else if (options.sections) {
+                    await sendMessage(sender, 'send-list-message', options);
+                } else if (options.buttons) {
+                    await sendMessage(sender, 'send-buttons', {
+                        message: options.text,
+                        buttons: options.buttons.map(btn => ({
+                            id: btn.buttonId,
+                            text: btn.buttonText.displayText
+                        }))
+                    });
+                }
+            }
+        };
+        
+        const message = {
+            from: sender,
+            body: text,
+            selectedButtonId: selectedId || text
+        };
+        
+        // Salvar estado no banco apenas se não existir sessão
+        const sessionKey = `${contato.numero}_epc_epi`;
+        if (!epcEpiTraining.sessions.has(sessionKey)) {
+            const { Interacao } = require('../../../BancoDeDados/models');
+            await Interacao.create({
+                telefone: sender,
+                tipo: 'epc_epi_introducao',
+                mensagem: JSON.stringify({ 
+                    etapa: 'epc_epi_introducao',
+                    contato_id: contato.id,
+                    treinamento_id: TREINAMENTO_ID
+                })
+            });
+        }
+        
+        const resultado = await epcEpiTraining.processarResposta(client, message, contato);
+        
+        // Remover da lista de processamento após 2 segundos
+        setTimeout(() => {
+            global.processandoTreinamentos.delete(chaveProcessamento);
+        }, 2000);
+        
+        return resultado;
+        
     } catch (error) {
-        console.error('❌ Erro ao salvar interação EPC/EPI:', error);
+        console.error('❌ Erro no treinamento EPC/EPI:', error);
+        global.processandoTreinamentos.delete(chaveProcessamento);
+        return false;
     }
 }
-
-async function obterUltimaInteracao(telefone) {
-    try {
-        return await Interacao.findOne({
-            where: { 
-                telefone: telefone,
-                tipo: { [require('sequelize').Op.like]: 'epc_epi_%' }
-            },
-            order: [['createdAt', 'DESC']]
-        });
-    } catch (error) {
-        console.error('❌ Erro ao obter interação EPC/EPI:', error);
-        return null;
-    }
-}
-
-// ==================== EXPORTS ====================
 
 module.exports = {
     processarTreinamentoEpcEpi,
+    EPCEPITraining,
     TREINAMENTO_ID,
     NOME_TREINAMENTO
 };
