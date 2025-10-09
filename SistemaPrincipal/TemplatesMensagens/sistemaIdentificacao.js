@@ -72,6 +72,8 @@ async function processarMensagemInicial(sender, text, sendMessage, buscarContato
         case 'epc_epi_certificado':
         case 'epc_epi_reprovado':
         case 'epc_epi_finalizado':
+            console.log(`🎓 [EPC_EPI] Processando etapa: ${etapa}`);
+            
             // Processar pelo treinamento EPC/EPI
             const epcEpi = require('./Treinamentos/EPC_EPI/epc_epi');
             
@@ -86,8 +88,12 @@ async function processarMensagemInicial(sender, text, sendMessage, buscarContato
                 contatoEpcEpi = {
                     id: dados.contato_id || 'mock',
                     nome: dados.nome || 'Usuário',
+                    numero: sender.replace('@c.us', ''),
                     empresaId: dados.empresa_id || 'N/A'
                 };
+            } else {
+                // Adicionar número do telefone
+                contatoEpcEpi.numero = sender.replace('@c.us', '');
             }
             
             return await epcEpi.processarTreinamentoEpcEpi(
