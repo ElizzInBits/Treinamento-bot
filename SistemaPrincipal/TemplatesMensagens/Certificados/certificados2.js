@@ -3,12 +3,12 @@ const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
-const { Contato, Empresa, Treinamento } = require('../../BancoDeDados/models');
+const { Usuario, Empresa, Treinamento } = require('../../BancoDeDados/models');
 
-async function gerarCertificadoBanco(contatoId) {
+async function gerarCertificadoBanco(contatoId, nometreinamento = null) {
   try {
     // Buscar contato e empresa
-    const contato = await Contato.findByPk(contatoId);
+    const contato = await Usuario.findByPk(contatoId);
 
     if (!contato) {
       throw new Error('❌ Contato não encontrado.');
@@ -20,8 +20,15 @@ async function gerarCertificadoBanco(contatoId) {
       empresa = await Empresa.findByPk(contato.empresaId);
     }
 
-    // Usar treinamento padrão ID 15
-    const treinamento = await Treinamento.findByPk(15);
+    // Buscar treinamento por nome ou usar padrão ID 15
+    let treinamento = null;
+    if (nometreinamento) {
+      treinamento = await Treinamento.findOne({ where: { nome: nometreinamento } });
+    }
+    
+    if (!treinamento) {
+      treinamento = await Treinamento.findByPk(15);
+    }
 
     if (!treinamento) {
       throw new Error(`❌ Treinamento não encontrado no banco de dados.`);
@@ -64,26 +71,53 @@ async function gerarCertificadoBanco(contatoId) {
       return dataLimpa;
     }
 
+    // Função para normalizar texto removendo acentos
+    function normalizarTexto(texto) {
+      if (!texto) return '';
+      return texto
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\x00-\x7F]/g, '');
+    }
+
     // Função para quebrar texto em linhas com medição precisa
     function quebrarTexto(texto, fonte, tamanhoFonte, larguraMax) {
       if (!texto) return [''];
       
-      const palavras = texto.split(' ');
+      // Normalizar texto para evitar problemas de codificação
+      const textoNormalizado = normalizarTexto(texto);
+      const palavras = textoNormalizado.split(' ');
       const linhas = [];
       let linhaAtual = '';
       
       for (const palavra of palavras) {
         const testeLinhaAtual = linhaAtual ? `${linhaAtual} ${palavra}` : palavra;
-        const larguraReal = fonte.widthOfTextAtSize(testeLinhaAtual, tamanhoFonte);
         
-        if (larguraReal <= larguraMax) {
-          linhaAtual = testeLinhaAtual;
-        } else {
-          if (linhaAtual) {
-            linhas.push(linhaAtual);
-            linhaAtual = palavra;
+        try {
+          const larguraReal = fonte.widthOfTextAtSize(testeLinhaAtual, tamanhoFonte);
+          
+          if (larguraReal <= larguraMax) {
+            linhaAtual = testeLinhaAtual;
           } else {
-            linhas.push(palavra);
+            if (linhaAtual) {
+              linhas.push(linhaAtual);
+              linhaAtual = palavra;
+            } else {
+              linhas.push(palavra);
+            }
+          }
+        } catch (error) {
+          console.warn('Erro ao medir texto, usando texto normalizado:', error);
+          // Se houver erro, usar estimativa simples
+          if (testeLinhaAtual.length * tamanhoFonte * 0.6 <= larguraMax) {
+            linhaAtual = testeLinhaAtual;
+          } else {
+            if (linhaAtual) {
+              linhas.push(linhaAtual);
+              linhaAtual = palavra;
+            } else {
+              linhas.push(palavra);
+            }
           }
         }
       }
@@ -101,12 +135,20 @@ async function gerarCertificadoBanco(contatoId) {
     page.drawText('Conferido a:', { x: 270, y: 630, size: tamanho, font: helvetica, color: cor });
 
     // Nome (centralizado automaticamente) - EM MAIÚSCULAS
-    const nomeCompleto = (contato.nomeCompleto || contato.nome).toUpperCase();
+    const nomeOriginal = (contato.nomeCompleto || contato.nome).toUpperCase();
+    const nomeCompleto = normalizarTexto(nomeOriginal);
     const nomeSize = 16;
     const larguraPagina = 595.28; // A4 width in points
-    const larguraNome = helvetica.widthOfTextAtSize(nomeCompleto, nomeSize);
-    const nomeX = (larguraPagina / 2) - (larguraNome / 2);
-    page.drawText(nomeCompleto, { x: nomeX, y: 600, size: nomeSize, font: helvetica, color: cor });
+    
+    try {
+      const larguraNome = helvetica.widthOfTextAtSize(nomeCompleto, nomeSize);
+      const nomeX = (larguraPagina / 2) - (larguraNome / 2);
+      page.drawText(nomeCompleto, { x: nomeX, y: 600, size: nomeSize, font: helvetica, color: cor });
+    } catch (error) {
+      console.warn('Erro ao medir nome, usando posição fixa:', error);
+      // Usar posição centralizada fixa se houver erro
+      page.drawText(nomeCompleto, { x: 150, y: 600, size: nomeSize, font: helvetica, color: cor });
+    }
 
     // Documento de Identificação
     page.drawText('Documento de', { x: 60, y: 519, size: tamanho, font: helvetica, color: cor });
@@ -115,11 +157,13 @@ async function gerarCertificadoBanco(contatoId) {
 
     // Nome do Curso
     page.drawText('Nome do Curso:', { x: 60, y: 467, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.nome, { x: 166, y: 467, size: tamanho, font: helvetica, color: cor });
+    const nomeCurso = normalizarTexto(treinamento.nome || '');
+    page.drawText(nomeCurso, { x: 166, y: 467, size: tamanho, font: helvetica, color: cor });
 
     // Empresa
     page.drawText('Empresa:', { x: 60, y: 429, size: tamanho, font: helvetica, color: cor });
-    const nomeEmpresa = empresa ? empresa.razaoSocial : 'SALUBRITÁ TREINAMENTOS LTDA';
+    const nomeEmpresaOriginal = empresa ? empresa.razaoSocial : 'SALUBRITA TREINAMENTOS LTDA';
+    const nomeEmpresa = normalizarTexto(nomeEmpresaOriginal);
     page.drawText(nomeEmpresa, { x: 166, y: 427, size: tamanho, font: helvetica, color: cor });
 
     // Modalidade
@@ -130,7 +174,8 @@ async function gerarCertificadoBanco(contatoId) {
     // TIPO
     page.drawText('Tipo de', { x: 310, y: 386, size: tamanho, font: helvetica, color: cor });
     page.drawText('Treinamento:', { x: 310, y: 371, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.tipo || 'TEÓRICO E PRÁTICO', { x: 400, y: 380, size: tamanho, font: helvetica, color: cor });
+    const tipoTreinamento = normalizarTexto(treinamento.tipo || 'TEORICO E PRATICO');
+    page.drawText(tipoTreinamento, { x: 400, y: 380, size: tamanho, font: helvetica, color: cor });
 
     // Carga Horária e Período
     page.drawText('Carga Horária', { x: 60, y: 336, size: tamanho, font: helvetica, color: cor });

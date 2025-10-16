@@ -1,0 +1,34 @@
+2025/09/09-11:32:25.015 78de1 Reusing MANIFEST /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/WHATSAPP_BOT_DIRECT/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/09/09-11:32:25.016 78de1 Recovering log #870
+2025/09/09-11:32:25.023 78de1 Reusing old log /root/Treinamento-bot/SistemaPrincipal/TemplatesMensagens/tokens/WHATSAPP_BOT_DIRECT/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000870.log 
+2025/09/09-11:32:26.093 78de1 Level-0 table #884: started
+2025/09/09-11:32:26.099 78de1 Level-0 table #884: 199332 bytes OK
+2025/09/09-11:32:26.101 78de1 Delete type=0 #870
+2025/09/09-11:32:26.102 78de1 Manual compaction at level-0 from '\x00I\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00J\x00\x00\x00' @ 0 : 0; will stop at '\x00I\x00\x00\x05' @ 2996652 : 1
+2025/09/09-11:32:26.102 78de1 Compacting 1@0 + 1@1 files
+2025/09/09-11:32:26.108 78de1 Generated table #885@0: 4972 keys, 101034 bytes
+2025/09/09-11:32:26.111 78de1 Generated table #886@0: 477 keys, 8954 bytes
+2025/09/09-11:32:26.111 78de1 Compacted 1@0 + 1@1 files => 109988 bytes
+2025/09/09-11:32:26.113 78de1 compacted to: files[ 0 2 20 0 0 0 0 ]
+2025/09/09-11:32:26.114 78de1 Delete type=2 #884
+2025/09/09-11:32:26.114 78de3 Manual compaction at level-0 from '\x00I\x00\x00\x05' @ 2996652 : 1 .. '\x00J\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/09/09-11:32:27.980 78de3 Compacting 1@1 + 7@2 files
+2025/09/09-11:32:28.067 78de3 Generated table #887@1: 72178 keys, 2263584 bytes
+2025/09/09-11:32:28.095 78de3 Generated table #888@1: 2595 keys, 2152682 bytes
+2025/09/09-11:32:28.125 78de3 Generated table #889@1: 2706 keys, 2145181 bytes
+2025/09/09-11:32:28.160 78de3 Generated table #890@1: 2484 keys, 2146305 bytes
+2025/09/09-11:32:28.185 78de3 Generated table #891@1: 2499 keys, 2145443 bytes
+2025/09/09-11:32:28.228 78de3 Generated table #892@1: 31770 keys, 2211531 bytes
+2025/09/09-11:32:28.270 78de3 Generated table #893@1: 30737 keys, 2210210 bytes
+2025/09/09-11:32:28.273 78de3 Generated table #894@1: 53 keys, 33264 bytes
+2025/09/09-11:32:28.273 78de3 Compacted 1@1 + 7@2 files => 15308200 bytes
+2025/09/09-11:32:28.277 78de3 compacted to: files[ 0 1 21 0 0 0 0 ]
+2025/09/09-11:32:28.278 78de3 Delete type=2 #876
+2025/09/09-11:32:28.278 78de3 Delete type=2 #877
+2025/09/09-11:32:28.279 78de3 Delete type=2 #875
+2025/09/09-11:32:28.279 78de3 Delete type=2 #878
+2025/09/09-11:32:28.279 78de3 Delete type=2 #885
+2025/09/09-11:32:28.279 78de3 Delete type=2 #880
+2025/09/09-11:32:28.279 78de3 Delete type=2 #874
+2025/09/09-11:32:28.279 78de3 Delete type=2 #873
+2025/09/09-11:32:28.279 78de3 Delete type=2 #879

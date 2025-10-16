@@ -1,5 +1,5 @@
 // Sistema de cache otimizado para contatos
-const { Contato } = require('./models');
+const { Usuario } = require('./models');
 
 class CacheContatos {
     constructor() {
@@ -30,7 +30,7 @@ class CacheContatos {
             const variacoes = this.gerarVariacoesNumero(numeroLimpo);
             
             // Buscar por qualquer variação
-            const contato = await Contato.findOne({
+            const contato = await Usuario.findOne({
                 where: { 
                     telefone: {
                         [require('sequelize').Op.in]: variacoes
@@ -59,7 +59,7 @@ class CacheContatos {
     // Pré-carregar contatos mais ativos
     async precarregarContatosAtivos() {
         try {
-            const contatosAtivos = await Contato.findAll({
+            const contatosAtivos = await Usuario.findAll({
                 where: {
                     statusTreinamento: ['em andamento', 'não iniciado']
                 },

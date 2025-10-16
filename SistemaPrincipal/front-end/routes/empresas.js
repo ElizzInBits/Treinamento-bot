@@ -1,4 +1,4 @@
-const { Empresa, Contato, Treinamento, EmpresaTreinamento, EmpresaSenha, sequelize } = require('../../BancoDeDados/models');
+const { Empresa, Usuario, Treinamento, EmpresaTreinamento, EmpresaSenha, sequelize } = require('../../BancoDeDados/models');
 const { fn, col, Op } = require('sequelize');
 const express = require('express');
 const router = express.Router();
@@ -7,7 +7,7 @@ function limparCNPJ(cnpj) {
   return cnpj.replace(/\D/g, '');
 }
 
-// ➕ Rota para gráfico de contatos por empresa (ANTES de /:id)
+// Rota para gráfico de contatos por empresa (ANTES de /:id)
 router.get('/contatos-por-empresa', async (req, res) => {
   try {
     const empresas = await Empresa.findAll({
@@ -17,8 +17,8 @@ router.get('/contatos-por-empresa', async (req, res) => {
         [sequelize.fn('COUNT', sequelize.col('contatos.id')), 'totalContatos']
       ],
       include: [{
-        model: Contato,
-        as: 'contatos',
+        model: Usuario,
+        as: 'usuarios',
         attributes: []
       }],
       group: ['empresas.id'],
@@ -263,8 +263,8 @@ router.delete('/:id', async (req, res) => {
       transaction
     });
     
-    // Excluir contatos da empresa
-    await Contato.destroy({
+    // Excluir usuários da empresa
+    await Usuario.destroy({
       where: { empresaId: req.params.id },
       transaction
     });
@@ -291,8 +291,8 @@ router.get('/:id/completo', async (req, res) => {
     const empresa = await Empresa.findByPk(req.params.id, {
       include: [
         {
-          model: Contato,
-          as: 'contatos'
+          model: Usuario,
+          as: 'usuarios'
         },
         {
           model: Treinamento,

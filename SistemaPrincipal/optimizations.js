@@ -14,8 +14,8 @@ class SystemOptimizations {
             
             // Adicionar índices críticos
             await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_contatos_telefone_status 
-                ON contatos(telefone, statusTreinamento)
+                CREATE INDEX IF NOT EXISTS idx_usuarios_telefone_status 
+                ON usuarios(telefone, statusTreinamento)
             `);
             
             await sequelize.query(`

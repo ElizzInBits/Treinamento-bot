@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Empresa, Contato, Treinamento, EmpresaTreinamento, sequelize } = require('../../BancoDeDados/models');
+const { Empresa, Usuario, Treinamento, EmpresaTreinamento, sequelize } = require('../../BancoDeDados/models');
 const { Op, fn, col, literal } = require('sequelize');
 
 // Health check endpoint
@@ -20,21 +20,21 @@ router.get('/health', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const totalEmpresas = await Empresa.count();
-    const totalContatos = await Contato.count();
+    const totalContatos = await Usuario.count();
     const totalTreinamentos = await Treinamento.count();
-    const contatosComTreinamento = await Contato.count({ where: { treinamentoId: { [Op.not]: null } } });
+    const contatosComTreinamento = await Usuario.count({ where: { treinamentoId: { [Op.not]: null } } });
     
-    // Contar empresas que têm pelo menos um contato
+    // Contar empresas que têm pelo menos um usuário
     const empresasComContatos = await Empresa.findAll({
       include: [{
-        model: Contato,
-        as: 'contatos',
+        model: Usuario,
+        as: 'usuarios',
         required: true
       }]
     });
     const empresasAtivas = empresasComContatos.length;
     
-    const certificadosEmitidos = await Contato.count({ where: { statusTreinamento: 'concluído' } });
+    const certificadosEmitidos = await Usuario.count({ where: { statusTreinamento: 'concluído' } });
 
     const taxaTreinamento = totalContatos > 0 ? ((contatosComTreinamento / totalContatos) * 100).toFixed(1) : 0;
     const mediaContatosPorEmpresa = totalEmpresas > 0 ? (totalContatos / totalEmpresas).toFixed(1) : 0;
@@ -65,8 +65,8 @@ router.get('/empresas-contatos', async (req, res) => {
     const dados = [];
     
     for (const empresa of empresas) {
-      const totalContatos = await Contato.count({ where: { empresaId: empresa.id } });
-      const contatosComTreinamento = await Contato.count({ 
+      const totalContatos = await Usuario.count({ where: { empresaId: empresa.id } });
+      const contatosComTreinamento = await Usuario.count({ 
         where: { 
           empresaId: empresa.id,
           treinamentoId: { [Op.not]: null }
@@ -94,8 +94,8 @@ router.get('/empresas-contatos', async (req, res) => {
 // Dados para gráfico de status de treinamento
 router.get('/status-treinamento', async (req, res) => {
   try {
-    const comTreinamento = await Contato.count({ where: { treinamentoId: { [Op.not]: null } } });
-    const semTreinamento = await Contato.count({ where: { treinamentoId: null } });
+    const comTreinamento = await Usuario.count({ where: { treinamentoId: { [Op.not]: null } } });
+    const semTreinamento = await Usuario.count({ where: { treinamentoId: null } });
     
     const dados = [
       { status: 'Com Treinamento', total: comTreinamento },
@@ -143,7 +143,7 @@ router.get('/modalidades', async (req, res) => {
 router.get('/evolucao-mensal', async (req, res) => {
   try {
     // Dados simplificados para o mês atual
-    const totalContatos = await Contato.count();
+    const totalContatos = await Usuario.count();
     const totalTreinamentos = await Treinamento.count();
     
     const mesAtual = new Date().toISOString().slice(0, 7); // YYYY-MM
@@ -161,7 +161,7 @@ router.get('/evolucao-mensal', async (req, res) => {
 // Contatos em treinamento
 router.get('/contatos-em-treinamento', async (req, res) => {
   try {
-    const total = await Contato.count({ 
+    const total = await Usuario.count({ 
       where: { treinamentoId: { [Op.not]: null } } 
     });
     
@@ -179,8 +179,8 @@ router.get('/top-empresas', async (req, res) => {
     const dados = [];
     
     for (const empresa of empresas) {
-      const totalContatos = await Contato.count({ where: { empresaId: empresa.id } });
-      const contatosComTreinamento = await Contato.count({ 
+      const totalContatos = await Usuario.count({ where: { empresaId: empresa.id } });
+      const contatosComTreinamento = await Usuario.count({ 
         where: { 
           empresaId: empresa.id,
           treinamentoId: { [Op.not]: null }

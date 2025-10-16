@@ -3,28 +3,37 @@ const { sequelize } = require('../database');
 
 // Importação dos modelos
 const EmpresaModel = require('./empresas');
-const ContatoModel = require('./contato');
-const InteracaoModel = require('./interacao');
+const UsuarioModel = require('./usuario');
+const ContatoModel = require('./contato'); // Modelo legado temporário
 const EmpresaTreinamentoModel = require('./empresaTreinamento');
 const TreinamentoModel = require('./treinamento');
 const EmpresaSenhaModel = require('./empresaSenha');
+const SessaoTreinamentoModel = require('./sessaoTreinamento');
+const InteracaoModel = require('./interacao');
+const AssinaturaCertificadoModel = require('./AssinaturaCertificado');
 
 // Inicializa os modelos
 const Empresa = EmpresaModel(sequelize, Sequelize.DataTypes);
-const Contato = ContatoModel(sequelize, Sequelize.DataTypes);
-const Interacao = InteracaoModel(sequelize, Sequelize.DataTypes);
+const Usuario = UsuarioModel(sequelize, Sequelize.DataTypes);
+const Contato = ContatoModel(sequelize, Sequelize.DataTypes); // Modelo legado temporário
 const EmpresaTreinamento = EmpresaTreinamentoModel(sequelize, Sequelize.DataTypes);
 const Treinamento = TreinamentoModel(sequelize, Sequelize.DataTypes);
 const EmpresaSenha = EmpresaSenhaModel(sequelize, Sequelize.DataTypes);
+const SessaoTreinamento = SessaoTreinamentoModel(sequelize, Sequelize.DataTypes);
+const Interacao = InteracaoModel(sequelize, Sequelize.DataTypes);
+const AssinaturaCertificado = AssinaturaCertificadoModel(sequelize, Sequelize.DataTypes);
 
 // Cria o objeto com todos os modelos
 const models = {
   Empresa,
-  Contato,
-  Interacao,
+  Usuario,
+  Contato, // Modelo legado temporário
   EmpresaTreinamento,
   Treinamento,
   EmpresaSenha,
+  SessaoTreinamento,
+  Interacao,
+  AssinaturaCertificado,
 };
 
 // Faz as associações

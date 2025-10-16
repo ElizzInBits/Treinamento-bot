@@ -72,16 +72,15 @@ module.exports = (sequelize) => {
     allowNull: true,
   }
   }, {
-    tableName: 'treinamento',
+    tableName: 'treinamentos',
     timestamps: true,
     underscored: true,
   });
 
   Treinamento.associate = (models) => {
-    Treinamento.belongsToMany(models.Contato, {
-      through: 'ContatoTreinamentos',
+    Treinamento.hasMany(models.Usuario, {
       foreignKey: 'treinamentoId',
-      otherKey: 'contatoId'
+      as: 'usuarios'
     });
     Treinamento.belongsToMany(models.Empresa, {
       through: models.EmpresaTreinamento,

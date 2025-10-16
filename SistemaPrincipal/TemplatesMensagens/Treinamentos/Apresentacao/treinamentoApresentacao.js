@@ -1,4 +1,4 @@
-const { Contato, Interacao } = require('../../../BancoDeDados/models');
+const { Usuario, Interacao } = require('../../../BancoDeDados/models');
 const { gerarCertificado } = require('../../Certificados/gerarCertificado');
 const { encurtarNome } = require('../../utils/formatarNome');
 
@@ -246,9 +246,20 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
             // 1. Enviar vídeo
             const videoPath = path.join(__dirname, 'material_apresentacao', 'Videos', 'Video01.mp4');
             if (fs.existsSync(videoPath)) {
-                await sendMessage(sender, 'send-video', {
-                    path: videoPath,
-                    caption: '📹 *Vídeos curtos*'
+                try {
+                    await sendMessage(sender, 'send-video', {
+                        path: videoPath,
+                        caption: '📹 *Vídeos curtos*'
+                    });
+                } catch (error) {
+                    console.error('❌ Erro ao enviar vídeo:', error);
+                    await sendMessage(sender, 'send-message', {
+                        message: '📹 *Vídeos curtos*\n\nVídeos explicativos de fácil compreensão'
+                    });
+                }
+            } else {
+                await sendMessage(sender, 'send-message', {
+                    message: '📹 *Vídeos curtos*\n\nVídeos explicativos de fácil compreensão'
                 });
             }
             
@@ -256,9 +267,20 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
             setTimeout(async () => {
                 const imagePath = path.join(__dirname, 'material_apresentacao', 'Imagens', 'Vantagens.png');
                 if (fs.existsSync(imagePath)) {
-                    await sendMessage(sender, 'send-image', {
-                        path: imagePath,
-                        caption: '🖼️ *Imagens e infográficos*'
+                    try {
+                        await sendMessage(sender, 'send-image', {
+                            path: imagePath,
+                            caption: '🖼️ *Imagens e infográficos*'
+                        });
+                    } catch (error) {
+                        console.error('❌ Erro ao enviar imagem:', error);
+                        await sendMessage(sender, 'send-message', {
+                            message: '🖼️ *Imagens e infográficos*\n\nRecursos visuais para facilitar o aprendizado'
+                        });
+                    }
+                } else {
+                    await sendMessage(sender, 'send-message', {
+                        message: '🖼️ *Imagens e infográficos*\n\nRecursos visuais para facilitar o aprendizado'
                     });
                 }
                 
@@ -272,10 +294,14 @@ async function mostrarRecursosDetalhados(sender, sendMessage) {
                     setTimeout(async () => {
                         const audioPath = path.join(__dirname, 'material_apresentacao', 'audios', 'Audio_texto01.mp3');
                         if (fs.existsSync(audioPath)) {
-                            await sendMessage(sender, 'send-file', {
-                                path: audioPath,
-                                filename: 'audio.mp3'
-                            });
+                            try {
+                                await sendMessage(sender, 'send-file', {
+                                    path: audioPath,
+                                    filename: 'audio.mp3'
+                                });
+                            } catch (error) {
+                                console.error('❌ Erro ao enviar áudio:', error);
+                            }
                         }
                         
                         // 5. Testes e avaliações
@@ -464,11 +490,18 @@ async function enviarVideoTreinamentoMotorista(sender, sendMessage) {
         console.log(`🎥 Tentando enviar vídeo: ${videoPath}`);
         
         if (fs.existsSync(videoPath)) {
-            await sendMessage(sender, 'send-video', {
-                path: videoPath,
-                caption: '🎥 Exemplo prático: Treinamento para motoristas'
-            });
-            console.log('✅ Vídeo de motoristas enviado com sucesso');
+            try {
+                await sendMessage(sender, 'send-video', {
+                    path: videoPath,
+                    caption: '🎥 Exemplo prático: Treinamento para motoristas'
+                });
+                console.log('✅ Vídeo de motoristas enviado com sucesso');
+            } catch (error) {
+                console.error('❌ Erro ao enviar vídeo de motoristas:', error);
+                await sendMessage(sender, 'send-message', {
+                    message: '🎥 *Exemplo prático: Treinamento para motoristas*\n\n🚗 Nossos treinamentos incluem:\n• Vídeos explicativos\n• Simulações práticas\n• Testes interativos\n• Certificado válido\n\n📱 Tudo direto no WhatsApp!'
+                });
+            }
         } else {
             console.log('❌ Arquivo de vídeo não encontrado, enviando mensagem alternativa');
             await sendMessage(sender, 'send-message', {
@@ -515,11 +548,18 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
         console.log(`🎥 Tentando enviar vídeo de terceiros: ${videoPath}`);
         
         if (fs.existsSync(videoPath)) {
-            await sendMessage(sender, 'send-video', {
-                path: videoPath,
-                caption: '🎥 Exemplo prático: Treinamento de Terceiros'
-            });
-            console.log('✅ Vídeo de terceiros enviado com sucesso');
+            try {
+                await sendMessage(sender, 'send-video', {
+                    path: videoPath,
+                    caption: '🎥 Exemplo prático: Treinamento de Terceiros'
+                });
+                console.log('✅ Vídeo de terceiros enviado com sucesso');
+            } catch (error) {
+                console.error('❌ Erro ao enviar vídeo de terceiros:', error);
+                await sendMessage(sender, 'send-message', {
+                    message: '🎥 *Exemplo prático: Treinamento de Terceiros*\n\n👥 Integração de terceiros via WhatsApp:\n• Cadastro automático\n• Treinamentos obrigatórios\n• Controle de acesso\n• Certificados digitais\n\n📱 Tudo integrado no WhatsApp!'
+                });
+            }
         } else {
             console.log('❌ Arquivo de vídeo de terceiros não encontrado, enviando mensagem alternativa');
             await sendMessage(sender, 'send-message', {
@@ -549,7 +589,7 @@ async function enviarVideoTreinamentoTerceiros(sender, sendMessage) {
 
 async function perguntarDadosCertificado(sender, sendMessage) {
     await sendMessage(sender, 'send-message', {
-        message: "🎓 Certificados também podem ser gerados automaticamente após o treinamento!"
+        message: "🎓 Agora você pode receber o seu certificado!"
     });
     
     try {
@@ -565,7 +605,7 @@ async function perguntarDadosCertificado(sender, sendMessage) {
         
         let contato = null;
         for (const formato of formatosTelefone) {
-            contato = await Contato.findOne({ where: { telefone: formato } });
+            contato = await Usuario.findOne({ where: { telefone: formato } });
             if (contato) {
                 console.log(`✅ Contato encontrado: ${contato.nome || contato.nomeCompleto} (formato: ${formato})`);
                 break;
@@ -582,7 +622,7 @@ async function perguntarDadosCertificado(sender, sendMessage) {
             
             if (nome && email && nome !== 'Não informado' && email !== 'Não informado') {
                 await sendMessage(sender, 'send-message', {
-                    message: `🎓 *Certificado de Participação*\n\nDados cadastrados no sistema:\n\n👤 *Nome:* ${nome}\n📧 *E-mail:* ${email}\n\nEstão corretos?\n\n1️⃣ Sim, estão corretos\n2️⃣ Não, quero corrigir`
+                    message: `🎓 *Certificado de conclusão*\n\nDados cadastrados no sistema:\n\n👤 *Nome:* ${nome}\n📧 *E-mail:* ${email}\n\nEstão corretos?\n\n1️⃣ Sim, estão corretos\n2️⃣ Não, quero corrigir`
                 });
                 await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ 
                     etapa: 'confirmar_dados_certificado', 
@@ -688,11 +728,11 @@ async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
     });
     
     try {
-        const resultado = await gerarCertificado(nome, email, sendMessage, sender);
+        const resultado = await gerarCertificado(nome, email, sendMessage, sender, 'Como fazer Treinamentos Normativos no WhatsApp');
         
         if (resultado.sucesso) {
             await sendMessage(sender, 'send-message', {
-                message: `✅ *Certificado gerado com sucesso!*\n\n📧 Enviado para: ${email}\n📱 Também enviado aqui no chat\n\n⚠️ *IMPORTANTE:* Este certificado é apenas demonstrativo e não possui validade legal para treinamentos normativos ou conformidade regulatória.`
+                message: `✅ *Certificado gerado com sucesso!*\n\n📧 Enviado para: ${email}\n\n🔏 *Para finalizar, assine digitalmente seu certificado:*\n${resultado.linkAssinatura}\n\n⏰ Link válido por 24 horas`
             });
         } else {
             await sendMessage(sender, 'send-message', {
@@ -809,7 +849,7 @@ async function verificarTreinamentosPendentes(sender, sendMessage, querContato =
         
         let contato = null;
         for (const formato of formatosTelefone) {
-            contato = await Contato.findOne({ where: { telefone: formato } });
+            contato = await Usuario.findOne({ where: { telefone: formato } });
             if (contato) break;
         }
         
@@ -868,15 +908,10 @@ async function verificarTreinamentosEmpresa(empresaId, contatoId = null) {
                     ELSE 'normal'
                 END as status_prazo,
                 DATE_ADD(et.data_atribuicao, INTERVAL 30 DAY) as prazo
-            FROM treinamento t
-            INNER JOIN empresa_treinamentos et ON t.id = et.treinamento_id
+            FROM treinamentos t
+            INNER JOIN empresas_treinamentos et ON t.id = et.treinamento_id
             WHERE et.empresa_id = :empresaId
-            ${contatoId ? `
-            AND t.id NOT IN (
-                SELECT ct.treinamento_id 
-                FROM ContatoTreinamentos ct 
-                WHERE ct.contato_id = :contatoId
-            )` : ''}
+
             ORDER BY 
                 CASE 
                     WHEN DATEDIFF(DATE_ADD(et.data_atribuicao, INTERVAL 30 DAY), CURDATE()) < 0 THEN 1
@@ -887,9 +922,6 @@ async function verificarTreinamentosEmpresa(empresaId, contatoId = null) {
         `;
         
         const replacements = { empresaId };
-        if (contatoId) {
-            replacements.contatoId = contatoId;
-        }
         
         const resultados = await sequelize.query(query, {
             replacements,
@@ -959,7 +991,7 @@ async function direcionarParaTreinamentos(sender, sendMessage, treinamentos, con
                 break;
         }
         
-        mensagem += `${icone} ${treinamento.nome}${prazoFormatado}\n`;
+        mensagem += `${icone} ${treinamento.nome}\n`;
     });
     
     mensagem += '\n👉 O que você gostaria de fazer?\n\n';
@@ -1058,15 +1090,21 @@ async function processarTreinamentosPendentes(sender, text, sendMessage) {
                     sender.length === 13 ? sender.substring(0, 4) + sender.substring(5) : sender,
                 ];
                 
-                const { Contato } = require('../../../BancoDeDados/models');
+                const { Usuario } = require('../../../BancoDeDados/models');
                 for (const formato of formatosTelefone) {
-                    contato = await Contato.findOne({ where: { telefone: formato } });
+                    contato = await Usuario.findOne({ where: { telefone: formato } });
                     if (contato) break;
                 }
                 
                 if (contato) {
                     console.log(`🎓 Iniciando treinamento EPC/EPI para ${contato.nome}`);
-                    return await epcEpi.processarTreinamentoEpcEpi(sender, '', null, contato, sendMessage, null);
+                    // Adicionar número do telefone ao contato
+                    contato.numero = sender.replace('@c.us', '');
+                    
+                    // Marcar como finalizado para evitar loop
+                    await salvarInteracao(sender, 'epc_epi_iniciado', JSON.stringify({ etapa: 'epc_epi_iniciado' }));
+                    
+                    return await epcEpi.processarTreinamentoEpcEpi(sender, 'iniciar_treinamento', null, contato, sendMessage, null);
                 }
             }
             

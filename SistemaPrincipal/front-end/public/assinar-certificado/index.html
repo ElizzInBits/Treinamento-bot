@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assinar Certificado - Salubritá</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Kaushan+Script&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f4c5c 0%, #6ec6ca 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .user-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .user-info p {
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .signature-area {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #fafafa;
+        }
+        
+        #signatureCanvas {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            cursor: crosshair;
+            width: 100%;
+            max-width: 400px;
+            height: 150px;
+        }
+        
+        .canvas-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .signature-options {
+            margin-bottom: 20px;
+        }
+        
+        .option-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .tab-btn:hover {
+            border-color: #4CAF50;
+        }
+        
+        .font-options {
+            margin: 20px 0;
+        }
+        
+        .font-previews {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .font-option {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .font-option:hover {
+            border-color: #4CAF50;
+            background: #f8f9fa;
+        }
+        
+        .font-option.selected {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+        }
+        
+        .font-preview {
+            flex: 1;
+            font-size: 24px;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .cursive1 {
+            font-family: 'Dancing Script', cursive;
+            font-weight: 700;
+        }
+        
+        .cursive2 {
+            font-family: 'Great Vibes', cursive;
+        }
+        
+        .cursive3 {
+            font-family: 'Kaushan Script', cursive;
+        }
+        
+        .signature-preview {
+            margin: 20px 0;
+        }
+        
+        #previewSignature {
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            #signatureCanvas {
+                height: 120px;
+            }
+            
+            .canvas-controls {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .option-tabs {
+                flex-direction: column;
+            }
+            
+            .font-preview {
+                font-size: 20px;
+            }
+            
+            #previewSignature {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎓</div>
+        <h1>Assinar Certificado</h1>
+        <p class="subtitle">Finalize seu certificado com sua assinatura digital</p>
+        
+        <div id="userInfo" class="user-info" style="display: none;">
+            <h3>Dados do Certificado</h3>
+            <p><strong>Nome:</strong> <span id="userName"></span></p>
+            <p><strong>E-mail:</strong> <span id="userEmail"></span></p>
+        </div>
+        
+        <div class="signature-options">
+            <h3 style="color: #333; margin-bottom: 20px;">Escolha como assinar:</h3>
+            <div class="option-tabs">
+                <button class="tab-btn active" onclick="showTab('draw')">✏️ Desenhar</button>
+                <button class="tab-btn" onclick="showTab('type')">📝 Digitar</button>
+            </div>
+        </div>
+        
+        <!-- Aba Desenhar -->
+        <div class="signature-area" id="drawTab">
+            <p style="margin-bottom: 15px; color: #666;">Desenhe sua assinatura no espaço abaixo:</p>
+            <canvas id="signatureCanvas"></canvas>
+            <div class="canvas-controls">
+                <button class="btn btn-secondary" onclick="clearSignature()">Limpar</button>
+                <button class="btn btn-primary" onclick="saveSignature()" id="saveBtn" disabled>Assinar Certificado</button>
+            </div>
+        </div>
+        
+        <!-- Aba Digitar -->
+        <div class="signature-area" id="typeTab" style="display: none;">
+            <p style="margin-bottom: 15px; color: #666;">Digite seu nome para gerar assinatura:</p>
+            <input type="text" id="nameInput" placeholder="Digite seu nome completo" 
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; font-size: 16px;">
+            
+            <div class="font-options">
+                <p style="margin-bottom: 10px; color: #666;">Escolha o estilo:</p>
+                <div class="font-previews">
+                    <div class="font-option" onclick="selectFont('cursive1')">
+                        <div class="font-preview cursive1" id="preview1">João Silva Santos</div>
+                        <input type="radio" name="fontStyle" value="cursive1" id="font1">
+                    </div>
+                    <div class="font-option" onclick="selectFont('cursive2')">
+                        <div class="font-preview cursive2" id="preview2">João Silva Santos</div>
+                        <input type="radio" name="fontStyle" value="cursive2" id="font2">
+                    </div>
+                    <div class="font-option" onclick="selectFont('cursive3')">
+                        <div class="font-preview cursive3" id="preview3">João Silva Santos</div>
+                        <input type="radio" name="fontStyle" value="cursive3" id="font3">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="signature-preview" id="signaturePreview" style="display: none;">
+                <p style="margin-bottom: 10px; color: #666;">Prévia da assinatura:</p>
+                <div id="previewSignature" style="border: 1px solid #ddd; padding: 20px; background: white; text-align: center; border-radius: 8px;"></div>
+            </div>
+            
+            <div class="canvas-controls">
+                <button class="btn btn-secondary" onclick="clearTypedSignature()">Limpar</button>
+                <button class="btn btn-primary" onclick="saveTypedSignature()" id="saveTypedBtn" disabled>Assinar Certificado</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processando assinatura...</p>
+        </div>
+        
+        <div class="success-message" id="successMessage"></div>
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <script src="signature.js"></script>
+</body>
+</html>

@@ -38,6 +38,13 @@ async function sendMessage(phone, endpoint, body = {}) {
             case 'send-file':
             case 'send-image':
             case 'send-video':
+                // Verificar se o arquivo existe antes de tentar enviar
+                const fs = require('fs');
+                if (body.path && !fs.existsSync(body.path)) {
+                    console.error(`❌ Arquivo não encontrado: ${body.path}`);
+                    return false;
+                }
+                
                 response = await axios.post(`${API_HOST}/api/${SECRET_KEY}/${SESSION}/send-file`, {
                     phone: phoneNumber,
                     path: body.path,
@@ -45,7 +52,7 @@ async function sendMessage(phone, endpoint, body = {}) {
                     caption: body.caption
                 }, {
                     headers: { 'Content-Type': 'application/json' },
-                    timeout: 5000
+                    timeout: 10000 // Aumentar timeout para arquivos
                 });
                 break;
                 
@@ -58,7 +65,17 @@ async function sendMessage(phone, endpoint, body = {}) {
         
     } catch (error) {
         const duration = Date.now() - sendStart;
-        console.error(`❌ ${endpoint} (${duration}ms):`, error.message);
+        
+        // Log mais detalhado para erros de mídia
+        if (endpoint.includes('file') || endpoint.includes('video') || endpoint.includes('image')) {
+            console.error(`❌ ${endpoint} (${duration}ms): ${error.message}`);
+            if (error.response && error.response.data) {
+                console.error(`   Detalhes:`, JSON.stringify(error.response.data));
+            }
+        } else {
+            console.error(`❌ ${endpoint} (${duration}ms):`, error.message);
+        }
+        
         return false;
     }
 }

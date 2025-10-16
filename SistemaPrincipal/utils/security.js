@@ -19,7 +19,13 @@ class SecurityUtils {
     static validateInput(input, maxLength = 1000) {
         if (!input || typeof input !== 'string') return false;
         if (input.length > maxLength) return false;
-        const dangerousChars = /<script|javascript:|data:|vbscript:|onload|onerror/i;
+        
+        // Para assinaturas base64, permitir data: URLs
+        if (maxLength > 10000 && input.startsWith('data:image/')) {
+            return true;
+        }
+        
+        const dangerousChars = /<script|javascript:|vbscript:|onload|onerror/i;
         return !dangerousChars.test(input);
     }
 
