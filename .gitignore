@@ -49,3 +49,22 @@ backup/
 # Arquivos temporários
 tmp/
 temp/
+
+# Cache e arquivos temporários
+.cache/
+cache/
+*.cache
+.npm/
+.node_repl_history
+
+# Arquivos de build
+build/
+dist/
+out/
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
