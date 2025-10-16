@@ -1,9 +1,17 @@
-# Arquivos de ambiente (credenciais sensíveis)
+# Arquivos de ambiente (credenciais sensíveis) - CRÍTICO!
 *.env
 .env
+.env.*
+**/.env
+**/.env.*
 .env.local
 .env.production
 .env.development
+.env.staging
+.env.test
+SistemaPrincipal/front-end/.env
+SistemaPrincipal/.env
+wppconnect-server/.env
 
 # Logs
 logs/
@@ -42,9 +50,18 @@ uploads/
 ecosystem.config.js
 pm2.config.js
 
-# Backups
+# Backups e arquivos temporários
 backup/
+backups/
 *.backup
+*.bak
+*.old
+*.orig
+*.tmp
+backup_*/
+*_backup/
+*_backup_*/
+backup-*/
 
 # Arquivos temporários
 tmp/
