@@ -7,7 +7,7 @@ const fs = require('fs');
 const contatosPath = path.join(__dirname, '..', '..', 'BancoDeDados', 'contatos.json');
 
 // Função para ler contatos
-function lerContatos() {
+function lerUsuarios() {
     try {
         if (fs.existsSync(contatosPath)) {
             const data = fs.readFileSync(contatosPath, 'utf8');
@@ -21,7 +21,7 @@ function lerContatos() {
 }
 
 // Função para salvar contatos
-function salvarContatos(contatos) {
+function salvarUsuarios(contatos) {
     try {
         fs.writeFileSync(contatosPath, JSON.stringify(contatos, null, 2));
         return true;
@@ -44,13 +44,13 @@ router.post('/login', async (req, res) => {
     
     try {
         // Buscar no banco de dados Sequelize
-        const { Contato } = require('../../BancoDeDados/models');
-        const usuario = await Contato.findOne({
+        const { Usuario } = require('../../BancoDeDados/models');
+        const usuario = await Usuario.findOne({
             where: {
                 email: email,
                 cpf: cpf.replace(/\D/g, '')
             },
-            include: ['empresaRef']
+            include: ['empresa']
         });
         
         if (usuario) {
@@ -62,7 +62,7 @@ router.post('/login', async (req, res) => {
                     email: usuario.email,
                     telefone: usuario.telefone,
                     ddi: '+55',
-                    nomeEmpresa: usuario.nomeEmpresa || usuario.empresaRef?.razaoSocial || 'Não informado'
+                    nomeEmpresa: usuario.nomeEmpresa || usuario.empresa?.razaoSocial || 'Não informado'
                 }
             });
         } else {
@@ -92,8 +92,8 @@ router.put('/atualizar', async (req, res) => {
     }
     
     try {
-        const { Contato } = require('../../BancoDeDados/models');
-        const usuario = await Contato.findOne({
+        const { Usuario } = require('../../BancoDeDados/models');
+        const usuario = await Usuario.findOne({
             where: { cpf: cpf.replace(/\D/g, '') }
         });
         
@@ -115,8 +115,8 @@ router.put('/atualizar', async (req, res) => {
         // Emitir evento WebSocket para atualização em tempo real
         const io = req.app.get('io');
         if (io) {
-            io.emit('contatoAtualizado', {
-                contato: usuario,
+            io.emit('usuarioAtualizado', {
+                usuario: usuario,
                 empresaId: usuario.empresaId
             });
         }

@@ -1,11 +1,11 @@
 const { gerarCertificadoBanco } = require('./certificados2');
-const { Contato } = require('../../BancoDeDados/models');
+const { Usuario } = require('../../BancoDeDados/models');
 const path = require('path');
 const fs = require('fs');
 
-async function gerarCertificado(nome, email, sendMessage, sender) {
+async function gerarCertificado(nome, email, sendMessage, sender, nometreinamento = null) {
     try {
-        console.log(`🎓 Gerando certificado para: ${nome} (${email})`);
+        console.log(`🎓 Gerando certificado para: ${nome} (${email}) - Treinamento: ${nometreinamento}`);
         
         // Buscar contato pelo telefone
         const formatosTelefone = [
@@ -17,7 +17,7 @@ async function gerarCertificado(nome, email, sendMessage, sender) {
         
         let contato = null;
         for (const formato of formatosTelefone) {
-            contato = await Contato.findOne({ where: { telefone: formato } });
+            contato = await Usuario.findOne({ where: { telefone: formato } });
             if (contato) {
                 console.log(`✅ Contato encontrado para certificado: ${contato.nome}`);
                 break;
@@ -38,21 +38,21 @@ async function gerarCertificado(nome, email, sendMessage, sender) {
         }
         
         // Gerar certificado usando certificados2.js (já envia por email automaticamente)
-        const caminhoArquivo = await gerarCertificadoBanco(contato.id);
+        const caminhoArquivo = await gerarCertificadoBanco(contato.id, nometreinamento);
         
-        // Enviar arquivo via WhatsApp
-        if (fs.existsSync(caminhoArquivo)) {
-            await sendMessage(sender, 'send-file', {
-                path: caminhoArquivo,
-                filename: path.basename(caminhoArquivo),
-                caption: '🎓 Seu certificado de participação!'
-            });
-            console.log('✅ Certificado enviado via WhatsApp');
-        }
+        // Criar registro de assinatura e gerar link
+        const AssinaturaCertificadoService = require('./assinaturaCertificado');
+        const assinatura = await AssinaturaCertificadoService.criarAssinaturaPendente(
+            contato.id, 
+            caminhoArquivo, 
+            nometreinamento
+        );
         
         return {
             sucesso: true,
-            arquivo: caminhoArquivo
+            arquivo: caminhoArquivo,
+            linkAssinatura: assinatura.linkAssinatura,
+            token: assinatura.token
         };
         
     } catch (error) {

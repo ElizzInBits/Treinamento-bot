@@ -14,7 +14,7 @@ const optimizedImageManager = SystemOptimizations.createOptimizedImageManager();
 const TRAINING_ID = 'ssma';
 
 // sendMessage will be passed as parameter to avoid circular dependency
-const { Treinamento, Contato } = require('../../../BancoDeDados/models/index.js');
+const { Treinamento, Usuario } = require('../../../BancoDeDados/models/index.js');
 const { Interacao, Empresa } = require('../../../BancoDeDados/models/index.js');
 const { gerarCertificadoBanco, enviarEmail } = require('../../Certificados/certificados2.js');
 const { Op } = require('sequelize');
@@ -801,7 +801,7 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
     
     // Enviar mensagem de manutenção diretamente
     try {
-        const contato = await Contato.findOne({ where: { telefone: sender } });
+        const contato = await Usuario.findOne({ where: { telefone: sender } });
         if (contato) {
             // Chamar diretamente a função de geração de certificado (que agora envia mensagem de manutenção)
             await gerarCertificadoSSMA(sender, contato, sendMessage);

@@ -233,6 +233,15 @@ function authenticateToken(req, res, next) {
 // ✅ 7. Registrar rotas da API com autenticação
 console.log('🔗 Registrando rotas da API...');
 // Rotas públicas para cadastro
+app.use('/api/usuarios', (req, res, next) => {
+    if (req.method === 'POST' && req.path === '/') {
+        next(); // Permitir POST público para cadastro
+    } else {
+        authenticateToken(req, res, next);
+    }
+}, contatosRoutes);
+
+// Manter compatibilidade com rota antiga
 app.use('/api/contatos', (req, res, next) => {
     if (req.method === 'POST' && req.path === '/') {
         next(); // Permitir POST público para cadastro
@@ -261,6 +270,26 @@ app.use('/api/treinamentos', (req, res, next) => {
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/usuario', usuarioRoutes);
 
+// Rota de limpeza (protegida)
+try {
+    console.log('🧹 Carregando rota de limpeza...');
+    const limpezaRoutes = require('./routes/limpeza.js');
+    app.use('/api/limpeza', authenticateToken, limpezaRoutes);
+    console.log('✅ Rota de limpeza carregada com sucesso');
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de limpeza:', error.message);
+}
+
+// Rotas de assinatura de certificado (públicas)
+try {
+    console.log('✍️ Carregando rota de assinatura de certificado...');
+    const assinaturaRoutes = require('./routes/assinaturaCertificado.js');
+    app.use('/api/assinatura', assinaturaRoutes);
+    console.log('✅ Rota de assinatura carregada com sucesso');
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de assinatura:', error.message);
+}
+
 // ✅ 7. Servir mídia (uploads) estáticos
 const midiaPath = path.join(__dirname, '..', 'media', 'treinamentos');
 if (fs.existsSync(midiaPath)) {
@@ -285,7 +314,7 @@ app.get('/test', (req, res) => {
         message: 'Servidor funcionando!',
         timestamp: new Date().toISOString(),
         routes: {
-            contatos: '/api/contatos',
+            usuarios: '/api/usuarios',
             treinamentos: '/api/treinamentos',
             empresas: '/api/empresas'
         }
@@ -321,7 +350,7 @@ app.get('/login-api', (req, res) => {
     <div id="api" style="display:none">
         <h3>Dados da API:</h3>
         <button onclick="getData('/api/treinamentos')">Treinamentos</button>
-        <button onclick="getData('/api/contatos')">Contatos</button>
+        <button onclick="getData('/api/usuarios')">Usuários</button>
         <button onclick="getData('/api/empresas')">Empresas</button>
         <button onclick="logout()" style="background:red;color:white">Sair</button>
         <pre id="data"></pre>
@@ -403,6 +432,48 @@ app.get('/usuario-login', (req, res) => {
 app.get('/usuario-painel', (req, res) => {
     const usuarioPainelPath = path.join(publicPath, 'usuario', 'painel.html');
     fs.existsSync(usuarioPainelPath) ? res.sendFile(usuarioPainelPath) : res.json({ error: 'Painel do usuário não encontrado' });
+});
+
+// Rota para página de assinatura de certificado
+app.get('/assinar-certificado/:token', (req, res) => {
+    const assinaturePath = path.join(publicPath, 'assinar-certificado', 'index.html');
+    fs.existsSync(assinaturePath) ? res.sendFile(assinaturePath) : res.json({ error: 'Página de assinatura não encontrada' });
+});
+
+// Rota para redirecionamento de links curtos
+app.get('/c/:codigo', async (req, res) => {
+    try {
+        const { codigo } = req.params;
+        
+        // Buscar link no banco
+        const { sequelize } = require('../BancoDeDados/database');
+        const LinkCurto = sequelize.define('LinkCurto', {
+            codigo: { type: require('sequelize').DataTypes.STRING(8) },
+            urlCompleta: { type: require('sequelize').DataTypes.STRING(500) },
+            expiresAt: { type: require('sequelize').DataTypes.DATE },
+            acessos: { type: require('sequelize').DataTypes.INTEGER, defaultValue: 0 }
+        }, { tableName: 'links_curtos' });
+        
+        const link = await LinkCurto.findOne({ where: { codigo } });
+        
+        if (!link) {
+            return res.status(404).json({ error: 'Link não encontrado' });
+        }
+        
+        if (new Date() > link.expiresAt) {
+            return res.status(410).json({ error: 'Link expirado' });
+        }
+        
+        // Incrementar contador de acessos
+        await link.increment('acessos');
+        
+        // Redirecionar para URL completa
+        res.redirect(link.urlCompleta);
+        
+    } catch (error) {
+        console.error('❌ Erro ao redirecionar link curto:', error);
+        res.status(500).json({ error: 'Erro interno' });
+    }
 });
 
 // ✅ 10. Middleware de erro
@@ -487,6 +558,14 @@ async function iniciarServidor() {
             await connectDB();
             await sequelize.sync();
             console.log('✅ Banco de dados conectado e sincronizado!');
+            
+            // Iniciar limpeza automática de sessões
+            try {
+                const LimpezaSessoes = require('../BancoDeDados/limpezaSessoes');
+                LimpezaSessoes.iniciarLimpezaAutomatica();
+            } catch (limpezaError) {
+                console.error('⚠️ Erro ao iniciar limpeza automática:', limpezaError.message);
+            }
         } catch (dbError) {
             console.error('⚠️ Erro ao conectar ao banco de dados:', dbError.message);
         }

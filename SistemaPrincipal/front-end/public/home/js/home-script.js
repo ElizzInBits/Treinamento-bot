@@ -107,8 +107,47 @@ function retrySocket() {
 
 // Escutar eventos de novos contatos e empresas
 if (socket) {
+  // Evento para novos usuários (novo nome)
+  socket.on('novoUsuario', (data) => {
+    console.log('Novo usuário recebido via WebSocket:', data.usuario || data.contato);
+    
+    const usuario = data.usuario || data.contato;
+    
+    // Adicionar contato à lista local
+    contatos.push({
+      ...usuario,
+      id: parseInt(usuario.id, 10),
+      empresaId: parseInt(usuario.empresaId, 10),
+      treinamentoId: usuario.treinamentoId ? parseInt(usuario.treinamentoId, 10) : null
+    });
+    
+    // Atualizar estatísticas
+    atualizarEstatisticasMapeamento();
+    atualizarEstatisticasEmpresas();
+    
+    // Atualizar visualizações se estiverem ativas
+    if (document.getElementById('empresas').classList.contains('active')) {
+      renderizarEmpresas();
+    }
+    
+    // Atualizar modal de contatos da empresa se estiver aberto
+    if (empresaSelecionada && usuario.empresaId === empresaSelecionada.id) {
+      contatosEmpresaSelecionada.push(usuario);
+      renderizarContatosEmpresa();
+    }
+    
+    // Mostrar notificação
+    if (Notification.permission === 'granted') {
+      new Notification('Novo contato cadastrado!', {
+        body: `${usuario.nome} foi cadastrado`,
+        icon: '/favicon.ico'
+      });
+    }
+  });
+  
+  // Manter compatibilidade com evento antigo
   socket.on('novoContato', (data) => {
-    console.log('Novo contato recebido via WebSocket:', data.contato);
+    console.log('Novo contato recebido via WebSocket (evento antigo):', data.contato);
     
     // Adicionar contato à lista local
     contatos.push({
@@ -187,8 +226,46 @@ if (socket) {
     }
   });
   
+  // Evento para usuários atualizados (novo nome)
+  socket.on('usuarioAtualizado', (data) => {
+    console.log('Usuário atualizado via WebSocket:', data.usuario || data.contato);
+    
+    const usuario = data.usuario || data.contato;
+    
+    // Atualizar contato na lista local
+    const index = contatos.findIndex(c => c.id === usuario.id);
+    if (index !== -1) {
+      contatos[index] = {
+        ...contatos[index],
+        ...usuario,
+        id: parseInt(usuario.id, 10),
+        empresaId: parseInt(usuario.empresaId, 10),
+        treinamentoId: usuario.treinamentoId ? parseInt(usuario.treinamentoId, 10) : null
+      };
+    }
+    
+    // Atualizar estatísticas
+    atualizarEstatisticasMapeamento();
+    atualizarEstatisticasEmpresas();
+    
+    // Atualizar visualizações se estiverem ativas
+    if (document.getElementById('empresas').classList.contains('active')) {
+      renderizarEmpresas();
+    }
+    
+    // Atualizar modal de contatos da empresa se estiver aberto
+    if (empresaSelecionada && usuario.empresaId === empresaSelecionada.id) {
+      const contatoIndex = contatosEmpresaSelecionada.findIndex(c => c.id === usuario.id);
+      if (contatoIndex !== -1) {
+        contatosEmpresaSelecionada[contatoIndex] = usuario;
+        renderizarContatosEmpresa();
+      }
+    }
+  });
+  
+  // Manter compatibilidade com evento antigo
   socket.on('contatoAtualizado', (data) => {
-    console.log('Contato atualizado via WebSocket:', data.contato);
+    console.log('Contato atualizado via WebSocket (evento antigo):', data.contato);
     
     // Atualizar contato na lista local
     const index = contatos.findIndex(c => c.id === data.contato.id);
@@ -218,6 +295,51 @@ if (socket) {
         contatosEmpresaSelecionada[contatoIndex] = data.contato;
         renderizarContatosEmpresa();
       }
+    }
+  });
+  
+  // Evento para usuários reiniciados (novo nome)
+  socket.on('usuarioReiniciado', (data) => {
+    console.log('Usuário reiniciado via WebSocket:', data.usuario || data.contato);
+    
+    const usuario = data.usuario || data.contato;
+    
+    // Atualizar contato na lista local
+    const index = contatos.findIndex(c => c.id === usuario.id);
+    if (index !== -1) {
+      contatos[index] = {
+        ...contatos[index],
+        ...usuario,
+        id: parseInt(usuario.id, 10),
+        empresaId: parseInt(usuario.empresaId, 10),
+        treinamentoId: usuario.treinamentoId ? parseInt(usuario.treinamentoId, 10) : null
+      };
+    }
+    
+    // Atualizar estatísticas
+    atualizarEstatisticasMapeamento();
+    atualizarEstatisticasEmpresas();
+    
+    // Atualizar visualizações se estiverem ativas
+    if (document.getElementById('empresas').classList.contains('active')) {
+      renderizarEmpresas();
+    }
+    
+    // Atualizar modal de contatos da empresa se estiver aberto
+    if (empresaSelecionada && usuario.empresaId === empresaSelecionada.id) {
+      const contatoIndex = contatosEmpresaSelecionada.findIndex(c => c.id === usuario.id);
+      if (contatoIndex !== -1) {
+        contatosEmpresaSelecionada[contatoIndex] = usuario;
+        renderizarContatosEmpresa();
+      }
+    }
+    
+    // Mostrar notificação específica para restart
+    if (Notification.permission === 'granted') {
+      new Notification('Treinamento reiniciado!', {
+        body: `Treinamento de ${usuario.nome} foi reiniciado`,
+        icon: '/favicon.ico'
+      });
     }
   });
 }
@@ -781,9 +903,9 @@ function atualizarSelectTreinamento() {
   });
 }
 
-// Carregar contatos
+// Carregar usuários
 function carregarContatos() {
-  return authenticatedFetch('/api/contatos')
+  return authenticatedFetch('/api/usuarios')
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar contatos');
       return res.json();
@@ -1126,7 +1248,7 @@ function restartTreinamentoContato(contatoId) {
 function removerContato(id) {
   if (!confirm('Tem certeza que deseja remover este contato?')) return;
 
-  authenticatedFetch(`/api/contatos/${id}`, {
+  authenticatedFetch(`/api/usuarios/${id}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -1993,7 +2115,7 @@ document.getElementById('contatoForm')?.addEventListener('submit', function (e) 
     statusTreinamento: treinamentoId ? 'ativo' : 'sem_treinamento'
   };
 
-  authenticatedFetch('/api/contatos', {
+  authenticatedFetch('/api/usuarios', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(novoContato)

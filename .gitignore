@@ -1,87 +1,51 @@
-# Arquivos temporários de cache e banco de dados
+# Arquivos de ambiente (credenciais sensíveis)
+*.env
+.env
+.env.local
+.env.production
+.env.development
+
+# Logs
+logs/
 *.log
-*.ldb
-*.lock
-*.tmp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Pastas de cache de navegadores ou Electron
-**/Cache/**
-**/GPUCache/**
-**/ShaderCache/**
-**/Code Cache/**
-**/DawnGraphiteCache/**
-**/DawnWebGPUCache/**
-**/GraphiteDawnCache/**
-**/Service Worker/**
-**/IndexedDB/**
-**/Local Storage/**
-**/Session Storage/**
-**/Cookies
-**/History
-**/Preferences
-**/TransportSecurity
-**/QuotaManager
-**/Reporting and NEL
-**/Sync Data/**
-**/shared_proto_db/**
-**/Site Characteristics Database/**
-**/DevToolsActivePort
-**/first_party_sets.db
-**/Extension Rules/**
-**/Extension Scripts/**
-**/Extension State/**
-**/Sessions/**
-**/Network Persistent State
-
-# Node.js
+# Dependências
 node_modules/
 npm-debug.log*
 
-# Excluir node_modules do wppconnect-server mas permitir o resto
-wppconnect-server/node_modules/
-wppconnect-server/dist/
-wppconnect-server/userDataDir/
-wppconnect-server/wppconnect_tokens/
-
-# Ignorar arquivos de sistema
+# Arquivos de sistema
 .DS_Store
 Thumbs.db
 
-*QuotaManager-journal
-*DIPS-wal
+# Tokens e sessões do WhatsApp
+SistemaPrincipal/TemplatesMensagens/tokens/
+*.data.json
 
+# Certificados e chaves
+*.pem
+*.key
+*.crt
+*.p12
 
-# Arquivos temporários do sistema/bot
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Default/
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/GrShaderCache/
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Local State
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Singleton*
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/Variations
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/segmentation_platform/
+# Uploads e mídia
+media/
+uploads/
 
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/LOG*
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/History-journal
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/GrShaderCache/*
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/ukm_db
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/Singleton*
-SistemaPrincipal/TemplatesMensagens/conexao/tokens/TREINAMENTO_BOT/**/Local State
+# Banco de dados local
+*.db
+*.sqlite
 
-SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Network/Cookies-journal
-Cookies-journal
-*.journal
+# Configurações específicas do servidor
+ecosystem.config.js
+pm2.config.js
 
+# Backups
+backup/
+*.backup
 
-SistemaPrincipal/TemplatesMensagens/tokens/NERDWHATS_AMERICA/Default/Safe Browsing Network/Safe Browsing Cookies
-*Safe Browsing Cookies
-
-
-**/GrShaderCache/
-**/Safe Browsing Network/
-*.log
-*.lock
-*.tmp
-*.bak
-
-**/lockfile
-
-
+# Arquivos temporários
+tmp/
+temp/

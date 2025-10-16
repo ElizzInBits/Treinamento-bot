@@ -1,6 +1,6 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
-const ContatoModel = require('../BancoDeDados/models/contato');
+const UsuarioModel = require('../BancoDeDados/models/usuario');
 const treinamentoSSMA = require('./Treinamentos/LCM/treinamentoSSMA');
 const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamentoApresentacao');
 const sistemaIdentificacao = require('./sistemaIdentificacao');
@@ -9,10 +9,13 @@ const mantenedorSessao = require('./manterSessao');
 // Inicializar sistema de limpeza de certificados
 require('./Certificados/limpezaCertificados');
 
+// Inicializar limpeza automática do banco
+require('../BancoDeDados/scripts/limpezaAutomatica');
+
 
 
 // Inicializar modelo
-let Contato = null;
+let Usuario = null;
 
 
 
@@ -27,7 +30,7 @@ const TIMEOUT_DUPLICADA = 5000; // 5 segundos
 (async () => {
   try {
     await connectDB();
-    Contato = ContatoModel(sequelize);
+    Usuario = UsuarioModel(sequelize);
     console.log('✅ Banco conectado - Template2');
   } catch (error) {
     console.error('❌ Erro no banco - Template2:', error);
@@ -79,8 +82,8 @@ async function processarMensagem(message, client) {
   
   try {
     // Verificar se o modelo está carregado
-    if (!Contato) {
-      console.log('⚠️ Modelo Contato não carregado, enviando resposta genérica');
+    if (!Usuario) {
+      console.log('⚠️ Modelo Usuario não carregado, enviando resposta genérica');
       await client.sendText(message.from, '😊 Olá! Recebi sua mensagem. Nossa equipe entrará em contato em breve!');
       return;
     }
@@ -100,7 +103,7 @@ async function processarMensagem(message, client) {
       ];
       
       for (const formato of formatosTelefone) {
-        const contato = await Contato.findOne({ where: { telefone: formato } });
+        const contato = await Usuario.findOne({ where: { telefone: formato } });
         if (contato) {
           console.log(`✅ Contato encontrado: ${contato.nome} (formato: ${formato})`);
           return contato;
@@ -333,13 +336,14 @@ async function inicializarBot() {
       statusFind: (status) => {
         console.log('📶 Bot Cliente Status:', status);
         
-        // Reconectar automaticamente se desconectar
-        if (status === 'browserClose' || status === 'desconnectedMobile') {
-          console.log(`🔄 Status ${status} - Tentando reconectar em 5 segundos...`);
+        // Reconectar automaticamente em qualquer desconexão
+        if (status === 'browserClose' || status === 'desconnectedMobile' || status === 'DISCONNECTED') {
+          console.log(`🔄 Status ${status} - Reconectando imediatamente...`);
           setTimeout(() => {
             reconectando = false;
+            instanciaAtiva = false;
             inicializarBot();
-          }, 5000);
+          }, 1000);
         }
         
         // Log de status importantes
@@ -389,26 +393,31 @@ async function inicializarBot() {
     // Iniciar sistema de heartbeat
     mantenedorSessao.iniciarHeartbeat();
     
-    // Sistema de monitoramento de conexão
+    // Sistema de monitoramento de conexão mais agressivo
     const monitorarConexao = setInterval(async () => {
       try {
         const state = await client.getConnectionState().catch(() => 'DISCONNECTED');
         if (state !== 'CONNECTED') {
           console.log(`⚠️ Estado da conexão: ${state}`);
-          if (state === 'DISCONNECTED') {
-            clearInterval(monitorarConexao);
-            mantenedorSessao.pararHeartbeat();
-            console.log('🔄 Conexão perdida - Reiniciando...');
-            setTimeout(() => {
-              reconectando = false;
-              inicializarBot();
-            }, 3000);
-          }
+          clearInterval(monitorarConexao);
+          mantenedorSessao.pararHeartbeat();
+          console.log('🔄 Conexão perdida - Reiniciando imediatamente...');
+          reconectando = false;
+          instanciaAtiva = false;
+          setTimeout(() => {
+            inicializarBot();
+          }, 500);
         }
       } catch (error) {
-        console.log('⚠️ Erro no monitor de conexão:', error.message);
+        console.log('⚠️ Erro no monitor de conexão, reiniciando...', error.message);
+        clearInterval(monitorarConexao);
+        reconectando = false;
+        instanciaAtiva = false;
+        setTimeout(() => {
+          inicializarBot();
+        }, 1000);
       }
-    }, 30000); // Verificar a cada 30 segundos
+    }, 10000); // Verificar a cada 10 segundos
     
     // Listener de mensagens
     client.onMessage(async (message) => {
@@ -483,6 +492,17 @@ async function inicializarBot() {
 // Inicializar o bot
 inicializarBot();
 
+// Handlers para evitar crashes
+process.on('uncaughtException', (error) => {
+    console.error('❌ Erro não capturado:', error);
+    console.log('🔄 Tentando continuar execução...');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Promise rejeitada não tratada:', reason);
+    console.log('🔄 Tentando continuar execução...');
+});
+
 // Verificação global desabilitada para evitar múltiplas instâncias
 
 // Função sendMessage usando cliente direto
@@ -515,18 +535,39 @@ async function sendMessage(phone, endpoint, body = {}) {
                 break;
                 
             case 'send-file':
+                // Verificar se arquivo existe antes de enviar
+                const fs = require('fs');
+                if (!fs.existsSync(body.path)) {
+                    console.error(`❌ Arquivo não encontrado: ${body.path}`);
+                    return false;
+                }
                 result = await wppClient.sendFile(phone, body.path, body.filename, body.caption);
                 break;
                 
             case 'send-image':
+                // Verificar se imagem existe antes de enviar
+                if (!require('fs').existsSync(body.path)) {
+                    console.error(`❌ Imagem não encontrada: ${body.path}`);
+                    return false;
+                }
                 result = await wppClient.sendImage(phone, body.path, body.filename || 'image.png', body.caption || '');
                 break;
                 
             case 'send-sticker-gif':
+                // Verificar se GIF existe antes de enviar
+                if (!require('fs').existsSync(body.path)) {
+                    console.error(`❌ GIF não encontrado: ${body.path}`);
+                    return false;
+                }
                 result = await wppClient.sendImageAsStickerGif(phone, body.path);
                 break;
                 
             case 'send-video':
+                // Verificar se vídeo existe antes de enviar
+                if (!require('fs').existsSync(body.path)) {
+                    console.error(`❌ Vídeo não encontrado: ${body.path}`);
+                    return false;
+                }
                 result = await wppClient.sendFile(phone, body.path, body.filename || 'video.mp4', body.caption || '');
                 break;
                 
@@ -541,10 +582,27 @@ async function sendMessage(phone, endpoint, body = {}) {
         const duration = Date.now() - sendStart;
         console.error(`❌ ${endpoint} (${duration}ms):`, error.message);
         
-        // Se erro de conexão, tentar reconectar
-        if (error.message.includes('Protocol error') || error.message.includes('Session closed')) {
-            console.log('🔄 Erro de protocolo detectado, reconectando...');
-            inicializarBot();
+        // Log mais detalhado para erros de mídia
+        if (endpoint.includes('file') || endpoint.includes('video') || endpoint.includes('image')) {
+            console.error(`   Detalhes do erro de mídia:`, {
+                path: body.path,
+                filename: body.filename,
+                exists: body.path ? require('fs').existsSync(body.path) : false
+            });
+        }
+        
+        // Se erro de conexão, tentar reconectar imediatamente
+        if (error.message.includes('Protocol error') || 
+            error.message.includes('Session closed') ||
+            error.message.includes('Cannot read properties of undefined') ||
+            error.message.includes('Target closed') ||
+            error.message.includes('Connection failed')) {
+            console.log('🔄 Erro de conexão detectado, reconectando...');
+            reconectando = false;
+            instanciaAtiva = false;
+            setTimeout(() => {
+                inicializarBot();
+            }, 500);
         }
         
         return false;

@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('📝 Dados sendo enviados:', novoUsuario);
 
-    fetch('/api/contatos', {
+    fetch('/api/usuarios', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

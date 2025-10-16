@@ -29,7 +29,7 @@ async function reiniciarContato(id, nome) {
   }
 
   try {
-    const response = await fetch(`/api/contatos/${id}/restart-treinamento`, {
+    const response = await fetch(`/api/usuarios/${id}/restart-treinamento`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -65,12 +65,12 @@ async function reiniciarSelecionados() {
   }
 
   try {
-    const response = await fetch('/api/contatos/restart-lote', {
+    const response = await fetch('/api/usuarios/restart-lote', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ contatoIds: ids })
+      body: JSON.stringify({ usuarioIds: ids })
     });
 
     const result = await response.json();
@@ -98,53 +98,53 @@ function atualizarContador() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Carregar contatos iniciais
-  fetch("/api/contatos")
+  // Carregar usuários iniciais
+  fetch("/api/usuarios")
     .then(res => res.json())
-    .then(contatos => {
-      contatos.forEach(contato => {
-        adicionarContatoNaTabela(contato);
+    .then(usuarios => {
+      usuarios.forEach(usuario => {
+        adicionarContatoNaTabela(usuario);
       });
       
       // Configurar eventos após carregar contatos
       configurarEventos();
     })
     .catch(err => {
-      console.error("Erro ao buscar contatos:", err);
-      alert("Erro ao carregar contatos.");
+      console.error("Erro ao buscar usuários:", err);
+      alert("Erro ao carregar usuários.");
     });
 
-  // Escutar novos contatos via WebSocket
-  socket.on('novoContato', (data) => {
-    console.log('Novo contato recebido:', data.contato);
-    adicionarContatoNaTabela(data.contato);
+  // Escutar novos usuários via WebSocket
+  socket.on('novoUsuario', (data) => {
+    console.log('Novo usuário recebido:', data.usuario);
+    adicionarContatoNaTabela(data.usuario);
     configurarEventos();
     
     // Mostrar notificação
     if (Notification.permission === 'granted') {
-      new Notification('Novo contato cadastrado!', {
-        body: `${data.contato.nome} foi cadastrado`,
+      new Notification('Novo usuário cadastrado!', {
+        body: `${data.usuario.nome} foi cadastrado`,
         icon: '/favicon.ico'
       });
     }
   });
 
   // Escutar eventos de restart
-  socket.on('contatoReiniciado', (data) => {
-    console.log('Contato reiniciado:', data.contato.nome);
+  socket.on('usuarioReiniciado', (data) => {
+    console.log('Usuário reiniciado:', data.usuario.nome);
     if (Notification.permission === 'granted') {
-      new Notification('Contato reiniciado!', {
-        body: `${data.contato.nome} teve o treinamento reiniciado`,
+      new Notification('Usuário reiniciado!', {
+        body: `${data.usuario.nome} teve o treinamento reiniciado`,
         icon: '/favicon.ico'
       });
     }
   });
 
-  socket.on('contatosReiniciados', (data) => {
+  socket.on('usuariosReiniciados', (data) => {
     console.log('Restart em lote concluído:', data);
     if (Notification.permission === 'granted') {
       new Notification('Restart em lote concluído!', {
-        body: `${data.sucessos}/${data.total} contatos reiniciados com sucesso`,
+        body: `${data.sucessos}/${data.total} usuários reiniciados com sucesso`,
         icon: '/favicon.ico'
       });
     }

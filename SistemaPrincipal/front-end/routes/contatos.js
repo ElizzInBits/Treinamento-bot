@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Contato, Empresa } = require('../../BancoDeDados/models');
+const { Usuario, Empresa } = require('../../BancoDeDados/models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../../BancoDeDados/database');
 // Função para notificações do navegador
@@ -167,10 +167,10 @@ function gerarVariacoes(numeroCompleto) {
 // Listar todos os contatos
 router.get('/', async (req, res) => {
   try {
-    const contatos = await Contato.findAll({
+    const contatos = await Usuario.findAll({
       include: {
         model: Empresa,
-        as: 'empresaRef',
+        as: 'empresa',
         attributes: ['razao_social']
       },
       order: [['nome', 'ASC']]
@@ -191,7 +191,7 @@ router.get('/', async (req, res) => {
 // Buscar contato por ID
 router.get('/:id', async (req, res) => {
     try {
-        const contato = await Contato.findByPk(req.params.id);
+        const contato = await Usuario.findByPk(req.params.id);
         if (!contato) {
             return res.status(404).json({ error: 'Contato não encontrado' });
         }
@@ -246,7 +246,7 @@ router.post('/', async (req, res) => {
         const variacoesTelefone = gerarVariacoes(telefoneLimpo);
         const cpfLimpo = cpf ? cpf.replace(/\D/g, '') : null;
         
-        const contatosExistentes = await Contato.findAll();
+        const contatosExistentes = await Usuario.findAll();
 
         const telefoneExiste = contatosExistentes.some(contato => {
             const variacoesContato = gerarVariacoes(contato.telefone);
@@ -261,7 +261,7 @@ router.post('/', async (req, res) => {
 
         // Verificar CPF duplicado se fornecido
         if (cpfLimpo) {
-            const cpfExiste = await Contato.findOne({ where: { cpf: cpfLimpo } });
+            const cpfExiste = await Usuario.findOne({ where: { cpf: cpfLimpo } });
             if (cpfExiste) {
                 return res.status(400).json({
                     error: 'Já existe um contato com este CPF'
@@ -270,7 +270,7 @@ router.post('/', async (req, res) => {
         }
 
         // Criar novo contato
-        const novoContato = await Contato.create({
+        const novoContato = await Usuario.create({
             nome: nome.trim(),
             telefone: telefoneLimpo,
             cpf: cpfLimpo,
@@ -283,13 +283,13 @@ router.post('/', async (req, res) => {
         // Emitir evento WebSocket para atualização em tempo real
         const io = req.app.get('io');
         if (io) {
-            io.emit('novoContato', {
-                contato: novoContato,
+            io.emit('novoUsuario', {
+                usuario: novoContato,
                 empresaId: novoContato.empresaId
             });
             io.emit('notificacao', {
-                tipo: 'contato_cadastrado',
-                titulo: 'Novo Contato Cadastrado',
+                tipo: 'usuario_cadastrado',
+                titulo: 'Novo Usuário Cadastrado',
                 mensagem: `${novoContato.nome} foi cadastrado no sistema`,
                 timestamp: new Date()
             });
@@ -335,7 +335,7 @@ router.put('/:id', async (req, res) => {
       nomeEmpresa
     } = req.body;
 
-    const contato = await Contato.findByPk(req.params.id);
+    const contato = await Usuario.findByPk(req.params.id);
     if (!contato) {
       return res.status(404).json({ error: 'Contato não encontrado' });
     }
@@ -352,7 +352,7 @@ router.put('/:id', async (req, res) => {
 
       // Verifica se outro contato já usa esse telefone
       const variacoesTelefone = gerarVariacoes(telefoneLimpo);
-      const contatosExistentes = await Contato.findAll({
+      const contatosExistentes = await Usuario.findAll({
         where: { id: { [Op.ne]: req.params.id } }
       });
 
@@ -431,7 +431,7 @@ router.post('/restart-lote', async (req, res) => {
 
         for (const id of contatoIds) {
             try {
-                const contato = await Contato.findByPk(id);
+                const contato = await Usuario.findByPk(id);
                 if (!contato) {
                     resultados.push({ id, status: 'erro', mensagem: 'Contato não encontrado' });
                     continue;
@@ -478,7 +478,7 @@ router.post('/restart-lote', async (req, res) => {
         // Emitir evento WebSocket
         const io = req.app.get('io');
         if (io) {
-            io.emit('contatosReiniciados', {
+            io.emit('usuariosReiniciados', {
                 total: contatoIds.length,
                 sucessos: resultados.filter(r => r.status === 'sucesso').length,
                 erros: resultados.filter(r => r.status === 'erro').length,
@@ -505,7 +505,7 @@ router.post('/restart-lote', async (req, res) => {
 // Restart de treinamento
 router.post('/:id/restart-treinamento', async (req, res) => {
     try {
-        const contato = await Contato.findByPk(req.params.id);
+        const contato = await Usuario.findByPk(req.params.id);
         if (!contato) {
             return res.status(404).json({ error: 'Contato não encontrado' });
         }
@@ -549,13 +549,13 @@ router.post('/:id/restart-treinamento', async (req, res) => {
         // Emitir evento WebSocket para atualização em tempo real
         const io = req.app.get('io');
         if (io) {
-            io.emit('contatoReiniciado', {
-                contato: contato,
+            io.emit('usuarioReiniciado', {
+                usuario: contato,
                 timestamp: new Date()
             });
             io.emit('notificacao', {
-                tipo: 'contato_reiniciado',
-                titulo: 'Contato Reiniciado',
+                tipo: 'usuario_reiniciado',
+                titulo: 'Usuário Reiniciado',
                 mensagem: `${contato.nome} teve o treinamento reiniciado`,
                 timestamp: new Date()
             });
@@ -579,10 +579,16 @@ router.post('/:id/restart-treinamento', async (req, res) => {
 // Deletar contato
 router.delete('/:id', async (req, res) => {
     try {
-        const contato = await Contato.findByPk(req.params.id);
+        const contato = await Usuario.findByPk(req.params.id);
         if (!contato) {
             return res.status(404).json({ error: 'Contato não encontrado' });
         }
+
+        // Deletar primeiro as assinaturas de certificados relacionadas
+        const { AssinaturaCertificado } = require('../../BancoDeDados/models');
+        await AssinaturaCertificado.destroy({
+            where: { usuarioId: req.params.id }
+        });
 
         await contato.destroy();
         res.json({ message: 'Contato deletado com sucesso' });

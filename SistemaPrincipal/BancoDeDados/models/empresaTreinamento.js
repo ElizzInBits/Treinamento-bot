@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const EmpresaTreinamento = sequelize.define('empresa_treinamentos', {
+  const EmpresaTreinamento = sequelize.define('empresas_treinamentos', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -19,7 +19,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'treinamento',
+        model: 'treinamentos',
         key: 'id',
       },
     },

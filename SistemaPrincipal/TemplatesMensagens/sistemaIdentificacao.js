@@ -1,10 +1,17 @@
 const { Interacao } = require('../BancoDeDados/models/index');
 const { encurtarNome } = require('./utils/formatarNome');
+const { Usuario } = require('../BancoDeDados/models/index');
 
 // ==================== SISTEMA DE IDENTIFICAÇÃO ====================
 
 async function processarMensagemInicial(sender, text, sendMessage, buscarContato) {
     console.log(`🎯 [SistemaIdentificacao] Processando: "${text}" de ${sender}`);
+    
+    // CÓDIGO ESPECIAL PARA PULAR DIRETO PARA CERTIFICADO
+    if (text.trim() === '#CERT123') {
+        console.log('🎯 CÓDIGO ESPECIAL DETECTADO - Pulando para certificado');
+        return await processarCodigoEspecialCertificado(sender, sendMessage, buscarContato);
+    }
     
     const ultimaInteracao = await obterUltimaInteracao(sender);
     
@@ -30,25 +37,22 @@ async function processarMensagemInicial(sender, text, sendMessage, buscarContato
         case 'mostrar_recursos_apresentacao':
             return await processarRecursosApresentacao(sender, text, sendMessage);
         case 'treinamentos_pendentes':
-        case 'mostrar_recursos':
-        case 'testes_avaliacoes':
-        case 'perguntar_quando_onde':
-        case 'exemplos_treinamentos':
-        case 'outras_aplicacoes':
-        case 'confirmar_dados_certificado':
-        case 'pergunta_conteudo_restante':
-        case 'contato_comercial':
-        case 'processando_recursos':
-        case 'finalizando':
-            // Todas essas etapas devem ser processadas pelo treinamentoApresentacao
+            // Verificar se é resposta válida para treinamentos pendentes
+            const respostasValidasTreinamentos = ['1', '2', '3', '4', 'fazer', 'ferramenta', 'depois', 'comercial'];
+            const textoLimpoTreinamentos = text.toLowerCase().trim();
+            
+            if (!respostasValidasTreinamentos.some(r => textoLimpoTreinamentos.includes(r) || textoLimpoTreinamentos === r)) {
+                console.log('🔄 Mensagem não reconhecida em treinamentos pendentes - Resetando para início');
+                return await enviarSaudacaoInicial(sender, sendMessage);
+            }
+            
+            // Se for resposta válida, processar normalmente
             const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamentoApresentacao');
-            const ultimaInteracao = await obterUltimaInteracao(sender);
-            const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
             
             const contatoMock = {
                 id: dados.contato_id || 'mock',
                 nome: dados.nome || 'Usuário',
-                empresaId: dados.empresa_id || 'N/A' // Usar empresaId (não empresa_id)
+                empresaId: dados.empresa_id || 'N/A'
             };
             
             return await treinamentoApresentacao.processarRespostaApresentacao(
@@ -60,8 +64,45 @@ async function processarMensagemInicial(sender, text, sendMessage, buscarContato
                 null
             );
             
+        case 'mostrar_recursos':
+        case 'testes_avaliacoes':
+        case 'perguntar_quando_onde':
+        case 'exemplos_treinamentos':
+        case 'outras_aplicacoes':
+        case 'confirmar_dados_certificado':
+        case 'pergunta_conteudo_restante':
+        case 'contato_comercial':
+        case 'processando_recursos':
+        case 'finalizando':
+            // Todas essas etapas devem ser processadas pelo treinamentoApresentacao
+            const treinamentoApresentacao2 = require('./Treinamentos/Apresentacao/treinamentoApresentacao');
+            
+            const contatoMock2 = {
+                id: dados.contato_id || 'mock',
+                nome: dados.nome || 'Usuário',
+                empresaId: dados.empresa_id || 'N/A'
+            };
+            
+            return await treinamentoApresentacao2.processarRespostaApresentacao(
+                sender, 
+                text, 
+                null, 
+                contatoMock2, 
+                sendMessage, 
+                null
+            );
+            
         // Etapas do treinamento EPC/EPI
+        case 'epc_epi_iniciado':
         case 'epc_epi_introducao':
+        case 'epc_epi_audio_confirmacao':
+        case 'epc_epi_perigo_risco':
+        case 'epc_epi_pergunta_a':
+        case 'epc_epi_pergunta_b':
+        case 'epc_epi_pergunta_relaxar_a':
+        case 'epc_epi_pergunta_relaxar_b':
+        case 'epc_epi_pergunta_relaxar_c':
+        case 'epc_epi_pergunta_relaxar_d':
         case 'epc_epi_definicoes':
         case 'epc_epi_tipos_epc':
         case 'epc_epi_tipos_epi':
@@ -73,6 +114,16 @@ async function processarMensagemInicial(sender, text, sendMessage, buscarContato
         case 'epc_epi_reprovado':
         case 'epc_epi_finalizado':
             console.log(`🎓 [EPC_EPI] Processando etapa: ${etapa}`);
+            
+            // Verificar se é saudação para resetar (apenas mensagens curtas e específicas)
+            const saudacoes = ['oi', 'olá', 'ola', 'hello', 'hi', 'tchau', 'sair', 'menu', 'inicio'];
+            const textoLimpo = text.toLowerCase().trim();
+            
+            // Se for saudação exata ou mensagem curta, resetar para início
+            if (textoLimpo.length <= 10 && saudacoes.some(s => textoLimpo === s || textoLimpo.startsWith(s))) {
+                console.log('🔄 Saudação detectada no treinamento - Resetando para início');
+                return await enviarSaudacaoInicial(sender, sendMessage);
+            }
             
             // Processar pelo treinamento EPC/EPI
             const epcEpi = require('./Treinamentos/EPC_EPI/epc_epi');
@@ -151,12 +202,12 @@ async function processarRespostaSaudacao(sender, text, sendMessage, buscarContat
                 
                 if (treinamentosPendentes && treinamentosPendentes.length > 0) {
                     await treinamentoApresentacao.direcionarParaTreinamentos(sender, sendMessage, treinamentosPendentes, contato);
-                    await salvarInteracao(sender, 'usuario_cadastrado_opcoes', JSON.stringify({ 
-                        etapa: 'usuario_cadastrado_opcoes',
+                    await salvarInteracao(sender, 'treinamentos_pendentes', JSON.stringify({ 
+                        etapa: 'treinamentos_pendentes',
                         contato_id: contato.id,
                         nome: encurtarNome(contato.nome),
                         empresa_id: contato.empresaId || 'N/A',
-                        ja_teve_interacoes: interacoesAnteriores
+                        treinamentos: treinamentosPendentes
                     }));
                     return true;
                 }
@@ -239,6 +290,13 @@ async function processarOpcaoUsuarioCadastrado(sender, text, sendMessage, buscar
             };
             
             await treinamentoApresentacao.direcionarParaTreinamentos(sender, sendMessage, treinamentosPendentes, contatoMock);
+            await salvarInteracao(sender, 'treinamentos_pendentes', JSON.stringify({ 
+                etapa: 'treinamentos_pendentes',
+                contato_id: dados.contato_id,
+                nome: dados.nome,
+                empresa_id: dados.empresa_id,
+                treinamentos: treinamentosPendentes
+            }));
         } else {
             console.log(`✅ Nenhum treinamento pendente para empresa ${dados.empresa_id}`);
             await sendMessage(sender, 'send-message', {
@@ -387,6 +445,79 @@ async function processarRecursosApresentacao(sender, text, sendMessage) {
     }
     
     return true;
+}
+
+// ==================== CÓDIGO ESPECIAL PARA CERTIFICADO ====================
+
+async function processarCodigoEspecialCertificado(sender, sendMessage, buscarContato) {
+    try {
+        // Buscar contato
+        const contato = await buscarContato();
+        
+        if (!contato) {
+            await sendMessage(sender, 'send-message', {
+                message: '❌ Usuário não encontrado no sistema. Faça seu cadastro primeiro em: https://abrir.link/ZEeCt'
+            });
+            return false;
+        }
+        
+        console.log(`🎯 Código especial ativado para ${contato.nome}`);
+        
+        // Importar o sistema de certificados
+        const certificados = require('./Certificados/certificados2');
+        const AssinaturaCertificadoService = require('./Certificados/assinaturaCertificado');
+        
+        await sendMessage(sender, 'send-message', {
+            message: `🎯 *CÓDIGO ESPECIAL ATIVADO!*\n\n👤 Usuário: ${contato.nome}\n📧 Email: ${contato.email || 'N/A'}\n🏢 Empresa: ${contato.empresa?.nome || 'N/A'}\n\n⚡ Gerando certificado...`
+        });
+        
+        // Gerar certificado usando apenas o ID do contato
+        const certificadoPath = await certificados.gerarCertificado(contato.id);
+        
+        if (certificadoPath) {
+            // Criar registro de assinatura
+            const resultado = await AssinaturaCertificadoService.criarAssinaturaPendente(
+                contato.id,
+                certificadoPath,
+                'Treinamento EPC/EPI'
+            );
+            
+            const linkAssinatura = resultado.linkAssinatura;
+            
+            if (resultado && linkAssinatura) {
+                await sendMessage(sender, 'send-message', {
+                    message: `✅ *CERTIFICADO GERADO COM SUCESSO!*\n\n📜 Seu certificado de **Treinamento EPC/EPI** foi gerado.\n\n🖊️ **Para finalizar, você precisa assinar digitalmente:**\n${linkAssinatura}\n\n⏰ *Link válido por 24 horas*\n\n📱 Acesse pelo celular ou computador para assinar e baixar seu certificado oficial.`
+                });
+                
+                console.log(`✅ Certificado gerado via código especial para ${contato.nome}`);
+                console.log(`🔗 Link de assinatura: ${linkAssinatura}`);
+            } else {
+                await sendMessage(sender, 'send-message', {
+                    message: '❌ Erro ao criar link de assinatura. Tente novamente.'
+                });
+            }
+        } else {
+            await sendMessage(sender, 'send-message', {
+                message: '❌ Erro ao gerar certificado. Tente novamente.'
+            });
+        }
+        
+        // Finalizar interação
+        await salvarInteracao(sender, 'finalizado', JSON.stringify({ 
+            etapa: 'finalizado',
+            codigo_especial: true,
+            certificado_gerado: !!certificadoPath
+        }));
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Erro no código especial:', error);
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Erro interno. Tente novamente ou entre em contato com o suporte.'
+        });
+        return false;
+    }
 }
 
 module.exports = {
