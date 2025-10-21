@@ -1,21 +1,21 @@
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const wppconnect = require('@wppconnect-team/wppconnect');
 const { connectDB, sequelize } = require('../BancoDeDados/database');
-const UsuarioModel = require('../BancoDeDados/models/usuario');
+const { Usuario } = require('../BancoDeDados/models');
 const treinamentoSSMA = require('./Treinamentos/LCM/treinamentoSSMA');
 const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamentoApresentacao');
 const sistemaIdentificacao = require('./sistemaIdentificacao');
 const mantenedorSessao = require('./manterSessao');
+const { createSharedLogger } = require('../utils/shared-logger');
+
+// Logger específico para WhatsApp Bot
+const logger = createSharedLogger('whatsapp-bot');
 
 // Inicializar sistema de limpeza de certificados
 require('./Certificados/limpezaCertificados');
 
 // Inicializar limpeza automática do banco
 require('../BancoDeDados/scripts/limpezaAutomatica');
-
-
-
-// Inicializar modelo
-let Usuario = null;
 
 
 
@@ -30,10 +30,9 @@ const TIMEOUT_DUPLICADA = 5000; // 5 segundos
 (async () => {
   try {
     await connectDB();
-    Usuario = UsuarioModel(sequelize);
-    console.log('✅ Banco conectado - Template2');
+    logger.info('Banco conectado - Template2');
   } catch (error) {
-    console.error('❌ Erro no banco - Template2:', error);
+    logger.error('Erro no banco - Template2', { error: error.message });
   }
 })();
 
@@ -42,20 +41,20 @@ async function processarMensagem(message, client) {
   const telefone = message.from.replace('@c.us', '');
   const mensagem = message.body.trim();
   
-  console.log(`💬 [Template2] Processando: "${mensagem}" de ${telefone}`);
+  logger.info('Processando mensagem', { telefone, mensagem: mensagem.substring(0, 100) });
   
   // Verificar comandos especiais
   if (mensagem.toLowerCase().includes('restart') || mensagem.toLowerCase().includes('reiniciar')) {
-    console.log(`🔄 COMANDO RESTART de ${telefone}`);
+    logger.warn('Comando RESTART executado', { telefone });
     mensagensProcessando.clear();
-    console.log('🧹 Cache de mensagens duplicadas limpo');
+    logger.info('Cache de mensagens duplicadas limpo');
     await client.sendText(message.from, '🔄 *Sistema reiniciado!*\n\nCache limpo. Você pode continuar.');
     setTimeout(() => inicializarBot(), 2000);
     return;
   }
   
   if (mensagem.toLowerCase().includes('limpar sessao') || mensagem.toLowerCase().includes('reset sessao')) {
-    console.log(`🧹 COMANDO LIMPAR SESSÃO de ${telefone}`);
+    logger.warn('Comando LIMPAR SESSÃO executado', { telefone });
     mantenedorSessao.limparSessao();
     await client.sendText(message.from, '🧹 *Sessão limpa!*\n\nVocê precisará escanear o QR Code novamente.');
     setTimeout(() => {
@@ -65,7 +64,7 @@ async function processarMensagem(message, client) {
   }
   
   if (mensagem.toLowerCase().includes('status sessao')) {
-    console.log(`📊 COMANDO STATUS SESSÃO de ${telefone}`);
+    logger.info('Comando STATUS SESSÃO executado', { telefone });
     const sessao = mantenedorSessao.verificarSessaoExistente();
     const tokens = mantenedorSessao.verificarTokensWhatsApp();
     await client.sendText(message.from, `📊 *Status da Sessão:*\n\nSessão ativa: ${sessao ? '✅ Sim' : '❌ Não'}\nTokens: ${tokens ? '✅ Presentes' : '❌ Ausentes'}\nÚltima atividade: ${sessao ? new Date(sessao.ultimoHeartbeat).toLocaleString() : 'N/A'}`);
@@ -83,7 +82,7 @@ async function processarMensagem(message, client) {
   try {
     // Verificar se o modelo está carregado
     if (!Usuario) {
-      console.log('⚠️ Modelo Usuario não carregado, enviando resposta genérica');
+      logger.warn('Modelo Usuario não carregado, enviando resposta genérica');
       await client.sendText(message.from, '😊 Olá! Recebi sua mensagem. Nossa equipe entrará em contato em breve!');
       return;
     }
@@ -105,22 +104,22 @@ async function processarMensagem(message, client) {
       for (const formato of formatosTelefone) {
         const contato = await Usuario.findOne({ where: { telefone: formato } });
         if (contato) {
-          console.log(`✅ Contato encontrado: ${contato.nome} (formato: ${formato})`);
+          logger.info('Contato encontrado', { nome: contato.nome, telefone: formato });
           return contato;
         }
       }
       
-      console.log(`❌ Contato não encontrado: ${telefone}`);
+      logger.warn('Contato não encontrado', { telefone });
       return null;
     };
     
     // Usar sistema de identificação para determinar o fluxo
-    console.log('🚀 Processando através do sistema de identificação');
+    logger.debug('Processando através do sistema de identificação', { telefone });
     await sistemaIdentificacao.processarMensagemInicial(telefone, mensagem, sendMessageForTraining, buscarContato);
     
 
   } catch (error) {
-    console.error('❌ Erro ao processar mensagem:', error);
+    logger.error('Erro ao processar mensagem', { error: error.message, telefone, stack: error.stack });
     await client.sendText(message.from, '❌ Desculpe, ocorreu um erro. Tente novamente em alguns instantes.');
   } finally {
     // Remover da lista de processamento após conclusão
@@ -140,7 +139,7 @@ function verificarMensagemDuplicada(telefone, mensagem) {
     const timestamp = mensagensProcessando.get(chave);
     // Se a mensagem foi processada há menos de 5 segundos, é duplicada
     if (agora - timestamp < TIMEOUT_DUPLICADA) {
-      console.log(`🔄 Mensagem duplicada ignorada: "${mensagem}" de ${telefone}`);
+      logger.debug('Mensagem duplicada ignorada', { telefone, mensagem: mensagem.substring(0, 50) });
       return true;
     }
   }
@@ -424,6 +423,7 @@ async function inicializarBot() {
       if (!message.body) return;
       if (message.isGroupMsg) return;
       if (message.fromMe) return;
+      if (message.from === 'status@broadcast') return; // Ignorar status do WhatsApp
       
       console.log('📨 Mensagem recebida:', message.body, 'de:', message.from);
       
@@ -510,7 +510,7 @@ async function sendMessage(phone, endpoint, body = {}) {
     const sendStart = Date.now();
     
     if (!wppClient) {
-        console.error('❌ Cliente WhatsApp não definido');
+        logger.error('Cliente WhatsApp não definido');
         return false;
     }
     
@@ -518,7 +518,7 @@ async function sendMessage(phone, endpoint, body = {}) {
         // Verificar se o cliente ainda está conectado
         const state = await wppClient.getConnectionState().catch(() => 'DISCONNECTED');
         if (state !== 'CONNECTED') {
-            console.log('⚠️ Cliente desconectado, tentando reconectar...');
+            logger.warn('Cliente desconectado, tentando reconectar');
             inicializarBot();
             return false;
         }
@@ -575,7 +575,7 @@ async function sendMessage(phone, endpoint, body = {}) {
                 return false;
         }
         
-        console.log(`✅ ${endpoint}: ${Date.now() - sendStart}ms`);
+        logger.debug('Mensagem enviada', { endpoint, duration: Date.now() - sendStart, phone });
         return result;
         
     } catch (error) {

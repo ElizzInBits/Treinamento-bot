@@ -3,59 +3,36 @@ const path = require('path');
 
 class ResourceManager {
     constructor() {
-        this.resources = {};
-        this.loadResources();
+        this.resources = this.getDefaultResources();
     }
 
-    loadResources() {
-        try {
-            const resourcesPath = path.join(__dirname, 'resources.json');
-            if (fs.existsSync(resourcesPath)) {
-                const resourcesData = fs.readFileSync(resourcesPath, 'utf8');
-                this.resources = JSON.parse(resourcesData);
-                console.log('✅ Recursos carregados do arquivo JSON');
-            } else {
-                console.log('⚠️ Arquivo resources.json não encontrado, criando...');
-                this.createDefaultResources();
-            }
-        } catch (error) {
-            console.error('❌ Erro ao carregar recursos:', error);
-            this.resources = {};
-        }
-    }
-
-    createDefaultResources() {
-        this.resources = {
+    getDefaultResources() {
+        return {
             templates: {
                 global: {
-                    boas_vindas: "Olá {{nome}}, bem-vindo ao treinamento {{treinamento}}! 🎯",
-                    erro_generico: "❌ Erro inesperado. Entre em contato com o suporte."
+                    modulo_concluido: "🎯 *MÓDULO {{numero}} CONCLUÍDO!*\n\n📊 Resultado: {{acertos}}/{{total}} ({{percentual}}%)",
+                    certificado_manutencao: "🔧 Sistema de certificados em manutenção. Certificado será enviado em breve.",
+                    treinamento_interrompido: "🔄 Parece que seu treinamento foi interrompido.",
+                    menu_opcoes: "📋 *MENU DE OPÇÕES*\n\nEscolha uma das opções abaixo:"
                 },
                 ssma: {
-                    modulo1_inicio: "📖 *MÓDULO 1 - FUNDAMENTOS E PREVENÇÃO*",
-                    modulo2_inicio: "🛡️ *MÓDULO 2 - CONTROLES E EQUIPAMENTOS*",
-                    treinamento_finalizado: "🎉 *TREINAMENTO SSMA CONCLUÍDO!*"
+                    consideracoes_finais: "🎯 *CONSIDERAÇÕES FINAIS*\n\nParabéns por concluir o treinamento SSMA!",
+                    treinamento_finalizado: "🎉 *TREINAMENTO SSMA FINALIZADO!*\n\nVocê concluiu com sucesso!"
                 }
             },
             images: {
                 ssma: {
-                    SEGURANCA: "1ABC123_EXEMPLO",
-                    SSMA: "1DEF456_EXEMPLO",
-                    CIPA: "1GHI789_EXEMPLO"
+                    NR06: "1ABC123_EXEMPLO",
+                    SSMA: "1DEF456_EXEMPLO", 
+                    SST: "1GHI789_EXEMPLO",
+                    LEI: "1JKL012_EXEMPLO",
+                    CIPA: "1MNO345_EXEMPLO",
+                    PCMSO: "1PQR678_EXEMPLO",
+                    MAPARISCO: "1STU901_EXEMPLO",
+                    SEGURANCA: "1VWX234_EXEMPLO"
                 }
             }
         };
-        this.saveResources();
-    }
-
-    saveResources() {
-        try {
-            const resourcesPath = path.join(__dirname, 'resources.json');
-            fs.writeFileSync(resourcesPath, JSON.stringify(this.resources, null, 2));
-            console.log('✅ Recursos salvos');
-        } catch (error) {
-            console.error('❌ Erro ao salvar recursos:', error);
-        }
     }
 
     getTemplate(treinamento, templateKey, variables = {}) {

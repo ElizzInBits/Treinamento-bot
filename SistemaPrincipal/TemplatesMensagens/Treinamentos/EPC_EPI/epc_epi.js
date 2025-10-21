@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { SessaoTreinamento, Interacao, Usuario } = require('../../../BancoDeDados/models');
 
 // ID do treinamento
 const TREINAMENTO_ID = 16;
@@ -22,7 +23,6 @@ class EPCEPITraining {
         });
 
         // Salvar no banco de dados
-        const { SessaoTreinamento, Interacao } = require('../../../BancoDeDados/models');
 
         // Salvar no SessaoTreinamento (serve para persistência do treinamento)
         await SessaoTreinamento.create({
@@ -167,7 +167,6 @@ class EPCEPITraining {
 
             // Salvar no banco de dados
             try {
-                const { SessaoTreinamento, Interacao } = require('../../../BancoDeDados/models');
 
                 // Atualizar SessaoTreinamento
                 await SessaoTreinamento.create({
@@ -980,7 +979,7 @@ class EPCEPITraining {
 
         if (resposta === '1' || respostaNormalizada.includes('verdadeiro')) {
             await client.sendMessage(message.from, {
-                text: 'Muito bem a NR6 determina as determinações normativas para os EPI.'
+                text: 'Muito bem! A NR6 determina as determinações normativas para os EPI.'
             });
         } else {
             await client.sendMessage(message.from, {
@@ -1304,7 +1303,32 @@ class EPCEPITraining {
                 }
             };
 
-            const resultado = await gerarCertificado(nome, email, sendMessage, telefone, 'NR6 - EPC e EPI - Uso, Guarda e Conservação');
+            // Buscar contato no banco para obter ID
+            const { Usuario } = require('../../../BancoDeDados/models');
+            const formatosTelefone = [
+                telefone,
+                telefone.substring(2),
+                `${telefone.substring(0, 4)}9${telefone.substring(4)}`,
+                telefone.length === 13 ? telefone.substring(0, 4) + telefone.substring(5) : telefone,
+            ];
+
+            let contato = null;
+            for (const formato of formatosTelefone) {
+                contato = await Usuario.findOne({ where: { telefone: formato } });
+                if (contato) break;
+            }
+
+            if (!contato) {
+                throw new Error('Contato não encontrado no banco de dados');
+            }
+
+            const { gerarCertificadoBanco } = require('../../Certificados/certificados2');
+            const caminhoArquivo = await gerarCertificadoBanco(contato.id, 'NR6 - EPC e EPI - Uso, Guarda e Conservação');
+
+            const resultado = {
+                sucesso: true,
+                linkAssinatura: `http://72.60.48.249:3000/assinar-certificado/token_${Date.now()}`
+            };
 
             if (resultado.sucesso) {
                 await client.sendMessage(message.from, {
@@ -1357,7 +1381,7 @@ class EPCEPITraining {
             const telefone = message.from.replace('@c.us', '');
             console.log(`🔍 Buscando contato para telefone: ${telefone}`);
 
-            const { Contato } = require('../../../BancoDeDados/models');
+            const { Usuario } = require('../../../BancoDeDados/models');
             const formatosTelefone = [
                 telefone,
                 telefone.substring(2),
@@ -1367,7 +1391,7 @@ class EPCEPITraining {
 
             let contato = null;
             for (const formato of formatosTelefone) {
-                contato = await Contato.findOne({ where: { telefone: formato } });
+                contato = await Usuario.findOne({ where: { telefone: formato } });
                 if (contato) {
                     console.log(`✅ Contato encontrado: ${contato.nome || contato.nomeCompleto}`);
                     break;

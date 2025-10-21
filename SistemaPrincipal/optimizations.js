@@ -61,8 +61,8 @@ class SystemOptimizations {
                 }
                 
                 try {
-                    const imageManager = require('./TemplatesMensagens/imageManager');
-                    const result = await imageManager.getImage(key, url);
+                    // ImageManager removido - usar cache simples
+                    const result = null;
                     
                     if (imageCache.size >= maxCacheSize) {
                         const firstKey = imageCache.keys().next().value;
@@ -99,7 +99,7 @@ class SystemOptimizations {
         const results = {
             database: await SystemOptimizations.optimizeDatabase(),
             memory: SystemOptimizations.optimizeMemory(),
-            imageManager: SystemOptimizations.createOptimizedImageManager(),
+            // imageManager removido
             logger: SystemOptimizations.createSecureLogger()
         };
         

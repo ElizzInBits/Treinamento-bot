@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
-const { AssinaturaCertificado, Usuario } = require('../../BancoDeDados/models');
+const { Usuario } = require('../../BancoDeDados/models');
 const { PDFDocument, rgb } = require('pdf-lib');
 const { sequelize } = require('../../BancoDeDados/database');
 
@@ -15,9 +15,11 @@ const LinkCurto = sequelize.define('LinkCurto', {
 
 class AssinaturaCertificadoService {
   
-  // Gerar token único para assinatura
-  static gerarToken() {
-    return crypto.randomBytes(32).toString('hex');
+  // Gerar token único para assinatura com ID do usuário e treinamento
+  static gerarToken(usuarioId, treinamentoId) {
+    const timestamp = Date.now().toString(36);
+    const random = crypto.randomBytes(16).toString('hex');
+    return `${treinamentoId}_${usuarioId}_${timestamp}_${random}`;
   }
 
   // Gerar link curto
@@ -65,58 +67,68 @@ class AssinaturaCertificadoService {
     }
   }
 
-  // Criar registro de assinatura pendente
-  static async criarAssinaturaPendente(usuarioId, certificadoPath, nometreinamento) {
-    const token = this.gerarToken();
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // Expira em 24 horas
+  // Criar token de certificado e salvar no usuário
+  static async criarTokenCertificado(usuarioId, treinamentoId, certificadoPath) {
+    const { Usuario } = require('../../BancoDeDados/models');
+    const token = this.gerarToken(usuarioId, treinamentoId);
 
-    const assinatura = await AssinaturaCertificado.create({
-      usuarioId,
-      certificadoPath,
-      tokenAssinatura: token,
-      expiresAt,
-      status: 'pendente'
+    // Buscar usuário
+    const usuario = await Usuario.findByPk(usuarioId);
+    if (!usuario) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    // Verificar se token já existe
+    const tokensExistentes = usuario.tokensCertificados ? usuario.tokensCertificados.split(',') : [];
+    const tokenExistente = tokensExistentes.find(t => t.startsWith(`${treinamentoId}_${usuarioId}_`));
+
+    if (tokenExistente) {
+      const urlCompleta = `http://72.60.48.249:3000/assinar-certificado/${tokenExistente}`;
+      return {
+        token: tokenExistente,
+        linkAssinatura: await this.encurtarUrl(urlCompleta),
+        linkCompleto: urlCompleta
+      };
+    }
+
+    // Adicionar novo token
+    tokensExistentes.push(token);
+    await usuario.update({
+      tokensCertificados: tokensExistentes.join(',')
     });
 
-    // Criar URL completa e encurtar
     const urlCompleta = `http://72.60.48.249:3000/assinar-certificado/${token}`;
     const linkEncurtado = await this.encurtarUrl(urlCompleta);
 
     return {
       token,
       linkAssinatura: linkEncurtado,
-      linkCompleto: urlCompleta,
-      assinaturaId: assinatura.id
+      linkCompleto: urlCompleta
     };
   }
 
-  // Validar token de assinatura
+  // Validar token de certificado
   static async validarToken(token) {
-    const assinatura = await AssinaturaCertificado.findOne({
-      where: { 
-        tokenAssinatura: token,
-        status: 'pendente'
-      },
-      include: [{
-        model: Usuario,
-        as: 'usuario'
-      }]
-    });
-
-    if (!assinatura) {
-      return { valido: false, erro: 'Token inválido ou expirado' };
+    const { Usuario } = require('../../BancoDeDados/models');
+    
+    // Extrair IDs do token
+    const [treinamentoId, usuarioId] = token.split('_');
+    
+    const usuario = await Usuario.findByPk(usuarioId);
+    if (!usuario) {
+      return { valido: false, erro: 'Usuário não encontrado' };
     }
 
-    if (new Date() > assinatura.expiresAt) {
-      await assinatura.update({ status: 'expirado' });
-      return { valido: false, erro: 'Token expirado' };
+    // Verificar se token existe na lista do usuário
+    const tokens = usuario.tokensCertificados ? usuario.tokensCertificados.split(',') : [];
+    if (!tokens.includes(token)) {
+      return { valido: false, erro: 'Token inválido' };
     }
 
     return { 
       valido: true, 
-      assinatura,
-      usuario: assinatura.usuario
+      usuario,
+      treinamentoId: parseInt(treinamentoId)
     };
   }
 
@@ -128,18 +140,14 @@ class AssinaturaCertificadoService {
       throw new Error(validacao.erro);
     }
 
-    const { assinatura, usuario } = validacao;
+    const { usuario } = validacao;
 
-    // Salvar assinatura no banco
-    await assinatura.update({
-      assinaturaBase64,
-      assinadoEm: new Date(),
-      status: 'assinado'
-    });
+    // Buscar certificado do usuário
+    const certificadoPath = this.buscarCertificadoPath(usuario.id, validacao.treinamentoId);
 
     // Regenerar PDF com assinatura
     const certificadoAssinado = await this.adicionarAssinaturaPDF(
-      assinatura.certificadoPath,
+      certificadoPath,
       assinaturaBase64
     );
 
@@ -153,6 +161,11 @@ class AssinaturaCertificadoService {
   // Adicionar assinatura ao PDF existente
   static async adicionarAssinaturaPDF(certificadoPath, assinaturaBase64) {
     try {
+      // Verificar se o path é válido
+      if (!certificadoPath) {
+        throw new Error('Caminho do certificado não fornecido');
+      }
+      
       // Verificar se o arquivo existe
       if (!fs.existsSync(certificadoPath)) {
         console.log(`⚠️ Certificado não encontrado, tentando regenerar: ${certificadoPath}`);
@@ -209,29 +222,7 @@ class AssinaturaCertificadoService {
       // Posicionar assinatura (escolha uma das opções abaixo)
       const { width, height } = firstPage.getSize();
       
-      // OPÇÃO 1: Canto inferior direito (atual)
-      // firstPage.drawImage(assinaturaImage, {
-      //   x: width - 200, y: 50, width: 150, height: 50
-      // });
-      
-      // OPÇÃO 2: Canto inferior esquerdo
-      // firstPage.drawImage(assinaturaImage, {
-      //   x: 50, y: 50, width: 150, height: 50
-      // });
-      
-      // OPÇÃO 3: Centro inferior
-      // firstPage.drawImage(assinaturaImage, {
-      //   x: (width / 2) - 75, y: 50, width: 150, height: 50
-      // });
-      
-      // OPÇÃO 4: Canto superior direito
-      // firstPage.drawImage(assinaturaImage, {
-      //   x: width - 200, y: height - 100, width: 150, height: 50
-      // });
-      
-      // OPÇÃO 5: Assinatura otimizada - tamanho e qualidade ideais
-      
-      // Obter dimensões originais da imagem para manter proporção
+
       const imgDims = assinaturaImage.scale(1);
       const aspectRatio = imgDims.width / imgDims.height;
       
@@ -272,6 +263,42 @@ class AssinaturaCertificadoService {
     }
   }
 
+  // Verificar se certificado já foi assinado
+  static async verificarStatusAssinatura(token) {
+    try {
+      const validacao = await this.validarToken(token);
+      
+      if (!validacao.valido) {
+        return { jaAssinado: false, certificadoAssinado: null };
+      }
+
+      const { usuario } = validacao;
+      const certificadoPath = this.buscarCertificadoPath(usuario.id);
+      
+      if (!certificadoPath) {
+        return { jaAssinado: false, certificadoAssinado: null };
+      }
+      
+      // Verificar se existe versão assinada
+      const nomeArquivo = path.basename(certificadoPath, '.pdf');
+      const certificadoAssinadoPath = path.join(
+        path.dirname(certificadoPath),
+        `${nomeArquivo}_assinado.pdf`
+      );
+      
+      const jaAssinado = fs.existsSync(certificadoAssinadoPath);
+      
+      return {
+        jaAssinado,
+        certificadoAssinado: jaAssinado ? path.basename(certificadoAssinadoPath) : null
+      };
+      
+    } catch (error) {
+      console.error('❌ Erro ao verificar status da assinatura:', error);
+      return { jaAssinado: false, certificadoAssinado: null };
+    }
+  }
+
   // Obter dados para página de assinatura
   static async obterDadosAssinatura(token) {
     const validacao = await this.validarToken(token);
@@ -280,7 +307,7 @@ class AssinaturaCertificadoService {
       return { erro: validacao.erro };
     }
 
-    const { assinatura, usuario } = validacao;
+    const { usuario, treinamentoId } = validacao;
     
     return {
       sucesso: true,
@@ -289,10 +316,57 @@ class AssinaturaCertificadoService {
         email: usuario.email
       },
       certificado: {
-        path: assinatura.certificadoPath,
-        expiresAt: assinatura.expiresAt
+        treinamentoId
       }
     };
+  }
+
+  // Buscar caminho do certificado
+  static buscarCertificadoPath(usuarioId, treinamentoId) {
+    const path = require('path');
+    const fs = require('fs');
+    
+    try {
+      // Buscar certificado na pasta de certificados
+      const certificadosDir = path.join(__dirname, 'Certificados');
+      
+      if (!fs.existsSync(certificadosDir)) {
+        console.log(`⚠️ Diretório de certificados não existe: ${certificadosDir}`);
+        return null;
+      }
+      
+      const arquivos = fs.readdirSync(certificadosDir).filter(f => f.endsWith('.pdf'));
+      console.log(`🔍 Procurando certificado para usuário ${usuarioId} em ${arquivos.length} arquivos`);
+      
+      // Procurar por arquivo que contenha o ID do usuário ou nome
+      let certificado = arquivos.find(arquivo => 
+        arquivo.includes(`_${usuarioId}_`) || 
+        arquivo.includes(`usuario_${usuarioId}`) ||
+        arquivo.toLowerCase().includes(`${usuarioId}`)
+      );
+      
+      // Se não encontrar por ID, pegar o mais recente
+      if (!certificado && arquivos.length > 0) {
+        console.log(`⚠️ Certificado específico não encontrado, usando o mais recente`);
+        const stats = arquivos.map(arquivo => ({
+          nome: arquivo,
+          path: path.join(certificadosDir, arquivo),
+          mtime: fs.statSync(path.join(certificadosDir, arquivo)).mtime
+        }));
+        
+        stats.sort((a, b) => b.mtime - a.mtime);
+        certificado = stats[0].nome;
+      }
+      
+      const certificadoPath = certificado ? path.join(certificadosDir, certificado) : null;
+      console.log(`📄 Certificado encontrado: ${certificadoPath}`);
+      
+      return certificadoPath;
+      
+    } catch (error) {
+      console.error('❌ Erro ao buscar certificado:', error);
+      return null;
+    }
   }
 }
 
