@@ -43,6 +43,11 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: true,
     },
+    tokensCertificados: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Tokens de certificados separados por vírgula'
+    },
   }, {
     timestamps: false,
     freezeTableName: true,

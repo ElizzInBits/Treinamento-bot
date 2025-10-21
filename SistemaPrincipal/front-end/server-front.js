@@ -1,14 +1,7 @@
-// Debug: verificar qual arquivo .env está sendo carregado
-console.log('🔍 DEBUG ENV:');
-console.log('  - Diretório atual:', __dirname);
-console.log('  - Arquivo .env local:', require('path').join(__dirname, '.env'));
-console.log('  - Arquivo .env raiz:', require('path').join(__dirname, '..', '..', '.env'));
+// Carregar .env da raiz do projeto
+require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env'), quiet: true });
 
-require('dotenv').config();
 
-// Debug: mostrar variáveis carregadas
-console.log('  - ADMIN_USERNAME carregado:', process.env.ADMIN_USERNAME);
-console.log('  - ADMIN_PASSWORD carregado:', process.env.ADMIN_PASSWORD);
 const cors = require('cors');
 const path = require('path');
 const express = require('express');
@@ -66,23 +59,28 @@ io.on('connection', (socket) => {
 app.set('io', io);
 
 // ✅ 1. Verificar se os arquivos de rota existem
-console.log('🔍 Verificando arquivos de rota...');
-
+// Verificar arquivos de rota silenciosamente
 const contatosPath = path.join(__dirname, 'routes', 'contatos.js');
 const treinamentosPath = path.join(__dirname, 'routes', 'treinamentos.js');
 const empresasPath = path.join(__dirname, 'routes', 'empresas.js');
 const databasePath = path.join(__dirname, '..', 'BancoDeDados', 'database.js');
 
-console.log('📁 Verificando arquivos de rota...');
-
 if (!fs.existsSync(contatosPath)) console.error('❌ Arquivo routes/contatos.js não encontrado!');
 if (!fs.existsSync(treinamentosPath)) console.error('❌ Arquivo routes/treinamentos.js não encontrado!');
 if (!fs.existsSync(empresasPath)) console.error('❌ Arquivo routes/empresas.js não encontrado!');
 if (!fs.existsSync(databasePath)) console.error('❌ Arquivo BancoDeDados/database.js não encontrado!');
-else console.log('✅ Arquivos de rota verificados com sucesso');
 
-// ✅ 2. Middlewares
-console.log('🔧 Configurando middlewares...');
+// ✅ 2. Middlewares e Performance
+console.log('🔧 Configurando middlewares e performance...');
+
+// Inicializar sistemas de performance
+const performanceInit = require('../utils/performance-init');
+performanceInit.init().catch(console.error);
+
+// Rate limiting
+const rateLimiter = require('../middleware/rate-limiter');
+app.use('/api', rateLimiter.getApiLimiter());
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors());
@@ -90,11 +88,24 @@ app.use(cors());
 // ✅ 3. Middleware de segurança e debug
 const securityMiddleware = require('../middleware/security');
 const Logger = require('../utils/logger');
+const { createSharedLogger } = require('../utils/shared-logger');
+
+// Logger específico para frontend
+const frontendLogger = createSharedLogger('frontend');
 
 app.use(securityMiddleware);
 
 app.use((req, res, next) => {
-    Logger.info('Request received', { method: req.method, path: req.path });
+    // Filtrar logs de health check e logs repetitivos
+    if (req.path !== '/api/health' && req.path !== '/api/logs/recent' && req.path !== '/api/logs/stats') {
+        Logger.info('Request received', { method: req.method, path: req.path });
+        frontendLogger.info(`${req.method} ${req.path}`, { 
+            method: req.method, 
+            path: req.path, 
+            ip: req.ip,
+            userAgent: req.get('User-Agent')?.substring(0, 50)
+        });
+    }
     next();
 });
 
@@ -107,14 +118,11 @@ if (fs.existsSync(publicPath)) {
     console.error('❌ Pasta public não encontrada!');
 }
 
-// ✅ 5. Carregar rotas com tratamento de erro
+// Carregar rotas silenciosamente
 let contatosRoutes, treinamentosRoutes, empresasRoutes;
 
-// 📥 Contatos
 try {
-    console.log('📥 Carregando rota de contatos...');
     contatosRoutes = require('./routes/contatos.js');
-    console.log('✅ Rota de contatos carregada com sucesso');
 } catch (error) {
     console.error('❌ Erro ao carregar rota de contatos:', error.message);
     contatosRoutes = express.Router();
@@ -125,9 +133,7 @@ try {
 
 // 📥 Treinamentos
 try {
-    console.log('📥 Carregando rota de treinamentos...');
     treinamentosRoutes = require('./routes/treinamentos.js');
-    console.log('✅ Rota de treinamentos carregada com sucesso');
 } catch (error) {
     console.error('❌ Erro ao carregar rota de treinamentos:', error.message);
     treinamentosRoutes = express.Router();
@@ -138,9 +144,7 @@ try {
 
 // 📥 Empresas
 try {
-    console.log('📥 Carregando rota de empresas...');
     empresasRoutes = require('./routes/empresas.js');
-    console.log('✅ Rota de empresas carregada com sucesso');
 } catch (error) {
     console.error('❌ Erro ao carregar rota de empresas:', error.message);
     empresasRoutes = express.Router();
@@ -152,9 +156,7 @@ try {
 // 📊 Dashboard
 let dashboardRoutes;
 try {
-    console.log('📊 Carregando rota de dashboard...');
     dashboardRoutes = require('./routes/dashboard.js');
-    console.log('✅ Rota de dashboard carregada com sucesso');
 } catch (error) {
     console.error('❌ Erro ao carregar rota de dashboard:', error.message);
     dashboardRoutes = express.Router();
@@ -166,9 +168,7 @@ try {
 // 👤 Usuário
 let usuarioRoutes;
 try {
-    console.log('👤 Carregando rota de usuário...');
     usuarioRoutes = require('./routes/usuario.js');
-    console.log('✅ Rota de usuário carregada com sucesso');
 } catch (error) {
     console.error('❌ Erro ao carregar rota de usuário:', error.message);
     usuarioRoutes = express.Router();
@@ -231,7 +231,7 @@ function authenticateToken(req, res, next) {
 }
 
 // ✅ 7. Registrar rotas da API com autenticação
-console.log('🔗 Registrando rotas da API...');
+// Registrar rotas da API
 // Rotas públicas para cadastro
 app.use('/api/usuarios', (req, res, next) => {
     if (req.method === 'POST' && req.path === '/') {
@@ -272,20 +272,24 @@ app.use('/api/usuario', usuarioRoutes);
 
 // Rota de limpeza (protegida)
 try {
-    console.log('🧹 Carregando rota de limpeza...');
     const limpezaRoutes = require('./routes/limpeza.js');
     app.use('/api/limpeza', authenticateToken, limpezaRoutes);
-    console.log('✅ Rota de limpeza carregada com sucesso');
 } catch (error) {
     console.error('❌ Erro ao carregar rota de limpeza:', error.message);
 }
 
+// Rota de logs (protegida)
+try {
+    const logsRoutes = require('../routes/logs.js');
+    app.use('/api/logs', authenticateToken, logsRoutes);
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de logs:', error.message);
+}
+
 // Rotas de assinatura de certificado (públicas)
 try {
-    console.log('✍️ Carregando rota de assinatura de certificado...');
     const assinaturaRoutes = require('./routes/assinaturaCertificado.js');
     app.use('/api/assinatura', assinaturaRoutes);
-    console.log('✅ Rota de assinatura carregada com sucesso');
 } catch (error) {
     console.error('❌ Erro ao carregar rota de assinatura:', error.message);
 }
@@ -294,7 +298,6 @@ try {
 const midiaPath = path.join(__dirname, '..', 'media', 'treinamentos');
 if (fs.existsSync(midiaPath)) {
     app.use('/media/treinamentos', express.static(midiaPath));
-    console.log('✅ Servindo arquivos de mídia em /media/treinamentos');
 } else {
     console.warn('⚠️ Pasta de mídia media/treinamentos não encontrada!');
     // Tentar criar o diretório
@@ -352,6 +355,7 @@ app.get('/login-api', (req, res) => {
         <button onclick="getData('/api/treinamentos')">Treinamentos</button>
         <button onclick="getData('/api/usuarios')">Usuários</button>
         <button onclick="getData('/api/empresas')">Empresas</button>
+        <button onclick="window.open('/logs', '_blank')" style="background:#3498db;color:white">📊 Dashboard de Logs</button>
         <button onclick="logout()" style="background:red;color:white">Sair</button>
         <pre id="data"></pre>
     </div>
@@ -438,6 +442,12 @@ app.get('/usuario-painel', (req, res) => {
 app.get('/assinar-certificado/:token', (req, res) => {
     const assinaturePath = path.join(publicPath, 'assinar-certificado', 'index.html');
     fs.existsSync(assinaturePath) ? res.sendFile(assinaturePath) : res.json({ error: 'Página de assinatura não encontrada' });
+});
+
+// Rota para dashboard de logs (com autenticação integrada)
+app.get('/logs', (req, res) => {
+    const logsPath = path.join(__dirname, '..', 'public', 'logs-dashboard-enhanced.html');
+    fs.existsSync(logsPath) ? res.sendFile(logsPath) : res.json({ error: 'Dashboard de logs não encontrado' });
 });
 
 // Rota para redirecionamento de links curtos

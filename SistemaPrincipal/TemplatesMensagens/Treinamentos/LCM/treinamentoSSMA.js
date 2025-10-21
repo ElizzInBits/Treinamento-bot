@@ -14,8 +14,7 @@ const optimizedImageManager = SystemOptimizations.createOptimizedImageManager();
 const TRAINING_ID = 'ssma';
 
 // sendMessage will be passed as parameter to avoid circular dependency
-const { Treinamento, Usuario } = require('../../../BancoDeDados/models/index.js');
-const { Interacao, Empresa } = require('../../../BancoDeDados/models/index.js');
+const { Treinamento, Usuario, Interacao, Empresa } = require('../../../BancoDeDados/models');
 const { gerarCertificadoBanco, enviarEmail } = require('../../Certificados/certificados2.js');
 const { Op } = require('sequelize');
 

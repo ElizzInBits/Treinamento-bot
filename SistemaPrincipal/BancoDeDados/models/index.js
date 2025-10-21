@@ -4,7 +4,7 @@ const { sequelize } = require('../database');
 // Importação dos modelos
 const EmpresaModel = require('./empresas');
 const UsuarioModel = require('./usuario');
-const ContatoModel = require('./contato'); // Modelo legado temporário
+// ContatoModel removido - usar Usuario
 const EmpresaTreinamentoModel = require('./empresaTreinamento');
 const TreinamentoModel = require('./treinamento');
 const EmpresaSenhaModel = require('./empresaSenha');
@@ -15,7 +15,7 @@ const AssinaturaCertificadoModel = require('./AssinaturaCertificado');
 // Inicializa os modelos
 const Empresa = EmpresaModel(sequelize, Sequelize.DataTypes);
 const Usuario = UsuarioModel(sequelize, Sequelize.DataTypes);
-const Contato = ContatoModel(sequelize, Sequelize.DataTypes); // Modelo legado temporário
+// Contato removido - usar Usuario
 const EmpresaTreinamento = EmpresaTreinamentoModel(sequelize, Sequelize.DataTypes);
 const Treinamento = TreinamentoModel(sequelize, Sequelize.DataTypes);
 const EmpresaSenha = EmpresaSenhaModel(sequelize, Sequelize.DataTypes);
@@ -27,7 +27,6 @@ const AssinaturaCertificado = AssinaturaCertificadoModel(sequelize, Sequelize.Da
 const models = {
   Empresa,
   Usuario,
-  Contato, // Modelo legado temporário
   EmpresaTreinamento,
   Treinamento,
   EmpresaSenha,

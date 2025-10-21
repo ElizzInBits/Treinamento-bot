@@ -1,6 +1,5 @@
-const { Interacao } = require('../BancoDeDados/models/index');
+const { Interacao, Usuario } = require('../BancoDeDados/models');
 const { encurtarNome } = require('./utils/formatarNome');
-const { Usuario } = require('../BancoDeDados/models/index');
 
 // ==================== SISTEMA DE IDENTIFICAÇÃO ====================
 
@@ -465,7 +464,7 @@ async function processarCodigoEspecialCertificado(sender, sendMessage, buscarCon
         
         // Importar o sistema de certificados
         const certificados = require('./Certificados/certificados2');
-        const AssinaturaCertificadoService = require('./Certificados/assinaturaCertificado');
+        const TreinamentoUtils = require('./Treinamentos/treinamento-utils');
         
         await sendMessage(sender, 'send-message', {
             message: `🎯 *CÓDIGO ESPECIAL ATIVADO!*\n\n👤 Usuário: ${contato.nome}\n📧 Email: ${contato.email || 'N/A'}\n🏢 Empresa: ${contato.empresa?.nome || 'N/A'}\n\n⚡ Gerando certificado...`
@@ -475,11 +474,11 @@ async function processarCodigoEspecialCertificado(sender, sendMessage, buscarCon
         const certificadoPath = await certificados.gerarCertificado(contato.id);
         
         if (certificadoPath) {
-            // Criar registro de assinatura
-            const resultado = await AssinaturaCertificadoService.criarAssinaturaPendente(
+            // Criar token de certificado usando ID automático do treinamento
+            const resultado = await TreinamentoUtils.criarTokenCertificadoTreinamento(
                 contato.id,
-                certificadoPath,
-                'Treinamento EPC/EPI'
+                'epc_epi.js', // Nome do arquivo do treinamento
+                certificadoPath
             );
             
             const linkAssinatura = resultado.linkAssinatura;

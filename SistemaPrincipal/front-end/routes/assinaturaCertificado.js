@@ -14,6 +14,11 @@ router.get('/dados/:token', async (req, res) => {
       return res.status(400).json({ erro: dados.erro });
     }
     
+    // Verificar se certificado já foi assinado
+    const statusAssinatura = await AssinaturaCertificadoService.verificarStatusAssinatura(token);
+    dados.jaAssinado = statusAssinatura.jaAssinado;
+    dados.certificadoAssinado = statusAssinatura.certificadoAssinado;
+    
     res.json(dados);
   } catch (error) {
     console.error('❌ Erro ao obter dados da assinatura:', error);
@@ -29,6 +34,16 @@ router.post('/salvar/:token', async (req, res) => {
     
     if (!assinatura) {
       return res.status(400).json({ erro: 'Assinatura é obrigatória' });
+    }
+    
+    // Verificar se já foi assinado
+    const statusAssinatura = await AssinaturaCertificadoService.verificarStatusAssinatura(token);
+    if (statusAssinatura.jaAssinado) {
+      return res.status(400).json({ 
+        erro: 'Este certificado já foi assinado. Você pode apenas fazer o download.',
+        jaAssinado: true,
+        certificadoAssinado: statusAssinatura.certificadoAssinado
+      });
     }
     
     const resultado = await AssinaturaCertificadoService.salvarAssinatura(token, assinatura);

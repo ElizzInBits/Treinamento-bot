@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '../../../.env' });
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const fs = require('fs');
 const path = require('path');

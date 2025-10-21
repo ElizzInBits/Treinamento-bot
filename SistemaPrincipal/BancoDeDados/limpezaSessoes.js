@@ -21,7 +21,11 @@ class LimpezaSessoes {
       console.log(`🧹 Limpeza automática: ${sessoesRemovidas} sessões antigas removidas`);
       return sessoesRemovidas;
     } catch (error) {
-      console.error('❌ Erro na limpeza de sessões:', error);
+      if (error.name === 'SequelizeConnectionError') {
+        console.log('⚠️ Banco não disponível para limpeza - tentando novamente em 1 hora');
+      } else {
+        console.error('❌ Erro na limpeza de sessões:', error.message);
+      }
       return 0;
     }
   }
@@ -57,7 +61,11 @@ class LimpezaSessoes {
       console.log(`🧹 Duplicatas removidas: ${totalRemovidas} sessões`);
       return totalRemovidas;
     } catch (error) {
-      console.error('❌ Erro ao limpar duplicatas:', error);
+      if (error.name === 'SequelizeConnectionError') {
+        console.log('⚠️ Banco não disponível para limpeza de duplicatas');
+      } else {
+        console.error('❌ Erro ao limpar duplicatas:', error.message);
+      }
       return 0;
     }
   }

@@ -1,25 +1,31 @@
 // database.js
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(
   process.env.DB_NAME || 'listadecontatos',
-  process.env.DB_USER || 'root', 
-  process.env.DB_PASS || 'Admin!?',
+  process.env.DB_USER || 'bot_user', 
+  process.env.DB_PASS || 'SenhaForte123!',
   {
     host: process.env.DB_HOST || '127.0.0.1',
     port: process.env.DB_PORT || 3306,
     dialect: 'mysql',
     logging: false,
     dialectOptions: {
-      connectTimeout: 5000
+      connectTimeout: 60000,
+      charset: 'utf8mb4'
     },
     pool: {
-      max: 20,
+      max: 25,
       min: 5,
-      acquire: 1000,
-      idle: 5000,
-      evict: 10000
+      acquire: 30000,
+      idle: 10000,
+      evict: 1000
+    },
+    benchmark: true,
+    retry: {
+      match: [/ETIMEDOUT/, /EHOSTUNREACH/, /ECONNRESET/, /ECONNREFUSED/],
+      max: 3
     }
   }
 );

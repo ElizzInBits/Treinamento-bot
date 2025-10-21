@@ -1,12 +1,46 @@
 {
-  "name": "whatsapp-bot",
-  "version": "1.0.0",
-  "description": "WhatsApp Bot usando API do wppconnect-server",
-  "main": "start-template.js",
+  "name": "whatsapp-bot-templates",
+  "version": "2.0.0",
+  "description": "WhatsApp Bot com templates de treinamento e geração de certificados",
+  "main": "Template2.js",
+  "scripts": {
+    "start": "node Template2.js",
+    "dev": "nodemon Template2.js",
+    "test": "node --check Template2.js",
+    "clean:tokens": "rm -rf tokens/*",
+    "clean:cache": "rm -rf cache/*",
+    "clean:logs": "rm -f logs/*.log"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "wppconnect",
+    "training",
+    "certificates",
+    "automation"
+  ],
+  "author": "Elizabeth",
+  "license": "MIT",
   "dependencies": {
+    "@wppconnect-team/wppconnect": "^1.37.3",
     "axios": "^1.6.0",
-    "dotenv": "^16.0.0",
+    "canvas": "^2.11.2",
+    "dotenv": "^17.2.1",
+    "express-winston": "^4.2.0",
     "fluent-ffmpeg": "^2.1.3",
-    "sharp": "^0.34.4"
+    "fs-extra": "^11.2.0",
+    "pdf-lib": "^1.17.1",
+    "puppeteer": "^21.11.0",
+    "qrcode": "^1.5.3",
+    "sharp": "^0.34.4",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

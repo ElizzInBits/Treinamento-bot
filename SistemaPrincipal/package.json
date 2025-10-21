@@ -1,43 +1,109 @@
 {
-  "name": "sistema-cadastro-lcm",
-  "version": "1.0.0",
-  "description": "Sistema de Cadastro de Contatos para Treinamento SSMA - LCM",
-  "main": "server-front.js",
+  "name": "treinamento-bot-sistema",
+  "version": "2.0.0",
+  "description": "Sistema completo de treinamento via WhatsApp com dashboard, logs e certificados",
+  "main": "front-end/server-front.js",
+  "homepage": "https://github.com/elizabeth/treinamento-bot",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elizabeth/treinamento-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/elizabeth/treinamento-bot/issues"
+  },
   "scripts": {
-    "start": "node server-front.js",
-    "dev": "nodemon server-front.js",
-    "migrate": "npx sequelize-cli db:migrate",
-    "seed": "npx sequelize-cli db:seed:all",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node front-end/server-front.js",
+    "dev": "nodemon front-end/server-front.js",
+    "bot": "node TemplatesMensagens/Template2.js",
+    "bot:dev": "nodemon TemplatesMensagens/Template2.js",
+    "logs": "tail -f logs/combined-*.log",
+    "logs:error": "tail -f logs/error-*.log",
+    "logs:clear": "rm -f logs/*.log",
+    "install:all": "npm install && cd front-end && npm install && cd ../TemplatesMensagens && npm install",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop all",
+    "pm2:restart": "pm2 restart all",
+    "pm2:logs": "pm2 logs",
+    "db:backup": "mysqldump -u root -p bot_treinamento > backup_$(date +%Y%m%d_%H%M%S).sql",
+    "cleanup": "node BancoDeDados/scripts/limpezaAutomatica.js",
+    "health": "curl -f http://localhost:3000/api/health || exit 1"
   },
   "keywords": [
-    "whatsapp",
-    "cadastro",
-    "contatos",
-    "treinamento",
-    "ssma"
+    "whatsapp-bot",
+    "training-system",
+    "dashboard",
+    "winston-logs",
+    "certificates",
+    "wppconnect",
+    "mysql",
+    "sequelize",
+    "express",
+    "socket.io",
+    "pdf-generation",
+    "automation",
+    "nodejs"
   ],
-  "author": "LCM",
-  "license": "ISC",
+  "author": {
+    "name": "Elizabeth",
+    "email": "elizabeth@example.com"
+  },
+  "license": "MIT",
+  "private": true,
   "dependencies": {
+    "@nestjs/common": "^10.4.20",
+    "@nestjs/core": "^10.4.20",
+    "@nestjs/platform-express": "^10.4.20",
+    "@nestjs/typeorm": "^11.0.0",
     "@wppconnect-team/wppconnect": "^1.37.3",
+    "axios": "^1.6.0",
+    "bull": "^4.16.5",
     "canvas": "^2.11.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
     "cors": "^2.8.5",
     "cpf-cnpj-validator": "^1.0.3",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.1.0",
+    "express-winston": "^4.2.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "fs-extra": "^11.2.0",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.6.0",
     "nodemailer": "^6.10.1",
-    "path": "^0.12.7",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.17.1",
     "puppeteer": "^21.11.0",
-    "sequelize": "^6.37.7"
+    "qrcode": "^1.5.3",
+    "rate-limit-redis": "^4.2.2",
+    "redis": "^5.8.3",
+    "reflect-metadata": "^0.2.2",
+    "sequelize": "^6.37.7",
+    "sharp": "^0.34.4",
+    "socket.io": "^4.7.5",
+    "typeorm": "^0.3.27",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "os": [
+    "linux",
+    "darwin",
+    "win32"
+  ],
+  "config": {
+    "port": 3000,
+    "https_port": 3443
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/elizabeth"
   }
 }
