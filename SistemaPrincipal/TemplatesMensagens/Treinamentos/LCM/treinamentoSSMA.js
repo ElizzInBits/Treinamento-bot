@@ -1,6 +1,10 @@
 //Script de Treinamento SSMA
 //ID do Treinamento: 14
 
+// ID do treinamento
+const TREINAMENTO_ID = 14;
+const NOME_TREINAMENTO = 'SSMA - Saúde, Segurança e Meio Ambiente';
+
 // Importar gerenciadores otimizados
 const resourceManager = require('../../resourceManager');
 const SystemOptimizations = require('../../../optimizations');

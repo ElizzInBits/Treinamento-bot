@@ -43,6 +43,20 @@ async function processarMensagem(message, client) {
   
   logger.info('Processando mensagem', { telefone, mensagem: mensagem.substring(0, 100) });
   
+  // Comando para solicitar certificados
+  if (mensagem.toLowerCase() === '#meus_certificados' || mensagem.toLowerCase() === 'meus certificados') {
+    logger.info('Comando MEUS_CERTIFICADOS executado', { telefone });
+    await enviarCertificadosUsuario(telefone, sendMessage);
+    return;
+  }
+  
+  // Comando MENU para mostrar treinamentos pendentes
+  if (mensagem.toLowerCase() === 'menu') {
+    logger.info('Comando MENU executado', { telefone });
+    await mostrarMenuTreinamentos(telefone, sendMessage);
+    return;
+  }
+  
   // Verificar comandos especiais
   if (mensagem.toLowerCase().includes('restart') || mensagem.toLowerCase().includes('reiniciar')) {
     logger.warn('Comando RESTART executado', { telefone });
@@ -78,6 +92,18 @@ async function processarMensagem(message, client) {
   
   // Marcar mensagem como sendo processada
   marcarMensagemProcessando(telefone, mensagem);
+  
+  // Salvar mensagem do usuário no banco
+  try {
+    const { Interacao } = require('../BancoDeDados/models');
+    await Interacao.create({
+      telefone: telefone,
+      tipo: 'mensagem_usuario',
+      mensagem: JSON.stringify({ body: mensagem, from: message.from, timestamp: Date.now() })
+    });
+  } catch (error) {
+    logger.error('Erro ao salvar mensagem do usuário', { error: error.message });
+  }
   
   try {
     // Verificar se o modelo está carregado
@@ -323,7 +349,7 @@ async function inicializarBot() {
           '--disable-web-security',
           '--disable-features=site-per-process'
         ],
-        protocolTimeout: 300000, // 5 minutos
+        protocolTimeout: 900000, // 15 minutos
         defaultViewport: { width: 800, height: 600 },
         userDataDir: path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT'),
         executablePath: undefined // Usar Chrome padrão do sistema
@@ -609,4 +635,252 @@ async function sendMessage(phone, endpoint, body = {}) {
     }
 }
 
-module.exports = { sendMessage, setWppClient, processarMensagem, verificarMensagemDuplicada };
+// Função para enviar certificados do usuário
+async function enviarCertificadosUsuario(telefone, sendMessageFunc) {
+  try {
+    const { Usuario, AssinaturaCertificado } = require('../BancoDeDados/models');
+    
+    // Buscar usuário
+    const formatosTelefone = [
+      telefone,
+      telefone.substring(2),
+      `${telefone.substring(0, 4)}9${telefone.substring(4)}`,
+      telefone.length === 13 ? telefone.substring(0, 4) + telefone.substring(5) : telefone,
+    ];
+    
+    let usuario = null;
+    for (const formato of formatosTelefone) {
+      usuario = await Usuario.findOne({ where: { telefone: formato } });
+      if (usuario) break;
+    }
+    
+    if (!usuario) {
+      await sendMessageFunc(telefone, 'send-message', { message: '❌ Usuário não encontrado no sistema.' });
+      return;
+    }
+    
+    // Buscar certificados assinados
+    const certificados = await AssinaturaCertificado.findAll({
+      where: {
+        usuarioId: usuario.id,
+        status: 'assinado'
+      },
+      order: [['assinadoEm', 'DESC']]
+    });
+    
+    if (certificados.length === 0) {
+      await sendMessageFunc(telefone, 'send-message', { message: '📜 Você ainda não possui certificados assinados.' });
+      return;
+    }
+    
+    // Enviar mensagem inicial
+    await sendMessageFunc(telefone, 'send-message', { 
+      message: `🎓 *Seus Certificados Assinados (${certificados.length}):*` 
+    });
+    
+    // Enviar cada certificado com link individual
+    const AssinaturaCertificadoService = require('./Certificados/assinaturaCertificado');
+    const { Treinamento } = require('../BancoDeDados/models');
+    
+    for (const cert of certificados) {
+      const [treinamentoId] = cert.tokenAssinatura.split('_');
+      const dataAssinatura = new Date(cert.assinadoEm).toLocaleDateString('pt-BR');
+      
+      // Buscar nome do treinamento
+      const treinamento = await Treinamento.findByPk(parseInt(treinamentoId));
+      const nomeTreinamento = treinamento ? treinamento.nome : `Treinamento ${treinamentoId}`;
+      
+      // Encurtar link individual
+      const linkCompleto = `http://72.60.48.249:3000/assinar-certificado/${cert.tokenAssinatura}`;
+      const linkEncurtado = await AssinaturaCertificadoService.encurtarUrl(linkCompleto);
+      
+      const mensagemCert = `✅ *${nomeTreinamento}*\n📅 Assinado em: ${dataAssinatura}\n🔗 ${linkEncurtado}`;
+      
+      await sendMessageFunc(telefone, 'send-message', { message: mensagemCert });
+      
+      // Pequeno delay entre mensagens
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    // Mensagem final
+    await sendMessageFunc(telefone, 'send-message', { 
+      message: '📌 *Dica:* Clique no link de cada certificado para visualizar e baixar!' 
+    });
+    
+  } catch (error) {
+    logger.error('Erro ao enviar certificados', { error: error.message });
+    await sendMessageFunc(telefone, 'send-message', { message: '❌ Erro ao buscar certificados. Tente novamente.' });
+  }
+}
+
+// Função centralizada para gerar certificados com tratamento de erro
+async function gerarCertificadoComAssinatura(usuarioId, treinamentoNomeArquivo, treinamentoId, sendMessageFunc, destinatario) {
+  try {
+    const { gerarCertificadoBanco } = require('./Certificados/certificados2');
+    const TreinamentoUtils = require('./Treinamentos/treinamento-utils');
+    
+    // Gerar certificado
+    const caminhoArquivo = await gerarCertificadoBanco(usuarioId, null, treinamentoId);
+    
+    if (!caminhoArquivo) {
+      await sendMessageFunc(destinatario, 'send-message', {
+        message: '❌ Erro ao gerar certificado. Tente novamente.'
+      });
+      return { sucesso: false, erro: 'Erro ao gerar certificado' };
+    }
+    
+    // Verificar se já existe certificado assinado ANTES de tentar criar token
+    const { AssinaturaCertificado: AssinaturaModel } = require('../BancoDeDados/models');
+    const certificadoExistente = await AssinaturaModel.findOne({
+      where: {
+        usuarioId: usuarioId,
+        status: 'assinado'
+      },
+      order: [['assinadoEm', 'DESC']]
+    });
+    
+    if (certificadoExistente) {
+      const tokenParts = certificadoExistente.tokenAssinatura.split('_');
+      const treinamentoIdToken = parseInt(tokenParts[0]);
+      
+      if (treinamentoIdToken === treinamentoId) {
+        const linkCertificado = `http://72.60.48.249:3000/assinar-certificado/${certificadoExistente.tokenAssinatura}`;
+        const AssinaturaCertificadoService = require('./Certificados/assinaturaCertificado');
+        const linkEncurtado = await AssinaturaCertificadoService.encurtarUrl(linkCertificado);
+        
+        await sendMessageFunc(destinatario, 'send-message', {
+          message: `✅ *Você já concluiu este treinamento!*\n\n🎓 Seu certificado já foi assinado anteriormente.\n\n🔗 *Acesse seu certificado:*\n${linkEncurtado}\n\n📜 Você pode baixar o certificado a qualquer momento!`
+        });
+        return { sucesso: false, erro: 'Certificado já assinado', jaAssinado: true, linkCertificado: linkEncurtado };
+      }
+    }
+    
+    try {
+      // Criar token de assinatura
+      const resultado = await TreinamentoUtils.criarTokenCertificadoTreinamento(
+        usuarioId,
+        treinamentoNomeArquivo,
+        caminhoArquivo
+      );
+      
+      const linkAssinatura = resultado.linkAssinatura;
+      
+      if (resultado && linkAssinatura) {
+        return {
+          sucesso: true,
+          linkAssinatura: linkAssinatura,
+          caminhoArquivo: caminhoArquivo
+        };
+      } else {
+        await sendMessageFunc(destinatario, 'send-message', {
+          message: '❌ Erro ao criar link de assinatura. Tente novamente.'
+        });
+        return { sucesso: false, erro: 'Erro ao criar link' };
+      }
+    } catch (tokenError) {
+      // Se chegou aqui, é um erro diferente
+      throw tokenError;
+    }
+  } catch (error) {
+    logger.error('Erro ao gerar certificado com assinatura', { error: error.message });
+    await sendMessageFunc(destinatario, 'send-message', {
+      message: '❌ Erro interno ao gerar certificado. Tente novamente mais tarde.'
+    });
+    return { sucesso: false, erro: error.message };
+  }
+}
+
+// Função para gerar menu padrão de treinamentos pendentes
+function gerarMenuTreinamentosPendentes() {
+  return '\n👉 *O que você gostaria de fazer?*\n\n' +
+         '1️⃣ Fazer meus treinamentos agora\n' +
+         '2️⃣ Ver como a ferramenta funciona\n' +
+         '3️⃣ Acessar meus certificados\n' +
+         '4️⃣ Lembrar depois\n' +
+         '5️⃣ Falar com o comercial';
+}
+
+// Função para mostrar menu de treinamentos quando usuário digita MENU
+async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
+  try {
+    const { Usuario } = require('../BancoDeDados/models');
+    const { encurtarNome } = require('./utils/formatarNome');
+    
+    // Buscar usuário
+    const formatosTelefone = [
+      telefone,
+      telefone.substring(2),
+      `${telefone.substring(0, 4)}9${telefone.substring(4)}`,
+      telefone.length === 13 ? telefone.substring(0, 4) + telefone.substring(5) : telefone,
+    ];
+    
+    let usuario = null;
+    for (const formato of formatosTelefone) {
+      usuario = await Usuario.findOne({ where: { telefone: formato } });
+      if (usuario) break;
+    }
+    
+    if (!usuario) {
+      await sendMessageFunc(telefone, 'send-message', { 
+        message: '❌ Usuário não encontrado no sistema. Faça seu cadastro em: https://abrir.link/ZEeCt' 
+      });
+      return;
+    }
+    
+    // Buscar treinamentos pendentes
+    const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(usuario.empresaId, usuario.id);
+    
+    if (!treinamentosPendentes || treinamentosPendentes.length === 0) {
+      await sendMessageFunc(telefone, 'send-message', { 
+        message: `🎉 Parabéns, ${encurtarNome(usuario.nome)}! Você não possui treinamentos pendentes no momento.\n\n✅ Todos os seus treinamentos estão em dia!` 
+      });
+      return;
+    }
+    
+    // Montar mensagem com treinamentos pendentes
+    let mensagem = `🎓 Ótimo ${encurtarNome(usuario.nome)}! Identifiquei que sua empresa tem treinamentos pendentes:\n\n`;
+    
+    treinamentosPendentes.forEach((treinamento) => {
+      let icone = '⚠️';
+      
+      switch (treinamento.status_prazo) {
+        case 'vencido':
+          icone = '🔴';
+          break;
+        case 'urgente':
+          icone = '🟡';
+          break;
+        case 'normal':
+          icone = treinamento.tipo === 'reciclagem' ? '🔄' : '⚠️';
+          break;
+      }
+      
+      mensagem += `${icone} ${treinamento.nome}\n`;
+    });
+    
+    mensagem += gerarMenuTreinamentosPendentes();
+    
+    await sendMessageFunc(telefone, 'send-message', { message: mensagem });
+    
+    // Salvar interação
+    const { Interacao } = require('../BancoDeDados/models');
+    await Interacao.create({
+      telefone: telefone,
+      tipo: 'treinamentos_pendentes',
+      mensagem: JSON.stringify({ 
+        etapa: 'treinamentos_pendentes',
+        treinamentos: treinamentosPendentes,
+        contato_id: usuario.id,
+        empresa_id: usuario.empresaId
+      })
+    });
+    
+  } catch (error) {
+    logger.error('Erro ao mostrar menu de treinamentos', { error: error.message });
+    await sendMessageFunc(telefone, 'send-message', { 
+      message: '❌ Erro ao buscar treinamentos. Tente novamente.' 
+    });
+  }
+}
+
+module.exports = { sendMessage, setWppClient, processarMensagem, verificarMensagemDuplicada, gerarCertificadoComAssinatura, enviarCertificadosUsuario, gerarMenuTreinamentosPendentes };

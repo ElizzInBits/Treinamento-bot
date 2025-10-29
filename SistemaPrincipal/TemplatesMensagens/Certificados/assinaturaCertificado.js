@@ -69,7 +69,27 @@ class AssinaturaCertificadoService {
 
   // Criar token de certificado e salvar no usuário
   static async criarTokenCertificado(usuarioId, treinamentoId, certificadoPath) {
-    const { Usuario } = require('../../BancoDeDados/models');
+    const { Usuario, AssinaturaCertificado } = require('../../BancoDeDados/models');
+    
+    // Verificar se já existe certificado assinado para este treinamento
+    const certificadoAssinado = await AssinaturaCertificado.findOne({
+      where: {
+        usuarioId: usuarioId,
+        status: 'assinado'
+      },
+      order: [['assinadoEm', 'DESC']]
+    });
+    
+    if (certificadoAssinado) {
+      // Extrair treinamentoId do token
+      const tokenParts = certificadoAssinado.tokenAssinatura.split('_');
+      const treinamentoIdToken = parseInt(tokenParts[0]);
+      
+      if (treinamentoIdToken === treinamentoId) {
+        throw new Error(`Você já possui um certificado assinado para este treinamento. Não é possível assinar novamente.`);
+      }
+    }
+    
     const token = this.gerarToken(usuarioId, treinamentoId);
 
     // Buscar usuário
@@ -78,23 +98,39 @@ class AssinaturaCertificadoService {
       throw new Error('Usuário não encontrado');
     }
 
-    // Verificar se token já existe
-    const tokensExistentes = usuario.tokensCertificados ? usuario.tokensCertificados.split(',') : [];
-    const tokenExistente = tokensExistentes.find(t => t.startsWith(`${treinamentoId}_${usuarioId}_`));
-
-    if (tokenExistente) {
-      const urlCompleta = `http://72.60.48.249:3000/assinar-certificado/${tokenExistente}`;
-      return {
-        token: tokenExistente,
-        linkAssinatura: await this.encurtarUrl(urlCompleta),
-        linkCompleto: urlCompleta
-      };
+    // Verificar se token já existe (pendente)
+    const tokenPendente = await AssinaturaCertificado.findOne({
+      where: {
+        usuarioId: usuarioId,
+        status: 'pendente'
+      },
+      order: [['createdAt', 'DESC']]
+    });
+    
+    if (tokenPendente) {
+      const tokenParts = tokenPendente.tokenAssinatura.split('_');
+      const treinamentoIdToken = parseInt(tokenParts[0]);
+      
+      if (treinamentoIdToken === treinamentoId) {
+        const urlCompleta = `http://72.60.48.249:3000/assinar-certificado/${tokenPendente.tokenAssinatura}`;
+        return {
+          token: tokenPendente.tokenAssinatura,
+          linkAssinatura: await this.encurtarUrl(urlCompleta),
+          linkCompleto: urlCompleta
+        };
+      }
     }
 
-    // Adicionar novo token
-    tokensExistentes.push(token);
-    await usuario.update({
-      tokensCertificados: tokensExistentes.join(',')
+    // Criar novo registro de assinatura
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+    
+    await AssinaturaCertificado.create({
+      usuarioId: usuarioId,
+      certificadoPath: certificadoPath,
+      tokenAssinatura: token,
+      expiresAt: expiresAt,
+      status: 'pendente'
     });
 
     const urlCompleta = `http://72.60.48.249:3000/assinar-certificado/${token}`;
@@ -109,31 +145,51 @@ class AssinaturaCertificadoService {
 
   // Validar token de certificado
   static async validarToken(token) {
-    const { Usuario } = require('../../BancoDeDados/models');
+    const { Usuario, AssinaturaCertificado } = require('../../BancoDeDados/models');
     
-    // Extrair IDs do token
+    // Buscar assinatura no banco
+    const assinatura = await AssinaturaCertificado.findOne({
+      where: { tokenAssinatura: token }
+    });
+    
+    if (!assinatura) {
+      return { valido: false, erro: 'Token inválido ou expirado' };
+    }
+    
+    // Verificar se já foi assinado
+    if (assinatura.status === 'assinado') {
+      return { valido: false, erro: 'Este certificado já foi assinado' };
+    }
+    
+    // Verificar expiração
+    if (new Date() > assinatura.expiresAt) {
+      await AssinaturaCertificado.update(
+        { status: 'expirado' },
+        { where: { id: assinatura.id } }
+      );
+      return { valido: false, erro: 'Token expirado' };
+    }
+    
+    // Extrair treinamentoId do token
     const [treinamentoId, usuarioId] = token.split('_');
     
-    const usuario = await Usuario.findByPk(usuarioId);
+    const usuario = await Usuario.findByPk(assinatura.usuarioId);
     if (!usuario) {
       return { valido: false, erro: 'Usuário não encontrado' };
-    }
-
-    // Verificar se token existe na lista do usuário
-    const tokens = usuario.tokensCertificados ? usuario.tokensCertificados.split(',') : [];
-    if (!tokens.includes(token)) {
-      return { valido: false, erro: 'Token inválido' };
     }
 
     return { 
       valido: true, 
       usuario,
-      treinamentoId: parseInt(treinamentoId)
+      treinamentoId: parseInt(treinamentoId),
+      assinatura
     };
   }
 
   // Salvar assinatura e regenerar PDF
   static async salvarAssinatura(token, assinaturaBase64) {
+    const { AssinaturaCertificado } = require('../../BancoDeDados/models');
+    
     const validacao = await this.validarToken(token);
     
     if (!validacao.valido) {
@@ -149,6 +205,20 @@ class AssinaturaCertificadoService {
     const certificadoAssinado = await this.adicionarAssinaturaPDF(
       certificadoPath,
       assinaturaBase64
+    );
+    
+    // Atualizar registro de assinatura
+    await AssinaturaCertificado.update(
+      {
+        assinaturaBase64: assinaturaBase64,
+        assinadoEm: new Date(),
+        status: 'assinado'
+      },
+      {
+        where: {
+          tokenAssinatura: token
+        }
+      }
     );
 
     return {
@@ -266,31 +336,50 @@ class AssinaturaCertificadoService {
   // Verificar se certificado já foi assinado
   static async verificarStatusAssinatura(token) {
     try {
-      const validacao = await this.validarToken(token);
+      const { AssinaturaCertificado } = require('../../BancoDeDados/models');
       
-      if (!validacao.valido) {
-        return { jaAssinado: false, certificadoAssinado: null };
-      }
-
-      const { usuario } = validacao;
-      const certificadoPath = this.buscarCertificadoPath(usuario.id);
+      const assinatura = await AssinaturaCertificado.findOne({
+        where: { tokenAssinatura: token }
+      });
       
-      if (!certificadoPath) {
+      if (!assinatura) {
         return { jaAssinado: false, certificadoAssinado: null };
       }
       
-      // Verificar se existe versão assinada
-      const nomeArquivo = path.basename(certificadoPath, '.pdf');
-      const certificadoAssinadoPath = path.join(
-        path.dirname(certificadoPath),
-        `${nomeArquivo}_assinado.pdf`
-      );
+      const jaAssinado = assinatura.status === 'assinado';
       
-      const jaAssinado = fs.existsSync(certificadoAssinadoPath);
+      if (jaAssinado) {
+        // Verificar se certificado assinado existe
+        if (assinatura.certificadoPath) {
+          const nomeArquivo = path.basename(assinatura.certificadoPath, '.pdf');
+          const certificadoAssinadoPath = path.join(
+            path.dirname(assinatura.certificadoPath),
+            `${nomeArquivo}_assinado.pdf`
+          );
+          
+          if (fs.existsSync(certificadoAssinadoPath)) {
+            return {
+              jaAssinado: true,
+              certificadoAssinado: path.basename(certificadoAssinadoPath)
+            };
+          }
+        }
+        
+        // Certificado foi apagado, regenerar
+        console.log('🔄 Certificado assinado foi apagado, regenerando...');
+        const certificadoRegenerado = await this.regenerarCertificadoAssinado(assinatura);
+        
+        if (certificadoRegenerado) {
+          return {
+            jaAssinado: true,
+            certificadoAssinado: path.basename(certificadoRegenerado)
+          };
+        }
+      }
       
       return {
         jaAssinado,
-        certificadoAssinado: jaAssinado ? path.basename(certificadoAssinadoPath) : null
+        certificadoAssinado: null
       };
       
     } catch (error) {
@@ -298,27 +387,88 @@ class AssinaturaCertificadoService {
       return { jaAssinado: false, certificadoAssinado: null };
     }
   }
+  
+  // Regenerar certificado assinado
+  static async regenerarCertificadoAssinado(assinatura) {
+    try {
+      const { Usuario } = require('../../BancoDeDados/models');
+      const { gerarCertificadoBanco } = require('./certificados2');
+      
+      // Extrair treinamentoId do token
+      const [treinamentoId, usuarioId] = assinatura.tokenAssinatura.split('_');
+      
+      console.log(`🔄 Regenerando certificado para usuário ${usuarioId}, treinamento ${treinamentoId}`);
+      
+      // Gerar novo certificado
+      const novoCertificadoPath = await gerarCertificadoBanco(
+        parseInt(usuarioId),
+        null,
+        parseInt(treinamentoId)
+      );
+      
+      if (!novoCertificadoPath) {
+        console.error('❌ Erro ao regenerar certificado');
+        return null;
+      }
+      
+      // Adicionar assinatura ao novo certificado
+      const certificadoAssinado = await this.adicionarAssinaturaPDF(
+        novoCertificadoPath,
+        assinatura.assinaturaBase64
+      );
+      
+      // Atualizar caminho no banco
+      await assinatura.update({
+        certificadoPath: novoCertificadoPath
+      });
+      
+      console.log(`✅ Certificado regenerado com sucesso: ${certificadoAssinado}`);
+      return certificadoAssinado;
+      
+    } catch (error) {
+      console.error('❌ Erro ao regenerar certificado:', error);
+      return null;
+    }
+  }
 
   // Obter dados para página de assinatura
   static async obterDadosAssinatura(token) {
-    const validacao = await this.validarToken(token);
-    
-    if (!validacao.valido) {
-      return { erro: validacao.erro };
-    }
-
-    const { usuario, treinamentoId } = validacao;
-    
-    return {
-      sucesso: true,
-      usuario: {
-        nome: usuario.nomeCompleto || usuario.nome,
-        email: usuario.email
-      },
-      certificado: {
-        treinamentoId
+    try {
+      const { Usuario, AssinaturaCertificado } = require('../../BancoDeDados/models');
+      
+      // Buscar assinatura no banco
+      const assinatura = await AssinaturaCertificado.findOne({
+        where: { tokenAssinatura: token }
+      });
+      
+      if (!assinatura) {
+        return { erro: 'Token inválido ou expirado' };
       }
-    };
+      
+      // Buscar usuário
+      const usuario = await Usuario.findByPk(assinatura.usuarioId);
+      if (!usuario) {
+        return { erro: 'Usuário não encontrado' };
+      }
+      
+      // Extrair treinamentoId do token
+      const [treinamentoId] = token.split('_');
+      
+      return {
+        sucesso: true,
+        usuario: {
+          nome: usuario.nomeCompleto || usuario.nome,
+          email: usuario.email
+        },
+        certificado: {
+          treinamentoId: parseInt(treinamentoId),
+          status: assinatura.status
+        }
+      };
+    } catch (error) {
+      console.error('❌ Erro ao obter dados da assinatura:', error);
+      return { erro: 'Erro ao processar token' };
+    }
   }
 
   // Buscar caminho do certificado

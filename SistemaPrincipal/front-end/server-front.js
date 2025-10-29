@@ -294,6 +294,16 @@ try {
     console.error('❌ Erro ao carregar rota de assinatura:', error.message);
 }
 
+// Rotas de exportar WhatsApp (protegidas)
+try {
+    const exportarWhatsAppRoutes = require('./routes/exportar-whatsapp.js');
+    app.use('/api/whatsapp-export', authenticateToken, exportarWhatsAppRoutes);
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de exportar WhatsApp:', error.message);
+}
+
+
+
 // ✅ 7. Servir mídia (uploads) estáticos
 const midiaPath = path.join(__dirname, '..', 'media', 'treinamentos');
 if (fs.existsSync(midiaPath)) {

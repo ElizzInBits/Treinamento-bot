@@ -1,3 +1,7 @@
+// ID do treinamento
+const TREINAMENTO_ID = 15;
+const NOME_TREINAMENTO = 'Como fazer Treinamentos Normativos no WhatsApp';
+
 const { Usuario, Interacao } = require('../../../BancoDeDados/models');
 const { gerarCertificado } = require('../../Certificados/gerarCertificado');
 const { encurtarNome } = require('../../utils/formatarNome');
@@ -120,12 +124,12 @@ async function processarOpcaoInicial(sender, text, sendMessage, buscarContato = 
             await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ 
                 etapa: 'mostrar_recursos',
                 contato_id: contato.id,
-                nome: encurtarNome(contato.nome),
+                nome: contato.nome || contato.nomeCompleto,
                 empresa_id: contato.empresaId,
                 em_apresentacao_direta: true // Flag para indicar apresentação direta
             }));
             
-            await mostrarComoFunciona(sender, encurtarNome(contato.nome), sendMessage);
+            await mostrarComoFunciona(sender, encurtarNome(contato.nome || contato.nomeCompleto), sendMessage);
         }
         return true;
     } else if (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('nao')) {
@@ -171,7 +175,7 @@ async function processarAposCadastro(sender, text, sendMessage, buscarContato = 
     if (contato) {
         console.log(`🎉 USUÁRIO CADASTRADO RETORNOU: ${contato.nome}`);
         await salvarInteracao(sender, 'processando_cadastrado', JSON.stringify({ etapa: 'processando_cadastrado' }));
-        await mostrarComoFunciona(sender, encurtarNome(contato.nome), sendMessage);
+        await mostrarComoFunciona(sender, encurtarNome(contato.nome || contato.nomeCompleto), sendMessage);
         return true;
     } else {
         await sendMessage(sender, 'send-message', {
@@ -189,7 +193,7 @@ async function mostrarComoFunciona(sender, nome, sendMessage) {
     await limparProgressoAnterior(sender);
     
     await sendMessage(sender, 'send-message', {
-        message: `😃 Muito bem ${encurtarNome(nome)}! Aqui o treinamento acontece como uma conversa rápida:\n• Mensagens curtas 💬\n• Linguagem simples ✅\n• Interatividade o tempo todo ⚡\n👉 E tudo com validade legal`
+        message: `😃 Muito bem ${nome}! Aqui o treinamento acontece como uma conversa rápida:\n• Mensagens curtas 💬\n• Linguagem simples ✅\n• Interatividade o tempo todo ⚡\n👉 E tudo com validade legal`
     });
     
     setTimeout(async () => {
@@ -416,7 +420,28 @@ async function mostrarQuandoOnde(sender, sendMessage) {
     await marcarProgressoEtapa(sender, 'quando_onde');
     
     await sendMessage(sender, 'send-message', {
-        message: '⏰ *Você pode fazer o curso:*\n\n☕ Tomando um café\n🚎 No ônibus ou metrô\n🌍 Em qualquer lugar, a qualquer hora\n\n📜 Tudo com registro, certificado e validade normativa.'
+        message: '⏰ *Você pode fazer o curso:*'
+    });
+
+    // Enviar imagens
+    const path = require('path');
+    const fs = require('fs');
+    const imagens = ['nocafe.png', 'nometro.png', 'notrabalho.png'];
+    const legendas = ['☕ Tomando um café', '🚎 No ônibus ou metrô', '🌍 No trabalho ou em qualquer lugar'];
+    
+    for (let i = 0; i < imagens.length; i++) {
+        const imagemPath = path.join(__dirname, 'material_apresentacao', 'Imagens', imagens[i]);
+        if (fs.existsSync(imagemPath)) {
+            await sendMessage(sender, 'send-image', {
+                path: imagemPath,
+                caption: legendas[i]
+            });
+            await new Promise(resolve => setTimeout(resolve, 800));
+        }
+    }
+    
+    await sendMessage(sender, 'send-message', {
+        message: '📜 Tudo com registro, certificado e validade normativa.'
     });
 
     // Continuar direto para exemplos após 2 segundos
@@ -728,15 +753,46 @@ async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
     });
     
     try {
-        const resultado = await gerarCertificado(nome, email, sendMessage, sender, 'Como fazer Treinamentos Normativos no WhatsApp');
+        // Buscar contato no banco
+        const { Usuario } = require('../../../BancoDeDados/models');
+        const telefone = sender.replace('@c.us', '');
+        const formatosTelefone = [
+            telefone,
+            telefone.substring(2),
+            `${telefone.substring(0, 4)}9${telefone.substring(4)}`,
+            telefone.length === 13 ? telefone.substring(0, 4) + telefone.substring(5) : telefone,
+        ];
+
+        let contato = null;
+        for (const formato of formatosTelefone) {
+            contato = await Usuario.findOne({ where: { telefone: formato } });
+            if (contato) break;
+        }
+
+        if (!contato) {
+            throw new Error('Contato não encontrado no banco de dados');
+        }
+
+        const { gerarCertificadoBanco } = require('../../Certificados/certificados2');
+        const TreinamentoUtils = require('../treinamento-utils');
+        
+        // Usar ID 15 para treinamento de apresentação
+        const caminhoArquivo = await gerarCertificadoBanco(contato.id, null, 15);
+
+        const { gerarCertificadoComAssinatura } = require('../../Template2');
+        
+        // Usar função centralizada
+        const resultado = await gerarCertificadoComAssinatura(
+            contato.id,
+            'treinamentoApresentacao.js',
+            15,
+            sendMessage,
+            sender
+        );
         
         if (resultado.sucesso) {
             await sendMessage(sender, 'send-message', {
-                message: `✅ *Certificado gerado com sucesso!*\n\n📧 Enviado para: ${email}\n\n🔏 *Para finalizar, assine digitalmente seu certificado:*\n${resultado.linkAssinatura}\n\n⏰ Link válido por 24 horas`
-            });
-        } else {
-            await sendMessage(sender, 'send-message', {
-                message: `❌ Erro ao gerar certificado: ${resultado.erro}`
+                message: `✅ *CERTIFICADO GERADO COM SUCESSO!*\n\n📜 Seu certificado de **Treinamento de Apresentação** foi gerado.\n\n🖊️ **Para finalizar, você precisa assinar digitalmente:**\n${resultado.linkAssinatura}\n\n⏰ *Link válido por 24 horas*\n\n📱 Acesse pelo celular ou computador para assinar e baixar seu certificado oficial.`
             });
         }
     } catch (error) {
@@ -910,8 +966,11 @@ async function verificarTreinamentosEmpresa(empresaId, contatoId = null) {
                 DATE_ADD(et.data_atribuicao, INTERVAL 30 DAY) as prazo
             FROM treinamentos t
             INNER JOIN empresas_treinamentos et ON t.id = et.treinamento_id
+            LEFT JOIN assinaturas_certificados ac ON ac.usuario_id = :contatoId 
+                AND ac.token_assinatura LIKE CONCAT(t.id, '_%')
+                AND ac.status = 'assinado'
             WHERE et.empresa_id = :empresaId
-
+                AND ac.id IS NULL
             ORDER BY 
                 CASE 
                     WHEN DATEDIFF(DATE_ADD(et.data_atribuicao, INTERVAL 30 DAY), CURDATE()) < 0 THEN 1
@@ -921,7 +980,7 @@ async function verificarTreinamentosEmpresa(empresaId, contatoId = null) {
                 et.data_atribuicao ASC
         `;
         
-        const replacements = { empresaId };
+        const replacements = { empresaId, contatoId };
         
         const resultados = await sequelize.query(query, {
             replacements,
@@ -966,6 +1025,7 @@ async function verificarTreinamentosEmpresa(empresaId, contatoId = null) {
 
 async function direcionarParaTreinamentos(sender, sendMessage, treinamentos, contato) {
     const nomeContato = encurtarNome(contato.nome || contato.nomeCompleto);
+    const { gerarMenuTreinamentosPendentes } = require('../../Template2');
     
     let mensagem = `🎓 Ótimo ${nomeContato}! Identifiquei que sua empresa tem treinamentos pendentes:\n\n`;
     
@@ -994,11 +1054,7 @@ async function direcionarParaTreinamentos(sender, sendMessage, treinamentos, con
         mensagem += `${icone} ${treinamento.nome}\n`;
     });
     
-    mensagem += '\n👉 O que você gostaria de fazer?\n\n';
-    mensagem += '1️⃣ Fazer meus treinamentos agora\n';
-    mensagem += '2️⃣ Ver como a ferramenta funciona\n';
-    mensagem += '3️⃣ Lembrar depois\n';
-    mensagem += '4️⃣ Falar com o comercial';
+    mensagem += gerarMenuTreinamentosPendentes();
     
     await sendMessage(sender, 'send-message', { message: mensagem });
     
@@ -1066,7 +1122,7 @@ async function processarTreinamentosPendentes(sender, text, sendMessage) {
     
     console.log(`🎓 Processando treinamentos pendentes: "${text}"`);
     
-    if (opcao === '1' || opcao.toLowerCase().includes('fazer') || opcao.toLowerCase().includes('agora')) {
+    if (opcao === '1' || (opcao.toLowerCase().includes('fazer') && opcao.toLowerCase().includes('treinamento'))) {
         // Iniciar treinamentos
         console.log('🎓 Direcionando para treinamentos da empresa');
         
@@ -1120,7 +1176,7 @@ async function processarTreinamentosPendentes(sender, text, sendMessage) {
         
         await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
         
-    } else if (opcao === '2' || opcao.toLowerCase().includes('ferramenta') || opcao.toLowerCase().includes('funciona')) {
+    } else if (opcao === '2' || (opcao.toLowerCase().includes('ferramenta') && opcao.toLowerCase().includes('funciona'))) {
         // Ver apresentação da ferramenta
         console.log('📱 Usuário quer ver apresentação mesmo com treinamentos pendentes');
         
@@ -1139,21 +1195,32 @@ async function processarTreinamentosPendentes(sender, text, sendMessage) {
         
         await mostrarComoFunciona(sender, dados.nome || 'Usuário', sendMessage);
         
-    } else if (opcao === '3' || opcao.toLowerCase().includes('depois') || opcao.toLowerCase().includes('lembrar')) {
+    } else if (opcao === '3' || opcao.toLowerCase().includes('certificado')) {
+        // Acessar certificados
+        console.log('📜 Usuário quer acessar certificados');
+        
+        const { enviarCertificadosUsuario } = require('../../Template2');
+        await enviarCertificadosUsuario(sender, sendMessage);
+        
+        // Não mudar etapa, manter em treinamentos_pendentes para continuar no menu
+        return true;
+        
+    } else if (opcao === '4' || opcao.toLowerCase().includes('depois') || opcao.toLowerCase().includes('lembrar')) {
         // Lembrar depois
         await sendMessage(sender, 'send-message', {
             message: '😊 Perfeito! Vou te lembrar sobre seus treinamentos.\n\n📝 **Treinamentos pendentes salvos!**\n\nQuando quiser fazer, é só me mandar um "oi" que te direciono direto para eles.\n\n⏰ Não esqueça dos prazos!'
         });
         await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
         
-    } else if (opcao === '4' || opcao.toLowerCase().includes('comercial')) {
+    } else if (opcao === '5' || opcao.toLowerCase().includes('comercial')) {
         // Contato comercial
         await finalizarApresentacao(sender, sendMessage);
         
     } else {
         // Opção inválida
+        const { gerarMenuTreinamentosPendentes } = require('../../Template2');
         await sendMessage(sender, 'send-message', {
-            message: '🤔 Não entendi sua resposta. O que você gostaria de fazer?\n\n1️⃣ Fazer meus treinamentos agora\n2️⃣ Ver como a ferramenta funciona\n3️⃣ Lembrar depois\n4️⃣ Falar com o comercial'
+            message: '🤔 Não entendi sua resposta.' + gerarMenuTreinamentosPendentes()
         });
     }
     
@@ -1341,8 +1408,12 @@ async function salvarInteracao(telefone, tipo, mensagem) {
 
 async function obterUltimaInteracao(telefone) {
     try {
+        const { Op } = require('sequelize');
         return await Interacao.findOne({
-            where: { telefone: telefone },
+            where: { 
+                telefone: telefone,
+                tipo: { [Op.ne]: 'mensagem_usuario' }
+            },
             order: [['createdAt', 'DESC']]
         });
     } catch (error) {

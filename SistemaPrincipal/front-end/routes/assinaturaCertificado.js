@@ -78,4 +78,35 @@ router.get('/download/:filename', (req, res) => {
   }
 });
 
+// Rota para reenviar link de certificado assinado
+router.get('/reenviar/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    // Verificar status
+    const status = await AssinaturaCertificadoService.verificarStatusAssinatura(token);
+    
+    if (!status.jaAssinado) {
+      return res.status(400).json({ erro: 'Certificado ainda não foi assinado' });
+    }
+    
+    if (!status.certificadoAssinado) {
+      return res.status(404).json({ erro: 'Certificado não encontrado' });
+    }
+    
+    // Retornar link de download
+    const linkDownload = `http://72.60.48.249:3000/api/assinatura/download/${status.certificadoAssinado}`;
+    
+    res.json({
+      sucesso: true,
+      linkDownload: linkDownload,
+      certificado: status.certificadoAssinado
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro ao reenviar certificado:', error);
+    res.status(500).json({ erro: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router;
