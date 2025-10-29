@@ -306,6 +306,12 @@ async function loadCertificateData() {
             // Configurar botão de download
             const downloadBtn = document.getElementById('downloadBtn');
             downloadBtn.href = `/api/assinatura/download/${data.certificadoAssinado}`;
+            
+            // Se estiver regenerando, aguardar um pouco
+            if (data.regenerando) {
+                console.log('🔄 Certificado sendo regenerado, aguardando...');
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
         }
         
     } catch (error) {

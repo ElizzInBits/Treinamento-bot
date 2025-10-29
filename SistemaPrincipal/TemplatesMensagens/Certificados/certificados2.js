@@ -263,7 +263,7 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null, treiname
     }
 
     const nomeArquivo = (contato.nomeCompleto || contato.nome || 'certificado').replace(/[^\w\s]/gi, '').replace(/\s+/g, '_');
-    const caminhoArquivo = path.join(certificadosDir, `certificado_${nomeArquivo}.pdf`);
+    const caminhoArquivo = path.join(certificadosDir, `certificado_${nomeArquivo}_T${treinamento.id}.pdf`);
     fs.writeFileSync(caminhoArquivo, await pdfDoc.save());
 
     console.log('✅ Certificado gerado com sucesso:', caminhoArquivo);

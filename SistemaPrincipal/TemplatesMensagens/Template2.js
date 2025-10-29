@@ -26,6 +26,9 @@ let wppClient = null;
 const mensagensProcessando = new Map();
 const TIMEOUT_DUPLICADA = 5000; // 5 segundos
 
+// Controle de usuários ocupados (buscando certificados, etc)
+const usuariosOcupados = new Map();
+
 // Conectar ao banco
 (async () => {
   try {
@@ -43,6 +46,13 @@ async function processarMensagem(message, client) {
   
   logger.info('Processando mensagem', { telefone, mensagem: mensagem.substring(0, 100) });
   
+  // Verificar se usuário está ocupado
+  if (usuariosOcupados.has(telefone)) {
+    const operacao = usuariosOcupados.get(telefone);
+    await client.sendText(message.from, `⏳ *Aguarde um momento...*\n\nEstou ${operacao}, só mais um instante!`);
+    return;
+  }
+  
   // Comando para solicitar certificados
   if (mensagem.toLowerCase() === '#meus_certificados' || mensagem.toLowerCase() === 'meus certificados') {
     logger.info('Comando MEUS_CERTIFICADOS executado', { telefone });
@@ -54,6 +64,20 @@ async function processarMensagem(message, client) {
   if (mensagem.toLowerCase() === 'menu') {
     logger.info('Comando MENU executado', { telefone });
     await mostrarMenuTreinamentos(telefone, sendMessage);
+    return;
+  }
+  
+  // Comando 5 para falar com comercial
+  if (mensagem.trim() === '5') {
+    logger.info('Comando COMERCIAL (5) executado', { telefone });
+    await client.sendText(message.from, '🎉 *Perfeito!*\n\nVou te conectar com nosso time comercial agora mesmo!\n\n👉 Clique no link abaixo para falar diretamente com nossa equipe:\n\nhttps://wa.me/553195095646?text=Olá%2C%20vim%20pelo%20assistente%20virtual%20de%20treinamentos.\n\n🚀 Obrigada por conhecer o futuro dos treinamentos normativos!');
+    return;
+  }
+  
+  // Comando 6 para falar com suporte
+  if (mensagem.trim() === '6') {
+    logger.info('Comando SUPORTE (6) executado', { telefone });
+    await client.sendText(message.from, '👨‍💻 *Suporte Técnico*\n\nVou te conectar com nossa equipe de suporte!\n\n👉 Clique no link abaixo para receber ajuda:\n\nhttps://wa.me/553131669006?text=Olá!%20Vim%20pelo%20assistente%20virtual%20de%20treinamentos%20e%20gostaria%20de%20receber%20ajuda%20com%20algo.\n\n✨ Nossa equipe está pronta para ajudar!');
     return;
   }
   
@@ -637,6 +661,9 @@ async function sendMessage(phone, endpoint, body = {}) {
 
 // Função para enviar certificados do usuário
 async function enviarCertificadosUsuario(telefone, sendMessageFunc) {
+  // Marcar usuário como ocupado
+  usuariosOcupados.set(telefone, 'buscando seus certificados');
+  
   try {
     const { Usuario, AssinaturaCertificado } = require('../BancoDeDados/models');
     
@@ -675,7 +702,9 @@ async function enviarCertificadosUsuario(telefone, sendMessageFunc) {
     
     // Enviar mensagem inicial
     await sendMessageFunc(telefone, 'send-message', { 
-      message: `🎓 *Seus Certificados Assinados (${certificados.length}):*` 
+      message: `🎓 *Seus Certificados Assinados (${certificados.length}):*
+
+⏳ Só um momento que vou buscar eles...` 
     });
     
     // Enviar cada certificado com link individual
@@ -690,7 +719,7 @@ async function enviarCertificadosUsuario(telefone, sendMessageFunc) {
       const treinamento = await Treinamento.findByPk(parseInt(treinamentoId));
       const nomeTreinamento = treinamento ? treinamento.nome : `Treinamento ${treinamentoId}`;
       
-      // Encurtar link individual
+      // Encurtar link
       const linkCompleto = `http://72.60.48.249:3000/assinar-certificado/${cert.tokenAssinatura}`;
       const linkEncurtado = await AssinaturaCertificadoService.encurtarUrl(linkCompleto);
       
@@ -710,6 +739,9 @@ async function enviarCertificadosUsuario(telefone, sendMessageFunc) {
   } catch (error) {
     logger.error('Erro ao enviar certificados', { error: error.message });
     await sendMessageFunc(telefone, 'send-message', { message: '❌ Erro ao buscar certificados. Tente novamente.' });
+  } finally {
+    // Liberar usuário
+    usuariosOcupados.delete(telefone);
   }
 }
 
@@ -797,7 +829,8 @@ function gerarMenuTreinamentosPendentes() {
          '2️⃣ Ver como a ferramenta funciona\n' +
          '3️⃣ Acessar meus certificados\n' +
          '4️⃣ Lembrar depois\n' +
-         '5️⃣ Falar com o comercial';
+         '5️⃣ Falar com o comercial\n' +
+         '6️⃣ Falar com o suporte';
 }
 
 // Função para mostrar menu de treinamentos quando usuário digita MENU
@@ -831,8 +864,23 @@ async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
     const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(usuario.empresaId, usuario.id);
     
     if (!treinamentosPendentes || treinamentosPendentes.length === 0) {
-      await sendMessageFunc(telefone, 'send-message', { 
-        message: `🎉 Parabéns, ${encurtarNome(usuario.nome)}! Você não possui treinamentos pendentes no momento.\n\n✅ Todos os seus treinamentos estão em dia!` 
+      let mensagem = `🎉 Parabéns, ${encurtarNome(usuario.nome)}! Você não possui treinamentos pendentes no momento.\n\n✅ Todos os seus treinamentos estão em dia!`;
+      mensagem += gerarMenuTreinamentosPendentes();
+      mensagem += '\n\n💡 *Dica:* Digite *MENU* a qualquer momento para voltar a este menu.';
+      
+      await sendMessageFunc(telefone, 'send-message', { message: mensagem });
+      
+      // Salvar interação
+      const { Interacao } = require('../BancoDeDados/models');
+      await Interacao.create({
+        telefone: telefone,
+        tipo: 'treinamentos_pendentes',
+        mensagem: JSON.stringify({ 
+          etapa: 'treinamentos_pendentes',
+          treinamentos: [],
+          contato_id: usuario.id,
+          empresa_id: usuario.empresaId
+        })
       });
       return;
     }
@@ -859,6 +907,7 @@ async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
     });
     
     mensagem += gerarMenuTreinamentosPendentes();
+    mensagem += '\n\n💡 *Dica:* Digite *MENU* a qualquer momento para voltar a este menu.';
     
     await sendMessageFunc(telefone, 'send-message', { message: mensagem });
     

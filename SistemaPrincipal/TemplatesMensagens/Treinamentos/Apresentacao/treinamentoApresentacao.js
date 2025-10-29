@@ -1097,7 +1097,7 @@ async function finalizarApresentacao(sender, sendMessage) {
     
     setTimeout(async () => {
         await sendMessage(sender, 'send-message', {
-            message: '🎉 *Perfeito!*\n\nVou te conectar com nosso time comercial agora mesmo!\n\n👉 Clique no link abaixo para falar diretamente com nossa equipe:\n\nhttps://wa.me/553131669006?text=Ol%C3%A1%2C%20vim%20do%20bot%20da%20Eliza%20e%20quero%20saber%20mais%20sobre%20os%20treinamentos%20normativos%20no%20WhatsApp\n\n📞 *Ou ligue:* (31) 3166-9006\n📧 *E-mail:* treinamentos@salubrita.com.br\n\n🚀 Obrigada por conhecer o futuro dos treinamentos normativos!'
+            message: '🎉 *Perfeito!*\n\nVou te conectar com nosso time comercial agora mesmo!\n\n👉 Clique no link abaixo para falar diretamente com nossa equipe:\n\nhttps://wa.me/553195095646?text=Ol%C3%A1%2C%20vim%20pelo%20assistente%20virtual%20de%20treinamentos.\n\n🚀 Obrigada por conhecer o futuro dos treinamentos normativos!'
         });
         
         await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));

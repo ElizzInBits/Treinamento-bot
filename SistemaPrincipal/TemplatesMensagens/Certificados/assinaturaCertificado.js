@@ -348,33 +348,38 @@ class AssinaturaCertificadoService {
       
       const jaAssinado = assinatura.status === 'assinado';
       
-      if (jaAssinado) {
-        // Verificar se certificado assinado existe
-        if (assinatura.certificadoPath) {
-          const nomeArquivo = path.basename(assinatura.certificadoPath, '.pdf');
-          const certificadoAssinadoPath = path.join(
-            path.dirname(assinatura.certificadoPath),
-            `${nomeArquivo}_assinado.pdf`
-          );
+      if (jaAssinado && assinatura.certificadoPath) {
+        const nomeArquivo = path.basename(assinatura.certificadoPath, '.pdf');
+        const certificadoAssinadoPath = path.join(
+          path.dirname(assinatura.certificadoPath),
+          `${nomeArquivo}_assinado.pdf`
+        );
+        
+        // Verificar se arquivo existe
+        if (!fs.existsSync(certificadoAssinadoPath)) {
+          console.log('🔄 Certificado assinado foi apagado, regenerando em background...');
           
-          if (fs.existsSync(certificadoAssinadoPath)) {
-            return {
-              jaAssinado: true,
-              certificadoAssinado: path.basename(certificadoAssinadoPath)
-            };
-          }
-        }
-        
-        // Certificado foi apagado, regenerar
-        console.log('🔄 Certificado assinado foi apagado, regenerando...');
-        const certificadoRegenerado = await this.regenerarCertificadoAssinado(assinatura);
-        
-        if (certificadoRegenerado) {
+          // Regenerar em background (não bloquear resposta)
+          this.regenerarCertificadoAssinado(assinatura).then(certificadoRegenerado => {
+            if (certificadoRegenerado) {
+              console.log(`✅ Certificado regenerado: ${certificadoRegenerado}`);
+            }
+          }).catch(err => {
+            console.error('❌ Erro ao regenerar certificado:', err);
+          });
+          
+          // Retornar nome esperado do arquivo (será regenerado em instantes)
           return {
             jaAssinado: true,
-            certificadoAssinado: path.basename(certificadoRegenerado)
+            certificadoAssinado: path.basename(certificadoAssinadoPath),
+            regenerando: true
           };
         }
+        
+        return {
+          jaAssinado: true,
+          certificadoAssinado: path.basename(certificadoAssinadoPath)
+        };
       }
       
       return {
