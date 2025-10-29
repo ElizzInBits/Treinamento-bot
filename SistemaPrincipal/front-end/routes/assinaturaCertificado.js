@@ -14,7 +14,7 @@ router.get('/dados/:token', async (req, res) => {
       return res.status(400).json({ erro: dados.erro });
     }
     
-    // Verificar se certificado já foi assinado
+    // Verificar status de assinatura (com regeneração se necessário)
     const statusAssinatura = await AssinaturaCertificadoService.verificarStatusAssinatura(token);
     dados.jaAssinado = statusAssinatura.jaAssinado;
     dados.certificadoAssinado = statusAssinatura.certificadoAssinado;
