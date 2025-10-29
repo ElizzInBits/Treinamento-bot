@@ -1322,21 +1322,27 @@ class EPCEPITraining {
                 throw new Error('Contato não encontrado no banco de dados');
             }
 
-            const { gerarCertificadoBanco } = require('../../Certificados/certificados2');
-            const caminhoArquivo = await gerarCertificadoBanco(contato.id, 'NR6 - EPC e EPI - Uso, Guarda e Conservação');
-
-            const resultado = {
-                sucesso: true,
-                linkAssinatura: `http://72.60.48.249:3000/assinar-certificado/token_${Date.now()}`
+            const { gerarCertificadoComAssinatura } = require('../../Template2');
+            
+            // Função sendMessage compatível
+            const sendMessageFunc = async (dest, type, options) => {
+                if (type === 'send-message') {
+                    await client.sendMessage(message.from, { text: options.message });
+                }
             };
-
+            
+            // Usar função centralizada
+            const resultado = await gerarCertificadoComAssinatura(
+                contato.id,
+                'epc_epi.js',
+                TREINAMENTO_ID,
+                sendMessageFunc,
+                message.from
+            );
+            
             if (resultado.sucesso) {
                 await client.sendMessage(message.from, {
-                    text: `✅ *Certificado gerado com sucesso!*\n\n📧 Enviado para: ${email}\n\n🔏 *Para finalizar, assine digitalmente seu certificado:*\n${resultado.linkAssinatura}\n\n⏰ Link válido por 24 horas`
-                });
-            } else {
-                await client.sendMessage(message.from, {
-                    text: `❌ Erro ao gerar certificado: ${resultado.erro}`
+                    text: `✅ *CERTIFICADO GERADO COM SUCESSO!*\n\n📜 Seu certificado de **Treinamento EPC/EPI** foi gerado.\n\n🖊️ **Para finalizar, você precisa assinar digitalmente:**\n${resultado.linkAssinatura}\n\n⏰ *Link válido por 24 horas*\n\n📱 Acesse pelo celular ou computador para assinar e baixar seu certificado oficial.`
                 });
             }
         } catch (error) {

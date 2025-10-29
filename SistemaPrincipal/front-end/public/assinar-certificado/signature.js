@@ -292,6 +292,22 @@ async function loadCertificateData() {
         document.getElementById('userEmail').textContent = data.usuario.email;
         document.getElementById('userInfo').style.display = 'block';
         
+        // Verificar se já foi assinado
+        if (data.jaAssinado && data.certificadoAssinado) {
+            // Esconder áreas de assinatura
+            document.querySelector('.signature-options').style.display = 'none';
+            document.getElementById('drawTab').style.display = 'none';
+            document.getElementById('typeTab').style.display = 'none';
+            
+            // Mostrar seção de certificado já assinado
+            const alreadySignedDiv = document.getElementById('alreadySigned');
+            alreadySignedDiv.style.display = 'block';
+            
+            // Configurar botão de download
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.href = `/api/assinatura/download/${data.certificadoAssinado}`;
+        }
+        
     } catch (error) {
         console.error('Erro ao carregar dados:', error);
         showError('Erro ao carregar dados do certificado');

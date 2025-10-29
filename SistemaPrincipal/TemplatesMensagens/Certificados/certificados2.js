@@ -5,7 +5,7 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const { Usuario, Empresa, Treinamento } = require('../../BancoDeDados/models');
 
-async function gerarCertificadoBanco(contatoId, nometreinamento = null) {
+async function gerarCertificadoBanco(contatoId, nometreinamento = null, treinamentoId = null) {
   try {
     // Buscar contato e empresa
     const contato = await Usuario.findByPk(contatoId);
@@ -20,12 +20,20 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null) {
       empresa = await Empresa.findByPk(contato.empresaId);
     }
 
-    // Buscar treinamento por nome ou usar padrão ID 15
+    // Buscar treinamento por ID (prioridade), nome ou usar padrão
     let treinamento = null;
-    if (nometreinamento) {
+    
+    // 1. Se foi passado ID específico, usar ele
+    if (treinamentoId) {
+      treinamento = await Treinamento.findByPk(treinamentoId);
+    }
+    
+    // 2. Se não achou por ID, tentar por nome
+    if (!treinamento && nometreinamento) {
       treinamento = await Treinamento.findOne({ where: { nome: nometreinamento } });
     }
     
+    // 3. Fallback para ID 15 se nada for encontrado
     if (!treinamento) {
       treinamento = await Treinamento.findByPk(15);
     }
@@ -71,13 +79,16 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null) {
       return dataLimpa;
     }
 
-    // Função para normalizar texto removendo acentos
+    // Função para normalizar texto removendo acentos e caracteres de controle
     function normalizarTexto(texto) {
       if (!texto) return '';
       return texto
+        .replace(/[\r\n\t]/g, ' ')  // Remove CR, LF, TAB
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, '')  // Remove caracteres de controle
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^\x00-\x7F]/g, '');
+        .replace(/[^\x20-\x7E]/g, '')  // Mantém apenas ASCII imprimível
+        .trim();
     }
 
     // Função para quebrar texto em linhas com medição precisa
@@ -94,7 +105,9 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null) {
         const testeLinhaAtual = linhaAtual ? `${linhaAtual} ${palavra}` : palavra;
         
         try {
-          const larguraReal = fonte.widthOfTextAtSize(testeLinhaAtual, tamanhoFonte);
+          // Normalizar texto antes de medir para evitar erro WinAnsi
+          const textoParaMedir = normalizarTexto(testeLinhaAtual);
+          const larguraReal = fonte.widthOfTextAtSize(textoParaMedir, tamanhoFonte);
           
           if (larguraReal <= larguraMax) {
             linhaAtual = testeLinhaAtual;
@@ -169,7 +182,7 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null) {
     // Modalidade
     page.drawText('Modalidade de', { x: 60, y: 382, size: tamanho, font: helvetica, color: cor });
     page.drawText('treinamento:', { x: 60, y: 367, size: tamanho, font: helvetica, color: cor });
-    page.drawText(treinamento.modalidade || '', { x: 166, y: 374, size: tamanho, font: helvetica, color: cor });
+    page.drawText(normalizarTexto(treinamento.modalidade || ''), { x: 166, y: 374, size: tamanho, font: helvetica, color: cor });
 
     // TIPO
     page.drawText('Tipo de', { x: 310, y: 386, size: tamanho, font: helvetica, color: cor });
@@ -197,7 +210,7 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null) {
     let yConformidade = 270;
     linhasConformidade.forEach(linha => {
       if (yConformidade > 150) { // Evita sair da página
-        page.drawText(linha, { x: 60, y: yConformidade, size: 10, font: helvetica, color: cor });
+        page.drawText(normalizarTexto(linha), { x: 60, y: yConformidade, size: 10, font: helvetica, color: cor });
         yConformidade -= 12;
       }
     });
@@ -224,20 +237,21 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null) {
         if (yConteudo < 450) { // Ajusta para não sobrepor outras informações
           return;
         }
-        segundaPagina.drawText(linha, { x: 40, y: yConteudo, size: tamanho, font: helvetica, color: cor });
+        segundaPagina.drawText(normalizarTexto(linha), { x: 40, y: yConteudo, size: tamanho, font: helvetica, color: cor });
         yConteudo -= 16;
       });
 
       // Instrutor
-      const instrutorInfo = `${treinamento.instrutor_principal || ''} - ${treinamento.qualificacao_instrutor || ''} - ${treinamento.registro_instrutor || ''}`;
+      const instrutorInfo = normalizarTexto(`${treinamento.instrutor_principal || ''} - ${treinamento.qualificacao_instrutor || ''} - ${treinamento.registro_instrutor || ''}`);
       segundaPagina.drawText(instrutorInfo, { x: 40, y: 430, size: tamanho, font: helvetica, color: cor });
 
       // Responsável
-      const responsavelInfo = `${treinamento.responsavel_treinamento || ''} - ${treinamento.cargo_responsavel || ''} - ${treinamento.registro_responsavel || ''}`;
+      const responsavelInfo = normalizarTexto(`${treinamento.responsavel_treinamento || ''} - ${treinamento.cargo_responsavel || ''} - ${treinamento.registro_responsavel || ''}`);
       segundaPagina.drawText(responsavelInfo, { x: 40, y: 320, size: tamanho, font: helvetica, color: cor });
 
       // Aproveitamento
-      segundaPagina.drawText(treinamento.aproveitamento_conteudo || 'Não há aproveitamento de conteúdo a ser considerado para esta capacitação.', {
+      const aproveitamentoTexto = normalizarTexto(treinamento.aproveitamento_conteudo || 'Nao ha aproveitamento de conteudo a ser considerado para esta capacitacao.');
+      segundaPagina.drawText(aproveitamentoTexto, {
         x: 40, y: 220, size: tamanho, font: helvetica, color: cor, maxWidth: 500
       });
     }

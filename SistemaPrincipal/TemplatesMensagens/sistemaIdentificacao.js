@@ -368,8 +368,12 @@ async function processarAposCadastro(sender, text, sendMessage, buscarContato) {
 
 async function obterUltimaInteracao(sender) {
     try {
+        const { Op } = require('sequelize');
         return await Interacao.findOne({
-            where: { telefone: sender },
+            where: { 
+                telefone: sender,
+                tipo: { [Op.ne]: 'mensagem_usuario' }
+            },
             order: [['createdAt', 'DESC']]
         });
     } catch (error) {
@@ -380,12 +384,13 @@ async function obterUltimaInteracao(sender) {
 
 async function salvarInteracao(sender, tipo, mensagem) {
     try {
+        const telefone = sender.replace('@c.us', '');
         await Interacao.create({
-            telefone: sender,
+            telefone: telefone,
             tipo: tipo,
             mensagem: mensagem
         });
-        console.log(`✅ Interação salva: ${tipo} para ${sender}`);
+        console.log(`✅ Interação salva: ${tipo} para ${telefone}`);
     } catch (error) {
         console.error('❌ Erro ao salvar interação:', error);
     }

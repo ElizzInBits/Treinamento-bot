@@ -16,7 +16,7 @@ class TreinamentoUtils {
             
             if (nomeArquivo.includes('epc_epi')) {
                 caminhoArquivo = path.join(__dirname, 'EPC_EPI', 'epc_epi.js');
-            } else if (nomeArquivo.includes('apresentacao')) {
+            } else if (nomeArquivo.includes('apresentacao') || nomeArquivo.includes('Apresentacao')) {
                 caminhoArquivo = path.join(__dirname, 'Apresentacao', 'treinamentoApresentacao.js');
             } else {
                 // Tentar encontrar o arquivo automaticamente
@@ -59,7 +59,7 @@ class TreinamentoUtils {
             
             if (nomeArquivo.includes('epc_epi')) {
                 caminhoArquivo = path.join(__dirname, 'EPC_EPI', 'epc_epi.js');
-            } else if (nomeArquivo.includes('apresentacao')) {
+            } else if (nomeArquivo.includes('apresentacao') || nomeArquivo.includes('Apresentacao')) {
                 caminhoArquivo = path.join(__dirname, 'Apresentacao', 'treinamentoApresentacao.js');
             } else {
                 caminhoArquivo = path.join(__dirname, nomeArquivo);

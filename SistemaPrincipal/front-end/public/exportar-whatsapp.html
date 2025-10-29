@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exportar Conversas WhatsApp</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        input[type="text"], input[type="number"] { width: 100%; max-width: 300px; }
+        button { background: #25D366; color: white; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #128C7E; }
+        .resultado { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .sucesso { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .erro { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .arquivos { margin-top: 20px; }
+        .arquivo { padding: 10px; border: 1px solid #ddd; margin-bottom: 10px; border-radius: 4px; }
+        .loading { display: none; color: #25D366; }
+    </style>
+</head>
+<body>
+    <h1>📱 Exportar Conversas WhatsApp</h1>
+    <p>Exporta conversas no formato nativo do WhatsApp com data/hora</p>
+    
+    <form id="exportForm">
+        <div class="form-group">
+            <label for="telefone">Telefone (com código do país):</label>
+            <input type="text" id="telefone" placeholder="5511999999999" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="limite">Limite de mensagens:</label>
+            <input type="number" id="limite" value="1000" min="1" max="10000">
+        </div>
+        
+        <button type="submit">Exportar Conversa</button>
+        <button type="button" onclick="listarArquivos()">Listar Arquivos</button>
+        <div class="loading" id="loading">Processando...</div>
+    </form>
+    
+    <div id="resultado"></div>
+    <div id="arquivos" class="arquivos"></div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            document.body.innerHTML = '<h1>Acesso negado</h1><p>Faça login primeiro em <a href="/login-api">/login-api</a></p>';
+        }
+
+        document.getElementById('exportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            const resultado = document.getElementById('resultado');
+            
+            loading.style.display = 'block';
+            resultado.innerHTML = '';
+            
+            const dados = {
+                telefone: document.getElementById('telefone').value,
+                limite: parseInt(document.getElementById('limite').value) || 1000
+            };
+            
+            try {
+                const response = await fetch('/api/whatsapp-export/exportar', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(dados)
+                });
+                
+                const data = await response.json();
+                
+                if (data.sucesso) {
+                    resultado.innerHTML = `
+                        <div class="resultado sucesso">
+                            <h3>✅ Conversa exportada com sucesso!</h3>
+                            <p><strong>Arquivo:</strong> ${data.arquivo}</p>
+                            <p><strong>Total de mensagens:</strong> ${data.totalMensagens}</p>
+                            <button onclick="baixarArquivo('${data.arquivo}')">📥 Baixar Arquivo</button>
+                        </div>
+                    `;
+                } else {
+                    resultado.innerHTML = `
+                        <div class="resultado erro">
+                            <h3>❌ Erro ao exportar</h3>
+                            <p>${data.erro}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultado.innerHTML = `
+                    <div class="resultado erro">
+                        <h3>❌ Erro de conexão</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+        
+        async function listarArquivos() {
+            const arquivos = document.getElementById('arquivos');
+            arquivos.innerHTML = '<p>Carregando...</p>';
+            
+            try {
+                const response = await fetch('/api/whatsapp-export/listar', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                
+                if (data.length === 0) {
+                    arquivos.innerHTML = '<p>Nenhum arquivo encontrado.</p>';
+                    return;
+                }
+                
+                let html = '<h3>📁 Arquivos Exportados:</h3>';
+                data.forEach(arquivo => {
+                    const tamanhoKB = (arquivo.tamanho / 1024).toFixed(2);
+                    const dataCriacao = new Date(arquivo.criado).toLocaleString('pt-BR');
+                    
+                    html += `
+                        <div class="arquivo">
+                            <strong>📄 ${arquivo.nome}</strong><br>
+                            Tamanho: ${tamanhoKB} KB | Criado: ${dataCriacao}<br>
+                            <button onclick="baixarArquivo('${arquivo.nome}')">📥 Baixar</button>
+                        </div>
+                    `;
+                });
+                
+                arquivos.innerHTML = html;
+            } catch (error) {
+                arquivos.innerHTML = `<p>Erro ao carregar arquivos: ${error.message}</p>`;
+            }
+        }
+        
+        async function baixarArquivo(nomeArquivo) {
+            try {
+                const response = await fetch(`/api/whatsapp-export/download/${nomeArquivo}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao baixar arquivo');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = nomeArquivo;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                alert('Erro ao baixar arquivo: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
