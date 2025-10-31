@@ -5,7 +5,7 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const { Usuario, Empresa, Treinamento } = require('../../BancoDeDados/models');
 
-async function gerarCertificadoBanco(contatoId, nometreinamento = null, treinamentoId = null) {
+async function gerarCertificadoBanco(contatoId, nometreinamento = null, treinamentoId = null, enviarEmailAutomatico = true) {
   try {
     // Buscar contato e empresa
     const contato = await Usuario.findByPk(contatoId);
@@ -268,8 +268,8 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null, treiname
 
     console.log('✅ Certificado gerado com sucesso:', caminhoArquivo);
 
-    // Enviar por e-mail
-    if (contato.email) {
+    // Enviar por e-mail (apenas se não for para assinatura)
+    if (contato.email && enviarEmailAutomatico) {
       await enviarEmail(contato.email, caminhoArquivo, treinamento);
     }
 

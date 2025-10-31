@@ -1,5 +1,6 @@
 const { Interacao, Usuario } = require('../BancoDeDados/models');
 const { encurtarNome } = require('./utils/formatarNome');
+const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamentoApresentacao');
 
 // ==================== SISTEMA DE IDENTIFICAÇÃO ====================
 
@@ -343,16 +344,53 @@ async function processarAposCadastro(sender, text, sendMessage, buscarContato) {
     
     if (contato) {
         console.log(`🎉 Usuário ${contato.nome} retornou após cadastro`);
-        await sendMessage(sender, 'send-message', {
-            message: `🎉 Perfeito, ${encurtarNome(contato.nome)}! Seu cadastro foi realizado com sucesso.\n\nAgora você pode escolher:\n\n1️⃣ Ir direto para meu treinamento\n2️⃣ Conhecer como a ferramenta funciona primeiro`
-        });
         
-        await salvarInteracao(sender, 'usuario_cadastrado_opcoes', JSON.stringify({ 
-            etapa: 'usuario_cadastrado_opcoes',
+        // Buscar treinamentos pendentes
+        const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(contato.empresaId, contato.id);
+        
+        let mensagem = `🎉 Perfeito, ${encurtarNome(contato.nome)}! Seu cadastro foi realizado com sucesso.\n\n`;
+        
+        if (treinamentosPendentes && treinamentosPendentes.length > 0) {
+            mensagem += `🎓 Identifiquei que sua empresa tem treinamentos pendentes:\n\n`;
+            
+            treinamentosPendentes.forEach((treinamento) => {
+                let icone = '⚠️';
+                
+                switch (treinamento.status_prazo) {
+                    case 'vencido':
+                        icone = '🔴';
+                        break;
+                    case 'urgente':
+                        icone = '🟡';
+                        break;
+                    case 'normal':
+                        icone = treinamento.tipo === 'reciclagem' ? '🔄' : '⚠️';
+                        break;
+                }
+                
+                mensagem += `${icone} ${treinamento.nome}\n`;
+            });
+        } else {
+            mensagem += `✅ Todos os seus treinamentos estão em dia!\n`;
+        }
+        
+        mensagem += `\n👉 *O que você gostaria de fazer?*\n\n`;
+        mensagem += `1️⃣ Fazer meus treinamentos agora\n`;
+        mensagem += `2️⃣ Ver como a ferramenta funciona\n`;
+        mensagem += `3️⃣ Acessar meus certificados\n`;
+        mensagem += `4️⃣ Lembrar depois\n`;
+        mensagem += `5️⃣ Falar com o comercial\n`;
+        mensagem += `6️⃣ Falar com o suporte`;
+        mensagem += `\n\n💡 *Dica:* Digite *MENU* a qualquer momento para voltar a este menu.`;
+        
+        await sendMessage(sender, 'send-message', { message: mensagem });
+        
+        await salvarInteracao(sender, 'treinamentos_pendentes', JSON.stringify({ 
+            etapa: 'treinamentos_pendentes',
             contato_id: contato.id,
             nome: encurtarNome(contato.nome),
             empresa_id: contato.empresaId || 'N/A',
-            ja_teve_interacoes: false
+            treinamentos: treinamentosPendentes || []
         }));
     } else {
         // Ainda não cadastrado

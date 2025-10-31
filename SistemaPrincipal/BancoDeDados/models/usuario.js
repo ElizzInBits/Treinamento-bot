@@ -43,10 +43,15 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: true,
     },
-    tokensCertificados: {
-      type: DataTypes.TEXT,
+    cargo: {
+      type: DataTypes.STRING(100),
       allowNull: true,
-      comment: 'Tokens de certificados separados por vírgula'
+      comment: 'Cargo do funcionário'
+    },
+    setor: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Setor do funcionário'
     },
   }, {
     timestamps: false,
