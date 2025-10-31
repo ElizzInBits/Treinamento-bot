@@ -175,6 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const email = document.getElementById('email').value.trim();
     const ddi = document.getElementById('ddi').value;
     const telefone = document.getElementById('telefone').value.trim();
+    const cargo = document.getElementById('cargo').value.trim();
+    const setor = document.getElementById('setor').value.trim();
     const empresaId = document.getElementById('empresaId').value;
 
     if (!nomeCompleto || !cpf || !email || !ddi || !telefone || !empresaId) {
@@ -202,12 +204,16 @@ document.addEventListener('DOMContentLoaded', () => {
       cpf: cpf.replace(/\D/g, ''),
       email: email,
       telefone: telefoneCompleto,
+      cargo: cargo || null,
+      setor: setor || null,
       empresaId: parseInt(empresaId)
     };
 
     console.log('📝 Dados sendo enviados:', novoUsuario);
+    console.log('🔍 DEBUG - Cargo:', cargo, '| Setor:', setor);
+    console.log('🔍 DEBUG - Cargo length:', cargo.length, '| Setor length:', setor.length);
 
-    fetch('/api/usuarios', {
+    fetch('/api/contatos', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

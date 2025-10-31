@@ -186,7 +186,7 @@ class AssinaturaCertificadoService {
     };
   }
 
-  // Salvar assinatura e regenerar PDF
+  // Salvar assinatura, regenerar PDF e enviar por email
   static async salvarAssinatura(token, assinaturaBase64) {
     const { AssinaturaCertificado } = require('../../BancoDeDados/models');
     
@@ -220,6 +220,25 @@ class AssinaturaCertificadoService {
         }
       }
     );
+    
+    // Enviar certificado ASSINADO por email
+    try {
+      const { enviarEmail } = require('./certificados2');
+      const { Treinamento } = require('../../BancoDeDados/models');
+      
+      const treinamento = await Treinamento.findByPk(validacao.treinamentoId);
+      
+      await enviarEmail(
+        usuario.email,
+        certificadoAssinado,  // Envia o certificado ASSINADO
+        treinamento
+      );
+      
+      console.log(`📧 E-mail com certificado assinado enviado para: ${usuario.email}`);
+    } catch (emailError) {
+      console.error('❌ Erro ao enviar e-mail, mas assinatura foi salva:', emailError.message);
+      // Não lança erro para não bloquear o fluxo
+    }
 
     return {
       sucesso: true,
@@ -254,10 +273,7 @@ class AssinaturaCertificadoService {
           
           const usuario = await Usuario.findOne({
             where: {
-              [require('sequelize').Op.or]: [
-                { nome: { [require('sequelize').Op.like]: `%${nomeUsuario}%` } },
-                { nomeCompleto: { [require('sequelize').Op.like]: `%${nomeUsuario}%` } }
-              ]
+              nome: { [require('sequelize').Op.like]: `%${nomeUsuario}%` }
             }
           });
           
@@ -404,11 +420,12 @@ class AssinaturaCertificadoService {
       
       console.log(`🔄 Regenerando certificado para usuário ${usuarioId}, treinamento ${treinamentoId}`);
       
-      // Gerar novo certificado
+      // Gerar novo certificado (sem enviar email, pois será enviado após assinatura)
       const novoCertificadoPath = await gerarCertificadoBanco(
         parseInt(usuarioId),
         null,
-        parseInt(treinamentoId)
+        parseInt(treinamentoId),
+        false  // Não enviar email automaticamente
       );
       
       if (!novoCertificadoPath) {
@@ -426,6 +443,26 @@ class AssinaturaCertificadoService {
       await assinatura.update({
         certificadoPath: novoCertificadoPath
       });
+      
+      // Enviar certificado assinado por email
+      try {
+        const usuario = await Usuario.findByPk(parseInt(usuarioId));
+        const { Treinamento } = require('../../BancoDeDados/models');
+        const { enviarEmail } = require('./certificados2');
+        
+        const treinamento = await Treinamento.findByPk(parseInt(treinamentoId));
+        
+        if (usuario && usuario.email) {
+          await enviarEmail(
+            usuario.email,
+            certificadoAssinado,
+            treinamento
+          );
+          console.log(`📧 E-mail enviado após regeneração para: ${usuario.email}`);
+        }
+      } catch (emailError) {
+        console.error('❌ Erro ao enviar e-mail na regeneração:', emailError.message);
+      }
       
       console.log(`✅ Certificado regenerado com sucesso: ${certificadoAssinado}`);
       return certificadoAssinado;
@@ -462,7 +499,7 @@ class AssinaturaCertificadoService {
       return {
         sucesso: true,
         usuario: {
-          nome: usuario.nomeCompleto || usuario.nome,
+          nome: usuario.nome,
           email: usuario.email
         },
         certificado: {

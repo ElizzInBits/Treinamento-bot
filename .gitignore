@@ -30,17 +30,31 @@ Thumbs.db
 
 # Tokens e sessões do WhatsApp
 SistemaPrincipal/TemplatesMensagens/tokens/
+tokens/
 *.data.json
+**/tokens/**
+WHATSAPP_BOT_DIRECT/
+**/WHATSAPP_BOT_DIRECT/**
+session.json
+**/session.json
 
-# Certificados e chaves
+# Certificados gerados (exceto modelo)
+**/Certificados/certificado_*.pdf
+**/Certificados/*_assinado.pdf
+SistemaPrincipal/TemplatesMensagens/Certificados/Certificados/*.pdf
+!SistemaPrincipal/TemplatesMensagens/Certificados/certificado-modelo-generico.pdf
+
+# Certificados e chaves SSL
 *.pem
 *.key
 *.crt
 *.p12
 
-# Uploads e mídia
+# Uploads e mídia dinâmica
+SistemaPrincipal/media/treinamentos/
 media/
 uploads/
+**/media/treinamentos/**
 
 # Banco de dados local
 *.db
@@ -79,9 +93,37 @@ build/
 dist/
 out/
 
-# Arquivos de IDE
+# Arquivos de IDE e editores
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.project
+.classpath
+.settings/
+*.sublime-*
+
+# Arquivos do sistema operacional
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# Arquivos de documentação temporários
+DOCS_*.md
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+
+# Logs do PM2
+.pm2/
+pm2-*.log
+*-pm2.log
+
+# Arquivos de lock (opcional - comente se quiser versionar)
+# package-lock.json
+# yarn.lock

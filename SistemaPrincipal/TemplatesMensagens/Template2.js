@@ -555,6 +555,19 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Verificação global desabilitada para evitar múltiplas instâncias
 
+// Função para simular digitação
+async function simularDigitacao(phone, duracao = 2000) {
+    if (!wppClient) return;
+    
+    try {
+        await wppClient.startTyping(phone);
+        await new Promise(resolve => setTimeout(resolve, duracao));
+        await wppClient.stopTyping(phone);
+    } catch (error) {
+        console.log('⚠️ Erro ao simular digitação:', error.message);
+    }
+}
+
 // Função sendMessage usando cliente direto
 async function sendMessage(phone, endpoint, body = {}) {
     const sendStart = Date.now();
@@ -577,6 +590,8 @@ async function sendMessage(phone, endpoint, body = {}) {
         
         switch (endpoint) {
             case 'send-message':
+                // Simular digitação antes de enviar
+                await simularDigitacao(phone, 1500);
                 result = await wppClient.sendText(phone, body.message);
                 break;
                 
@@ -752,7 +767,7 @@ async function gerarCertificadoComAssinatura(usuarioId, treinamentoNomeArquivo, 
     const TreinamentoUtils = require('./Treinamentos/treinamento-utils');
     
     // Gerar certificado
-    const caminhoArquivo = await gerarCertificadoBanco(usuarioId, null, treinamentoId);
+    const caminhoArquivo = await gerarCertificadoBanco(usuarioId, null, treinamentoId, false);
     
     if (!caminhoArquivo) {
       await sendMessageFunc(destinatario, 'send-message', {
@@ -879,7 +894,8 @@ async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
           etapa: 'treinamentos_pendentes',
           treinamentos: [],
           contato_id: usuario.id,
-          empresa_id: usuario.empresaId
+          empresa_id: usuario.empresaId,
+          nome: encurtarNome(usuario.nome)
         })
       });
       return;
@@ -920,7 +936,8 @@ async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
         etapa: 'treinamentos_pendentes',
         treinamentos: treinamentosPendentes,
         contato_id: usuario.id,
-        empresa_id: usuario.empresaId
+        empresa_id: usuario.empresaId,
+        nome: encurtarNome(usuario.nome)
       })
     });
     
@@ -932,4 +949,4 @@ async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
   }
 }
 
-module.exports = { sendMessage, setWppClient, processarMensagem, verificarMensagemDuplicada, gerarCertificadoComAssinatura, enviarCertificadosUsuario, gerarMenuTreinamentosPendentes };
+module.exports = { sendMessage, setWppClient, processarMensagem, verificarMensagemDuplicada, gerarCertificadoComAssinatura, enviarCertificadosUsuario, gerarMenuTreinamentosPendentes, simularDigitacao };

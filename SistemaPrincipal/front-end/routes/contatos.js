@@ -210,7 +210,10 @@ router.post('/', async (req, res) => {
         console.log('Body:', req.body);
         console.log('Body type:', typeof req.body);
         
-        const { nome, telefone, cpf, empresaId, email, nomeEmpresa } = req.body;
+        const { nome, telefone, cpf, empresaId, email, cargo, setor } = req.body;
+
+        console.log('🔍 DEBUG API - Cargo recebido:', cargo, '| Setor recebido:', setor);
+        console.log('🔍 DEBUG API - Body completo:', JSON.stringify(req.body, null, 2));
 
         // Validação básica
         if (!nome || !telefone || !email) {
@@ -276,7 +279,8 @@ router.post('/', async (req, res) => {
             cpf: cpfLimpo,
             empresaId: empresaId ? parseInt(empresaId, 10) : 1,
             email: email.trim(),
-            nomeEmpresa: nomeEmpresa ? nomeEmpresa.trim() : null,
+            cargo: cargo ? cargo.trim() : null,
+            setor: setor ? setor.trim() : null,
             statusTreinamento: 'não iniciado'
         });
 
@@ -327,12 +331,12 @@ router.put('/:id', async (req, res) => {
     const {
       nome,
       telefone,
-      nomeCompleto,
       email,
       statusTreinamento,
       cpf,
-      empresaId, // ✅ usamos empresaId agora
-      nomeEmpresa
+      empresaId,
+      cargo,
+      setor
     } = req.body;
 
     const contato = await Usuario.findByPk(req.params.id);
@@ -389,13 +393,12 @@ router.put('/:id', async (req, res) => {
     const camposParaAtualizar = {};
     if (nome) camposParaAtualizar.nome = nome.trim();
     if (telefone) camposParaAtualizar.telefone = limparNumero(telefone);
-    if (nomeCompleto !== undefined) camposParaAtualizar.nomeCompleto = nomeCompleto;
     if (email !== undefined) camposParaAtualizar.email = email.trim();
     if (statusTreinamento) camposParaAtualizar.statusTreinamento = statusTreinamento;
     if (cpf !== undefined) camposParaAtualizar.cpf = cpf ? cpf.replace(/\D/g, '') : null;
-    if (nomeEmpresa !== undefined) camposParaAtualizar.nomeEmpresa = nomeEmpresa ? nomeEmpresa.trim() : null;
+    if (cargo !== undefined) camposParaAtualizar.cargo = cargo ? cargo.trim() : null;
+    if (setor !== undefined) camposParaAtualizar.setor = setor ? setor.trim() : null;
 
-    // ✅ Corrigido: atualiza a empresa corretamente via ID (chave estrangeira)
     if (empresaId !== undefined) {
       camposParaAtualizar.empresaId = empresaId ? parseInt(empresaId, 10) : null;
     }

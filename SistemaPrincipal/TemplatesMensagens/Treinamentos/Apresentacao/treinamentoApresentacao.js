@@ -777,7 +777,7 @@ async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
         const TreinamentoUtils = require('../treinamento-utils');
         
         // Usar ID 15 para treinamento de apresentação
-        const caminhoArquivo = await gerarCertificadoBanco(contato.id, null, 15);
+        const caminhoArquivo = await gerarCertificadoBanco(contato.id, null, 15, false);
 
         const { gerarCertificadoComAssinatura } = require('../../Template2');
         
