@@ -172,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const nomeCompleto = document.getElementById('nomeCompleto').value.trim();
     const cpf = document.getElementById('cpf').value.trim();
+    const sexo = document.getElementById('sexo').value.trim();
     const email = document.getElementById('email').value.trim();
     const ddi = document.getElementById('ddi').value;
     const telefone = document.getElementById('telefone').value.trim();
@@ -179,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setor = document.getElementById('setor').value.trim();
     const empresaId = document.getElementById('empresaId').value;
 
-    if (!nomeCompleto || !cpf || !email || !ddi || !telefone || !empresaId) {
+    if (!nomeCompleto || !cpf || !sexo || !email || !ddi || !telefone || !empresaId) {
       alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
@@ -202,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const novoUsuario = {
       nome: nomeCompleto,
       cpf: cpf.replace(/\D/g, ''),
+      sexo: sexo,
       email: email,
       telefone: telefoneCompleto,
       cargo: cargo || null,
@@ -248,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cpfError').style.display = 'none';
         document.getElementById('cpf').style.borderColor = '';
         document.getElementById('empresaId').value = '';
+        document.getElementById('sexo').value = ''
         try {
           window.location.href = './voltarWhats-index.html';
         } catch (error) {

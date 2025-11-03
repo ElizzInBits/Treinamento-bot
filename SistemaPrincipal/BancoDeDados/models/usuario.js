@@ -23,6 +23,10 @@ module.exports = (sequelize) => {
       allowNull: true,
       unique: true,
     },
+    sexo: {
+      type: DataTypes.ENUM('masculino', 'feminino', 'outro'),
+      allowNull: true,
+    },
     statusTreinamento: {
       type: DataTypes.STRING,
       defaultValue: 'não iniciado',
