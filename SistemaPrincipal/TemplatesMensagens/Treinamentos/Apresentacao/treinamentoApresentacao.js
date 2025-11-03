@@ -5,6 +5,7 @@ const NOME_TREINAMENTO = 'Como fazer Treinamentos Normativos no WhatsApp';
 const { Usuario, Interacao } = require('../../../BancoDeDados/models');
 const { gerarCertificado } = require('../../Certificados/gerarCertificado');
 const { encurtarNome } = require('../../utils/formatarNome');
+const { atualizarDadosUsuario } = require('../../utils/atualizarDadosUsuario');
 
 // ==================== FUNÇÃO PRINCIPAL ====================
 
@@ -715,6 +716,9 @@ async function processarConfirmacaoDados(sender, text, sendMessage) {
             });
             return true;
         }
+        
+        // ATUALIZAR BANCO DE DADOS antes de gerar certificado
+        await atualizarDadosUsuario(sender, nome, email);
         
         await gerarEEnviarCertificado(nome, email, sender, sendMessage);
     } else {

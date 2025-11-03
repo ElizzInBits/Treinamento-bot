@@ -210,9 +210,10 @@ router.post('/', async (req, res) => {
         console.log('Body:', req.body);
         console.log('Body type:', typeof req.body);
         
-        const { nome, telefone, cpf, empresaId, email, cargo, setor } = req.body;
+        const { nome, telefone, cpf, sexo, empresaId, email, cargo, setor } = req.body;
 
         console.log('🔍 DEBUG API - Cargo recebido:', cargo, '| Setor recebido:', setor);
+        console.log('🔍 DEBUG API - Sexo recebido:', sexo);
         console.log('🔍 DEBUG API - Body completo:', JSON.stringify(req.body, null, 2));
 
         // Validação básica
@@ -277,6 +278,7 @@ router.post('/', async (req, res) => {
             nome: nome.trim(),
             telefone: telefoneLimpo,
             cpf: cpfLimpo,
+            sexo: sexo.trim(),
             empresaId: empresaId ? parseInt(empresaId, 10) : 1,
             email: email.trim(),
             cargo: cargo ? cargo.trim() : null,
