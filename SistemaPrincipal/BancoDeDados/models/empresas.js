@@ -47,6 +47,11 @@ module.exports = (sequelize) => {
       allowNull: true,
       field: 'criado_em',
     },
+    horarioFuncionamento: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: 'horario_funcionamento',
+    },
 
   }, {
     timestamps: false,

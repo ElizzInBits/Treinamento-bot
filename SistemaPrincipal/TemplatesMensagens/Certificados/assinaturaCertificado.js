@@ -196,15 +196,17 @@ class AssinaturaCertificadoService {
       throw new Error(validacao.erro);
     }
 
-    const { usuario } = validacao;
+    const { usuario, assinatura, treinamentoId } = validacao;
 
-    // Buscar certificado do usuário
-    const certificadoPath = this.buscarCertificadoPath(usuario.id, validacao.treinamentoId);
+    // Buscar certificado do banco de dados
+    const certificadoPath = assinatura.certificadoPath;
 
     // Regenerar PDF com assinatura
     const certificadoAssinado = await this.adicionarAssinaturaPDF(
       certificadoPath,
-      assinaturaBase64
+      assinaturaBase64,
+      usuario.id,
+      treinamentoId
     );
     
     // Atualizar registro de assinatura
@@ -248,50 +250,31 @@ class AssinaturaCertificadoService {
   }
 
   // Adicionar assinatura ao PDF existente
-  static async adicionarAssinaturaPDF(certificadoPath, assinaturaBase64) {
+  static async adicionarAssinaturaPDF(certificadoPath, assinaturaBase64, usuarioId, treinamentoId) {
     try {
-      // Verificar se o path é válido
       if (!certificadoPath) {
         throw new Error('Caminho do certificado não fornecido');
       }
       
-      // Verificar se o arquivo existe
+      // Se o arquivo não existe, regenerar
       if (!fs.existsSync(certificadoPath)) {
-        console.log(`⚠️ Certificado não encontrado, tentando regenerar: ${certificadoPath}`);
+        console.log(`⚠️ Certificado não encontrado, regenerando: ${certificadoPath}`);
         
-        // Tentar extrair ID do usuário do caminho do arquivo
-        const nomeArquivo = path.basename(certificadoPath, '.pdf');
-        const match = nomeArquivo.match(/certificado_(.+)/);
+        const { gerarCertificadoBanco } = require('./certificados2');
         
-        if (match) {
-          // Regenerar certificado usando certificados2.js
-          const certificados = require('./certificados2');
-          
-          // Buscar usuário pelo nome no arquivo
-          const { Usuario } = require('../../BancoDeDados/models');
-          const nomeUsuario = match[1].replace(/_/g, ' ');
-          
-          const usuario = await Usuario.findOne({
-            where: {
-              nome: { [require('sequelize').Op.like]: `%${nomeUsuario}%` }
-            }
-          });
-          
-          if (usuario) {
-            console.log(`🔄 Regenerando certificado para ${usuario.nome}`);
-            const novoCertificado = await certificados.gerarCertificado(usuario.id);
-            
-            if (novoCertificado && fs.existsSync(novoCertificado)) {
-              certificadoPath = novoCertificado;
-            } else {
-              throw new Error('Não foi possível regenerar o certificado');
-            }
-          } else {
-            throw new Error('Usuário não encontrado para regenerar certificado');
-          }
-        } else {
-          throw new Error(`Arquivo de certificado não encontrado: ${certificadoPath}`);
+        const novoCertificadoPath = await gerarCertificadoBanco(
+          usuarioId,
+          null,
+          treinamentoId,
+          false
+        );
+        
+        if (!novoCertificadoPath || !fs.existsSync(novoCertificadoPath)) {
+          throw new Error('Não foi possível regenerar o certificado');
         }
+        
+        console.log(`✅ Certificado regenerado: ${novoCertificadoPath}`);
+        certificadoPath = novoCertificadoPath;
       }
       
       // Ler PDF existente
@@ -513,53 +496,8 @@ class AssinaturaCertificadoService {
     }
   }
 
-  // Buscar caminho do certificado
-  static buscarCertificadoPath(usuarioId, treinamentoId) {
-    const path = require('path');
-    const fs = require('fs');
-    
-    try {
-      // Buscar certificado na pasta de certificados
-      const certificadosDir = path.join(__dirname, 'Certificados');
-      
-      if (!fs.existsSync(certificadosDir)) {
-        console.log(`⚠️ Diretório de certificados não existe: ${certificadosDir}`);
-        return null;
-      }
-      
-      const arquivos = fs.readdirSync(certificadosDir).filter(f => f.endsWith('.pdf'));
-      console.log(`🔍 Procurando certificado para usuário ${usuarioId} em ${arquivos.length} arquivos`);
-      
-      // Procurar por arquivo que contenha o ID do usuário ou nome
-      let certificado = arquivos.find(arquivo => 
-        arquivo.includes(`_${usuarioId}_`) || 
-        arquivo.includes(`usuario_${usuarioId}`) ||
-        arquivo.toLowerCase().includes(`${usuarioId}`)
-      );
-      
-      // Se não encontrar por ID, pegar o mais recente
-      if (!certificado && arquivos.length > 0) {
-        console.log(`⚠️ Certificado específico não encontrado, usando o mais recente`);
-        const stats = arquivos.map(arquivo => ({
-          nome: arquivo,
-          path: path.join(certificadosDir, arquivo),
-          mtime: fs.statSync(path.join(certificadosDir, arquivo)).mtime
-        }));
-        
-        stats.sort((a, b) => b.mtime - a.mtime);
-        certificado = stats[0].nome;
-      }
-      
-      const certificadoPath = certificado ? path.join(certificadosDir, certificado) : null;
-      console.log(`📄 Certificado encontrado: ${certificadoPath}`);
-      
-      return certificadoPath;
-      
-    } catch (error) {
-      console.error('❌ Erro ao buscar certificado:', error);
-      return null;
-    }
-  }
 }
+
+// Método removido - certificadoPath agora vem do banco de dados
 
 module.exports = AssinaturaCertificadoService;

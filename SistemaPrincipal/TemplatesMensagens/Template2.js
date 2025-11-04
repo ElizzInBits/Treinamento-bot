@@ -7,6 +7,7 @@ const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamento
 const sistemaIdentificacao = require('./sistemaIdentificacao');
 const mantenedorSessao = require('./manterSessao');
 const { createSharedLogger } = require('../utils/shared-logger');
+const { verificarHorarioFuncionamento } = require('./utils/verificarHorarioFuncionamento');
 
 // Logger específico para WhatsApp Bot
 const logger = createSharedLogger('whatsapp-bot');
@@ -45,6 +46,26 @@ async function processarMensagem(message, client) {
   const mensagem = message.body.trim();
   
   logger.info('Processando mensagem', { telefone, mensagem: mensagem.substring(0, 100) });
+  
+  // Verificar horário de funcionamento da empresa
+  const verificacaoHorario = await verificarHorarioFuncionamento(message.from);
+  if (!verificacaoHorario.permitido) {
+    await client.sendText(message.from, verificacaoHorario.mensagem);
+    return;
+  }
+  
+  // Verificar se usuário está ativo
+  const { verificarUsuarioAtivo } = require('./utils/verificarUsuarioAtivo');
+  const verificacaoAtivo = await verificarUsuarioAtivo(message.from);
+  if (!verificacaoAtivo.ativo) {
+    // Permitir apenas acesso a certificados
+    if (mensagem.toLowerCase() === '#meus_certificados' || mensagem.toLowerCase() === 'meus certificados') {
+      await enviarCertificadosUsuario(telefone, sendMessage);
+      return;
+    }
+    await client.sendText(message.from, verificacaoAtivo.mensagem);
+    return;
+  }
   
   // Verificar se usuário está ocupado
   if (usuariosOcupados.has(telefone)) {

@@ -125,6 +125,8 @@ router.post('/', async (req, res) => {
       }
     }
 
+    const { horarioFuncionamento } = req.body;
+
     const novaEmpresa = await Empresa.create({
       razaoSocial: razaoSocialFinal.trim().toUpperCase(),
       cnpj: cnpjLimpo,
@@ -133,6 +135,7 @@ router.post('/', async (req, res) => {
       cep: cep || null,
       contato: contato || null,
       email: email || null,
+      horarioFuncionamento: horarioFuncionamento || null,
       criadoEm: new Date()
     });
 
@@ -189,7 +192,8 @@ router.put('/:id', async (req, res) => {
       endereco, 
       cep, 
       contato, 
-      email 
+      email,
+      horarioFuncionamento
     } = req.body;
     
     const razaoSocialFinal = razaoSocial || razao_social;
@@ -228,6 +232,7 @@ router.put('/:id', async (req, res) => {
     if (endereco !== undefined) empresa.endereco = endereco;
     if (cep !== undefined) empresa.cep = cep;
     if (contato !== undefined) empresa.contato = contato;
+    if (horarioFuncionamento !== undefined) empresa.horarioFuncionamento = horarioFuncionamento || null;
 
     await empresa.save();
     
