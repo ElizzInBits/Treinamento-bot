@@ -1090,6 +1090,9 @@ function renderizarContatosEmpresa() {
             <div class="contact-actions">
               <button class="btn-info" onclick="abrirDetalhesContato(${contato.id})">Detalhes</button>
               <button class="btn-warning" onclick="abrirEditarContato(${contato.id})">Editar</button>
+              <button class="btn-secondary" onclick="toggleAtivoContato(${contato.id})" title="Ativar/Desativar contato">
+                ${contato.ativo === 0 ? '✅ Ativar' : '⛔ Desativar'}
+              </button>
               <button class="btn-secondary" onclick="restartTreinamentoContato(${contato.id})" title="Reiniciar treinamento do contato">🔄 Restart</button>
               <button class="btn-error" onclick="removerContato(${contato.id})">Remover</button>
             </div>
@@ -3893,6 +3896,23 @@ function abrirDetalhesEmpresa(empresaId) {
                   <input type="text" id="editCep" value="${empresa.cep || ''}" class="form-control" placeholder="00000-000" />
                 </div>
               </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>⏰ Horário de Funcionamento</label>
+                  <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="flex: 1;">
+                      <label style="font-size: 12px; color: #6b7280; margin-bottom: 4px; display: block;">Início</label>
+                      <input type="time" id="editHoraInicio" value="${empresa.horarioFuncionamento ? empresa.horarioFuncionamento.split('-')[0] : ''}" class="form-control" />
+                    </div>
+                    <span style="color: #9ca3af; font-size: 20px; margin-top: 20px;">→</span>
+                    <div style="flex: 1;">
+                      <label style="font-size: 12px; color: #6b7280; margin-bottom: 4px; display: block;">Fim</label>
+                      <input type="time" id="editHoraFim" value="${empresa.horarioFuncionamento ? empresa.horarioFuncionamento.split('-')[1] : ''}" class="form-control" />
+                    </div>
+                  </div>
+                  <small style="color: #9ca3af; font-size: 12px; margin-top: 6px; display: block;">Deixe vazio para atendimento 24 horas</small>
+                </div>
+              </div>
               <div class="form-actions">
                 <button type="button" class="btn-primary" onclick="salvarEmpresa(${empresaId})">
                   💾 Salvar Alterações
@@ -3993,11 +4013,19 @@ function salvarEmpresa(empresaId) {
   const telefone = document.getElementById('editTelefone').value.trim();
   const endereco = document.getElementById('editEndereco').value.trim();
   const cep = document.getElementById('editCep').value.trim();
+  const horaInicio = document.getElementById('editHoraInicio').value.trim();
+  const horaFim = document.getElementById('editHoraFim').value.trim();
   
   // Validar campos obrigatórios
   if (!razaoSocial) {
     mostrarAlerta('Razão social é obrigatória.', 'error');
     return;
+  }
+  
+  // Montar horário no formato HH:MM-HH:MM
+  let horarioFuncionamento = null;
+  if (horaInicio && horaFim) {
+    horarioFuncionamento = `${horaInicio}-${horaFim}`;
   }
   
   // Preparar dados com conversão para null de campos vazios
@@ -4007,7 +4035,8 @@ function salvarEmpresa(empresaId) {
     email: email || null,
     contato: telefone || null,
     endereco: endereco || null,
-    cep: cep || null
+    cep: cep || null,
+    horarioFuncionamento: horarioFuncionamento
   };
   
   console.log('📤 Dados a serem enviados:', dados);

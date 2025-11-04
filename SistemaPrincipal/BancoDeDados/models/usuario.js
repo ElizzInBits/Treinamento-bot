@@ -57,6 +57,12 @@ module.exports = (sequelize) => {
       allowNull: true,
       comment: 'Setor do funcionário'
     },
+    ativo: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+      comment: '1 = Ativo, 0 = Inativo'
+    },
   }, {
     timestamps: false,
     freezeTableName: true,

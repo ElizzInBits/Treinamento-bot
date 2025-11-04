@@ -581,6 +581,36 @@ router.post('/:id/restart-treinamento', async (req, res) => {
     }
 });
 
+// Ativar/Desativar contato
+router.patch('/:id/toggle-ativo', async (req, res) => {
+    try {
+        const contato = await Usuario.findByPk(req.params.id);
+        if (!contato) {
+            return res.status(404).json({ error: 'Contato não encontrado' });
+        }
+
+        const { ativo } = req.body;
+        await contato.update({ ativo: ativo });
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('usuarioAtualizado', {
+                usuario: contato,
+                empresaId: contato.empresaId
+            });
+        }
+
+        res.json({ 
+            message: `Contato ${ativo === 1 ? 'ativado' : 'desativado'} com sucesso`,
+            contato: contato
+        });
+
+    } catch (error) {
+        console.error('Erro ao alterar status do contato:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
 // Deletar contato
 router.delete('/:id', async (req, res) => {
     try {

@@ -113,6 +113,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // ✅ Remove símbolos e + do telefone final
         const contatoCompleto = `${ddi.replace('+', '')}${contato.replace(/\D/g, '')}`;
 
+        const horaInicio = document.getElementById('horaInicio').value.trim();
+        const horaFim = document.getElementById('horaFim').value.trim();
+        
+        // Montar horário no formato HH:MM-HH:MM
+        let horarioFuncionamento = null;
+        if (horaInicio && horaFim) {
+            horarioFuncionamento = `${horaInicio}-${horaFim}`;
+        }
+
         const novaEmpresa = {
             razaoSocial: razaoSocial.toUpperCase(),
             cnpj,
@@ -121,7 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
             cep,
             contato: contatoCompleto,
             email,
-            senha
+            senha,
+            horarioFuncionamento: horarioFuncionamento
         };
 
         fetch('/api/empresas', {
