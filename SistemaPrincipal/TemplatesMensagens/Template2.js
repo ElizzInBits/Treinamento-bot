@@ -82,7 +82,8 @@ async function processarMensagem(message, client) {
   }
   
   // Comando MENU para mostrar treinamentos pendentes
-  if (mensagem.toLowerCase() === 'menu') {
+  const mensagemLower = mensagem.toLowerCase().trim();
+  if (mensagemLower === 'menu' || mensagemLower === 'mennu' || mensagemLower === 'manu' || mensagemLower.includes('menu')) {
     logger.info('Comando MENU executado', { telefone });
     await mostrarMenuTreinamentos(telefone, sendMessage);
     return;
@@ -384,58 +385,51 @@ async function inicializarBot() {
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
-          '--disable-features=VizDisplayCompositor',
-          '--disable-web-security',
-          '--disable-features=site-per-process',
           '--no-first-run',
           '--disable-default-apps',
-          '--disable-extensions',
-          '--disable-features=VizDisplayCompositor',
-          '--disable-web-security',
-          '--disable-features=site-per-process'
+          '--disable-extensions'
         ],
-        protocolTimeout: 900000, // 15 minutos
-        defaultViewport: { width: 800, height: 600 },
-        userDataDir: path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT'),
-        executablePath: undefined // Usar Chrome padrão do sistema
+        defaultViewport: null,
+        userDataDir: path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT')
       },
       catchQR: (base64Qr, asciiQR) => {
         console.log('\n📱 QR CODE Bot Cliente:');
         console.log(asciiQR);
       },
       statusFind: (status) => {
-        console.log('📶 Bot Cliente Status:', status);
+        console.log('📶 Status:', status);
         
-        // Reconectar automaticamente em qualquer desconexão
-        if (status === 'browserClose' || status === 'desconnectedMobile' || status === 'DISCONNECTED') {
-          console.log(`🔄 Status ${status} - Reconectando imediatamente...`);
-          setTimeout(() => {
-            reconectando = false;
-            instanciaAtiva = false;
-            inicializarBot();
-          }, 1000);
-        }
-        
-        // Log de status importantes
         if (status === 'qrReadSuccess') {
-          console.log('✅ QR Code lido com sucesso!');
-          // Criar backup dos tokens após QR lido
-          setTimeout(() => {
-            mantenedorSessao.backupTokens();
-          }, 5000);
+          console.log('⏳ QR lido. Aguardando celular confirmar...');
+          setTimeout(() => mantenedorSessao.backupTokens(), 5000);
         }
+        
         if (status === 'chatsAvailable') {
-          console.log('✅ Chats disponíveis - Sessão ativa!');
-          // Atualizar status da sessão
+          console.log('✅ CONECTADO! Sessão ativa!');
+          reconectando = false;
+          instanciaAtiva = false;
           mantenedorSessao.salvarSessao({
             sessionId: 'WHATSAPP_BOT_DIRECT',
             status: 'ACTIVE',
             ultimaAtividade: Date.now()
           });
+          mantenedorSessao.iniciarHeartbeat();
         }
+        
         if (status === 'desconnectedMobile') {
-          console.log('❌ Desconectado do celular!');
+          console.log('❌ Celular desconectou!');
           mantenedorSessao.pararHeartbeat();
+          reconectando = false;
+          instanciaAtiva = false;
+        }
+        
+        if (status === 'browserClose') {
+          console.log('🔄 Navegador fechou. Reiniciando...');
+          setTimeout(() => {
+            reconectando = false;
+            instanciaAtiva = false;
+            inicializarBot();
+          }, 5000);
         }
       }
     });
@@ -450,71 +444,16 @@ async function inicializarBot() {
     wppClient = client;
     clienteAtivo = client;
     setWppClient(client);
-    reconectando = false;
-    console.log('✅ Bot Cliente conectado!');
+    console.log('⏳ Cliente inicializado. Aguardando chatsAvailable...');
     
-    // Salvar dados da sessão
-    mantenedorSessao.salvarSessao({
-      sessionId: 'WHATSAPP_BOT_DIRECT',
-      status: 'CONNECTED',
-      conectadoEm: Date.now()
-    });
-    
-    // Iniciar sistema de heartbeat
-    mantenedorSessao.iniciarHeartbeat();
-    
-    // Sistema de monitoramento de conexão mais agressivo
-    const monitorarConexao = setInterval(async () => {
-      try {
-        const state = await client.getConnectionState().catch(() => 'DISCONNECTED');
-        if (state !== 'CONNECTED') {
-          console.log(`⚠️ Estado da conexão: ${state}`);
-          clearInterval(monitorarConexao);
-          mantenedorSessao.pararHeartbeat();
-          console.log('🔄 Conexão perdida - Reiniciando imediatamente...');
-          reconectando = false;
-          instanciaAtiva = false;
-          setTimeout(() => {
-            inicializarBot();
-          }, 500);
-        }
-      } catch (error) {
-        console.log('⚠️ Erro no monitor de conexão, reiniciando...', error.message);
-        clearInterval(monitorarConexao);
+    // "escutar" as mensagens
+    client.onMessage(async (message) => {
+      if (reconectando) {
+        console.log('✅ Primeira mensagem recebida! Conexão confirmada.');
         reconectando = false;
         instanciaAtiva = false;
-        setTimeout(() => {
-          inicializarBot();
-        }, 1000);
       }
-    }, 10000); // Verificar a cada 10 segundos
-    
-    // Listener de mensagens
-    client.onMessage(async (message) => {
-      if (!message.body) return;
-      if (message.isGroupMsg) return;
-      if (message.fromMe) return;
-      if (message.from === 'status@broadcast') return; // Ignorar status do WhatsApp
-      
-      console.log('📨 Mensagem recebida:', message.body, 'de:', message.from);
-      
-      try {
-        await processarMensagem(message, client);
-      } catch (error) {
-        console.error('❌ Erro ao processar mensagem:', error.message);
-      }
-    });
-    
-    // Bloqueador de chamadas
-    client.onIncomingCall(async (call) => {
-      console.log('📞 Chamada recebida de:', call.peerJid);
-      try {
-        await client.rejectCall(call.id);
-        await client.sendText(call.peerJid, '🚫 *Chamadas não são aceitas*\n\nEnvie mensagem de texto! 😊');
-        console.log('✅ Chamada bloqueada');
-      } catch (error) {
-        console.error('❌ Erro ao bloquear:', error.message);
-      }
+      await processarMensagem(message, client);
     });
     
     // Listener para detectar mudanças de estado
@@ -527,31 +466,10 @@ async function inicializarBot() {
       }
     });
     
-    // Listener para detectar quando a sessão é fechada
-    client.onInterfaceChange((interfaceChange) => {
-      console.log('🔄 Interface mudou:', interfaceChange);
-    });
-    
   } catch (error) {
     console.error('❌ Erro Bot Cliente:', error.message || 'Erro desconhecido');
     reconectando = false;
     instanciaAtiva = false;
-    
-    // Se for erro de SingletonLock, tentar limpar e reconectar
-    if (error.message && (error.message.includes('SingletonLock') || error.message.includes('Failed to create'))) {
-      console.log('🧹 Erro de SingletonLock detectado - Limpando e tentando novamente...');
-      await limparSingletonLock();
-      setTimeout(() => {
-        inicializarBot();
-      }, 5000);
-      return;
-    }
-    
-    // Não tentar reconectar se for erro de QR timeout
-    if (error.message && (error.message.includes('QR') || error.message.includes('timeout'))) {
-      console.log('⚠️ Erro de QR/Timeout - Aguardando nova tentativa manual');
-      return;
-    }
     
     console.log('🔄 Tentando reconectar em 20 segundos...');
     setTimeout(() => {
@@ -891,7 +809,7 @@ async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
     
     if (!usuario) {
       await sendMessageFunc(telefone, 'send-message', { 
-        message: '❌ Usuário não encontrado no sistema. Faça seu cadastro em: https://abrir.link/ZEeCt' 
+        message: '🤔 Hum, que tal fazer o seu cadastro na nossa plataforma antes, hein?\nÉ muito simples, basta clicar no link abaixo e assim que finalizar é só voltar aqui e me envie qualquer mensagem para começarmos!\n\nhttps://abrir.link/ZEeCt\n\nATENÇÃO:\nNo Cadastro use o MESMO NÚMERO que você utilizará para conversar aqui comigo.\n\n💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.' 
       });
       return;
     }
@@ -900,7 +818,7 @@ async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
     const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(usuario.empresaId, usuario.id);
     
     if (!treinamentosPendentes || treinamentosPendentes.length === 0) {
-      let mensagem = `🎉 Parabéns, ${encurtarNome(usuario.nome)}! Você não possui treinamentos pendentes no momento.\n\n✅ Todos os seus treinamentos estão em dia!`;
+      let mensagem = `🎉 Parabéns, ${encurtarNome(usuario.nome)}! Você não possui treinamentos pendentes no momento.\n\nℹ️ Não há treinamentos pendentes para você.`;
       mensagem += gerarMenuTreinamentosPendentes();
       mensagem += '\n\n💡 *Dica:* Digite *MENU* a qualquer momento para voltar a este menu.';
       
@@ -963,7 +881,7 @@ async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
     });
     
   } catch (error) {
-    logger.error('Erro ao mostrar menu de treinamentos', { error: error.message });
+    logger.error('Erro ao mostrar menu  de treinamentos', { error: error.message });
     await sendMessageFunc(telefone, 'send-message', { 
       message: '❌ Erro ao buscar treinamentos. Tente novamente.' 
     });

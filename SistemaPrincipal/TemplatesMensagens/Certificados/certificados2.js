@@ -220,6 +220,16 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null, treiname
       x: 380, y: 85, size: 9, font: helvetica, color: cor
     }); */
 
+    // Marca d'água para treinamento de degustação (EPC_EPI - ID 16)
+    if (treinamento.id === 16) {
+      page.drawText('CONTEUDO DE DEGUSTACAO', {
+        x: 150, y: 420, size: 24, font: helvetica, color: rgb(0.9, 0.9, 0.9), opacity: 0.3
+      });
+      page.drawText('CERTIFICADO DE EXEMPLO', {
+        x: 150, y: 390, size: 24, font: helvetica, color: rgb(0.9, 0.9, 0.9), opacity: 0.3
+      });
+    }
+
     // SEGUNDA PÁGINA - Formatação baseada no código Python
     const paginas = pdfDoc.getPages();
     let segundaPagina;

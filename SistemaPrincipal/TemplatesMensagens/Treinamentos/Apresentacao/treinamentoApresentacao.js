@@ -219,9 +219,25 @@ async function processarMostrarRecursos(sender, text, sendMessage) {
     } else if (opcao === '2' || opcao.includes('pula')) {
         console.log('✅ Pulando recursos - Continuando apresentação');
         
-        // Continuar diretamente com exemplos de treinamentos sem verificar pendentes
-        // A verificação de treinamentos pendentes já foi feita no início da apresentação
-        await mostrarExemplosTrainamentos(sender, sendMessage);
+        // Enviar GIF de preguiça como sticker
+        try {
+            const path = require('path');
+            const gifPath = path.join(__dirname, 'medias', 'preguica.gif');
+            console.log(`🖼️ Tentando enviar GIF de preguiça como sticker: ${gifPath}`);
+            
+            await sendMessage(sender, 'send-sticker-gif', {
+                path: gifPath
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar GIF sticker:', error);
+        }
+        
+        // Aguardar 1 segundo antes de continuar
+        setTimeout(async () => {
+            // Continuar diretamente com exemplos de treinamentos sem verificar pendentes
+            // A verificação de treinamentos pendentes já foi feita no início da apresentação
+            await mostrarExemplosTrainamentos(sender, sendMessage);
+        }, 1000);
     } else {
         console.log('❌ Opção inválida - reenviando');
         await sendMessage(sender, 'send-message', {
@@ -404,8 +420,25 @@ async function processarPerguntaQuandoOnde(sender, text, sendMessage) {
         await mostrarQuandoOnde(sender, sendMessage);
     } else if (opcao === '2' || opcao.includes('direto') || opcao.includes('exemplos')) {
         console.log('✅ Indo direto para exemplos');
-        // Não marcar progresso se pulou
-        await mostrarExemplosTrainamentos(sender, sendMessage);
+        
+        // Enviar GIF de preguiça como sticker
+        try {
+            const path = require('path');
+            const gifPath = path.join(__dirname, 'medias', 'preguica.gif');
+            console.log(`🖼️ Tentando enviar GIF de preguiça como sticker: ${gifPath}`);
+            
+            await sendMessage(sender, 'send-sticker-gif', {
+                path: gifPath
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar GIF sticker:', error);
+        }
+        
+        // Aguardar 1 segundo antes de continuar
+        setTimeout(async () => {
+            // Não marcar progresso se pulou
+            await mostrarExemplosTrainamentos(sender, sendMessage);
+        }, 1000);
     } else {
         console.log('❌ Opção inválida - reenviando');
         await sendMessage(sender, 'send-message', {
@@ -478,9 +511,26 @@ async function processarExemplosTrainamentos(sender, text, sendMessage) {
         await enviarVideoTreinamentoMotorista(sender, sendMessage);
     } else if (opcao === '2' || opcao.includes('convencido') || opcao.includes('já estou')) {
         console.log('✅ Opção 2 selecionada - pulando vídeos');
-        // NÃO marcar progresso de videos_exemplos se pulou
-        // Ir direto para certificado (que vai detectar que faltou conteúdo)
-        await perguntarDadosCertificado(sender, sendMessage);
+        
+        // Enviar GIF de preguiça como sticker
+        try {
+            const path = require('path');
+            const gifPath = path.join(__dirname, 'medias', 'preguica.gif');
+            console.log(`🖼️ Tentando enviar GIF de preguiça como sticker: ${gifPath}`);
+            
+            await sendMessage(sender, 'send-sticker-gif', {
+                path: gifPath
+            });
+        } catch (error) {
+            console.error('❌ Erro ao enviar GIF sticker:', error);
+        }
+        
+        // Aguardar 1 segundo antes de continuar
+        setTimeout(async () => {
+            // NÃO marcar progresso de videos_exemplos se pulou
+            // Ir direto para certificado (que vai detectar que faltou conteúdo)
+            await perguntarDadosCertificado(sender, sendMessage);
+        }, 1000);
     } else {
         console.log('❌ Opção inválida - reenviando opções');
         await sendMessage(sender, 'send-message', {
@@ -1160,9 +1210,6 @@ async function processarTreinamentosPendentes(sender, text, sendMessage) {
                     console.log(`🎓 Iniciando treinamento EPC/EPI para ${contato.nome}`);
                     // Adicionar número do telefone ao contato
                     contato.numero = sender.replace('@c.us', '');
-                    
-                    // Marcar como finalizado para evitar loop
-                    await salvarInteracao(sender, 'epc_epi_iniciado', JSON.stringify({ etapa: 'epc_epi_iniciado' }));
                     
                     return await epcEpi.processarTreinamentoEpcEpi(sender, 'iniciar_treinamento', null, contato, sendMessage, null);
                 }

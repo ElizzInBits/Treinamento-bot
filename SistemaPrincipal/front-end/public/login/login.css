@@ -1,12 +1,13 @@
 * {
+    font-family: "Poppins", sans-serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
 body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #0f4c5c 50%, #6ec6ca 100%);
+    background: linear-gradient(135deg, #53A5A6 0%, #F1AE33 20%, #53A5A6 50%, #88A6BB 80%, #53A5A6 100%);
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -20,7 +21,7 @@ body {
 }
 
 .login-box {
-    background: white;
+    background: #FFFFFF;
     padding: 40px;
     border-radius: 10px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
@@ -34,7 +35,7 @@ body {
 }
 
 .logo h1 {
-    color: #333;
+    color: #000000;
     margin-bottom: 30px;
     font-size: 24px;
 }
@@ -47,7 +48,7 @@ body {
 .input-group label {
     display: block;
     margin-bottom: 5px;
-    color: #555;
+    color: #000000;
     font-weight: bold;
 }
 
@@ -62,14 +63,14 @@ body {
 
 .input-group input:focus {
     outline: none;
-    border-color: #0f4c5c;
+    border-color: #F1AE33;
 }
 
 .login-btn {
     width: 100%;
     padding: 12px;
-    background: linear-gradient(135deg, #0f4c5c 0%, #6ec6ca 100%);
-    color: white;
+    background: #F1AE33;
+    color: #FFFFFF;
     border: none;
     border-radius: 5px;
     font-size: 16px;

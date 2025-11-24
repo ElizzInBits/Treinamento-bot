@@ -19,53 +19,51 @@
     <!-- Header Principal -->
     <header class="main-header">
       <div class="header-content">
-        <div class="logo-section">
-          <div class="logo-icon"><img src="Imagens/image.png" alt=""></div>
-          <div class="logo-text">
-            <h1>Gestão de Treinamentos</h1>
-            <p class="subtitle">Sistema Para Gerenciamento e Aplicação de Treinamentos</p>
-          </div>
-        </div>
-        <div class="header-info">
-          <div class="system-status">
-            <span class="status-indicator online"></span>
-            <span class="status-text">Sistema Online</span>
-          </div>
-          <div class="current-time" id="currentTime"></div>
-        </div>
-        <div class="header-actions">
-          <div class="actions-row">
-            <button class="btn-icon" onclick="atualizarTodasEstatisticas()" title="Atualizar dados">
-              <span class="icon">🔄</span>
+        <img src="Imagens/image.png" alt="Logo">
+        <nav class="header-info">
+          <div class="nav-container">
+            <button class="nav-tab" onclick="showTab('mapeamento')" data-tab="mapeamento">
+              Dashboard
             </button>
-            <button class="btn-primary" onclick="exportarDadosXLS()">
-              <span class="icon">📊</span>
-              Exportar Dados
+            <button class="nav-tab" onclick="showTab('empresas')" data-tab="empresas">
+              Empresas
             </button>
-
+            <button class="nav-tab" onclick="showTab('treinamentos')" data-tab="treinamentos">
+              Treinamento Padrão
+            </button>
+            <button class="nav-tab" onclick="showTab('treinamento-personalizado')" data-tab="treinamento-personalizado">
+              Treinamento Personalizado
+            </button>
           </div>
-          <button class="btn-logout" onclick="logout()" title="Sair do sistema">
-            <span class="icon">🚪</span>
-            <span class="logout-text">Log out</span>
-          </button>
-        </div>
+        </nav>
       </div>
     </header>
 
-    <!-- Navegação por Tabs -->
-    <nav class="tab-navigation">
-      <div class="nav-container">
-        <button class="nav-tab" onclick="showTab('mapeamento')" data-tab="mapeamento">
-          Mapeamento
-        </button>
-        <button class="nav-tab" onclick="showTab('empresas')" data-tab="empresas">
-          Empresas
-        </button>
-        <button class="nav-tab" onclick="showTab('treinamentos')" data-tab="treinamentos">
-          Treinamentos
+    <section>
+      <div class="system-status">
+        <span class="status-indicator online"></span>
+        <span class="status-text">Sistema Online</span>
+        <div class="current-time" id="currentTime"></div>
+        <div class="actions">
+          <button onclick="atualizarTodasEstatisticas()">
+            <span class="icon">🔄 Atualizar</span>
+          </button>
+          <button onclick="exportarDadosXLS()">
+            <span class="icon">📊 Exportar Dados</span>
+          </button>
+        </div>
+        <button onclick="logout()">
+          <span class="icon">🚪Log out</span>
         </button>
       </div>
-    </nav>
+    </section>
+
+    <section class="subtitle">
+      <div class="text">
+        <h1>Gestão de Treinamentos</h1>
+        <p>Sistema Para Gerenciamento e Aplicação de Treinamentos</p>
+      </div>
+    </section>
 
     <!-- Container Principal -->
     <main class="content-container">
@@ -75,11 +73,6 @@
       <!-- Aba Mapeamento -->
       <section id="mapeamento" class="tab-content">
         <div class="content-card">
-          <div class="card-header">
-            <h2>Dashboard de Mapeamento</h2>
-            <p>Visualize os principais indicadores e análises de dados do sistema</p>
-          </div>
-
           <!-- Cards de Indicadores -->
           <div class="dashboard-stats">
             <div class="stat-item" onclick="showTab('empresas')" style="cursor: pointer;">
@@ -168,11 +161,6 @@
       <!-- Aba Empresas -->
       <section id="empresas" class="tab-content">
         <div class="content-card">
-          <div class="card-header">
-            <h2>Empresas Cadastradas</h2>
-            <p>Vizualize e gerencie as empresas cadastradas no sistema</p>
-          </div>
-
           <div class="dashboard-stats">
             <div class="stat-item">
               <div class="stat-value" id="totalEmpresas">0</div>
@@ -188,16 +176,20 @@
             </div>
           </div>
 
-          <div class="quick-actions" style="display: flex; gap: 1rem; margin: 2rem 0; justify-content: center; flex-wrap: wrap;">
-            <button class="btn-primary" onclick="window.open('/autoCadastro', '_blank')" style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; font-size: 1rem;">
+          <div class="quick-actions"
+            style="display: flex; gap: 1rem; margin: 2rem 0; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="window.open('/autoCadastro', '_blank')"
+              style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; font-size: 1rem;">
               <span style="font-size: 1.2rem;">👤</span>
               Cadastrar Novo Contato
             </button>
-            <button class="btn-secondary" onclick="window.open('/empre', '_blank')" style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; font-size: 1rem;">
+            <button class="btn-secondary" onclick="window.open('/empre', '_blank')"
+              style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; font-size: 1rem;">
               <span style="font-size: 1.2rem;">🏢</span>
               Cadastrar Nova Empresa
             </button>
-            <button class="btn-icon" onclick="testarNotificacoes()" title="Testar notificações" style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; font-size: 1rem;">
+            <button class="btn-icon" onclick="testarNotificacoes()" title="Testar notificações"
+              style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; font-size: 1rem;">
               <span style="font-size: 1.2rem;">🔔</span>
               Testar Notificações
             </button>
@@ -262,8 +254,8 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label for="emConformidade">Em Conformidade <span class="required">*</span></label>
-                    <input type="text" id="emConformidade" name="emConformidade" required placeholder="Descreva a conformidade"
-                      maxlength="255" class="form-control" />
+                    <input type="text" id="emConformidade" name="emConformidade" required
+                      placeholder="Descreva a conformidade" maxlength="255" class="form-control" />
                   </div>
                   <div class="form-group">
                     <label for="aproveitamentoConteudo">Aproveitamento de Conteúdo <span
@@ -305,7 +297,9 @@
                     <input type="file" id="midiasTreinamento" name="midiasTreinamento" multiple
                       accept="image/*,video/*,audio/*,application/pdf" class="form-control" style="display: none;" />
                     <div id="selectedFiles" class="selected-files"></div>
-                    <button type="button" class="btn-secondary" onclick="document.getElementById('midiasTreinamento').click()" style="margin-top: 10px; display: none;" id="btnAdicionarMais">
+                    <button type="button" class="btn-secondary"
+                      onclick="document.getElementById('midiasTreinamento').click()"
+                      style="margin-top: 10px; display: none;" id="btnAdicionarMais">
                       ➕ Adicionar Mais Arquivos
                     </button>
                   </div>
@@ -333,8 +327,7 @@
                 <div class="form-group">
                   <label for="registroInstrutor">Registro do Instrutor <span class="required">*</span></label>
                   <input type="text" id="registroInstrutor" name="registroInstrutor" required
-                    placeholder="Número de registro profissional" maxlength="100"
-                    class="form-control" />
+                    placeholder="Número de registro profissional" maxlength="100" class="form-control" />
                 </div>
               </div>
 
@@ -352,8 +345,7 @@
                   <div class="form-group">
                     <label for="cargoResponsavel">Cargo do Responsável</label>
                     <input type="text" id="cargoResponsavel" name="cargoResponsavel"
-                      placeholder="Ex:Coordenador de Treinamento" maxlength="100"
-                      class="form-control" />
+                      placeholder="Ex:Coordenador de Treinamento" maxlength="100" class="form-control" />
                   </div>
                 </div>
 
@@ -361,14 +353,12 @@
                   <div class="form-group">
                     <label for="areaResponsavel">Área Responsável <span class="required">*</span></label>
                     <input type="text" id="areaResponsavel" name="areaResponsavel" required
-                      placeholder="Ex: Recursos Humanos, Segurança do Trabalho" maxlength="100"
-                      class="form-control" />
+                      placeholder="Ex: Recursos Humanos, Segurança do Trabalho" maxlength="100" class="form-control" />
                   </div>
                   <div class="form-group">
                     <label for="registroResponsavel">Registro do Responsável <span class="required">*</span></label>
                     <input type="text" id="registroResponsavel" name="registroResponsavel" required
-                      placeholder="Número de registro profissional" maxlength="100"
-                      class="form-control" />
+                      placeholder="Número de registro profissional" maxlength="100" class="form-control" />
                   </div>
                 </div>
 
@@ -529,7 +519,7 @@
           if (timeElement) {
             timeElement.textContent = agora.toLocaleString('pt-BR', {
               day: '2-digit',
-              month: '2-digit', 
+              month: '2-digit',
               year: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
@@ -538,24 +528,24 @@
         }
         setInterval(atualizarRelogio, 1000);
         atualizarRelogio();
-        
+
         // Função para ativar/desativar notificações
         async function toggleNotificacoes() {
           if (!('Notification' in window)) {
             mostrarModalInstrucoes('Seu navegador não suporta notificações.', 'erro');
             return;
           }
-          
+
           if (Notification.permission === 'granted') {
             alert('✅ Notificações já estão ativadas!');
             return;
           }
-          
+
           if (Notification.permission === 'denied') {
             mostrarModalInstrucoes('Notificações foram bloqueadas pelo navegador.', 'bloqueado');
             return;
           }
-          
+
           try {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
@@ -572,21 +562,21 @@
             alert('❌ Erro ao solicitar permissão: ' + error.message);
           }
         }
-        
+
         // Função para testar notificações
         async function testarNotificacoes() {
           console.log('Testando notificações...');
-          
+
           if (!('Notification' in window)) {
             mostrarModalInstrucoes('Seu navegador não suporta notificações.', 'erro');
             return;
           }
-          
+
           if (Notification.permission === 'denied') {
             mostrarModalInstrucoes('Notificações foram bloqueadas pelo navegador.', 'bloqueado');
             return;
           }
-          
+
           if (Notification.permission === 'default') {
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
@@ -594,7 +584,7 @@
               return;
             }
           }
-          
+
           try {
             new Notification('🧪 Teste de Notificação', {
               body: 'Se você está vendo isso, as notificações estão funcionando!',
@@ -605,7 +595,7 @@
             alert('❌ Erro ao enviar notificação: ' + error.message);
           }
         }
-        
+
         // Função para mostrar modal com instruções
         function mostrarModalInstrucoes(titulo, tipo) {
           const modal = document.createElement('div');
@@ -614,7 +604,7 @@
             background: rgba(0,0,0,0.8); z-index: 10000; display: flex; 
             align-items: center; justify-content: center;
           `;
-          
+
           let conteudo = '';
           if (tipo === 'bloqueado') {
             conteudo = `
@@ -648,7 +638,7 @@
               <p>Seu navegador não suporta notificações web.</p>
             `;
           }
-          
+
           modal.innerHTML = `
             <div style="
               background: white; padding: 30px; border-radius: 15px; 
@@ -663,15 +653,15 @@
               ">Entendi</button>
             </div>
           `;
-          
+
           document.body.appendChild(modal);
-          
+
           // Fechar ao clicar fora
           modal.addEventListener('click', (e) => {
             if (e.target === modal) modal.remove();
           });
         }
-        
+
 
       </script>
 

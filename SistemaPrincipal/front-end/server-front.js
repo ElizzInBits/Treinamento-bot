@@ -302,6 +302,14 @@ try {
     console.error('❌ Erro ao carregar rota de exportar WhatsApp:', error.message);
 }
 
+// Rotas de fluxos (protegidas)
+try {
+    const fluxosRoutes = require('./routes/fluxos.js');
+    app.use('/api/fluxos', authenticateToken, fluxosRoutes);
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de fluxos:', error.message);
+}
+
 
 
 // ✅ 7. Servir mídia (uploads) estáticos
@@ -351,72 +359,72 @@ app.get('/api/health', (req, res) => {
 // Página de login para API
 app.get('/login-api', (req, res) => {
     res.send(`
-<!DOCTYPE html>
-<html>
-<head><title>Login API</title></head>
-<body>
-    <h2>Login para acessar API</h2>
-    <input type="text" id="user" placeholder="Usuário" value="Administrador">
-    <input type="password" id="pass" placeholder="Senha">
-    <button onclick="login()">Entrar</button>
-    <div id="result"></div>
-    <div id="api" style="display:none">
-        <h3>Dados da API:</h3>
-        <button onclick="getData('/api/treinamentos')">Treinamentos</button>
-        <button onclick="getData('/api/usuarios')">Usuários</button>
-        <button onclick="getData('/api/empresas')">Empresas</button>
-        <button onclick="window.open('/logs', '_blank')" style="background:#3498db;color:white">📊 Dashboard de Logs</button>
-        <button onclick="logout()" style="background:red;color:white">Sair</button>
-        <pre id="data"></pre>
-    </div>
-    <script>
-        let token = localStorage.getItem('token');
-        if(token) showAPI();
-        
-        async function login() {
-            const user = document.getElementById('user').value;
-            const pass = document.getElementById('pass').value;
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({username: user, password: pass})
-            });
-            const data = await res.json();
-            if(data.token) {
-                token = data.token;
-                localStorage.setItem('token', token);
-                showAPI();
-            } else {
-                document.getElementById('result').innerHTML = 'Erro: ' + data.message;
+    <!DOCTYPE html>
+    <html>
+    <head><title>Login API</title></head>
+    <body>
+        <h2>Login para acessar API</h2>
+        <input type="text" id="user" placeholder="Usuário" value="Administrador">
+        <input type="password" id="pass" placeholder="Senha">
+        <button onclick="login()">Entrar</button>
+        <div id="result"></div>
+        <div id="api" style="display:none">
+            <h3>Dados da API:</h3>
+            <button onclick="getData('/api/treinamentos')">Treinamentos</button>
+            <button onclick="getData('/api/usuarios')">Usuários</button>
+            <button onclick="getData('/api/empresas')">Empresas</button>
+            <button onclick="window.open('/logs', '_blank')" style="background:#3498db;color:white">📊 Dashboard de Logs</button>
+            <button onclick="logout()" style="background:red;color:white">Sair</button>
+            <pre id="data"></pre>
+        </div>
+        <script>
+            let token = localStorage.getItem('token');
+            if(token) showAPI();
+            
+            async function login() {
+                const user = document.getElementById('user').value;
+                const pass = document.getElementById('pass').value;
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: user, password: pass})
+                });
+                const data = await res.json();
+                if(data.token) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    showAPI();
+                } else {
+                    document.getElementById('result').innerHTML = 'Erro: ' + data.message;
+                }
             }
-        }
-        
-        function showAPI() {
-            document.getElementById('api').style.display = 'block';
-            document.getElementById('result').innerHTML = 'Logado com sucesso!';
-            getData();
-        }
-        
-        async function getData(endpoint) {
-            if (!endpoint) endpoint = window.location.search.replace('?redirect=', '') || '/api/treinamentos';
-            const res = await fetch(endpoint, {
-                headers: {'Authorization': 'Bearer ' + token}
+            
+            function showAPI() {
+                document.getElementById('api').style.display = 'block';
+                document.getElementById('result').innerHTML = 'Logado com sucesso!';
+                getData();
+            }
+            
+            async function getData(endpoint) {
+                if (!endpoint) endpoint = window.location.search.replace('?redirect=', '') || '/api/treinamentos';
+                const res = await fetch(endpoint, {
+                    headers: {'Authorization': 'Bearer ' + token}
+                });
+                const data = await res.json();
+                document.getElementById('data').innerHTML = JSON.stringify(data, null, 2);
+            }
+            
+            function logout() {
+                localStorage.removeItem('token');
+                location.reload();
+            }
+            
+            window.addEventListener('beforeunload', function() {
+                localStorage.removeItem('token');
             });
-            const data = await res.json();
-            document.getElementById('data').innerHTML = JSON.stringify(data, null, 2);
-        }
-        
-        function logout() {
-            localStorage.removeItem('token');
-            location.reload();
-        }
-        
-        window.addEventListener('beforeunload', function() {
-            localStorage.removeItem('token');
-        });
-    </script>
-</body>
-</html>
+        </script>
+    </body>
+    </html>
     `);
 });
 

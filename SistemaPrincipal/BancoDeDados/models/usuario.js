@@ -70,7 +70,15 @@ module.exports = (sequelize) => {
       { fields: ['telefone'] },
       { fields: ['empresaId'] },
       { fields: ['statusTreinamento'] }
-    ]
+    ],
+    hooks: {
+      beforeDestroy: async (usuario, options) => {
+        const { SessaoTreinamento, Interacao } = sequelize.models;
+        await SessaoTreinamento.destroy({ where: { telefone: usuario.telefone }, transaction: options.transaction });
+        await Interacao.destroy({ where: { telefone: usuario.telefone }, transaction: options.transaction });
+        console.log(`✅ Sessões e interações removidas para: ${usuario.telefone}`);
+      }
+    }
   });
 
   Usuario.associate = (models) => {

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔄</text></svg>">
+    <title>Flow Builder - Criador Visual de Fluxos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e1e; color: #fff; overflow: hidden; }
+        .container { display: flex; height: 100vh; }
+        .sidebar { width: 260px; background: #252526; padding: 20px; border-right: 1px solid #3e3e42; overflow-y: auto; }
+        .sidebar h2 { margin-bottom: 20px; font-size: 18px; color: #4ec9b0; }
+        .node-type { background: linear-gradient(135deg, #2d2d30 0%, #3e3e42 100%); padding: 12px; margin-bottom: 10px; border-radius: 6px; cursor: move; border: 1px solid #3e3e42; transition: all 0.3s; }
+        .node-type:hover { background: linear-gradient(135deg, #3e3e42 0%, #4e4e52 100%); border-color: #4ec9b0; transform: translateX(5px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .node-type-title { font-weight: bold; margin-bottom: 5px; color: #4ec9b0; font-size: 14px; }
+        .node-type-desc { font-size: 11px; color: #858585; }
+        .canvas-container { flex: 1; position: relative; overflow: hidden; background: #1e1e1e; }
+        .canvas { width: 100%; height: 100%; position: relative; background: #1e1e1e; background-image: radial-gradient(circle, rgba(78,201,176,.08) 1px, transparent 1px); background-size: 25px 25px; transform-origin: 0 0; transition: transform 0.1s ease; }
+        svg.connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .flow-node { position: absolute; background: linear-gradient(135deg, #2d2d30 0%, #252526 100%); border: 2px solid #3e3e42; border-radius: 10px; padding: 16px; min-width: 220px; max-width: 300px; cursor: move; box-shadow: 0 6px 12px rgba(0,0,0,0.4); transition: all 0.2s; z-index: 10; }
+        .flow-node:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.5); }
+        .flow-node.selected { border-color: #4ec9b0; box-shadow: 0 0 20px rgba(78, 201, 176, 0.7); }
+        .flow-node.mensagem { border-left: 5px solid #569cd6; }
+        .flow-node.pergunta { border-left: 5px solid #dcdcaa; }
+        .flow-node.midia { border-left: 5px solid #ce9178; }
+        .flow-node.finalizar { border-left: 5px solid #f48771; }
+        .node-header { font-weight: bold; margin-bottom: 12px; color: #4ec9b0; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .node-delete { cursor: pointer; color: #f48771; font-size: 20px; opacity: 0.6; transition: all 0.2s; }
+        .node-delete:hover { opacity: 1; transform: scale(1.2); }
+        .node-content { font-size: 12px; color: #cccccc; word-wrap: break-word; line-height: 1.4; }
+        .node-connector { position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); width: 24px; height: 24px; background: #4ec9b0; border-radius: 50%; cursor: pointer; border: 3px solid #1e1e1e; z-index: 20; transition: all 0.2s; }
+        .node-connector:hover { transform: translateX(-50%) scale(1.3); box-shadow: 0 0 10px rgba(78, 201, 176, 0.8); }
+        .properties-panel { width: 340px; background: #252526; padding: 20px; border-left: 1px solid #3e3e42; overflow-y: auto; }
+        .properties-panel h3 { margin-bottom: 18px; color: #4ec9b0; font-size: 16px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 13px; color: #cccccc; font-weight: 500; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; background: #3c3c3c; border: 1px solid #3e3e42; border-radius: 5px; color: #fff; font-family: inherit; font-size: 13px; transition: all 0.2s; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #4ec9b0; box-shadow: 0 0 5px rgba(78, 201, 176, 0.3); }
+        .form-group textarea { min-height: 90px; resize: vertical; }
+        .btn { padding: 11px 22px; background: #0e639c; border: none; border-radius: 5px; color: #fff; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+        .btn:hover { background: #1177bb; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .btn-success { background: #16825d; }
+        .btn-success:hover { background: #1a9870; }
+        .btn-danger { background: #c72e0f; }
+        .btn-danger:hover { background: #e03e1f; }
+        .btn-small { padding: 6px 12px; font-size: 11px; margin-top: 6px; }
+        .toolbar { position: absolute; top: 20px; left: 20px; z-index: 100; display: flex; gap: 10px; }
+        .zoom-controls { position: absolute; bottom: 20px; right: 20px; z-index: 100; display: flex; gap: 6px; background: #252526; padding: 8px; border-radius: 6px; border: 1px solid #3e3e42; }
+        .zoom-btn { width: 38px; height: 38px; background: #2d2d30; border: 1px solid #3e3e42; border-radius: 5px; color: #fff; cursor: pointer; font-size: 18px; font-weight: bold; transition: all 0.2s; }
+        .zoom-btn:hover { background: #3e3e42; transform: scale(1.1); }
+        .empty-state { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #858585; pointer-events: none; }
+        .empty-state h3 { margin-bottom: 10px; font-size: 20px; }
+        .option-item { background: #3c3c3c; padding: 12px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #3e3e42; }
+        .option-item input { margin-bottom: 6px; }
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>📦 Componentes</h2>
+            <div class="node-type" draggable="true" data-type="mensagem">
+                <div class="node-type-title">💬 Mensagem</div>
+                <div class="node-type-desc">Envia uma mensagem de texto</div>
+            </div>
+            <div class="node-type" draggable="true" data-type="pergunta">
+                <div class="node-type-title">❓ Pergunta</div>
+                <div class="node-type-desc">Faz uma pergunta com opções</div>
+            </div>
+            <div class="node-type" draggable="true" data-type="midia">
+                <div class="node-type-title">🖼️ Mídia</div>
+                <div class="node-type-desc">Envia imagem, áudio ou vídeo</div>
+            </div>
+            <div class="node-type" draggable="true" data-type="finalizar">
+                <div class="node-type-title">🏁 Finalizar</div>
+                <div class="node-type-desc">Encerra o fluxo</div>
+            </div>
+        </div>
+        <div class="canvas-container">
+            <div class="toolbar">
+                <button class="btn" onclick="flowBuilder.listarFluxos()">📚 Meus Fluxos</button>
+                <button class="btn" onclick="flowBuilder.limparCanvas()">🗑️ Limpar</button>
+                <button class="btn" onclick="flowBuilder.importarJSON()">📂 Importar Arquivo</button>
+                <button class="btn btn-success" onclick="flowBuilder.exportarJSON()">💾 Salvar</button>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="flowBuilder.zoom(0.1)">+</button>
+                <button class="zoom-btn" onclick="flowBuilder.zoom(-0.1)">−</button>
+                <button class="zoom-btn" onclick="flowBuilder.resetZoom()">⊙</button>
+            </div>
+            <div class="canvas" id="canvas">
+                <svg class="connections" id="connections"></svg>
+                <div class="empty-state">
+                    <h3>👈 Arraste componentes aqui</h3>
+                    <p>Comece criando seu fluxo de conversa</p>
+                </div>
+            </div>
+        </div>
+        <div class="properties-panel" id="properties">
+            <h3>⚙️ Propriedades</h3>
+            <p style="color: #858585;">Selecione um nó para editar</p>
+        </div>
+    </div>
+    <input type="file" id="fileInput" accept=".json">
+    <script src="flow-builder.js"></script>
+</body>
+</html>
