@@ -1,6 +1,7 @@
 const rateLimit = require('express-rate-limit');
 const redis = require('redis');
 let RedisStore;
+
 try {
     RedisStore = require('rate-limit-redis');
 } catch (e) {
@@ -37,11 +38,11 @@ class RateLimiter {
     // Rate limiter para API
     getApiLimiter() {
         return rateLimit({
-            windowMs: 15 * 60 * 1000, // 15 minutos
-            max: 100, // 100 requests por IP
+            windowMs: 1 * 60 * 1000,
+            max: 1000, 
             message: {
-                error: 'Muitas requisições. Tente novamente em 15 minutos.',
-                retryAfter: 900
+                error: 'Muitas requisições. Tente novamente em 1 minuto.',
+                retryAfter: 60
             },
             standardHeaders: true,
             legacyHeaders: false
@@ -77,23 +78,23 @@ class RateLimiter {
 
     checkMemoryLimit(key, windowMs, maxMessages, now) {
         const record = this.memoryStore.get(key) || { count: 0, resetTime: now + windowMs };
-        
+
         if (now > record.resetTime) {
             record.count = 1;
             record.resetTime = now + windowMs;
         } else {
             record.count++;
         }
-        
+
         this.memoryStore.set(key, record);
-        
+
         // Limpeza automática
         setTimeout(() => {
             if (this.memoryStore.get(key)?.resetTime <= Date.now()) {
                 this.memoryStore.delete(key);
             }
         }, windowMs);
-        
+
         return record.count <= maxMessages;
     }
 
@@ -103,26 +104,26 @@ class RateLimiter {
         const windowMs = 24 * 60 * 60 * 1000; // 24 horas
         const maxCertificates = 3; // 3 certificados por dia
 
-        return this.redisClient ? 
+        return this.redisClient ?
             this.checkRedisLimit(key, windowMs, maxCertificates) :
             this.checkMemoryLimit(key, windowMs, maxCertificates, Date.now());
     }
 
     // Middleware para Express
     getExpressMiddleware(options = {}) {
-        const { windowMs = 15 * 60 * 1000, max = 100, message } = options;
-        
+        const { windowMs = 1 * 60 * 1000, max = 1000, message } = options;
+
         return (req, res, next) => {
             const key = `api:${req.ip}`;
             const allowed = this.checkMemoryLimit(key, windowMs, max, Date.now());
-            
+
             if (!allowed) {
                 return res.status(429).json({
                     error: message || 'Rate limit exceeded',
                     retryAfter: Math.ceil(windowMs / 1000)
                 });
             }
-            
+
             next();
         };
     }

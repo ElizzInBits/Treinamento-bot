@@ -63,6 +63,28 @@ module.exports = {
       max_restarts: 10,
       restart_delay: 3000,
       autorestart: true
+    },
+    {
+      name: 'gestao-empresa',
+      cwd: '../sistema-gestao-empresa',
+      script: 'server.js',
+      instances: 1,
+      exec_mode: 'fork',
+      env_file: './.env',
+      env: {
+        NODE_ENV: 'production',
+        GESTAO_PORT: 3001
+      },
+      error_file: '../Treinamento-bot/SistemaPrincipal/logs/gestao-error.log',
+      out_file: '../Treinamento-bot/SistemaPrincipal/logs/gestao-out.log',
+      log_file: '../Treinamento-bot/SistemaPrincipal/logs/gestao-combined.log',
+      log_type: 'raw',
+      merge_logs: true,
+      log_date_format: 'HH:mm:ss',
+      time: false,
+      max_restarts: 10,
+      restart_delay: 3000,
+      autorestart: true
     }
   ]
 };

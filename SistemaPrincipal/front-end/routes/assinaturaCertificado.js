@@ -21,7 +21,7 @@ router.get('/dados/:token', async (req, res) => {
     
     res.json(dados);
   } catch (error) {
-    console.error('❌ Erro ao obter dados da assinatura:', error);
+    console.error('❌ Erro ao obtra dados da assinatura', error);
     res.status(500).json({ erro: 'Erro interno do servidor' });
   }
 });

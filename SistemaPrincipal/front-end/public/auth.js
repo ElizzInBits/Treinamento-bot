@@ -12,6 +12,7 @@ function checkAuth() {
     return true;
 }
 
+/*
 // Verificar se o usuário voltou para a página (back/forward)
 window.addEventListener('pageshow', function(event) {
     if (event.persisted && !window.location.pathname.includes('login')) {
@@ -28,7 +29,7 @@ window.addEventListener('beforeunload', function() {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('loginTime');
     }
-});
+});*/
 
 // Configurações de retry
 const RETRY_CONFIG = {

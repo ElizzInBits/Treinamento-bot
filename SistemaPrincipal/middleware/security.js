@@ -9,10 +9,11 @@ function securityMiddleware(req, res, next) {
     // Pular rate limiting para arquivos estáticos
     const isStaticFile = /\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i.test(req.path);
     
+    /*
     if (!isStaticFile && !rateLimiter(clientIp)) {
         Logger.warn('Rate limit exceeded', { ip: clientIp });
         return res.status(429).json({ error: 'Too many requests' });
-    }
+    }*/
 
     if (req.body) {
         for (const [key, value] of Object.entries(req.body)) {

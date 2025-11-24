@@ -1,0 +1,57 @@
+{
+  "id": "exemplo_simples",
+  "nome": "Exemplo de Fluxo Simples",
+  "versao": "1.0",
+  "inicio": "boas_vindas",
+  "nos": {
+    "boas_vindas": {
+      "id": "boas_vindas",
+      "tipo": "mensagem",
+      "conteudo": "Olá! Bem-vindo ao treinamento de exemplo.",
+      "delay": 1500,
+      "proximo": "pergunta_1"
+    },
+    "pergunta_1": {
+      "id": "pergunta_1",
+      "tipo": "pergunta",
+      "pergunta": "Você já conhece este sistema?",
+      "titulo": "Responda:",
+      "opcoes": [
+        {
+          "id": "sim",
+          "texto": "Sim, já conheço",
+          "descricao": "Já usei antes",
+          "palavrasChave": ["sim", "conheço", "já"],
+          "proximo": "resposta_sim"
+        },
+        {
+          "id": "nao",
+          "texto": "Não, é novo para mim",
+          "descricao": "Primeira vez",
+          "palavrasChave": ["não", "nao", "novo"],
+          "proximo": "resposta_nao"
+        }
+      ],
+      "erroProximo": "pergunta_1"
+    },
+    "resposta_sim": {
+      "id": "resposta_sim",
+      "tipo": "mensagem",
+      "conteudo": "Ótimo! Então você já sabe como funciona.",
+      "delay": 1000,
+      "proximo": "finalizar"
+    },
+    "resposta_nao": {
+      "id": "resposta_nao",
+      "tipo": "mensagem",
+      "conteudo": "Sem problemas! Vou te explicar tudo.",
+      "delay": 1000,
+      "proximo": "finalizar"
+    },
+    "finalizar": {
+      "id": "finalizar",
+      "tipo": "finalizar",
+      "mensagem": "Obrigado por participar! Até a próxima."
+    }
+  }
+}

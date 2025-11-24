@@ -4,7 +4,7 @@
 const CALL_BLOCKER_CONFIG = {
   // Ativar/desativar o bloqueio de ligações
   enabled: true,
-  
+
   // Mensagem enviada quando uma ligação é bloqueada
   blockedMessage: `🚫 *Chamadas não são aceitas*
 
@@ -12,28 +12,28 @@ Envie mensagem de texto! 😊`,
 
   // Delay em milissegundos antes de enviar a mensagem (para evitar conflitos)
   messageDelay: 500,
-  
+
   // Log detalhado das ligações bloqueadas
   detailedLogging: true,
-  
+
   // Lista de números que podem ligar (whitelist) - deixe vazio para bloquear todos
   allowedNumbers: [
     // Exemplo: '5511999999999'
   ],
-  
+
   // Mensagem personalizada para números da whitelist (opcional)
   whitelistMessage: `📞 Olá! Embora este seja um bot automatizado, seu número está autorizado.
 
 No entanto, prefiro comunicação por mensagens de texto para melhor atendimento.
 
 Por favor, envie uma mensagem! 😊`,
-  
+
   // Bloquear ligações em grupo também
   blockGroupCalls: true,
-  
+
   // Enviar mensagem de bloqueio apenas uma vez por dia por número
   oncePerDay: true,
-  
+
   // Armazenar números que já receberam mensagem hoje
   dailyMessagesSent: new Set()
 };
@@ -43,7 +43,7 @@ function isNumberAllowed(phoneNumber) {
   if (CALL_BLOCKER_CONFIG.allowedNumbers.length === 0) {
     return false; // Se não há whitelist, bloquear todos
   }
-  
+
   const cleanNumber = phoneNumber.replace(/[@c.us]/g, '');
   return CALL_BLOCKER_CONFIG.allowedNumbers.includes(cleanNumber);
 }
@@ -53,7 +53,7 @@ function shouldSendMessage(phoneNumber) {
   if (!CALL_BLOCKER_CONFIG.oncePerDay) {
     return true; // Sempre enviar se não há limitação diária
   }
-  
+
   const cleanNumber = phoneNumber.replace(/[@c.us]/g, '');
   return !CALL_BLOCKER_CONFIG.dailyMessagesSent.has(cleanNumber);
 }

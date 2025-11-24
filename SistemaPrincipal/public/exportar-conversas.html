@@ -1,72 +1,135 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exportar Conversas</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        input[type="text"], input[type="date"] { width: 100%; max-width: 300px; }
-        button { background: #007bff; color: white; cursor: pointer; margin-right: 10px; }
-        button:hover { background: #0056b3; }
-        .resultado { margin-top: 20px; padding: 15px; border-radius: 4px; }
-        .sucesso { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
-        .erro { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-        .arquivos { margin-top: 20px; }
-        .arquivo { padding: 10px; border: 1px solid #ddd; margin-bottom: 10px; border-radius: 4px; }
-        .loading { display: none; color: #007bff; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        input[type="text"],
+        input[type="date"] {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .resultado {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .sucesso {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .erro {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .arquivos {
+            margin-top: 20px;
+        }
+
+        .arquivo {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .loading {
+            display: none;
+            color: #007bff;
+        }
     </style>
 </head>
+
 <body>
     <h1>Exportar Conversas do WhatsApp</h1>
     <p style="color: #666; font-size: 14px;">Exporta conversas no formato nativo do WhatsApp com data/hora</p>
-    
+
     <form id="exportForm">
         <div class="form-group">
             <label for="telefone">Telefone (com código do país):</label>
             <input type="text" id="telefone" placeholder="5511999999999" required>
         </div>
-        
+
         <div class="form-group">
             <label for="limite">Limite de mensagens:</label>
             <input type="number" id="limite" value="1000" min="1" max="10000">
         </div>
-        
+
         <button type="submit">Exportar Conversa</button>
         <button type="button" onclick="listarArquivos()">Listar Arquivos</button>
         <div class="loading" id="loading">Processando...</div>
     </form>
-    
+
     <div id="resultado"></div>
     <div id="arquivos" class="arquivos"></div>
 
     <script>
         document.getElementById('exportForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const loading = document.getElementById('loading');
             const resultado = document.getElementById('resultado');
-            
+
             loading.style.display = 'block';
             resultado.innerHTML = '';
-            
+
             const dados = {
                 telefone: document.getElementById('telefone').value,
                 limite: parseInt(document.getElementById('limite').value) || 1000
             };
-            
+
             try {
                 const response = await fetch('/api/conversas/exportar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dados)
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.sucesso) {
                     resultado.innerHTML = `
                         <div class="resultado sucesso">
@@ -97,25 +160,25 @@
                 loading.style.display = 'none';
             }
         });
-        
+
         async function listarArquivos() {
             const arquivos = document.getElementById('arquivos');
             arquivos.innerHTML = '<p>Carregando...</p>';
-            
+
             try {
                 const response = await fetch('/api/conversas/listar');
                 const data = await response.json();
-                
+
                 if (data.length === 0) {
                     arquivos.innerHTML = '<p>Nenhum arquivo encontrado.</p>';
                     return;
                 }
-                
+
                 let html = '<h3>Arquivos Exportados:</h3>';
                 data.forEach(arquivo => {
                     const tamanhoKB = (arquivo.tamanho / 1024).toFixed(2);
                     const dataCriacao = new Date(arquivo.criado).toLocaleString('pt-BR');
-                    
+
                     html += `
                         <div class="arquivo">
                             <strong>${arquivo.nome}</strong><br>
@@ -126,7 +189,7 @@
                         </div>
                     `;
                 });
-                
+
                 arquivos.innerHTML = html;
             } catch (error) {
                 arquivos.innerHTML = `<p>Erro ao carregar arquivos: ${error.message}</p>`;
@@ -134,4 +197,5 @@
         }
     </script>
 </body>
+
 </html>

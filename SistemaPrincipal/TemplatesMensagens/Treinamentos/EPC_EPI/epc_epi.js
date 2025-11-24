@@ -59,6 +59,11 @@ class EPCEPITraining {
     }
 
     async processarResposta(client, message, contato) {
+        // Garantir que contato.numero existe
+        if (!contato.numero) {
+            contato.numero = message.from.replace('@c.us', '');
+        }
+        
         const sessionKey = `${contato.numero}_epc_epi`;
         let session = this.sessions.get(sessionKey);
 
@@ -80,7 +85,6 @@ class EPCEPITraining {
         switch (session.etapa) {
             case 'introducao':
                 await this.processarIntroducao(client, message, session, resposta);
-                // Forçar atualização da sessão
                 this.sessions.set(sessionKey, session);
                 await this.salvarSessaoBanco(contato.numero, session);
                 break;
@@ -90,70 +94,109 @@ class EPCEPITraining {
                 break;
             case 'pergunta_a':
                 await this.processarPerguntaA(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
             case 'pergunta_b':
                 await this.processarPerguntaB(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
             case 'pergunta_epc':
                 await this.processarPerguntaEPC(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
             case 'pergunta_epi':
                 await this.processarPerguntaEPI(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
             case 'quiz_hierarquia':
                 await this.processarQuizHierarquia(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
             case 'pergunta_relaxar_a':
                 await this.processarPerguntaRelaxarA(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
             case 'pergunta_relaxar_b':
                 await this.processarPerguntaRelaxarB(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
             case 'pergunta_relaxar_c':
                 await this.processarPerguntaRelaxarC(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
             case 'pergunta_relaxar_d':
                 await this.processarPerguntaRelaxarD(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
-
             case 'enviar_pdf_nr6':
             case 'enviar_video_medidas':
-                // Etapas automáticas, não precisam processar resposta
                 break;
-
             case 'pergunta_verdadeiro_falso_a':
                 await this.processarPerguntaVerdadeiroFalsoA(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
-
             case 'pergunta_verdadeiro_falso_b':
                 await this.processarPerguntaVerdadeiroFalsoB(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
-
             case 'pergunta_verdadeiro_falso_c':
                 await this.processarPerguntaVerdadeiroFalsoC(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
-
             case 'pergunta_verdadeiro_falso_d':
                 await this.processarPerguntaVerdadeiroFalsoD(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
-
             case 'pergunta_verdadeiro_falso_e':
                 await this.processarPerguntaVerdadeiroFalsoE(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
-
             case 'tipos_epi_introducao':
-                // Etapa automática, não precisa processar resposta
                 break;
-
             case 'pergunta_capacetes_a':
                 await this.processarPerguntaCapacetesA(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
-
             case 'pergunta_capacetes_b':
                 await this.processarPerguntaCapacetesB(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
+                break;
+            case 'protecao_auditiva_intro':
+            case 'pergunta_auditiva_1':
+                await this.processarPerguntaAuditiva1(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
+                break;
+            case 'pergunta_auditiva_2':
+                await this.processarPerguntaAuditiva2(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
+                break;
+            case 'pergunta_tipos_1':
+                await this.processarPerguntaTipos1(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
+                break;
+            case 'pergunta_tipos_2':
+                await this.processarPerguntaTipos2(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
+                break;
+            case 'pergunta_final_aud_1':
+                await this.processarPerguntaFinalAud1(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
+                break;
+            case 'pergunta_final_aud_2':
+                await this.processarPerguntaFinalAud2(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
                 break;
             case 'confirmar_dados_certificado':
                 await this.processarConfirmacaoDados(client, message, session, resposta);
+                await this.salvarSessaoBanco(contato.numero, session);
+                break;
+            case 'perigo_risco':
+            case 'video':
+            case 'hierarquia':
+                console.log(`⚠️ [EPC_EPI] Etapa automática ${session.etapa}, ignorando resposta`);
+                break;
+            default:
+                console.log(`⚠️ [EPC_EPI] Etapa desconhecida: ${session.etapa}`);
                 break;
         }
     }
@@ -1224,9 +1267,446 @@ class EPCEPITraining {
         }
 
         setTimeout(async() => {
+            session.etapa = 'protecao_auditiva_intro';
+            await this.iniciarProtecaoAuditiva(client, message, session);
+        }, 2000);
+    }
+
+    // ========== MÓDULO PROTEÇÃO AUDITIVA ==========
+    
+    async iniciarProtecaoAuditiva(client, message, session) {
+        await client.sendMessage(message.from, {
+            text: 'Agora vamos tratar da Proteção Auditiva:'
+        });
+
+        setTimeout(async() => {
+            await this.enviarAudioProtecaoAuditiva(client, message, session);
+        }, 2000);
+    }
+
+    async enviarAudioProtecaoAuditiva(client, message, session) {
+        const audioPath = path.join(this.basePath, 'Audios', 'protecao_auditiva_intro.mp3');
+        
+        if (fs.existsSync(audioPath)) {
+            await client.sendMessage(message.from, { audio: { url: audioPath } });
+        }
+
+        setTimeout(async() => {
+            await this.enviarConceitosAuditivos(client, message, session);
+        }, 3000);
+    }
+
+    async enviarConceitosAuditivos(client, message, session) {
+        await client.sendMessage(message.from, {
+            text: 'Agora vamos tratar de alguns pontos que você precisa saber o que são, antes de continuarmos:'
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Conceito 1: Nível de Ação
+        const img1 = path.join(this.basePath, 'Imagens', 'ruido_imagem.png');
+        if (fs.existsSync(img1)) await client.sendMessage(message.from, { image: { url: img1 } });
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const aud1 = path.join(this.basePath, 'Audios', 'ruido_audio.mp3');
+        if (fs.existsSync(aud1)) await client.sendMessage(message.from, { audio: { url: aud1 } });
+        
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Conceito 2: Limite de Tolerância
+        const img2 = path.join(this.basePath, 'Imagens', 'decibel_imagem.png');
+        if (fs.existsSync(img2)) await client.sendMessage(message.from, { image: { url: img2 } });
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const aud2 = path.join(this.basePath, 'Audios', 'decibel_audio.mp3');
+        if (fs.existsSync(aud2)) await client.sendMessage(message.from, { audio: { url: aud2 } });
+        
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Conceito 3: Dose de Ruído
+        const img3 = path.join(this.basePath, 'Imagens', 'limites_imagem.png');
+        if (fs.existsSync(img3)) await client.sendMessage(message.from, { image: { url: img3 } });
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const aud3 = path.join(this.basePath, 'Audios', 'limites_audio.mp3');
+        if (fs.existsSync(aud3)) await client.sendMessage(message.from, { audio: { url: aud3 } });
+        
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Conceito 4: NRR
+        const img4 = path.join(this.basePath, 'Imagens', 'protetor_imagem.png');
+        if (fs.existsSync(img4)) await client.sendMessage(message.from, { image: { url: img4 } });
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const aud4 = path.join(this.basePath, 'Audios', 'protetor_audio.mp3');
+        if (fs.existsSync(aud4)) await client.sendMessage(message.from, { audio: { url: aud4 } });
+
+        setTimeout(async() => {
+            session.etapa = 'pergunta_auditiva_1';
+            await this.iniciarPerguntasAuditivas(client, message);
+        }, 3000);
+    }
+
+    async iniciarPerguntasAuditivas(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'Como você já está acostumado vamos a mais uma perguntinha.'
+        });
+
+        setTimeout(async() => {
+            await client.sendMessage(message.from, { text: 'Escolha a opção correta!' });
+            setTimeout(async() => {
+                await client.sendMessage(message.from, {
+                    text: '1 – O nível de ação é uma referência a partir da qual começamos a adotar controles para que todas as pessoas estejam protegidas. Para o ruído qual o nível de ação estabelecido?'
+                });
+                setTimeout(async() => {
+                    await this.perguntaAuditiva1(client, message);
+                }, 1500);
+            }, 1000);
+        }, 1500);
+    }
+
+    async perguntaAuditiva1(client, message) {
+        const sections = [{
+            title: 'Escolha a resposta correta:',
+            rows: [
+                { rowId: 'aud_p1_a', title: 'A) 85 dB para 8 horas', description: '85 dB para 8 horas sem proteção' },
+                { rowId: 'aud_p1_b', title: 'B) 80 dB de exposição média', description: '80 dB de exposição média' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            buttonText: 'SELECIONE UMA OPÇÃO',
+            description: 'Escolha:',
+            sections: sections
+        });
+    }
+
+    async processarPerguntaAuditiva1(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'aud_p1_a' || resposta === 'a' || resposta === '1' || respostaNormalizada.includes('85')) {
+            await client.sendMessage(message.from, {
+                text: 'IiiiiiHHHH! Você errou, reveja a imagem e ouça o áudio novamente.'
+            });
+            setTimeout(async() => {
+                await this.perguntaAuditiva1(client, message);
+            }, 2000);
+        } else if (resposta === 'aud_p1_b' || resposta === 'b' || resposta === '2' || respostaNormalizada.includes('80')) {
+            await client.sendMessage(message.from, {
+                text: 'Correto! O nível de ação para ruído é de 80 dB.'
+            });
+            session.etapa = 'pergunta_auditiva_2';
+            await this.salvarSessaoBanco(message.from.replace('@c.us', ''), session);
+            setTimeout(async() => {
+                await this.perguntaAuditiva2(client, message);
+            }, 1500);
+        } else {
+            await this.perguntaAuditiva1(client, message);
+        }
+    }
+
+    async perguntaAuditiva2(client, message) {
+        const sections = [{
+            title: 'Escolha a resposta correta:',
+            rows: [
+                { rowId: 'aud_p2_a', title: 'A) Quando EPC não for possível', description: 'Quando EPC não for possível ou até implantação' },
+                { rowId: 'aud_p2_b', title: 'B) Sempre que houver risco', description: 'Sempre que houver risco de ruído' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            text: '2 – Quando o protetor auricular deve ser empregado para proteger a audição do trabalhador?'
+        });
+
+        setTimeout(async() => {
+            await client.sendMessage(message.from, {
+                buttonText: 'SELECIONE UMA OPÇÃO',
+                description: 'Escolha:',
+                sections: sections
+            });
+        }, 1000);
+    }
+
+    async processarPerguntaAuditiva2(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'aud_p2_a' || resposta === 'a' || resposta === '1' || respostaNormalizada.includes('epc') || respostaNormalizada.includes('quando epc')) {
+            await client.sendMessage(message.from, {
+                text: 'Correto! Até que o EPC seja implantado ou quando o EPC for inviável.'
+            });
+            session.etapa = 'pergunta_tipos_1';
+            await this.salvarSessaoBanco(message.from.replace('@c.us', ''), session);
+            setTimeout(async() => {
+                await this.explicarTiposProtetores(client, message, session);
+            }, 1500);
+        } else {
+            await client.sendMessage(message.from, {
+                text: 'Errado! Reveja a imagem e ouça novamente o áudio.'
+            });
+            setTimeout(async() => {
+                await this.perguntaAuditiva2(client, message);
+            }, 2000);
+        }
+    }
+
+    async explicarTiposProtetores(client, message, session) {
+        const mensagens = [
+            'Muito bem! Estamos indo rápido. Agora vamos ver um pouco sobre os tipos de protetores auriculares existentes.',
+            'Cada modelo tem suas vantagens e suas desvantagens.',
+            'Entendendo cada tipo, fica mais fácil escolher a melhor proteção. Veja tudo sobre cada tipo.'
+        ];
+
+        for (const msg of mensagens) {
+            await client.sendMessage(message.from, { text: msg });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
+        const infografico = path.join(this.basePath, 'Imagens', 'tipos_protetores.jpg');
+        if (fs.existsSync(infografico)) {
+            await client.sendMessage(message.from, {
+                image: { url: infografico },
+                caption: '📊 Tipos de Protetores Auriculares'
+            });
+        }
+
+        setTimeout(async() => {
+            session.etapa = 'pergunta_tipos_1';
+            await this.iniciarPerguntasTipos(client, message);
+        }, 3000);
+    }
+
+    async iniciarPerguntasTipos(client, message) {
+        await client.sendMessage(message.from, { text: 'Vamos de novo. Lá vem as perguntinhas!' });
+        setTimeout(async() => {
+            await client.sendMessage(message.from, { text: 'Escolha a opção correta:' });
+            setTimeout(async() => {
+                await this.perguntaTipos1(client, message);
+            }, 1000);
+        }, 1500);
+    }
+
+    async perguntaTipos1(client, message) {
+        const sections = [{
+            title: 'Escolha a resposta correta:',
+            rows: [
+                { rowId: 'aud_t1_a', title: 'A) Cuidados com higiene', description: 'Cuidados maiores com higiene' },
+                { rowId: 'aud_t1_b', title: 'B) Preço mais caro', description: 'Preço mais caro' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            text: '1 – Qual a maior desvantagem do protetor auricular tipo plugue de inserção?'
+        });
+
+        setTimeout(async() => {
+            await client.sendMessage(message.from, {
+                buttonText: 'SELECIONE UMA OPÇÃO',
+                description: 'Escolha:',
+                sections: sections
+            });
+        }, 1000);
+    }
+
+    async processarPerguntaTipos1(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'aud_t1_a' || resposta === 'a' || resposta === '1' || respostaNormalizada.includes('higiene')) {
+            await client.sendMessage(message.from, {
+                text: 'Correto! Se o protetor estiver sujo, poderá causar infecções.'
+            });
+            session.etapa = 'pergunta_tipos_2';
+            await this.salvarSessaoBanco(message.from.replace('@c.us', ''), session);
+            setTimeout(async() => {
+                await this.perguntaTipos2(client, message);
+            }, 1500);
+        } else {
+            await client.sendMessage(message.from, {
+                text: 'Errado! Volte novamente ao infográfico.'
+            });
+            setTimeout(async() => {
+                await this.perguntaTipos1(client, message);
+            }, 2000);
+        }
+    }
+
+    async perguntaTipos2(client, message) {
+        const sections = [{
+            title: 'Escolha a resposta correta:',
+            rows: [
+                { rowId: 'aud_t2_a', title: 'A) Confortável e leve', description: 'Confortável, leve e compatível' },
+                { rowId: 'aud_t2_b', title: 'B) Pesado e desconfortável', description: 'Pesado, desconfortável no calor' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            text: '2 – O Protetor tipo concha é mais eficiente na atenuação do ruído, mas ele tem limitações. Qual opção abaixo tem limitações do protetor tipo concha?'
+        });
+
+        setTimeout(async() => {
+            await client.sendMessage(message.from, {
+                buttonText: 'SELECIONE UMA OPÇÃO',
+                description: 'Escolha:',
+                sections: sections
+            });
+        }, 1000);
+    }
+
+    async processarPerguntaTipos2(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'aud_t2_b' || resposta === 'b' || resposta === '2' || respostaNormalizada.includes('pesado') || respostaNormalizada.includes('desconfort')) {
+            await client.sendMessage(message.from, {
+                text: 'Correto! Estas são limitações do protetor tipo concha.'
+            });
+            session.etapa = 'pergunta_final_aud_1';
+            await this.salvarSessaoBanco(message.from.replace('@c.us', ''), session);
+            setTimeout(async() => {
+                await this.explicarUsoGuarda(client, message, session);
+            }, 1500);
+        } else {
+            await client.sendMessage(message.from, {
+                text: 'Errado! Reveja o infográfico.'
+            });
+            setTimeout(async() => {
+                await this.perguntaTipos2(client, message);
+            }, 2000);
+        }
+    }
+
+    async explicarUsoGuarda(client, message, session) {
+        await client.sendMessage(message.from, {
+            text: 'E agora vamos ver um pouco sobre o Uso, A guarda e a Conservação dos protetores auditivos.'
+        });
+
+        setTimeout(async() => {
+            const videoPath = path.join(this.basePath, 'Videos', 'uso_guarda_conservacao_auditivo.mp4');
+            if (fs.existsSync(videoPath)) {
+                await client.sendMessage(message.from, {
+                    video: { path: videoPath },
+                    caption: '🎥 Uso, Guarda e Conservação'
+                });
+            }
+
+            setTimeout(async() => {
+                session.etapa = 'pergunta_final_aud_1';
+                await this.iniciarPerguntasFinaisAuditiva(client, message);
+            }, 3000);
+        }, 2000);
+    }
+
+    async iniciarPerguntasFinaisAuditiva(client, message) {
+        await client.sendMessage(message.from, {
+            text: 'Agora, para encerrar me responde aí:'
+        });
+
+        setTimeout(async() => {
+            await this.perguntaFinalAud1(client, message);
+        }, 1500);
+    }
+
+    async perguntaFinalAud1(client, message) {
+        const sections = [{
+            title: 'Escolha a resposta correta:',
+            rows: [
+                { rowId: 'aud_f1_a', title: 'A) NRR', description: 'Nível de Redução do Ruído – NRR' },
+                { rowId: 'aud_f1_b', title: 'B) Nível de Ação 50%', description: 'Nível de Ação sobre limite' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            text: '1 – O protetor funciona ao diminuir a intensidade das ondas sonoras que chegam ao ouvido. Esta redução é indicada na embalagem do produto. Qual é esse índice de redução indicado?'
+        });
+
+        setTimeout(async() => {
+            await client.sendMessage(message.from, {
+                buttonText: 'SELECIONE UMA OPÇÃO',
+                description: 'Escolha:',
+                sections: sections
+            });
+        }, 1000);
+    }
+
+    async processarPerguntaFinalAud1(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'aud_f1_a' || resposta === 'a' || resposta === '1' || respostaNormalizada.includes('nrr')) {
+            await client.sendMessage(message.from, {
+                text: 'Correto! O índice de NRR representa a quantidade de redução ofertada pelo protetor quando usado de forma certa.'
+            });
+            session.etapa = 'pergunta_final_aud_2';
+            await this.salvarSessaoBanco(message.from.replace('@c.us', ''), session);
+            setTimeout(async() => {
+                await this.perguntaFinalAud2(client, message);
+            }, 1500);
+        } else {
+            await client.sendMessage(message.from, {
+                text: 'Errado! Reveja o vídeo.'
+            });
+            setTimeout(async() => {
+                await this.perguntaFinalAud1(client, message);
+            }, 2000);
+        }
+    }
+
+    async perguntaFinalAud2(client, message) {
+        const sections = [{
+            title: 'Escolha a resposta correta:',
+            rows: [
+                { rowId: 'aud_f2_a', title: 'A) Intervalo de 5 minutos', description: 'Contínuo, intervalo 5 min' },
+                { rowId: 'aud_f2_b', title: 'B) Contínuo 100% do tempo', description: '100% do tempo, só retirar longe do ruído' }
+            ]
+        }];
+
+        await client.sendMessage(message.from, {
+            text: '2 – A exposição ao ruído, mesmo que por curto tempo, pode prejudicar a proteção do dia todo. Como deve ser o uso do protetor durante o dia?'
+        });
+
+        setTimeout(async() => {
+            await client.sendMessage(message.from, {
+                buttonText: 'SELECIONE UMA OPÇÃO',
+                description: 'Escolha:',
+                sections: sections
+            });
+        }, 1000);
+    }
+
+    async processarPerguntaFinalAud2(client, message, session, resposta) {
+        const respostaNormalizada = resposta.toLowerCase().trim();
+        
+        if (resposta === 'aud_f2_b' || resposta === 'b' || resposta === '2' || respostaNormalizada.includes('100') || respostaNormalizada.includes('contínuo')) {
+            await client.sendMessage(message.from, {
+                text: 'Correto! Deve-se usar o protetor o tempo todo.'
+            });
+            session.etapa = 'finalizar';
+            await this.salvarSessaoBanco(message.from.replace('@c.us', ''), session);
+            setTimeout(async() => {
+                await this.mensagemFinalDegustacao(client, message, session);
+            }, 1500);
+        } else {
+            await client.sendMessage(message.from, {
+                text: 'Errado! Reveja o vídeo.'
+            });
+            setTimeout(async() => {
+                await this.perguntaFinalAud2(client, message);
+            }, 2000);
+        }
+    }
+
+    async mensagemFinalDegustacao(client, message, session) {
+        await client.sendMessage(message.from, {
+            text: 'Olá! Chegamos ao final do treinamento de degustação. Há muito ainda para tratar sobre EPI, mas este material foi desenvolvido com o intuito de apresentarmos a ferramenta e o processo de execução.'
+        });
+
+        setTimeout(async() => {
             await this.finalizarTreinamento(client, message);
         }, 2000);
     }
+
+    // ========== FIM MÓDULO PROTEÇÃO AUDITIVA ==========
 
     async processarConfirmacaoDados(client, message, session, resposta) {
         const opcao = resposta.trim();
