@@ -22,7 +22,7 @@
   "author": "Elizabeth",
   "license": "MIT",
   "dependencies": {
-    "@wppconnect-team/wppconnect": "^1.37.5",
+    "@wppconnect-team/wppconnect": "^1.37.7",
     "axios": "^1.6.0",
     "canvas": "^2.11.2",
     "dotenv": "^17.2.1",

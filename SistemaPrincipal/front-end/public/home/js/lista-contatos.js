@@ -17,9 +17,69 @@ function adicionarContatoNaTabela(contato) {
       <button class="btn-restart" onclick="reiniciarContato(${contato.id}, '${contato.nome}')">
         🔄 Restart
       </button>
+      <button class="btn-transferir" onclick="transferirEmpresa(${contato.id}, '${contato.nome}')">
+        🔀 Transferir
+      </button>
     </td>
   `;
   tbody.appendChild(tr);
+}
+
+// Função para transferir funcionário entre empresas
+async function transferirEmpresa(id, nome) {
+  try {
+    // Carregar lista de empresas
+    const response = await fetch('/api/empresas/select/options');
+    const empresas = await response.json();
+    
+    if (!empresas || empresas.length === 0) {
+      alert('Nenhuma empresa disponível para transferência.');
+      return;
+    }
+    
+    // Criar select com empresas
+    let options = empresas.map(emp => 
+      `<option value="${emp.id}">${emp.razao_social}</option>`
+    ).join('');
+    
+    const novaEmpresaId = prompt(
+      `Transferir ${nome} para qual empresa?\n\nDigite o ID da empresa:\n\n` +
+      empresas.map(e => `${e.id} - ${e.razao_social}`).join('\n')
+    );
+    
+    if (!novaEmpresaId) return;
+    
+    const empresaSelecionada = empresas.find(e => e.id == novaEmpresaId);
+    if (!empresaSelecionada) {
+      alert('ID de empresa inválido.');
+      return;
+    }
+    
+    if (!confirm(`Confirma transferência de ${nome} para ${empresaSelecionada.razao_social}?`)) {
+      return;
+    }
+    
+    const transferResponse = await fetch(`/api/usuarios/${id}/transferir-empresa`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+      },
+      body: JSON.stringify({ novaEmpresaId: parseInt(novaEmpresaId) })
+    });
+    
+    const result = await transferResponse.json();
+    
+    if (transferResponse.ok) {
+      alert(`✅ ${nome} transferido com sucesso para ${empresaSelecionada.razao_social}!`);
+      location.reload();
+    } else {
+      alert(`❌ Erro: ${result.error}`);
+    }
+  } catch (error) {
+    console.error('Erro ao transferir funcionário:', error);
+    alert('❌ Erro ao transferir funcionário. Tente novamente.');
+  }
 }
 
 // Função para reiniciar contato individual

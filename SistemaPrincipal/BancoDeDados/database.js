@@ -1,5 +1,5 @@
 // database.js
-require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(

@@ -17,13 +17,40 @@ document.addEventListener('DOMContentLoaded', () => {
   // 🏢 Carregar empresas
   async function carregarEmpresas() {
     try {
+      // Verificar se há parâmetro ?empresa=salubrita na URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const empresaParam = urlParams.get('empresa');
+      
+      if (empresaParam === 'salubrita') {
+        // Modo Salubritá: carregar apenas essa empresa e bloquear
+        console.log('🔒 Modo Salubritá ativado');
+        empresaSelect.innerHTML = '<option value="">Carregando...</option>';
+        empresaSelect.disabled = true;
+        
+        const response = await fetch('/api/empresas/salubrita');
+        const empresa = await response.json();
+        
+        if (empresa && empresa.id) {
+          empresaSelect.innerHTML = `<option value="${empresa.id}" selected>${empresa.razaoSocial}</option>`;
+          empresaSelect.disabled = true;
+          empresaSelect.style.background = '#e5e7eb';
+          empresaSelect.style.cursor = 'not-allowed';
+          console.log('✅ Empresa Salubritá bloqueada:', empresa);
+        } else {
+          empresaSelect.innerHTML = '<option value="">Erro ao carregar Salubritá</option>';
+          alert('Erro: Empresa Salubritá não encontrada.');
+        }
+        return;
+      }
+      
+      // Modo normal: carregar todas as empresas
       empresaSelect.innerHTML = '<option value="">Carregando empresas...</option>';
       empresaSelect.disabled = true;
       
       const response = await fetch('/api/empresas/select/options');
       const empresas = await response.json();
       
-      empresaSelect.innerHTML = '<option value="">Selecione sua empresa</option>';
+      empresaSelect.innerHTML = '<option value="">Selecione sua empresa...</option>';
       
       if (empresas && empresas.length > 0) {
         empresas.forEach(empresa => {
@@ -252,10 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('empresaId').value = '';
         document.getElementById('sexo').value = ''
         try {
-          window.location.href = './voltarWhats-index.html';
+          window.location.href = './iniciar-chat-wpp.html';
         } catch (error) {
           console.error('Erro no redirecionamento:', error);
-          window.open('./voltarWhats-index.html', '_blank');
+          window.open('./iniciar-chat-wpp.html', '_blank');
         }
       })
       .catch(error => {

@@ -1,0 +1,721 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+  scrollbar-width: 0;
+}
+
+.training-form-section {
+  padding: 2rem;
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.training-form-section h3 {
+  color: #F1AE33;
+  margin-bottom: 24px;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+/* TÍTULO DAS SEÇÕES */
+.section-title {
+  margin-bottom: 10px;
+}
+
+.section-title {
+  position: relative;
+  color: #53A5A6;
+  margin-bottom: 30px;
+}
+
+.section-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  width: 50px;
+  height: 3px;
+  background: #53A5A6;
+}
+
+/* FORMULÁRIO TREINAMENTOS */
+.training-form-section {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.training-form-section .form-section {
+  background: #FFFFFF;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #E2E8F0;
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.training-form-section .form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.training-form-section .form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  position: static;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.training-form-section .form-group label {
+  color: #475569;
+  font-weight: 600;
+  font-size: 15px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.training-form-section .input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 2px solid #53A5A6;
+  border-radius: 8px;
+  overflow: hidden;
+  align-items: stretch;
+}
+
+.training-form-section .input-icon {
+  background: #FFFFFF;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #8A94A6;
+  min-width: 55px;
+  position: relative;
+  border-right: none;
+}
+
+.training-form-section .input-icon::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  height: 80%;
+  width: 3%;
+  background-color: #53A5A6;
+}
+
+.training-form-section .input-wrapper input {
+  flex: 1;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  color: #000000;
+  font-size: 15px;
+}
+
+.training-form-section .input-wrapper textarea {
+  flex: 1;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  color: #000000;
+  font-size: 15px;
+  resize: vertical;
+  min-height: 120px;
+  box-sizing: border-box;
+}
+
+.training-form-section .input-wrapper select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 16px;
+  color: #000000;
+  cursor: pointer;
+
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%236B7280' height='14' viewBox='0 0 20 20' width='14' xmlns='http://www.w3.org/2000/svg'><polygon points='0,0 20,0 10,10'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 10px;
+}
+
+.training-form-section .input-wrapper input:focus,
+.training-form-section .input-wrapper textarea:focus,
+.training-form-section .input-wrapper select:focus {
+  outline: none;
+}
+
+.training-form-section .input-wrapper :invalid {
+  border-color: #EF4444;
+}
+
+.training-form-section .form-actions,
+#editarTreinamentoForm .form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.training-form-section .form-actions button,
+#editarTreinamentoForm .form-actions button {
+  min-width: 80px;
+  font-size: 0.8rem;
+  padding: 6px 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #999999;
+  cursor: pointer;
+  color: #000000;
+  background-color: #EEEEEE;
+  transition: 0.3s ease-in-out;
+}
+
+.training-form-section .form-actions button:hover,
+#editarTreinamentoForm .form-actions button:hover {
+  transform: scale(1.03);
+}
+
+/* SEÇÃO MÍDIAS */
+.file-upload-container {
+  margin-top: 10px;
+}
+
+.file-upload-area {
+  border: 2px dashed #000000;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+  position: relative;
+}
+
+.file-upload-area:hover {
+  transform: translateY(-2px);
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.upload-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.upload-hint {
+  font-size: 0.9rem;
+  color: #64748B;
+  margin-bottom: 1rem;
+}
+
+.upload-types {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.type-badge {
+  background: #FFFFFF;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 12px;
+}
+
+.selected-files {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  display: none;
+}
+
+.selected-files.has-files {
+  display: block;
+}
+
+.selected-files h5 {
+  color: #0F4C5C;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: #F8FAFC;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  border: 1px solid #E2E8F0;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.file-icon {
+  font-size: 1.5rem;
+}
+
+.file-name {
+  font-weight: 500;
+  color: #475569;
+  flex: 1;
+}
+
+.file-size {
+  font-size: 0.85rem;
+  color: #475569;
+  margin-right: 20px;
+}
+
+.file-remove {
+  background-color: #000000;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.file-remove:hover {
+  background: #DC2626;
+  color: #FFFFFF;
+}
+
+/* SEÇÃO TRAINAMENTOS DISPONÍVEIS */
+.training-section {
+  padding: 2rem;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.training-section h3 {
+  color: #F1AE33;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+/* CARDS DE TREINAMENTOS */
+.training-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  padding: 0rem 2rem;
+}
+
+.training-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 5px 0px, rgba(0, 0, 0, 0.1) 0px 0px 1px 0px;
+  position: relative;
+  background: linear-gradient(135deg, #53A5A6 0%, #61b4b6 35%, #4A8F90 100%);
+}
+
+.training-header {
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+}
+
+.training-title {
+  position: relative;
+  height: 150px;
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+  white-space: normal;
+  word-break: break-word;
+  overflow: hidden;
+  flex: 1;
+}
+
+.training-title::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.6;
+  z-index: 0;
+}
+
+.training-title h4 {
+  position: relative;
+  z-index: 1;
+  color: #FFFFFF;
+  font-size: 18px;
+}
+
+.card-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+}
+
+.tipo-treinamento {
+  width: auto;
+  display: flex;
+  align-items: center;
+  border-radius: 0 0 0 20px;
+  background-color: #FFFFFF;
+  height: 30px;
+  padding: 0 10px;
+  color: #F1AE33;
+  font-weight: bold;
+}
+
+.tipo-treinamento i {
+  margin-right: 5px;
+}
+
+.janela-scroll {
+  max-height: 150px;
+  overflow-y: auto;
+  background-color: #FFFFFF;
+  padding: 8px;
+}
+
+.conteudo {
+  text-align: justify;
+  font-size: 15px;
+  min-height: 200px;
+  background-color: #FFFFFF;
+  padding: 0px 5px;
+}
+
+.training-details {
+  background-color: #FFFFFF;
+}
+
+.training-details::before {
+  content: "";
+  display: block;
+  width: 95%;
+  height: 1px;
+  background: #D1D1D1;
+  margin: 15px auto;
+  border-radius: 2px;
+}
+
+.training-info {
+  word-break: break-word;
+  padding: 10px;
+  font-size: 14px;
+  margin: 10px 0;
+}
+
+.training-info strong {
+  color: #475569;
+  font-weight: 600;
+}
+
+.training-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 8px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.training-actions button {
+  flex: 1;
+  min-width: 80px;
+  font-size: 0.8rem;
+  padding: 6px 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #999999;
+  cursor: pointer;
+  color: #000000;
+  background-color: #EEEEEE;
+  transition: 0.3s ease-in-out;
+}
+
+.training-actions button:hover {
+  transform: scale(1.03);
+}
+
+/* MODAL EDITAR TREINAMENTO */
+#modalDetalhesTreinamento .form-section {
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 12px;
+  margin-bottom: 30px;
+}
+
+#editarTreinamentoForm .form-section h4 {
+  position: relative;
+  color: #F1AE33;
+  margin-bottom: 30px;
+}
+
+#editarTreinamentoForm .form-section h4::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  width: 50px;
+  height: 3px;
+  background: #F1AE33;
+}
+
+#editarTreinamentoForm .form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+#editarTreinamentoForm .form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  position: static;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+#editarTreinamentoForm .form-group label {
+  color: #374151;
+  font-weight: 600;
+  font-size: 14px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+#editarTreinamentoForm .input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 2px solid #F1AE33;
+  border-radius: 8px;
+  overflow: hidden;
+  align-items: stretch;
+}
+
+#editarTreinamentoForm .input-icon {
+  background: #FFFFFF;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #8A94A6;
+  min-width: 55px;
+  position: relative;
+  border-right: none;
+}
+
+#editarTreinamentoForm .input-icon::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  height: 80%;
+  width: 3%;
+  background-color: #F1AE33;
+}
+
+#editarTreinamentoForm .input-wrapper input {
+  flex: 1;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  color: #000000;
+  font-size: 15px;
+}
+
+#editarTreinamentoForm .input-wrapper textarea {
+  flex: 1;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  color: #000000;
+  font-size: 15px;
+  resize: vertical;
+  min-height: 120px;
+  box-sizing: border-box;
+}
+
+#editarTreinamentoForm .input-wrapper select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 16px;
+  color: #000000;
+  cursor: pointer;
+
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%236B7280' height='14' viewBox='0 0 20 20' width='14' xmlns='http://www.w3.org/2000/svg'><polygon points='0,0 20,0 10,10'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 10px;
+}
+
+#editarTreinamentoForm .input-wrapper input:focus,
+#editarTreinamentoForm .input-wrapper textarea:focus,
+#editarTreinamentoForm .input-wrapper select:focus {
+  outline: none;
+}
+
+
+
+
+
+
+
+
+/* SEÇÃO MÍDIAS - EDITAR */
+#modalDetalhesTreinamento .professional-form #midia-treinamento {
+  grid-column: 1 / -1;
+}
+
+#modalDetalhesTreinamento .professional-form #midia-treinamento h4 {
+  border-bottom: none;
+}
+
+.midias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.midia-item {
+  border: 1px solid #DDDDDD;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  background: #F9F9F9;
+}
+
+.midia-preview {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+}
+
+.midia-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.midia-nome {
+  font-size: 12px;
+  color: #666666;
+  word-break: break-all;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-section {
+  margin-bottom: 2rem;
+}
+
+.media-section h5 {
+  color: #0F4C5C;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #CBD5E1;
+}
+
+.existing-media {
+  margin-bottom: 2rem;
+}
+
+.no-media {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+  border-radius: 8px;
+  color: #999999;
+}
+
+.no-media p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.btn-excluir-treinamento {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-excluir-treinamento button {
+  margin-top: 10px;
+  width: 300px;
+  font-size: 0.8rem;
+  padding: 6px 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #999999;
+  cursor: pointer;
+  color: #000000;
+  background-color: #EEEEEE;
+  transition: 0.3s ease-in-out;
+}
+
+.btn-excluir-treinamento button:hover {
+  transform: scale(1.03);
+}

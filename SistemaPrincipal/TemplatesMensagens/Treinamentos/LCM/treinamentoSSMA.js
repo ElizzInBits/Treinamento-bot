@@ -5,14 +5,10 @@
 const TREINAMENTO_ID = 14;
 const NOME_TREINAMENTO = 'SSMA - Saúde, Segurança e Meio Ambiente';
 
-// Importar gerenciadores otimizados
+// Importar gerenciadores
 const resourceManager = require('../../resourceManager');
-const SystemOptimizations = require('../../../optimizations');
 const Logger = require('../../../utils/logger');
 const SecurityUtils = require('../../../utils/security');
-
-// Criar gerenciador de imagens otimizado
-const optimizedImageManager = SystemOptimizations.createOptimizedImageManager();
 
 // ID do treinamento para recursos
 const TRAINING_ID = 'ssma';
@@ -298,8 +294,7 @@ async function processarResposta(sender, message, sendMessage) {
  */
 async function iniciarModulo1(sender, sendMessage) {
     // Enviar imagem NR 06 do Google Drive
-    const imagemNR06Url = resourceManager.getImageUrl(TRAINING_ID, 'NR06');
-    const imagemNR06Path = await optimizedImageManager.getImage('NR06', imagemNR06Url);
+    const imagemNR06Path = resourceManager.getImagePath(TRAINING_ID, 'NR06');
     if (imagemNR06Path) {
         try {
             await sendMessage(sender, 'send-image', {
@@ -314,8 +309,7 @@ async function iniciarModulo1(sender, sendMessage) {
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Enviar imagem SSMA do Google Drive
-    const imagemSSMAUrl = resourceManager.getImageUrl(TRAINING_ID, 'SSMA');
-    const imagemSSMAPath = await optimizedImageManager.getImage('SSMA', imagemSSMAUrl);
+    const imagemSSMAPath = resourceManager.getImagePath(TRAINING_ID, 'SSMA');
     if (imagemSSMAPath) {
         try {
             await sendMessage(sender, 'send-image', {
@@ -330,8 +324,7 @@ async function iniciarModulo1(sender, sendMessage) {
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Enviar imagem SST do Google Drive
-    const imagemSSTUrl = resourceManager.getImageUrl(TRAINING_ID, 'SST');
-    const imagemSSTPath = await optimizedImageManager.getImage('SST', imagemSSTUrl);
+    const imagemSSTPath = resourceManager.getImagePath(TRAINING_ID, 'SST');
     if (imagemSSTPath) {
         try {
             await sendMessage(sender, 'send-image', {
@@ -360,8 +353,7 @@ async function iniciarModulo1(sender, sendMessage) {
 
         
     // Enviar imagem LEI do Google Drive
-    const imagemLEIUrl = resourceManager.getImageUrl(TRAINING_ID, 'LEI');
-    const imagemLEIPath = await optimizedImageManager.getImage('LEI', imagemLEIUrl);
+    const imagemLEIPath = resourceManager.getImagePath(TRAINING_ID, 'LEI');
     if (imagemLEIPath) {
         try {
             await sendMessage(sender, 'send-image', {
@@ -383,8 +375,7 @@ async function iniciarModulo1(sender, sendMessage) {
 
 
     // Enviar imagem CIPA do Google Drive
-    const imagemCIPAUrl = resourceManager.getImageUrl(TRAINING_ID, 'CIPA');
-    const imagemCIPAPath = await optimizedImageManager.getImage('CIPA', imagemCIPAUrl);
+    const imagemCIPAPath = resourceManager.getImagePath(TRAINING_ID, 'CIPA');
     if (imagemCIPAPath) {
         try {
             await sendMessage(sender, 'send-image', {
@@ -411,8 +402,7 @@ async function iniciarModulo1(sender, sendMessage) {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Enviar imagem PCMSO do Google Drive
-    const imagemPCMSOUrl = resourceManager.getImageUrl(TRAINING_ID, 'PCMSO');
-    const imagemPCMSOPath = await optimizedImageManager.getImage('PCMSO', imagemPCMSOUrl);
+    const imagemPCMSOPath = resourceManager.getImagePath(TRAINING_ID, 'PCMSO');
     if (imagemPCMSOPath) {
         try {
             await sendMessage(sender, 'send-image', {
@@ -594,8 +584,7 @@ async function iniciarModulo2(sender, sendMessage) {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Enviar imagem MAPARISCO do Google Drive
-    const imagemMapaRiscoUrl = resourceManager.getImageUrl(TRAINING_ID, 'MAPARISCO');
-    const imagemMapaRiscoPath = await optimizedImageManager.getImage('MAPARISCO', imagemMapaRiscoUrl);
+    const imagemMapaRiscoPath = resourceManager.getImagePath(TRAINING_ID, 'MAPARISCO');
     if (imagemMapaRiscoPath) {
         try {
             await sendMessage(sender, 'send-image', {
@@ -770,8 +759,7 @@ async function finalizarModulo2(sender, acertos, sendMessage) {
  */
 async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
     // Enviar imagem SEGURANCA usando o gerenciador de recursos
-    const imagemUrl = resourceManager.getImageUrl(TRAINING_ID, 'SEGURANCA');
-    const imagemPath = await optimizedImageManager.getImage('SEGURANCA', imagemUrl);
+    const imagemPath = resourceManager.getImagePath(TRAINING_ID, 'SEGURANCA');
     if (imagemPath) {
         try {
             await sendMessage(sender, 'send-image', {        

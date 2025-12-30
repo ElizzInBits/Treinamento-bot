@@ -92,76 +92,33 @@ function validarCPF(cpf) {
     return true;
 }
 
-// Função para gerar variações - MELHORADA
+// Função para gerar variações - SIMPLIFICADA
 function gerarVariacoes(numeroCompleto) {
     const limpo = limparNumero(numeroCompleto);
     const variacoes = [limpo];
     
-    console.log(`🔄 Gerando variações para: ${limpo}`);
-
-    // Se tem 10 dígitos (DDD + 8 dígitos)
+    // Se tem 10 dígitos (DDD + 8): adicionar com 9 e com DDI
     if (limpo.length === 10) {
-        // Adicionar variação com 9
-        const comNove = limpo.slice(0, 2) + '9' + limpo.slice(2);
-        variacoes.push(comNove);
-        
-        // Adicionar variações com DDI 55
-        variacoes.push('55' + limpo);
-        variacoes.push('55' + comNove);
+        variacoes.push(limpo.slice(0, 2) + '9' + limpo.slice(2)); // com 9
+        variacoes.push('55' + limpo); // com DDI
     }
-    
-    // Se tem 11 dígitos (DDD + 9 dígitos)
-    else if (limpo.length === 11) {
-        // Remover o 9 se estiver na posição correta
-        if (limpo.charAt(2) === '9') {
-            const semNove = limpo.slice(0, 2) + limpo.slice(3);
-            variacoes.push(semNove);
-        }
-        
-        // Adicionar variações com DDI 55
-        variacoes.push('55' + limpo);
-        if (limpo.charAt(2) === '9') {
-            const semNove = limpo.slice(0, 2) + limpo.slice(3);
-            variacoes.push('55' + semNove);
-        }
+    // Se tem 11 dígitos (DDD + 9): remover 9 e adicionar DDI
+    else if (limpo.length === 11 && limpo.charAt(2) === '9') {
+        variacoes.push(limpo.slice(0, 2) + limpo.slice(3)); // sem 9
+        variacoes.push('55' + limpo); // com DDI
     }
-    
-    // Se tem 12 dígitos (DDI + DDD + 8 dígitos)
-    else if (limpo.length === 12) {
-        // Adicionar variação com 9
-        const comNove = limpo.slice(0, 4) + '9' + limpo.slice(4);
-        variacoes.push(comNove);
-        
-        // Remover DDI se for 55
-        if (limpo.startsWith('55')) {
-            variacoes.push(limpo.slice(2));
-            variacoes.push(limpo.slice(2, 4) + '9' + limpo.slice(4));
-        }
+    // Se tem 12 dígitos (DDI + DDD + 8): adicionar com 9 e remover DDI
+    else if (limpo.length === 12 && limpo.startsWith('55')) {
+        variacoes.push(limpo.slice(2)); // sem DDI
+        variacoes.push(limpo.slice(0, 4) + '9' + limpo.slice(4)); // com 9
     }
-    
-    // Se tem 13 dígitos (DDI + DDD + 9 dígitos)
-    else if (limpo.length === 13) {
-        // Remover o 9 se estiver na posição correta
-        if (limpo.charAt(4) === '9') {
-            const semNove = limpo.slice(0, 4) + limpo.slice(5);
-            variacoes.push(semNove);
-        }
-        
-        // Remover DDI se for 55
-        if (limpo.startsWith('55')) {
-            variacoes.push(limpo.slice(2));
-            if (limpo.charAt(4) === '9') {
-                const semNove = limpo.slice(2, 4) + limpo.slice(5);
-                variacoes.push(semNove);
-            }
-        }
+    // Se tem 13 dígitos (DDI + DDD + 9): remover 9 e remover DDI
+    else if (limpo.length === 13 && limpo.startsWith('55') && limpo.charAt(4) === '9') {
+        variacoes.push(limpo.slice(2)); // sem DDI
+        variacoes.push(limpo.slice(0, 4) + limpo.slice(5)); // sem 9
     }
 
-    // Remover duplicatas
-    const varicoesUnicas = [...new Set(variacoes)];
-    console.log(`🔄 Variações geradas: ${varicoesUnicas.join(', ')}`);
-    
-    return varicoesUnicas;
+    return [...new Set(variacoes)];
 }
 
 // Listar todos os contatos
@@ -246,31 +203,41 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // Verificar duplicatas de telefone e CPF
+        // Verificar duplicatas de telefone
         const variacoesTelefone = gerarVariacoes(telefoneLimpo);
         const cpfLimpo = cpf ? cpf.replace(/\D/g, '') : null;
         
-        const contatosExistentes = await Usuario.findAll();
-
-        const telefoneExiste = contatosExistentes.some(contato => {
-            const variacoesContato = gerarVariacoes(contato.telefone);
-            return variacoesTelefone.some(num => variacoesContato.includes(num));
+        console.log(`🔍 Verificando duplicatas para: ${telefoneLimpo}`);
+        console.log(`🔍 Variações geradas: ${variacoesTelefone.join(', ')}`);
+        
+        // Buscar contatos com telefones que possam corresponder
+        const contatosExistentes = await Usuario.findAll({
+            where: {
+                telefone: {
+                    [Op.in]: variacoesTelefone
+                }
+            }
         });
 
-        if (telefoneExiste) {
+        if (contatosExistentes.length > 0) {
+            console.log(`❌ Telefone duplicado encontrado: ${contatosExistentes[0].telefone}`);
             return res.status(400).json({
                 error: 'Já existe um contato com este telefone'
             });
         }
+        
+        console.log(`✅ Nenhum telefone duplicado encontrado`);
 
         // Verificar CPF duplicado se fornecido
         if (cpfLimpo) {
             const cpfExiste = await Usuario.findOne({ where: { cpf: cpfLimpo } });
             if (cpfExiste) {
+                console.log(`❌ CPF duplicado encontrado: ${cpfLimpo}`);
                 return res.status(400).json({
                     error: 'Já existe um contato com este CPF'
                 });
             }
+            console.log(`✅ CPF não duplicado`);
         }
 
         // Criar novo contato
@@ -338,7 +305,8 @@ router.put('/:id', async (req, res) => {
       cpf,
       empresaId,
       cargo,
-      setor
+      setor,
+      treinamentoId
     } = req.body;
 
     const contato = await Usuario.findByPk(req.params.id);
@@ -404,6 +372,12 @@ router.put('/:id', async (req, res) => {
     if (empresaId !== undefined) {
       camposParaAtualizar.empresaId = empresaId ? parseInt(empresaId, 10) : null;
     }
+
+    if (treinamentoId !== undefined) {
+        camposParaAtualizar.treinamentoId = treinamentoId
+            ? parseInt(treinamentoId, 10)
+            : null;
+        }
 
     // ✨ Executa atualização
     await contato.update(camposParaAtualizar);
@@ -581,6 +555,130 @@ router.post('/:id/restart-treinamento', async (req, res) => {
     }
 });
 
+// Exportar conversa do WhatsApp (rota pública com token)
+router.get('/:id/exportar-conversa', async (req, res) => {
+    try {
+        const contato = await Usuario.findByPk(req.params.id);
+        if (!contato) {
+            return res.status(404).json({ error: 'Contato não encontrado' });
+        }
+
+        const { Interacao } = require('../../BancoDeDados/models');
+        const variacoesTelefone = gerarVariacoes(contato.telefone);
+        
+        // Buscar todas as interações do contato
+        const interacoes = await Interacao.findAll({
+            where: {
+                telefone: {
+                    [Op.in]: variacoesTelefone
+                }
+            },
+            order: [['createdAt', 'ASC']]
+        });
+
+        if (interacoes.length === 0) {
+            return res.status(404).send('Nenhuma conversa encontrada para este contato');
+        }
+
+        // Formatar conversa no estilo WhatsApp
+        let conversaTxt = `Conversa com ${contato.nome}\n`;
+        conversaTxt += `Telefone: ${formatarTelefoneExport(contato.telefone)}\n`;
+        conversaTxt += `Exportado em: ${new Date().toLocaleString('pt-BR')}\n`;
+        conversaTxt += `Total de mensagens: ${interacoes.length}\n`;
+        conversaTxt += `${'='.repeat(60)}\n\n`;
+
+        interacoes.forEach(interacao => {
+            const data = new Date(interacao.createdAt);
+            const dataFormatada = data.toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            const remetente = interacao.tipo === 'enviada' ? 'Bot' : contato.nome;
+            const mensagemTexto = typeof interacao.mensagem === 'string' ? interacao.mensagem : JSON.stringify(interacao.mensagem);
+            conversaTxt += `[${dataFormatada}] ${remetente}: ${mensagemTexto}\n`;
+        });
+
+        // Configurar headers para download
+        const nomeArquivo = `conversa_${contato.nome.replace(/\s+/g, '_')}_${Date.now()}.txt`;
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${nomeArquivo}"`);
+        res.send(conversaTxt);
+
+    } catch (error) {
+        console.error('Erro ao exportar conversa:', error);
+        res.status(500).send('Erro ao exportar conversa');
+    }
+});
+
+function formatarTelefoneExport(telefone) {
+    if (!telefone) return 'N/A';
+    const cleaned = telefone.replace(/\D/g, '');
+    if (cleaned.length === 13) {
+        return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
+    } else if (cleaned.length === 12) {
+        return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 8)}-${cleaned.slice(8)}`;
+    } else if (cleaned.length === 11) {
+        return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+    }
+    return telefone;
+}
+
+// Transferir funcionário entre empresas
+router.patch('/:id/transferir-empresa', async (req, res) => {
+    try {
+        const { novaEmpresaId } = req.body;
+        
+        if (!novaEmpresaId) {
+            return res.status(400).json({ error: 'ID da nova empresa é obrigatório' });
+        }
+
+        const contato = await Usuario.findByPk(req.params.id);
+        if (!contato) {
+            return res.status(404).json({ error: 'Funcionário não encontrado' });
+        }
+
+        const novaEmpresa = await Empresa.findByPk(novaEmpresaId);
+        if (!novaEmpresa) {
+            return res.status(404).json({ error: 'Nova empresa não encontrada' });
+        }
+
+        const empresaAntigaId = contato.empresaId;
+        await contato.update({ empresaId: novaEmpresaId });
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('usuarioTransferido', {
+                usuario: contato,
+                empresaAntigaId,
+                novaEmpresaId,
+                timestamp: new Date()
+            });
+            io.emit('notificacao', {
+                tipo: 'usuario_transferido',
+                titulo: 'Funcionário Transferido',
+                mensagem: `${contato.nome} foi transferido para ${novaEmpresa.razaoSocial}`,
+                timestamp: new Date()
+            });
+        }
+
+        res.json({ 
+            message: 'Funcionário transferido com sucesso',
+            contato,
+            empresaAntiga: empresaAntigaId,
+            empresaNova: novaEmpresaId
+        });
+
+    } catch (error) {
+        console.error('Erro ao transferir funcionário:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
 // Ativar/Desativar contato
 router.patch('/:id/toggle-ativo', async (req, res) => {
     try {
@@ -630,6 +728,57 @@ router.delete('/:id', async (req, res) => {
 
     } catch (error) {
         console.error('Erro ao deletar contato:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Rota de teste para verificar se telefone está cadastrado
+router.post('/verificar-telefone', async (req, res) => {
+    try {
+        const { telefone } = req.body;
+        if (!telefone) {
+            return res.status(400).json({ error: 'Telefone é obrigatório' });
+        }
+
+        const telefoneLimpo = limparNumero(telefone);
+        const variacoes = gerarVariacoes(telefoneLimpo);
+        
+        console.log(`🔍 Verificando telefone: ${telefone}`);
+        console.log(`📞 Telefone limpo: ${telefoneLimpo}`);
+        console.log(`🔢 Variações: ${variacoes.join(', ')}`);
+        
+        const contatos = await Usuario.findAll({
+            where: {
+                telefone: {
+                    [Op.in]: variacoes
+                }
+            }
+        });
+        
+        if (contatos.length > 0) {
+            console.log(`✅ Contato(s) encontrado(s): ${contatos.map(c => `${c.nome} (${c.telefone})`).join(', ')}`);
+            res.json({
+                encontrado: true,
+                contatos: contatos.map(c => ({
+                    id: c.id,
+                    nome: c.nome,
+                    telefone: c.telefone,
+                    email: c.email,
+                    statusTreinamento: c.statusTreinamento
+                })),
+                variacoesTestadas: variacoes
+            });
+        } else {
+            console.log(`❌ Nenhum contato encontrado`);
+            res.json({
+                encontrado: false,
+                variacoesTestadas: variacoes,
+                mensagem: 'Nenhum contato encontrado com este telefone'
+            });
+        }
+
+    } catch (error) {
+        console.error('Erro ao verificar telefone:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });

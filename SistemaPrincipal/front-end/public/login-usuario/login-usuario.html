@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acessar Cadastro</title>
+    <link rel="icon" type="image/png" href="../home/Imagens/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Onest:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <script src="https://kit.fontawesome.com/4392b60e4c.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="../login-usuario/css/login-usuario.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Acessar meus dados</h1>
+            <p>Digite seu email e CPF para acessar seus dados</p>
+        </div>
+
+        <div class="form-section" style="padding: 10px 30px">
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="email" class="text">E-mail</label>
+                    <input type="email" class="input" id="email" placeholder="joao.silva@exemplo.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="cpf" class="text">CPF</label>
+                    <input type="text" class="input" id="cpf" placeholder="000.000.000-00" maxlength="14" required>
+                </div>
+
+                <button type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Acessar
+                </button>
+            </form>
+
+            <div class="voltar-cadastro">
+                <button onclick="window.location.href='/autoCadastro'">
+                    ← Voltar ao Cadastro
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../login-usuario/js/login-usuario.js"></script>
+</body>
+
+</html>

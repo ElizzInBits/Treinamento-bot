@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auto Cadastro</title>
+  <title>Cadastro de Empresas</title>
   <link rel="icon" type="image/png" href="../home/Imagens/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
     href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
     rel="stylesheet">
   <script src="https://kit.fontawesome.com/4392b60e4c.js" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="css/autoCadastro.css" />
+  <link rel="stylesheet" href="/cadastro-empresa/css/cadastro-empresa.css" />
 </head>
 
 <body>
@@ -22,80 +22,70 @@
     </div>
   </div>
   <div class="container">
-    <h1>Faça Seu Cadastro</h1>
-    <p class="subtitle">Preencha seus dados para começar sua jornada de aprendizado</p>
+    <h1>Cadastro de Empresa</h1>
+    <p class="subtitle">Preencha os dados da empresa para começar</p>
 
     <div class="form-section">
-      <form id="autoCadastroForm">
+      <form id="cadastroEmpresaForm">
 
         <div class="form-group">
-          <label for="nomeCompleto">Nome Completo <span class="required">*</span></label>
-
-          <div class="warning-message-container">
-            <div class="warning-message">
-              <strong><i class="fa-solid fa-award" style="color: #475569; margin-right: 3px;"></i>
-                IMPORTANTE:</strong><br>
-              Preencha seu <strong>nome completo corretamente</strong>, exatamente como consta em seus documentos. Este
-              nome será utilizado na emissão do certificado oficial.
-            </div>
-          </div>
-
+          <label for="razaoSocial">Razão Social <span class="required">*</span></label>
           <div class="input-wrapper">
             <div class="input-icon">
-              <span><i class="fa-solid fa-user"></i></span>
+              <span><i class="fa-solid fa-building"></i></span>
             </div>
-            <input type="text" id="nomeCompleto" name="nomeCompleto" placeholder="Ex: João Silva Santos" required />
-          </div>
+            <input type="text" id="razaoSocial" name="razaoSocial" placeholder="Ex: Tech Solutions Ltda" required/>
+          </div> 
         </div>
 
         <div class="form-group">
-          <label for="cpf">CPF <span class="required">*</span></label>
+          <label for="cnpj">CNPJ <span class="required">*</span></label>
           <div class="input-wrapper">
             <div class="input-icon">
               <span><i class="fa-solid fa-id-card"></i></span>
             </div>
-            <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" required />
+            <input type="text" id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" required/>
           </div>
-          <div id="cpfError" class="error-message"></div>
         </div>
 
         <div class="form-group">
-          <label for="sexo">Sexo <span class="required">*</span></label>
+          <label for="porte">Porte da Empresa <span class="required">*</span></label>
           <div class="input-wrapper">
             <div class="input-icon">
-              <i class="fa-solid fa-venus-mars"></i>
+              <i class="fa-solid fa-users"></i>
             </div>
-            <select id="sexo" name="sexo" required>
-              <option value="">Selecione uma opção...</option>
-              <option value="masculino">Masculino</option>
-              <option value="feminino">Feminino</option>
-              <option value="outro">Outro</option>
+            <select id="porte" name="porte" required>
+              <option value="">Selecione o porte...</option>
+              <option value="MICRO">Microempresa</option>
+              <option value="PEQUENO">Pequeno Porte</option>
+              <option value="MEDIO">Médio Porte</option>
+              <option value="GRANDE">Grande Porte</option>
             </select>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="email">E-mail <span class="required">*</span></label>
+          <label for="endereco">Endereço <span class="required">*</span></label>
           <div class="input-wrapper">
             <div class="input-icon">
-              <span><i class="fa-solid fa-envelope"></i></span>
+              <span><i class="fa-solid fa-map-location-dot"></i></span>
             </div>
-            <input type="email" id="email" name="email" placeholder="joao.silva@exemplo.com" required />
+            <input type="text" id="endereco" name="endereco" placeholder="Rua, número e complemento" required/>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="telefone">Telefone <span class="required">*</span></label>
-
-          <div class="warning-message-container">
-            <div class="warning-message">
-              <strong><i class="fa-solid fa-triangle-exclamation" style="color: #475569; margin-right: 3px;"></i>
-                ATENÇÃO:</strong>
-              <br>
-              Use o <strong>mesmo número</strong> que você utilizará para conversar com o bot de treinamento no
-              WhatsApp.
+          <label for="cep">CEP <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <div class="input-icon">
+              <span><i class="fa-solid fa-inbox"></i></span>
             </div>
+            <input type="text" id="cep" name="cep" placeholder="00000-000" required/>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label for="contato">Número de Contato <span class="required">*</span></label>
 
           <div class="input-wrapper">
             <div class="input-icon-ddi">
@@ -146,64 +136,98 @@
                 <option value="+358">🇫🇮 +358</option>
               </select>
             </div>
-            <input type="text" id="telefone" name="telefone" placeholder="(11) 99999-9999" required />
+            <input type="text" id="contato" name="contato" placeholder="(11) 99999-9999" required/>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="cargo">Cargo</label>
+          <label for="email">Email <span class="required">*</span></label>
           <div class="input-wrapper">
             <div class="input-icon">
-              <span><i class="fa-solid fa-briefcase"></i></span>
+              <span><i class="fa-solid fa-envelope"></i></span>
             </div>
-            <input type="text" id="cargo" name="cargo" placeholder="Ex: Operador de Máquinas" />
+            <input type="email" id="email" name="email" placeholder="contato@empresa.com" required/>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="setor">Setor</label>
-          <div class="input-wrapper">
-            <div class="input-icon">
-              <span><i class="fa-solid fa-industry"></i></span>
+          <label>Horário de Funcionamento</label>
+
+          <div class="input-row">
+            <div class="input-wrapper">
+              <input type="time" id="horaInicio" name="horaInicio"/>
             </div>
-            <input type="text" id="setor" name="setor" placeholder="Ex: Produção" />
+
+            <span><i class="fa-solid fa-arrow-right"></i></span>
+
+            <div class="input-wrapper">
+              <input type="time" id="horaFim" name="horaFim"/>
+            </div>
           </div>
+
+          <small style="color: #9ca3af; font-size: 12px; margin-top: 6px; display: block;">Deixe vazio para atendimento
+            24 horas</small>
         </div>
 
         <div class="form-group">
-          <label for="empresaId">Empresa <span class="required">*</span></label>
+          <div class="input-row">
+            <label for="senha">Senha de Acesso <span class="required">*</span></label>
+            <button type="button" id="gerarSenha" class="btn-gerar">
+              🎲 Gerar
+            </button>
+          </div>
+
           <div class="input-wrapper">
             <div class="input-icon">
-              <span><i class="fa-solid fa-building"></i></span>
+              <span><i class="fa-solid fa-envelope"></i></span>
             </div>
-            <select id="empresaId" name="empresaId" required>
-              <option value="">Selecione sua empresa...</option>
-            </select>
+            <input type="text" id="senha" name="senha" placeholder="Digite ou gere uma senha" required/>
           </div>
+          <small style="color: #9ca3af; font-size: 12px; margin-top: 6px; display: block;">Mínimo 8 caracteres. Use o
+            botão "Gerar" para criar uma senha forte
+          </small>
         </div>
 
         <hr style="border: none; border-top: 1px solid #D1D1D1; width: 100%; margin-top: 30px; margin-bottom: 30px;">
 
         <div class="btn-cadastro">
           <button type="submit">
-            <span><i class="fa-solid fa-user-check" style="margin-right: 5px"></i> Finalizar Cadastro</span>
+            <span><i class="fa-solid fa-user-check" style="margin-right: 5px"></i>Finalizar Cadastro</span>
           </button>
-        </div>
-
-        <div class="possui-cadastro">
-          <p>Já possui cadastro?</p>
-          <span type="button" onclick="window.location.href='/login-usuario'">
-            <i class="fa-solid fa-user-pen" style="color: #475569"></i> Acessar meus dados
-          </span>
         </div>
       </form>
     </div>
+
+    <!-- Seção de Gerenciamento de Treinamentos 
+    <div class="training-management-section" id="trainingSection"
+      style="display: none; padding: 40px; background: white; border-top: 1px solid #e5e7eb;">
+      <h2
+        style="color: #374151; font-size: 24px; font-weight: 600; margin: 0 0 30px 0; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <span style="font-size: 28px;">🎓</span> Gerenciar Treinamentos
+      </h2>-->
+<!--
+      <div class="training-container">-->
+        <!-- Treinamentos Atribuídos 
+        <div class="training-column assigned-trainings">
+          <h3>📝 Treinamentos Atribuídos</h3>
+          <div class="training-list" id="assignedTrainingsList">
+            <div class="loading">Carregando...</div>
+          </div>
+        </div>-->
+
+        <!-- Treinamentos Disponíveis 
+        <div class="training-column available-trainings">
+          <h3>➕ Treinamentos Disponíveis</h3>
+          <div class="training-list" id="availableTrainingsList">
+            <div class="loading">Carregando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+-->
   </div>
 
-  <script src="js/cadastro-script.js?v=20251031114700"></script>
-  <script>
-    console.log('✅ Script carregado - Versão 20251031114500 com cargo e setor');
-  </script>
+  <script src="/cadastro-empresa/js/cadastro-empresa.js" defer></script>
 </body>
 
 </html>

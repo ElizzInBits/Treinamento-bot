@@ -1,0 +1,139 @@
+* {
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #53A5A6 0%, #6EC5C7 40%, #4A8F90 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0px 20px;
+}
+
+.container {
+    width: 600px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+}
+
+.header {
+    padding: 30px 30px 0px 30px;
+    text-align: center;
+}
+
+.header h1 {
+    color: #475569;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.content {
+    padding: 30px 32px 32px 32px;
+}
+
+.data-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.data-item {
+    background: #F8FAFC;
+    padding: 16px;
+    border-radius: 12px;
+    border-left: 4px solid #F1AE33;
+}
+
+.data-item label {
+    color: #6B7280;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-item p {
+    color: #6B7280;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 4px 0 0 0;
+}
+
+.btn-wrapper {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-wrapper button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #F1AE33 0%, #f8bc3a 40%, #F3B84A 100%);
+    color: #000000;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: transform 0.2s;
+}
+
+.btn-wrapper button i {
+    margin-right: 5px;
+}
+
+.btn-wrapper button:hover {
+    transform: translateY(-2px);
+}
+
+/* MODAL DE EDITAR */
+#editMode {
+    display: none;
+}
+
+.data-item-edit {
+    display: flex;
+    flex-direction: column;
+    background: #F8FAFC;
+    padding: 16px;
+    border-radius: 12px;
+    border-left: 4px solid #F1AE33;
+}
+
+.data-item-edit label {
+    color: #6B7280;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-item-edit input {
+    background-color: transparent;
+    color: #6B7280;
+    border: 2px solid #F1AE33;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 5px;
+    padding: 5px;
+    border-radius: 8px;
+}
+
+input:focus {
+    outline: none;
+}
+
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset;
+  box-shadow: 0 0 0 1000px #FFFFFF inset;
+  -webkit-text-fill-color: #000000;
+}

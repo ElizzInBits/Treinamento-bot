@@ -12,8 +12,14 @@ function addSharedLog(level, message, meta = {}) {
     
     // Ler logs existentes
     if (fs.existsSync(SHARED_LOGS_FILE)) {
-      const data = fs.readFileSync(SHARED_LOGS_FILE, 'utf8');
-      logs = JSON.parse(data);
+      try {
+        const data = fs.readFileSync(SHARED_LOGS_FILE, 'utf8');
+        logs = JSON.parse(data);
+        if (!Array.isArray(logs)) logs = [];
+      } catch (parseError) {
+        // JSON corrompido, reiniciar arquivo
+        logs = [];
+      }
     }
     
     // Adicionar novo log
@@ -35,7 +41,7 @@ function addSharedLog(level, message, meta = {}) {
     // Salvar de volta
     fs.writeFileSync(SHARED_LOGS_FILE, JSON.stringify(logs, null, 2));
   } catch (error) {
-    console.error('Erro ao salvar log compartilhado:', error.message);
+    // Silenciar erro para não poluir console
   }
 }
 
@@ -49,6 +55,8 @@ function getSharedLogs(limit = 100, level = null) {
     const data = fs.readFileSync(SHARED_LOGS_FILE, 'utf8');
     let logs = JSON.parse(data);
     
+    if (!Array.isArray(logs)) return [];
+    
     // Filtrar por nível se especificado
     if (level) {
       logs = logs.filter(log => log.level === level);
@@ -57,7 +65,6 @@ function getSharedLogs(limit = 100, level = null) {
     // Retornar os últimos logs em ordem reversa
     return logs.slice(-limit).reverse();
   } catch (error) {
-    console.error('Erro ao ler logs compartilhados:', error.message);
     return [];
   }
 }
@@ -65,11 +72,9 @@ function getSharedLogs(limit = 100, level = null) {
 // Função para limpar logs compartilhados
 function clearSharedLogs() {
   try {
-    if (fs.existsSync(SHARED_LOGS_FILE)) {
-      fs.unlinkSync(SHARED_LOGS_FILE);
-    }
+    fs.writeFileSync(SHARED_LOGS_FILE, '[]');
   } catch (error) {
-    console.error('Erro ao limpar logs compartilhados:', error.message);
+    // Silenciar erro
   }
 }
 

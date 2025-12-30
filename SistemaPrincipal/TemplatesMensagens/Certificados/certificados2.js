@@ -291,8 +291,14 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null, treiname
 }
 
 function formatarCPF(cpf) {
-  if (!cpf || cpf.length !== 11) return '***.***.***-**';
-  return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  if (!cpf) return '***.***.***-**';
+  
+  // Remover caracteres não numéricos
+  const cpfLimpo = cpf.replace(/\D/g, '');
+  
+  if (cpfLimpo.length !== 11) return cpf; // Retorna original se não tiver 11 dígitos
+  
+  return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 }
 
 async function enviarEmail(destinatario, arquivoPath, treinamento = null) {
@@ -338,8 +344,198 @@ async function enviarEmail(destinatario, arquivoPath, treinamento = null) {
   }
 }
 
+// Função para gerar certificado de visitante (sem cadastro no sistema)
+async function gerarCertificadoVisitante(nome, email, cpf, treinamentoId = 15) {
+  try {
+    // Buscar treinamento
+    const treinamento = await Treinamento.findByPk(treinamentoId);
+    
+    if (!treinamento) {
+      throw new Error(`❌ Treinamento não encontrado.`);
+    }
+
+    // Carregar modelo do certificado
+    const templatePath = path.join(__dirname, 'Modelo Certificado-Base.pdf');
+    if (!fs.existsSync(templatePath)) {
+      throw new Error('❌ Modelo de certificado não encontrado.');
+    }
+
+    const templateBytes = fs.readFileSync(templatePath);
+    const pdfDoc = await PDFDocument.load(templateBytes);
+    const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const page = pdfDoc.getPages()[0];
+    const cor = rgb(0, 0, 0);
+    const tamanho = 12;
+
+    // Função para normalizar texto
+    function normalizarTexto(texto) {
+      if (!texto) return '';
+      return texto
+        .replace(/[\r\n\t]/g, ' ')
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\x20-\x7E]/g, '')
+        .trim();
+    }
+
+    // PRIMEIRA PÁGINA
+    page.drawText('Conferido a:', { x: 270, y: 630, size: tamanho, font: helvetica, color: cor });
+
+    // Nome (centralizado) - EM MAIÚSCULAS
+    const nomeCompleto = normalizarTexto(nome.toUpperCase());
+    const nomeSize = 16;
+    const larguraPagina = 595.28;
+    
+    try {
+      const larguraNome = helvetica.widthOfTextAtSize(nomeCompleto, nomeSize);
+      const nomeX = (larguraPagina / 2) - (larguraNome / 2);
+      page.drawText(nomeCompleto, { x: nomeX, y: 600, size: nomeSize, font: helvetica, color: cor });
+    } catch (error) {
+      page.drawText(nomeCompleto, { x: 150, y: 600, size: nomeSize, font: helvetica, color: cor });
+    }
+
+    // Documento de Identificação (com CPF formatado)
+    page.drawText('Documento de', { x: 60, y: 519, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Identificação:', { x: 60, y: 506, size: tamanho, font: helvetica, color: cor });
+    page.drawText(formatarCPF(cpf), { x: 166, y: 513, size: tamanho, font: helvetica, color: cor });
+
+    // Nome do Curso
+    page.drawText('Nome do Curso:', { x: 60, y: 467, size: tamanho, font: helvetica, color: cor });
+    const nomeCurso = normalizarTexto(treinamento.nome || '');
+    page.drawText(nomeCurso, { x: 166, y: 467, size: tamanho, font: helvetica, color: cor });
+
+    // Empresa
+    page.drawText('Empresa:', { x: 60, y: 429, size: tamanho, font: helvetica, color: cor });
+    page.drawText('SALUBRITA TREINAMENTOS LTDA', { x: 166, y: 427, size: tamanho, font: helvetica, color: cor });
+
+    // Modalidade
+    page.drawText('Modalidade de', { x: 60, y: 382, size: tamanho, font: helvetica, color: cor });
+    page.drawText('treinamento:', { x: 60, y: 367, size: tamanho, font: helvetica, color: cor });
+    page.drawText(normalizarTexto(treinamento.modalidade || ''), { x: 166, y: 374, size: tamanho, font: helvetica, color: cor });
+
+    // TIPO
+    page.drawText('Tipo de', { x: 310, y: 386, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Treinamento:', { x: 310, y: 371, size: tamanho, font: helvetica, color: cor });
+    const tipoTreinamento = normalizarTexto(treinamento.tipo || 'TEORICO E PRATICO');
+    page.drawText(tipoTreinamento, { x: 400, y: 380, size: tamanho, font: helvetica, color: cor });
+
+    // Carga Horária e Período
+    page.drawText('Carga Horária', { x: 60, y: 336, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Realizada:', { x: 60, y: 321, size: tamanho, font: helvetica, color: cor });
+    const cargaHoraria = treinamento.carga_horaria || treinamento.cargaHoraria || '4';
+    page.drawText(`${cargaHoraria} HORAS`, { x: 166, y: 328, size: tamanho, font: helvetica, color: cor });
+
+    // Período de Treinamento
+    const dataAtual = new Date().toLocaleDateString('pt-BR');
+    const periodoTreinamento = `${dataAtual} - ${dataAtual}`;
+    page.drawText('Período de', { x: 310, y: 336, size: tamanho, font: helvetica, color: cor });
+    page.drawText('Treinamento:', { x: 310, y: 321, size: tamanho, font: helvetica, color: cor });
+    page.drawText(periodoTreinamento, { x: 400, y: 328, size: tamanho, font: helvetica, color: cor });
+
+    // Marca d'água APENAS para certificado de visitante (mais visível)
+    page.drawText('CERTIFICADO DE DEMONSTRACAO', {
+      x: 120, y: 420, size: 24, font: helvetica, color: rgb(0.8, 0.8, 0.8), opacity: 0.6
+    });
+    page.drawText('SEM VALIDADE LEGAL', {
+      x: 170, y: 390, size: 24, font: helvetica, color: rgb(0.8, 0.8, 0.8), opacity: 0.5
+    });
+
+    // SEGUNDA PÁGINA - Conteúdo Programático
+    const paginas = pdfDoc.getPages();
+    let segundaPagina;
+
+    if (paginas.length >= 2) {
+      segundaPagina = paginas[1];
+    }
+
+    if (segundaPagina) {
+      // Função para quebrar texto em linhas
+      function quebrarTexto(texto, fonte, tamanhoFonte, larguraMax) {
+        if (!texto) return [''];
+        const palavras = texto.split(' ');
+        const linhas = [];
+        let linhaAtual = '';
+        
+        for (const palavra of palavras) {
+          const testeLinhaAtual = linhaAtual ? `${linhaAtual} ${palavra}` : palavra;
+          try {
+            const larguraReal = fonte.widthOfTextAtSize(testeLinhaAtual, tamanhoFonte);
+            if (larguraReal <= larguraMax) {
+              linhaAtual = testeLinhaAtual;
+            } else {
+              if (linhaAtual) {
+                linhas.push(linhaAtual);
+                linhaAtual = palavra;
+              } else {
+                linhas.push(palavra);
+              }
+            }
+          } catch (error) {
+            if (testeLinhaAtual.length * tamanhoFonte * 0.6 <= larguraMax) {
+              linhaAtual = testeLinhaAtual;
+            } else {
+              if (linhaAtual) {
+                linhas.push(linhaAtual);
+                linhaAtual = palavra;
+              } else {
+                linhas.push(palavra);
+              }
+            }
+          }
+        }
+        if (linhaAtual) linhas.push(linhaAtual);
+        return linhas;
+      }
+
+      // Conteúdo Programático
+      const linhasConteudo = quebrarTexto(treinamento.conteudo_programatico || 'Conteúdo não informado', helvetica, tamanho, 520);
+      let yConteudo = 660;
+      
+      linhasConteudo.forEach(linha => {
+        if (yConteudo < 450) return;
+        segundaPagina.drawText(linha, { x: 40, y: yConteudo, size: tamanho, font: helvetica, color: cor });
+        yConteudo -= 16;
+      });
+
+      // Instrutor
+      const instrutorInfo = `${treinamento.instrutor_principal || ''} - ${treinamento.qualificacao_instrutor || ''} - ${treinamento.registro_instrutor || ''}`;
+      segundaPagina.drawText(instrutorInfo, { x: 40, y: 430, size: tamanho, font: helvetica, color: cor });
+
+      // Responsável
+      const responsavelInfo = `${treinamento.responsavel_treinamento || ''} - ${treinamento.cargo_responsavel || ''} - ${treinamento.registro_responsavel || ''}`;
+      segundaPagina.drawText(responsavelInfo, { x: 40, y: 320, size: tamanho, font: helvetica, color: cor });
+
+      // Aproveitamento
+      const aproveitamentoTexto = treinamento.aproveitamento_conteudo || 'Nao ha aproveitamento de conteudo a ser considerado para esta capacitacao.';
+      segundaPagina.drawText(aproveitamentoTexto, {
+        x: 40, y: 220, size: tamanho, font: helvetica, color: cor, maxWidth: 500
+      });
+    }
+
+    // Salvar PDF 
+    const certificadosDir = path.join(__dirname, 'Certificados');
+    if (!fs.existsSync(certificadosDir)) {
+      fs.mkdirSync(certificadosDir, { recursive: true });
+    }
+
+    const nomeArquivo = nome.replace(/[^\w\s]/gi, '').replace(/\s+/g, '_');
+    const timestamp = Date.now();
+    const caminhoArquivo = path.join(certificadosDir, `certificado_visitante_${nomeArquivo}_${timestamp}.pdf`);
+    fs.writeFileSync(caminhoArquivo, await pdfDoc.save());
+
+    console.log('✅ Certificado visitante gerado:', caminhoArquivo);
+
+    return caminhoArquivo;
+  } catch (error) {
+    console.error('❌ Erro ao gerar certificado visitante:', error.message);
+    throw error;
+  }
+}
+
 module.exports = {
   gerarCertificado: gerarCertificadoBanco,
   gerarCertificadoBanco,
+  gerarCertificadoVisitante,
   enviarEmail,
 };

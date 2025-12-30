@@ -1,7 +1,6 @@
 // Carregar .env da raiz do projeto
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env'), quiet: true });
 
-
 const cors = require('cors');
 const path = require('path');
 const express = require('express');
@@ -186,14 +185,12 @@ const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 1 hora em ms
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     
-    // Debug: mostrar qual senha está sendo usada
     console.log('🔐 DEBUG LOGIN:');
     console.log('  - Username recebido:', username);
     console.log('  - ADMIN_USERNAME env:', process.env.ADMIN_USERNAME);
     console.log('  - ADMIN_PASSWORD env:', process.env.ADMIN_PASSWORD);
     console.log('  - Senha padrão fallback: salubrita');
     
-    // Credenciais do admin via env
     if (username === (process.env.ADMIN_USERNAME || 'Administrador') && password === (process.env.ADMIN_PASSWORD || 'salubrita')) {
         const token = jwt.sign({ 
             username: 'Administrador',
@@ -232,10 +229,12 @@ function authenticateToken(req, res, next) {
 
 // ✅ 7. Registrar rotas da API com autenticação
 // Registrar rotas da API
-// Rotas públicas para cadastro
+// Rotas públicas para cadastro e exportar conversa
 app.use('/api/usuarios', (req, res, next) => {
     if (req.method === 'POST' && req.path === '/') {
         next(); // Permitir POST público para cadastro
+    } else if (req.path.includes('/exportar-conversa')) {
+        next(); // Permitir exportar conversa sem autenticação
     } else {
         authenticateToken(req, res, next);
     }
@@ -245,17 +244,21 @@ app.use('/api/usuarios', (req, res, next) => {
 app.use('/api/contatos', (req, res, next) => {
     if (req.method === 'POST' && req.path === '/') {
         next(); // Permitir POST público para cadastro
+    } else if (req.path.includes('/exportar-conversa')) {
+        next(); // Permitir exportar conversa sem autenticação
     } else {
         authenticateToken(req, res, next);
     }
 }, contatosRoutes);
+
 app.use('/api/empresas', (req, res, next) => {
-    if (req.path === '/select/options' || (req.method === 'POST' && req.path === '/')) {
-        next(); // Permitir acesso público às opções de empresas e cadastro
+    if (req.path === '/select/options' || req.path === '/salubrita' || (req.method === 'POST' && req.path === '/')) {
+        next(); // Permitir acesso público às opções de empresas, Salubritá e cadastro
     } else {
         authenticateToken(req, res, next);
     }
 }, empresasRoutes);
+
 app.use('/api/treinamentos', (req, res, next) => {
     // Interceptar requisições do navegador sem token
     const authHeader = req.headers['authorization'];
@@ -267,6 +270,7 @@ app.use('/api/treinamentos', (req, res, next) => {
     
     authenticateToken(req, res, next);
 }, treinamentosRoutes);
+
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/usuario', usuarioRoutes);
 
@@ -329,7 +333,7 @@ if (fs.existsSync(midiaPath)) {
     }
 }
 
-// ✅ 8. Rota de teste básica
+// ROTA DE TESTE
 app.get('/test', (req, res) => {
     res.json({
         message: 'Servidor funcionando!',
@@ -347,16 +351,16 @@ app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
     res.status(204).end();
 });
 
-// ✅ 9. Painéis HTML
-const homePath = path.join(publicPath, 'home', 'home-index.html');
+// PAINÉIS - TELA PRINCIPAL, AUTOCADASTRO E CADASTRO DE EMPRESA
+const homePath = path.join(publicPath, 'home', 'home.html');
 const autoCadastroPath = path.join(publicPath, 'autoCadastro', 'cadastro-index.html');
-const emprePath = path.join(publicPath, 'empreCadastro', 'empre-index.html');
+const cadastroEmpresaPath = path.join(publicPath, 'cadastro-empresa', 'cadastro-empresa.html');
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date() });
 });
 
-// Página de login para API
+// PÁGINA DE LOGIN PARA API
 app.get('/login-api', (req, res) => {
     res.send(`
     <!DOCTYPE html>
@@ -414,7 +418,7 @@ app.get('/login-api', (req, res) => {
                 document.getElementById('data').innerHTML = JSON.stringify(data, null, 2);
             }
             
-            function logout() {
+            function logout(
                 localStorage.removeItem('token');
                 location.reload();
             }
@@ -428,35 +432,40 @@ app.get('/login-api', (req, res) => {
     `);
 });
 
-// Redirecionar para login
+// ROTA PARA PÁGINA DE LOGIN ADM
 app.get('/', (req, res) => {
     const loginPath = path.join(publicPath, 'login', 'login.html');
     fs.existsSync(loginPath) ? res.sendFile(loginPath) : res.json({ error: 'Página de login não encontrada' });
 });
 
+// ROTA PARA PÁGINA PRINCIPAL
 app.get('/home', (req, res) => {
     fs.existsSync(homePath) ? res.sendFile(homePath) : res.json({ error: 'Painel 1 não encontrado', path: homePath });
 });
 
+// ROTA PARA PÁGINA DE AUTOCADASTRO
 app.get('/autoCadastro', (req, res) => {
     fs.existsSync(autoCadastroPath) ? res.sendFile(autoCadastroPath) : res.json({ error: 'Painel 2 não encontrado', path: autoCadastroPath });
 });
 
-app.get('/empre', (req, res) => {
-    fs.existsSync(emprePath) ? res.sendFile(emprePath) : res.json({ error: 'Painel 3 não encontrado', path: emprePath });
+// ROTA PARA PÁGINA DE CADASTRO DE EMPRESA
+app.get('/cadastro-empresa', (req, res) => {
+    fs.existsSync(cadastroEmpresaPath) ? res.sendFile(cadastroEmpresaPath) : res.json({ error: 'Painel 3 não encontrado', path: cadastroEmpresaPath });
 });
 
-app.get('/usuario-login', (req, res) => {
-    const usuarioLoginPath = path.join(publicPath, 'usuario', 'login.html');
+// ROTA PARA PÁGINA DE LOGIN DO USUÁRIO
+app.get('/login-usuario', (req, res) => {
+    const usuarioLoginPath = path.join(publicPath, 'login-usuario', 'login-usuario.html');
     fs.existsSync(usuarioLoginPath) ? res.sendFile(usuarioLoginPath) : res.json({ error: 'Página de login do usuário não encontrada' });
 });
 
-app.get('/usuario-painel', (req, res) => {
-    const usuarioPainelPath = path.join(publicPath, 'usuario', 'painel.html');
+// ROTA PARA PAINEL DE EDITAR DADOS DO USUÁRIO
+app.get('/editar-usuario', (req, res) => {
+    const usuarioPainelPath = path.join(publicPath, 'login-usuario', 'editar-usuario.html');
     fs.existsSync(usuarioPainelPath) ? res.sendFile(usuarioPainelPath) : res.json({ error: 'Painel do usuário não encontrado' });
 });
 
-// Rota para página de assinatura de certificado
+// ROTA PARA PÁGINA DE ASSINATURA DE CERTIFICADO
 app.get('/assinar-certificado/:token', (req, res) => {
     const assinaturePath = path.join(publicPath, 'assinar-certificado', 'index.html');
     fs.existsSync(assinaturePath) ? res.sendFile(assinaturePath) : res.json({ error: 'Página de assinatura não encontrada' });
@@ -527,7 +536,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// ✅ 11. Rota 404
+// ROTA 404 - NÃO ENCONTRADA
 app.use((req, res) => {
     console.log(`❌ Rota não encontrada: ${req.method} ${req.path}`);
     res.status(404).json({
@@ -543,45 +552,9 @@ async function iniciarServidor() {
     try {
         console.log('🚀 Iniciando servidor...');
 
-        if (SSL_ENABLED && httpsServer) {
-            // Iniciar servidor HTTPS
-            httpsServer.listen(HTTPS_PORT, '0.0.0.0', () => {
-                const serverIP = process.env.FRONTEND_URL || `https://72.60.48.249:${HTTPS_PORT}`;
-                console.log(`✅ Servidor HTTPS rodando na porta ${HTTPS_PORT}`);
-                console.log(`🔗 Teste: ${serverIP}/test`);
-                console.log(`📱 Painel 1: ${serverIP}/home`);
-                console.log(`📱 Painel 2: ${serverIP}/autoCadastro`);
-                console.log(`📱 Painel 3: ${serverIP}/empre`);
-                console.log(`🔗 API Contatos: ${serverIP}/api/contatos`);
-                console.log(`🔗 API Treinamentos: ${serverIP}/api/treinamentos`);
-                console.log(`🔗 API Empresas: ${serverIP}/api/empresas`);
-            });
-            
-            // Iniciar servidor HTTP para redirecionamento
-            server.listen(PORT, '0.0.0.0', () => {
-                console.log(`🔄 Servidor HTTP (redirecionamento) rodando na porta ${PORT}`);
-            });
-        } else {
-            // Servidor HTTP padrão
-            server.listen(PORT, '0.0.0.0', () => {
-                const serverIP = process.env.FRONTEND_URL || `http://72.60.48.249:${PORT}`;
-                console.log(`✅ Servidor HTTP rodando na porta ${PORT}`);
-                console.log(`🔗 Teste: ${serverIP}/test`);
-                console.log(`📱 Painel 1: ${serverIP}/home`);
-                console.log(`📱 Painel 2: ${serverIP}/autoCadastro`);
-                console.log(`📱 Painel 3: ${serverIP}/empre`);
-                console.log(`🔗 API Contatos: ${serverIP}/api/contatos`);
-                console.log(`🔗 API Treinamentos: ${serverIP}/api/treinamentos`);
-                console.log(`🔗 API Empresas: ${serverIP}/api/empresas`);
-                
-                if (!SSL_ENABLED) {
-                    console.log('💡 Para habilitar SSL, configure SSL_ENABLED=true no .env');
-                }
-            });
-        }
-
+        // Primeiro: Conectar ao banco de dados
         try {
-            console.log('🔗 Tentando conectar ao banco de dados...');
+            console.log('🔗 Conectando ao banco de dados...');
             const { connectDB, sequelize } = require('../BancoDeDados/database.js');
             await connectDB();
             await sequelize.sync();
@@ -591,11 +564,50 @@ async function iniciarServidor() {
             try {
                 const LimpezaSessoes = require('../BancoDeDados/limpezaSessoes');
                 LimpezaSessoes.iniciarLimpezaAutomatica();
+                console.log('🧹 Limpeza automática iniciada');
             } catch (limpezaError) {
                 console.error('⚠️ Erro ao iniciar limpeza automática:', limpezaError.message);
             }
         } catch (dbError) {
             console.error('⚠️ Erro ao conectar ao banco de dados:', dbError.message);
+        }
+
+        // Segundo: Iniciar servidor HTTP/HTTPS
+        if (SSL_ENABLED && httpsServer) {
+            httpsServer.listen(HTTPS_PORT, '0.0.0.0', () => {
+                const serverIP = process.env.FRONTEND_URL || `https://72.60.48.249:${HTTPS_PORT}`;
+                console.log(`\n✅ Servidor HTTPS rodando na porta ${HTTPS_PORT}`);
+                console.log(`🔗 Teste: ${serverIP}/test`);
+                console.log(`📱 Painel 1: ${serverIP}/home`);
+                console.log(`📱 Painel 2: ${serverIP}/autoCadastro`);
+                console.log(`📱 Painel 3: ${serverIP}/cadastro-empresa`);
+                console.log(`🔗 API Contatos: ${serverIP}/api/contatos`);
+                console.log(`🔗 API Treinamentos: ${serverIP}/api/treinamentos`);
+                console.log(`🔗 API Empresas: ${serverIP}/api/empresas`);
+                console.log('\n🟢 Sistema pronto para uso!\n');
+            });
+            
+            server.listen(PORT, '0.0.0.0', () => {
+                console.log(`🔄 Servidor HTTP (redirecionamento) na porta ${PORT}`);
+            });
+        } else {
+            server.listen(PORT, '0.0.0.0', () => {
+                const serverIP = process.env.FRONTEND_URL || `http://72.60.48.249:${PORT}`;
+                console.log(`\n✅ Servidor HTTP rodando na porta ${PORT}`);
+                console.log(`🔗 Teste: ${serverIP}/test`);
+                console.log(`📱 Painel 1: ${serverIP}/home`);
+                console.log(`📱 Painel 2: ${serverIP}/autoCadastro`);
+                console.log(`📱 Painel 3: ${serverIP}/cadastro-empresa`);
+                console.log(`🔗 API Contatos: ${serverIP}/api/contatos`);
+                console.log(`🔗 API Treinamentos: ${serverIP}/api/treinamentos`);
+                console.log(`🔗 API Empresas: ${serverIP}/api/empresas`);
+                
+                if (!SSL_ENABLED) {
+                    console.log('💡 Para habilitar SSL, configure SSL_ENABLED=true no .env');
+                }
+                console.log('\n🟢 Sistema pronto para uso!\n');
+            });
+            console.log(`🔌 Servidor HTTP iniciando na porta ${PORT}...`);
         }
 
     } catch (error) {

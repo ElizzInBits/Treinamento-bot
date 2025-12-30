@@ -36,6 +36,29 @@ router.get('/contatos-por-empresa', async (req, res) => {
 
 
 
+// Rota específica para Salubritá (ANTES de /:id)
+router.get('/salubrita', async (req, res) => {
+  try {
+    const salubrita = await Empresa.findOne({
+      where: {
+        [Op.or]: [
+          { id: 3 },
+          { razaoSocial: { [Op.like]: '%Salubritá%' } }
+        ]
+      }
+    });
+    
+    if (!salubrita) {
+      return res.status(404).json({ error: 'Empresa Salubritá não encontrada' });
+    }
+    
+    res.json(salubrita);
+  } catch (error) {
+    console.error('Erro ao buscar Salubritá:', error);
+    res.status(500).json({ error: 'Erro ao buscar empresa' });
+  }
+});
+
 // Opções para select no front-end (DEVE VIR ANTES DE /:id)
 router.get('/select/options', async (req, res) => {
   try {

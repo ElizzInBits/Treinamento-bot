@@ -18,10 +18,18 @@ class PerformanceInit {
             // Inicializar cache
             await cacheManager.init();
 
-            // Inicializar filas
-            queueManager.getMessageQueue();
-            queueManager.getCertificateQueue();
-            queueManager.getCleanupQueue();
+            // Inicializar filas (apenas se Redis estiver disponível)
+            if (cacheManager.isRedisAvailable) {
+                try {
+                    queueManager.getMessageQueue();
+                    queueManager.getCertificateQueue();
+                    queueManager.getCleanupQueue();
+                } catch (queueError) {
+                    this.logger.warn('Queue initialization failed, continuing without queues', { error: queueError.message });
+                }
+            } else {
+                this.logger.info('Redis unavailable, skipping queue initialization');
+            }
 
             // Aplicar índices do banco
             await this.createDatabaseIndexes();

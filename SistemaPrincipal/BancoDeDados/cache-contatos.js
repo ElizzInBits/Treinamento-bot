@@ -16,10 +16,13 @@ class CacheContatos {
         const numeroLimpo = this.limparNumero(telefone);
         const cacheKey = `contato_${numeroLimpo}`;
         
+        console.log(`🔍 [CACHE] Buscando contato: ${telefone} -> ${numeroLimpo}`);
+        
         // Verificar cache primeiro
         if (this.cache.has(cacheKey)) {
             const cached = this.cache.get(cacheKey);
             if (Date.now() - cached.timestamp < this.CACHE_TIMEOUT) {
+                console.log(`✅ [CACHE] Contato encontrado no cache: ${cached.contato.nome}`);
                 return cached.contato;
             }
             this.cache.delete(cacheKey);
@@ -28,6 +31,7 @@ class CacheContatos {
         try {
             // Gerar variações do número (com e sem 9)
             const variacoes = this.gerarVariacoesNumero(numeroLimpo);
+            console.log(`🔢 [CACHE] Variações geradas: ${variacoes.join(', ')}`);
             
             // Buscar por qualquer variação
             const contato = await Usuario.findOne({
@@ -43,15 +47,18 @@ class CacheContatos {
             
             // Salvar no cache se encontrou
             if (contato) {
+                console.log(`✅ [CACHE] Contato encontrado no BD: ${contato.nome} (${contato.telefone})`);
                 this.cache.set(cacheKey, {
                     contato: contato,
                     timestamp: Date.now()
                 });
+            } else {
+                console.log(`❌ [CACHE] Contato NÃO encontrado no BD`);
             }
             
             return contato;
         } catch (error) {
-            console.error('Erro buscarContato:', error.message);
+            console.error('❌ [CACHE] Erro buscarContato:', error.message);
             return null;
         }
     }
@@ -137,16 +144,32 @@ class CacheContatos {
     gerarVariacoesNumero(numero) {
         const variacoes = [numero];
         
-        // Se tem 13 dígitos e o 5º é 9: 5533999595511 → 553399595511
-        if (numero.length === 13 && numero.charAt(4) === '9') {
-            variacoes.push(numero.substring(0, 4) + numero.substring(5));
+        // 10 dígitos (DDD + 8): adicionar 9 e DDI
+        if (numero.length === 10) {
+            variacoes.push(numero.slice(0, 2) + '9' + numero.slice(2)); // com 9
+            variacoes.push('55' + numero); // com DDI
+            variacoes.push('55' + numero.slice(0, 2) + '9' + numero.slice(2)); // DDI + 9
         }
-        // Se tem 12 dígitos: 553399595511 → 5533999595511
-        else if (numero.length === 12) {
-            variacoes.push(numero.substring(0, 4) + '9' + numero.substring(4));
+        // 11 dígitos (DDD + 9): remover 9 e adicionar DDI
+        else if (numero.length === 11 && numero.charAt(2) === '9') {
+            variacoes.push(numero.slice(0, 2) + numero.slice(3)); // sem 9
+            variacoes.push('55' + numero); // com DDI
+            variacoes.push('55' + numero.slice(0, 2) + numero.slice(3)); // DDI sem 9
+        }
+        // 12 dígitos (DDI + DDD + 8): adicionar 9 e remover DDI
+        else if (numero.length === 12 && numero.startsWith('55')) {
+            variacoes.push(numero.slice(2)); // sem DDI
+            variacoes.push(numero.slice(0, 4) + '9' + numero.slice(4)); // com 9
+            variacoes.push(numero.slice(2, 4) + '9' + numero.slice(4)); // sem DDI com 9
+        }
+        // 13 dígitos (DDI + DDD + 9): remover 9 e remover DDI
+        else if (numero.length === 13 && numero.startsWith('55') && numero.charAt(4) === '9') {
+            variacoes.push(numero.slice(2)); // sem DDI
+            variacoes.push(numero.slice(0, 4) + numero.slice(5)); // sem 9
+            variacoes.push(numero.slice(2, 4) + numero.slice(5)); // sem DDI sem 9
         }
         
-        return variacoes;
+        return [...new Set(variacoes)];
     }
 
     // Estatísticas do cache

@@ -114,23 +114,36 @@ async function processarOpcaoInicial(sender, text, sendMessage, buscarContato = 
         }
         
         if (!contato) {
-            await sendMessage(sender, 'send-message', {
-                message: '🤔 Hum, que tal fazer o seu cadastro na nossa plataforma antes, hein?\nÉ muito simples, basta clicar no link abaixo e assim que finalizar é só voltar aqui e me envie qualquer mensagem para começarmos!\n\nhttps://abrir.link/ZEeCt\n\nATENÇÃO:\nNo Cadastro use o MESMO NÚMERO que você utilizará para conversar aqui comigo.\n\n💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.'
-            });
-            await salvarInteracao(sender, 'aguardando_cadastro', JSON.stringify({ etapa: 'aguardando_cadastro' }));
+            // MODO VISITANTE - Permitir ver apresentação sem cadastro
+            console.log(`👤 MODO VISITANTE: Iniciando apresentação sem cadastro`);
+            
+            // Salvar interação ANTES de enviar mensagens para evitar loop
+            await salvarInteracao(sender, 'processando_cadastrado', JSON.stringify({ 
+                etapa: 'processando_cadastrado',
+                modo_visitante: true
+            }));
+            console.log(`✅ Interação salva para evitar loop`);
+            
+            await mostrarComoFunciona(sender, 'Visitante', sendMessage);
+            console.log(`✅ mostrarComoFunciona chamada`);
         } else {
             console.log(`🎉 USUÁRIO CADASTRADO: ${contato.nome} - Iniciando apresentação direta`);
             
-            // Salvar dados do contato na interação para uso posterior
-            await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ 
-                etapa: 'mostrar_recursos',
-                contato_id: contato.id,
-                nome: contato.nome || contato.nomeCompleto,
-                empresa_id: contato.empresaId,
-                em_apresentacao_direta: true // Flag para indicar apresentação direta
-            }));
-            
-            await mostrarComoFunciona(sender, encurtarNome(contato.nome || contato.nomeCompleto), sendMessage);
+            try {
+                // Salvar dados do contato na interação para uso posterior
+                await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ 
+                    etapa: 'mostrar_recursos',
+                    contato_id: contato.id,
+                    nome: contato.nome || contato.nomeCompleto,
+                    empresa_id: contato.empresaId,
+                    em_apresentacao_direta: true // Flag para indicar apresentação direta
+                }));
+                
+                await mostrarComoFunciona(sender, encurtarNome(contato.nome || contato.nomeCompleto), sendMessage);
+            } catch (error) {
+                console.error(`❌ Erro ao iniciar apresentação:`, error);
+                throw error;
+            }
         }
         return true;
     } else if (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('nao')) {
@@ -179,9 +192,16 @@ async function processarAposCadastro(sender, text, sendMessage, buscarContato = 
         await mostrarComoFunciona(sender, encurtarNome(contato.nome || contato.nomeCompleto), sendMessage);
         return true;
     } else {
-        await sendMessage(sender, 'send-message', {
-            message: '🤔 Hum, que tal fazer o seu cadastro na nossa plataforma antes, hein?\nÉ muito simples, basta clicar no link abaixo e assim que finalizar é só voltar aqui e me envie qualquer mensagem para começarmos!\n\nhttps://abrir.link/ZEeCt\n\nATENÇÃO:\nNo Cadastro use o MESMO NÚMERO que você utilizará para conversar aqui comigo.\n\n💡 Caso tenha feito cadastro com um número diferente desse, basta acessar novamente o painel de cadastro, rolar a tela até o final e acessar os seus dados para realizar a edição do número.'
-        });
+        // MODO VISITANTE - Permitir continuar sem cadastro
+        console.log(`👤 MODO VISITANTE: Usuário ainda não cadastrado, iniciando apresentação`);
+        
+        // Salvar interação ANTES de enviar mensagens para evitar loop
+        await salvarInteracao(sender, 'processando_cadastrado', JSON.stringify({ 
+            etapa: 'processando_cadastrado',
+            modo_visitante: true
+        }));
+        
+        await mostrarComoFunciona(sender, 'Visitante', sendMessage);
         return true;
     }
 }
@@ -189,21 +209,49 @@ async function processarAposCadastro(sender, text, sendMessage, buscarContato = 
 // ==================== APRESENTAÇÃO DOS RECURSOS ====================
 
 async function mostrarComoFunciona(sender, nome, sendMessage) {
+    console.log(`🎬 [APRESENTACAO] Iniciando mostrarComoFunciona para ${sender} (${nome})`);
+    
     // LIMPAR PROGRESSO ANTERIOR ao iniciar nova apresentação
     console.log(`🧹 [PROGRESSO] Limpando progresso anterior para ${sender}`);
     await limparProgressoAnterior(sender);
     
-    await sendMessage(sender, 'send-message', {
-        message: `😃 Muito bem ${nome}! Aqui o treinamento acontece como uma conversa rápida:\n• Mensagens curtas 💬\n• Linguagem simples ✅\n• Interatividade o tempo todo ⚡\n👉 E tudo com validade legal`
-    });
+    // Mensagem de boas-vindas para visitantes
+    if (nome === 'Visitante') {
+        console.log(`📤 [ENVIO] Enviando mensagem de boas-vindas visitante`);
+        try {
+            await sendMessage(sender, 'send-message', {
+                message: '😊 Perfeito! Vou te mostrar como funciona!\n\n⚠️ *Modo Visitante*\nVocê poderá ver toda a apresentação e gerar seu certificado de demonstração.\n\n📌 Para certificados oficiais com assinatura digital e validade legal, faça seu cadastro: https://abrir.link/ZEeCt'
+            });
+            console.log(`✅ [ENVIO] Mensagem visitante enviada`);
+        } catch (error) {
+            console.error(`❌ [ENVIO] Erro ao enviar mensagem visitante:`, error);
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    console.log(`📤 [ENVIO] Enviando mensagem principal`);
+    try {
+        await sendMessage(sender, 'send-message', {
+            message: `😃 Muito bem ${nome}! Aqui o treinamento acontece como uma conversa rápida:\n• Mensagens curtas 💬\n• Linguagem simples ✅\n• Interatividade o tempo todo ⚡\n👉 E tudo com validade legal`
+        });
+        console.log(`✅ [ENVIO] Mensagem principal enviada`);
+    } catch (error) {
+        console.error(`❌ [ENVIO] Erro ao enviar mensagem principal:`, error);
+    }
     
     setTimeout(async () => {
-        await sendMessage(sender, 'send-message', {
-            message: 'Quer ver os recursos que posso usar?\n1️⃣ Sim, mostra aí.\n2️⃣ Pula essa parte.'
-        });
+        console.log(`📤 [ENVIO] Enviando pergunta recursos`);
+        try {
+            await sendMessage(sender, 'send-message', {
+                message: 'Quer ver os recursos que posso usar?\n1️⃣ Sim, mostra aí.\n2️⃣ Pula essa parte.'
+            });
+            console.log(`✅ [ENVIO] Pergunta recursos enviada`);
+        } catch (error) {
+            console.error(`❌ [ENVIO] Erro ao enviar pergunta recursos:`, error);
+        }
         await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ 
             etapa: 'mostrar_recursos',
-            em_apresentacao: true // Flag para indicar que está em apresentação
+            em_apresentacao: true
         }));
     }, 800);
 }
@@ -709,16 +757,16 @@ async function perguntarDadosCertificado(sender, sendMessage) {
             }
         }
         
-        // Se não encontrou contato ou dados estão incompletos
+        // Se não encontrou contato ou dados estão incompletos - MODO VISITANTE
         await sendMessage(sender, 'send-message', {
-            message: '🎓 *Certificado de Participação*\n\nPara emitir seu certificado, preciso de alguns dados:\n\n📝 Por favor, envie:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+            message: '🎓 *Certificado de Participação*\n\nPara emitir seu certificado, preciso de alguns dados:\n\n📝 Por favor, envie:\n\n*Nome completo:* (como deve aparecer no certificado)\n*CPF:* (para validação)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\n123.456.789-00\njoao@email.com'
         });
         await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ etapa: 'confirmar_dados_certificado' }));
         
     } catch (error) {
         console.error('❌ Erro ao buscar contato:', error);
         await sendMessage(sender, 'send-message', {
-            message: '🎓 *Certificado de Participação*\n\nPara emitir seu certificado, preciso de alguns dados:\n\n📝 Por favor, envie:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+            message: '🎓 *Certificado de Participação*\n\nPara emitir seu certificado, preciso de alguns dados:\n\n📝 Por favor, envie:\n\n*Nome completo:* (como deve aparecer no certificado)\n*CPF:* (para validação)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\n123.456.789-00\njoao@email.com'
         });
         await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ etapa: 'confirmar_dados_certificado' }));
     }
@@ -738,7 +786,7 @@ async function processarConfirmacaoDados(sender, text, sendMessage) {
     // Se usuário quer alterar ou não tem dados salvos
     if (dados.nome && dados.email && (opcao === '2' || opcao.toLowerCase().includes('não') || opcao.toLowerCase().includes('corrigir'))) {
         await sendMessage(sender, 'send-message', {
-            message: '📝 Por favor, envie os dados corretos:\n\n*Nome completo:* (como deve aparecer no certificado)\n*E-mail:* (para envio do certificado)\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+            message: '📝 Por favor, envie os dados corretos:\n\n*Nome completo:*\n*CPF:*\n*E-mail:*\n\nExemplo:\nJoão Silva Santos\n123.456.789-00\njoao@email.com'
         });
         await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ etapa: 'confirmar_dados_certificado' }));
         return true;
@@ -755,25 +803,32 @@ async function processarConfirmacaoDados(sender, text, sendMessage) {
     // Processar dados informados manualmente
     const linhas = text.trim().split('\n').filter(linha => linha.trim());
     
-    if (linhas.length >= 2) {
+    if (linhas.length >= 3) {
         const nome = linhas[0].trim();
-        const email = linhas[1].trim();
+        const cpf = linhas[1].trim();
+        const email = linhas[2].trim();
         
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             await sendMessage(sender, 'send-message', {
-                message: '❌ E-mail inválido. Por favor, envie novamente:\n\n*Nome completo:*\n*E-mail válido:*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+                message: '❌ E-mail inválido. Por favor, envie novamente:\n\n*Nome completo:*\n*CPF:*\n*E-mail válido:*\n\nExemplo:\nJoão Silva Santos\n123.456.789-00\njoao@email.com'
             });
             return true;
         }
         
-        // ATUALIZAR BANCO DE DADOS antes de gerar certificado
-        await atualizarDadosUsuario(sender, nome, email);
+        // Salvar CPF na interação para uso posterior
+        await salvarInteracao(sender, 'confirmar_dados_certificado', JSON.stringify({ 
+            etapa: 'confirmar_dados_certificado',
+            nome: nome,
+            email: email,
+            cpf: cpf
+        }));
         
+        // Gerar certificado diretamente (não precisa atualizar banco para visitante)
         await gerarEEnviarCertificado(nome, email, sender, sendMessage);
     } else {
         await sendMessage(sender, 'send-message', {
-            message: '❌ Dados incompletos. Por favor, envie:\n\n*Nome completo:*\n*E-mail:*\n\nExemplo:\nJoão Silva Santos\njoao@email.com'
+            message: '❌ Dados incompletos. Por favor, envie:\n\n*Nome completo:*\n*CPF:*\n*E-mail:*\n\nExemplo:\nJoão Silva Santos\n123.456.789-00\njoao@email.com'
         });
     }
     
@@ -802,30 +857,38 @@ async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
         return;
     }
     
+    // Buscar contato no banco
+    const { Usuario } = require('../../../BancoDeDados/models');
+    const telefone = sender.replace('@c.us', '');
+    const formatosTelefone = [
+        telefone,
+        telefone.substring(2),
+        `${telefone.substring(0, 4)}9${telefone.substring(4)}`,
+        telefone.length === 13 ? telefone.substring(0, 4) + telefone.substring(5) : telefone,
+    ];
+
+    let contato = null;
+    for (const formato of formatosTelefone) {
+        contato = await Usuario.findOne({ where: { telefone: formato } });
+        if (contato) break;
+    }
+
+    if (!contato) {
+        // MODO VISITANTE - Gerar certificado com dados informados
+        // Buscar CPF da última interação
+        const ultimaInteracao = await obterUltimaInteracao(sender);
+        const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+        const cpf = dados.cpf || 'Não informado';
+        
+        await gerarCertificadoVisitante(nome, email, cpf, sender, sendMessage);
+        return;
+    }
+    
     await sendMessage(sender, 'send-message', {
         message: '⏳ Gerando seu certificado...'
     });
     
     try {
-        // Buscar contato no banco
-        const { Usuario } = require('../../../BancoDeDados/models');
-        const telefone = sender.replace('@c.us', '');
-        const formatosTelefone = [
-            telefone,
-            telefone.substring(2),
-            `${telefone.substring(0, 4)}9${telefone.substring(4)}`,
-            telefone.length === 13 ? telefone.substring(0, 4) + telefone.substring(5) : telefone,
-        ];
-
-        let contato = null;
-        for (const formato of formatosTelefone) {
-            contato = await Usuario.findOne({ where: { telefone: formato } });
-            if (contato) break;
-        }
-
-        if (!contato) {
-            throw new Error('Contato não encontrado no banco de dados');
-        }
 
         const { gerarCertificadoBanco } = require('../../Certificados/certificados2');
         const TreinamentoUtils = require('../treinamento-utils');
@@ -1477,6 +1540,47 @@ async function iniciarTreinamentoApresentacao(sender, sendMessage) {
     return await processarRespostaApresentacao(sender, '', null, null, sendMessage);
 }
 
+// Função para gerar certificado de visitante (sem cadastro no sistema)
+async function gerarCertificadoVisitante(nome, email, cpf, sender, sendMessage) {
+    await sendMessage(sender, 'send-message', {
+        message: '⏳ Gerando seu certificado...'
+    });
+    
+    try {
+        const certificadosModule = require('../../Certificados/certificados2');
+        
+        // Gerar certificado PDF com dados do visitante
+        const caminhoArquivo = await certificadosModule.gerarCertificadoVisitante(nome, email, cpf, 15);
+        
+        if (!caminhoArquivo) {
+            await sendMessage(sender, 'send-message', {
+                message: '❌ Erro ao gerar certificado. Tente novamente.'
+            });
+            return;
+        }
+        
+        // Enviar certificado diretamente por WhatsApp
+        await sendMessage(sender, 'send-file', {
+            path: caminhoArquivo,
+            filename: `Certificado_${nome.replace(/\s+/g, '_')}.pdf`
+        });
+        
+        await sendMessage(sender, 'send-message', {
+            message: `✅ *CERTIFICADO GERADO COM SUCESSO!*\n\n📜 Seu certificado de **Treinamento de Apresentação** foi gerado e enviado acima.\n\n📝 *Dados do certificado:*\n👤 Nome: ${nome}\n🆔 CPF: ${cpf}\n📧 E-mail: ${email}\n\n📌 *Observação:* Este é um certificado de demonstração sem assinatura digital. Para certificados oficiais com assinatura digital e validade legal, faça seu cadastro completo em: https://abrir.link/ZEeCt`
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao gerar certificado visitante:', error);
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Erro interno ao gerar certificado. Tente novamente mais tarde.'
+        });
+    }
+    
+    setTimeout(async () => {
+        await mostrarOutrasAplicacoes(sender, sendMessage);
+    }, 1000);
+}
+
 // ==================== EXPORTS ====================
 
 module.exports = {
@@ -1484,5 +1588,7 @@ module.exports = {
     iniciarTreinamentoApresentacao,
     mostrarComoFunciona,
     verificarTreinamentosEmpresa,
-    direcionarParaTreinamentos
+    direcionarParaTreinamentos,
+    verificarProgressoCompleto,
+    gerarEEnviarCertificado
 };

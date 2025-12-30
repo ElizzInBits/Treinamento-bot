@@ -81,6 +81,49 @@ async function processarMensagem(message, client) {
     return;
   }
   
+  // Comando para gerar certificado (visitantes que se cadastraram)
+  if (mensagem.toLowerCase() === 'certificado' || mensagem.toLowerCase() === '#certificado') {
+    logger.info('Comando CERTIFICADO executado', { telefone });
+    
+    // Verificar se usuário está cadastrado agora
+    const { Usuario } = require('../BancoDeDados/models');
+    const formatosTelefone = [
+      telefone,
+      telefone.substring(2),
+      `${telefone.substring(0, 4)}9${telefone.substring(4)}`,
+      telefone.length === 13 ? telefone.substring(0, 4) + telefone.substring(5) : telefone,
+    ];
+    
+    let usuario = null;
+    for (const formato of formatosTelefone) {
+      usuario = await Usuario.findOne({ where: { telefone: formato } });
+      if (usuario) break;
+    }
+    
+    if (!usuario) {
+      await client.sendText(message.from, '⚠️ Você ainda não está cadastrado.\n\n📝 Faça seu cadastro: https://abrir.link/ZEeCt\n\n💡 Use o mesmo número de telefone!');
+      return;
+    }
+    
+    // Verificar se completou a apresentação
+    const treinamentoApresentacao = require('./Treinamentos/Apresentacao/treinamentoApresentacao');
+    const progressoCompleto = await treinamentoApresentacao.verificarProgressoCompleto(telefone);
+    
+    if (!progressoCompleto.completo) {
+      await client.sendText(message.from, `⚠️ Você precisa completar a apresentação primeiro.\n\n📋 Faltando:\n${progressoCompleto.faltando.join('\n')}\n\n👉 Digite *MENU* para continuar.`);
+      return;
+    }
+    
+    // Gerar certificado
+    await treinamentoApresentacao.gerarEEnviarCertificado(
+      usuario.nome || usuario.nomeCompleto,
+      usuario.email,
+      message.from,
+      sendMessage
+    );
+    return;
+  }
+  
   // Comando MENU para mostrar treinamentos pendentes
   const mensagemLower = mensagem.toLowerCase().trim();
   if (mensagemLower === 'menu' || mensagemLower === 'mennu' || mensagemLower === 'manu' || mensagemLower.includes('menu')) {
@@ -293,7 +336,7 @@ function limparLockFiles() {
   }
 }
 
-// Função para limpar SingletonLock de forma agressiva
+// Função para limpar APENAS SingletonLock (preservar tokens)
 async function limparSingletonLock() {
   const fs = require('fs');
   const path = require('path');
@@ -302,36 +345,20 @@ async function limparSingletonLock() {
   try {
     console.log('🧹 Limpando SingletonLock...');
     
-    // Matar TODOS os processos Chrome/Chromium
+    // Matar APENAS processos Chrome do bot
     try {
       execSync('pkill -9 -f "chrome.*WHATSAPP_BOT_DIRECT"', { stdio: 'ignore' });
-      execSync('pkill -9 -f chromium', { stdio: 'ignore' });
-      execSync('pkill -9 -f chrome', { stdio: 'ignore' });
-      console.log('✅ Processos Chrome finalizados');
+      console.log('✅ Processos Chrome do bot finalizados');
     } catch (e) {}
     
     // Aguardar processos terminarem
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Remover SingletonLock específico
+    // Remover APENAS SingletonLock (preservar tokens)
     const lockPath = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT', 'SingletonLock');
     if (fs.existsSync(lockPath)) {
       fs.unlinkSync(lockPath);
       console.log('✅ SingletonLock removido');
-    }
-    
-    // Remover outros arquivos de lock
-    const tokensDir = path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT');
-    if (fs.existsSync(tokensDir)) {
-      const files = fs.readdirSync(tokensDir);
-      files.forEach(file => {
-        if (file.includes('lock') || file.includes('Lock')) {
-          try {
-            fs.unlinkSync(path.join(tokensDir, file));
-            console.log(`✅ Removido: ${file}`);
-          } catch (e) {}
-        }
-      });
     }
     
   } catch (error) {
@@ -369,6 +396,7 @@ async function inicializarBot() {
   await new Promise(resolve => setTimeout(resolve, 3000));
   
   try {
+    console.log('🔧 Criando cliente WhatsApp...');
     const client = await wppconnect.create({
       session: 'WHATSAPP_BOT_DIRECT',
       headless: 'new',
@@ -377,8 +405,8 @@ async function inicializarBot() {
       autoClose: 0,
       qrTimeout: 0,
       tokenStore: 'file',
-      folderNameToken: './tokens',
-      mkdirFolderToken: './tokens',
+      folderNameToken: path.join(__dirname, 'tokens'),
+      mkdirFolderToken: path.join(__dirname, 'tokens'),
       puppeteerOptions: {
         args: [
           '--no-sandbox',
@@ -387,7 +415,8 @@ async function inicializarBot() {
           '--disable-gpu',
           '--no-first-run',
           '--disable-default-apps',
-          '--disable-extensions'
+          '--disable-extensions',
+          '--disable-features=IsolateOrigins,site-per-process'
         ],
         defaultViewport: null,
         userDataDir: path.join(__dirname, 'tokens', 'WHATSAPP_BOT_DIRECT')
@@ -454,6 +483,22 @@ async function inicializarBot() {
         instanciaAtiva = false;
       }
       await processarMensagem(message, client);
+    });
+    
+    // Listener para bloquear chamadas
+    client.onIncomingCall(async (call) => {
+      try {
+        console.log(`📞 Chamada recebida de ${call.peerJid}. Rejeitando...`);
+        await client.rejectCall(call.id);
+        
+        // Enviar mensagem informando que não aceita chamadas
+        const telefone = call.peerJid.replace('@c.us', '');
+        await client.sendText(call.peerJid, '📞 *Chamadas não são aceitas*\n\nOlá! Sou um assistente virtual e não posso atender chamadas de voz ou vídeo.\n\n💬 Por favor, envie uma mensagem de texto que terei prazer em ajudar!');
+        
+        logger.info('Chamada rejeitada e mensagem enviada', { telefone });
+      } catch (error) {
+        console.error('❌ Erro ao rejeitar chamada:', error.message);
+      }
     });
     
     // Listener para detectar mudanças de estado

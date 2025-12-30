@@ -5,47 +5,83 @@ class QueueManager {
     constructor() {
         this.logger = createSharedLogger('queue');
         this.queues = {};
+        this.redisAvailable = false;
         this.redisConfig = {
             host: process.env.REDIS_HOST || 'localhost',
             port: process.env.REDIS_PORT || 6379,
             password: process.env.REDIS_PASSWORD || undefined,
             maxRetriesPerRequest: 1,
             connectTimeout: 1000,
-            enableOfflineQueue: false
+            enableOfflineQueue: false,
+            retryStrategy: () => null // Não tentar reconectar
         };
     }
 
     createQueue(name, options = {}) {
         if (this.queues[name]) return this.queues[name];
 
-        const defaultOptions = {
-            redis: this.redisConfig,
-            defaultJobOptions: {
-                removeOnComplete: 10,
-                removeOnFail: 5,
-                attempts: 3,
-                backoff: {
-                    type: 'exponential',
-                    delay: 2000
+        try {
+            const defaultOptions = {
+                redis: this.redisConfig,
+                defaultJobOptions: {
+                    removeOnComplete: 10,
+                    removeOnFail: 5,
+                    attempts: 3,
+                    backoff: {
+                        type: 'exponential',
+                        delay: 2000
+                    }
                 }
-            }
-        };
+            };
 
-        this.queues[name] = new Bull(name, { ...defaultOptions, ...options });
-        return this.queues[name];
+            this.queues[name] = new Bull(name, { ...defaultOptions, ...options });
+            this.redisAvailable = true;
+            return this.queues[name];
+        } catch (error) {
+            this.logger.warn(`Redis unavailable, queue ${name} disabled`, { error: error.message });
+            // Retornar mock queue que executa jobs imediatamente
+            return this.createMockQueue(name);
+        }
+    }
+
+    createMockQueue(name) {
+        const mockQueue = {
+            name,
+            process: (jobType, concurrency, handler) => {
+                mockQueue._handler = handler;
+            },
+            add: async (jobType, data, options) => {
+                if (mockQueue._handler) {
+                    try {
+                        await mockQueue._handler({ data, id: Date.now() });
+                    } catch (error) {
+                        this.logger.error(`Mock queue ${name} job failed`, { error: error.message });
+                    }
+                }
+                return { id: Date.now() };
+            },
+            on: () => {},
+            getWaiting: async () => [],
+            getActive: async () => [],
+            getCompleted: async () => [],
+            getFailed: async () => []
+        };
+        this.queues[name] = mockQueue;
+        return mockQueue;
     }
 
     // Queue para mensagens WhatsApp
     getMessageQueue() {
         if (!this.queues.messages) {
-            const queue = this.createQueue('messages', {
-                defaultJobOptions: {
-                    removeOnComplete: 20,
-                    removeOnFail: 10,
-                    attempts: 5,
-                    delay: 1000
-                }
-            });
+            try {
+                const queue = this.createQueue('messages', {
+                    defaultJobOptions: {
+                        removeOnComplete: 20,
+                        removeOnFail: 10,
+                        attempts: 5,
+                        delay: 1000
+                    }
+                });
 
             queue.process('send-message', 5, async (job) => {
                 const { phone, endpoint, body, sendMessage } = job.data;
@@ -56,9 +92,12 @@ class QueueManager {
                 this.logger.debug('Message sent', { jobId: job.id });
             });
 
-            queue.on('failed', (job, err) => {
-                this.logger.error('Message failed', { jobId: job.id, error: err.message });
-            });
+                queue.on('failed', (job, err) => {
+                    this.logger.error('Message failed', { jobId: job.id, error: err.message });
+                });
+            } catch (error) {
+                this.logger.warn('Message queue unavailable, using mock', { error: error.message });
+            }
         }
         return this.queues.messages;
     }

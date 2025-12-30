@@ -1,11 +1,11 @@
+
 :root {
-  /* Cores Principais */
   --primary-color: #0f4c5c;
   --secondary-color: #6ec6ca;
   --accent-color: #feb200;
   --accent-light: #fef3d2;
 
-  /* Cores Neutras */
+
   --white: #ffffff;
   --gray-50: #f8fafc;
   --gray-100: #f1f5f9;
@@ -18,24 +18,21 @@
   --gray-800: #1e293b;
   --gray-900: #0f172a;
 
-  /* Cores de Estado */
+
   --success: #10b981;
   --error: #ef4444;
   --warning: #f59e0b;
   --info: #3b82f6;
 
-  /* Sombras */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
-  /* Transições */
   --transition: all 0.2s ease-in-out;
   --transition-slow: all 0.3s ease-in-out;
 }
 
-/* Reset e base */
 * {
   margin: 0;
   padding: 0;
@@ -49,14 +46,12 @@ body {
   line-height: 1.6;
 }
 
-/* Container principal */
 .container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
 }
 
-/* Cabeçalho */
 .header {
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   color: var(--white);
@@ -83,7 +78,6 @@ body {
   font-weight: 300;
 }
 
-/* Seção da lista */
 .list-section {
   background-color: var(--white);
   border-radius: 12px;
@@ -92,7 +86,6 @@ body {
   overflow: hidden;
 }
 
-/* Tabela */
 #tabelaContatos {
   width: 100%;
   border-collapse: collapse;
@@ -102,7 +95,6 @@ body {
   border-radius: 8px;
 }
 
-/* Cabeçalho da tabela */
 #tabelaContatos thead {
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   color: var(--white);
@@ -118,7 +110,6 @@ body {
   border: none;
 }
 
-/* Corpo da tabela */
 #tabelaContatos tbody tr {
   border-bottom: 1px solid var(--gray-200);
   transition: var(--transition);
@@ -139,7 +130,6 @@ body {
   border: none;
 }
 
-/* Estilização de status */
 .status-badge {
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
@@ -164,7 +154,6 @@ body {
   color: var(--gray-900);
 }
 
-/* Responsividade */
 @media (max-width: 1024px) {
   .container {
     padding: 1rem;
@@ -227,7 +216,6 @@ body {
   }
 }
 
-/* Estados vazios */
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
@@ -244,7 +232,40 @@ body {
   font-size: 0.9rem;
 }
 
-/* Animações de carregamento */
+.btn-restart,
+.btn-transferir {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-right: 0.5rem;
+}
+
+.btn-restart {
+  background-color: var(--warning);
+  color: var(--white);
+}
+
+.btn-restart:hover {
+  background-color: #d97706;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-transferir {
+  background-color: var(--info);
+  color: var(--white);
+}
+
+.btn-transferir:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+  
 .loading {
   display: flex;
   justify-content: center;
