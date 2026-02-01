@@ -1,0 +1,26 @@
+2025/07/09-11:50:09.657 8dc Reusing MANIFEST C:\Treinamento-bot\wppconnect-server\SistemaPrincipal\TemplatesMensagens\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/09-11:50:09.658 8dc Recovering log #101
+2025/07/09-11:50:09.687 8dc Reusing old log C:\Treinamento-bot\wppconnect-server\SistemaPrincipal\TemplatesMensagens\tokens\NERDWHATS_AMERICA\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000101.log 
+2025/07/09-11:50:10.959 45f0 Level-0 table #107: started
+2025/07/09-11:50:10.988 45f0 Level-0 table #107: 1313910 bytes OK
+2025/07/09-11:50:10.989 45f0 Delete type=0 #101
+2025/07/09-11:50:10.994 8dc Manual compaction at level-0 from '\x00$\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00%\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/09-11:50:12.168 45f0 Compacting 1@1 + 2@2 files
+2025/07/09-11:50:12.263 45f0 Generated table #108@1: 38062 keys, 2185542 bytes
+2025/07/09-11:50:12.358 45f0 Generated table #109@1: 66433 keys, 1765387 bytes
+2025/07/09-11:50:12.358 45f0 Compacted 1@1 + 2@2 files => 3950929 bytes
+2025/07/09-11:50:12.360 45f0 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/07/09-11:50:53.901 2ebc Level-0 table #111: started
+2025/07/09-11:50:53.943 2ebc Level-0 table #111: 1066419 bytes OK
+2025/07/09-11:50:53.945 2ebc Delete type=2 #103
+2025/07/09-11:50:53.945 2ebc Delete type=2 #104
+2025/07/09-11:50:53.945 2ebc Delete type=0 #106
+2025/07/09-11:50:53.946 2ebc Delete type=2 #107
+2025/07/09-11:50:58.756 45f0 Compacting 1@1 + 2@2 files
+2025/07/09-11:50:58.798 45f0 Generated table #112@1: 34849 keys, 2180009 bytes
+2025/07/09-11:50:58.872 45f0 Generated table #113@1: 73515 keys, 1887876 bytes
+2025/07/09-11:50:58.872 45f0 Compacted 1@1 + 2@2 files => 4067885 bytes
+2025/07/09-11:50:58.873 45f0 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/07/09-11:50:58.874 45f0 Delete type=2 #108
+2025/07/09-11:50:58.874 45f0 Delete type=2 #109
+2025/07/09-11:50:58.874 45f0 Delete type=2 #111

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Cadastro</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Sistema de Cadastro</h1>
+        <p>Gerenciamento de Contatos e Treinamentos</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('cadastro')">
+          <span>📝</span> Cadastrar
+        </button>
+        <button class="tab" onclick="showTab('listar')">
+          <span>👥</span> Contatos
+        </button>
+        <button class="tab" onclick="showTab('treinamentos')">
+          <span>🎓</span> Treinamentos
+        </button>
+      </div>
+
+      <div id="alerts"></div>
+
+      <!-- Aba Cadastro -->
+      <div id="cadastro" class="tab-content active">
+        <div class="form-section">
+          <h2><span>📝</span> Cadastrar Novo Contato</h2>
+          <form id="cadastroForm">
+            <div class="form-group">
+              <label for="nome">Nome Completo *</label>
+              <input
+                type="text"
+                id="nome"
+                name="nome"
+                required
+                placeholder="Digite o nome completo do contato"
+              />
+            </div>
+            <div class="form-group">
+              <label for="telefone">Telefone *</label>
+              <input
+                type="text"
+                id="telefone"
+                name="telefone"
+                required
+                placeholder="Ex: 5531999990000"
+              />
+              <small
+                >Formato: DDI + DDD + Número. Ex: 5531999990000 (13 dígitos) ou
+                553199990000 (12 dígitos)</small
+              >
+            </div>
+            <div class="form-group">
+              <label for="treinamento">Treinamento</label>
+              <select id="treinamento" name="treinamento">
+                <option value="">Selecione um treinamento (opcional)</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-primary">
+              <span>💾</span> Cadastrar Contato
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Aba Listar -->
+      <div id="listar" class="tab-content">
+        <div class="form-section">
+          <h2><span>👥</span> Contatos Cadastrados</h2>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3 id="totalContatos">0</h3>
+              <p>Total de Contatos</p>
+            </div>
+            <div class="stat-card">
+              <h3 id="contatosComTreinamento">0</h3>
+              <p>Com Treinamento</p>
+            </div>
+            <div class="stat-card">
+              <h3 id="contatosSemTreinamento">0</h3>
+              <p>Sem Treinamento</p>
+            </div>
+          </div>
+
+          <div class="search-box">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Pesquisar contatos por nome ou telefone..."
+              onkeyup="filtrarContatos()"
+            />
+          </div>
+
+          <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Carregando contatos...</p>
+          </div>
+
+          <div id="contatosLista" class="contacts-list"></div>
+        </div>
+      </div>
+
+      <!-- Aba Treinamentos -->
+      <div id="treinamentos" class="tab-content">
+        <div class="form-section">
+          <h2><span>🎓</span> Gerenciar Treinamentos</h2>
+
+          <div class="training-management">
+            <h3><span>➕</span> Criar Novo Treinamento</h3>
+            <form id="treinamentoForm">
+              <div class="training-form">
+                <div class="form-group">
+                  <label for="novoTreinamento">Nome do Treinamento *</label>
+                  <input
+                    type="text"
+                    id="novoTreinamento"
+                    name="novoTreinamento"
+                    required
+                    placeholder="Digite o nome do treinamento"
+                    maxlength="100"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="descricaoTreinamento">Descrição</label>
+                  <input
+                    type="text"
+                    id="descricaoTreinamento"
+                    name="descricaoTreinamento"
+                    placeholder="Breve descrição do treinamento"
+                    maxlength="200"
+                  />
+                </div>
+                <button type="submit"><span>✨</span> Criar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="loading" id="loadingTreinamentos">
+            <div class="spinner"></div>
+            <p>Carregando treinamentos...</p>
+          </div>
+
+          <div id="treinamentosGrid" class="training-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para visualizar contatos do treinamento -->
+    <div id="modalContatos" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalTitulo">Contatos do Treinamento</h3>
+          <button class="close" onclick="fecharModal()">&times;</button>
+        </div>
+        <div id="modalConteudo"></div>
+      </div>
+    </div>
+
+    <!-- Modal para editar contato -->
+    <div id="modalEditarContato" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Editar Contato</h3>
+          <button class="close" onclick="fecharModalEditarContato()">
+            &times;
+          </button>
+        </div>
+        <form id="editarContatoForm">
+          <input type="hidden" id="editarContatoId" />
+          <label for="editarNome">Nome *</label>
+          <input type="text" id="editarNome" required />
+          <label for="editarTelefone">Telefone *</label>
+          <input
+            type="text"
+            id="editarTelefone"
+            required
+            placeholder="Ex: 5531999990000"
+          />
+          <label for="editarTreinamento">Treinamento</label>
+          <select id="editarTreinamento">
+            <option value="">Sem treinamento</option>
+          </select>
+          <button type="submit" class="btn-save">Salvar Alterações</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="modalDetalhesContato" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Detalhes do Contato</h3>
+          <button class="close" onclick="fecharModalDetalhesContato()">
+            &times;
+          </button>
+        </div>
+        <div id="detalhesContatoConteudo"></div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Contatos</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: rgb(0, 170, 170);
+        background: linear-gradient(
+          120deg,
+          rgba(0, 170, 170, 0.25) 0%,
+          rgba(0, 170, 170, 0.25) 35%,
+          rgba(254, 178, 0, 0.25) 65%,
+          rgba(254, 178, 0, 0.25) 100%
+        );
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 800px;
+        animation: slideIn 0.5s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        color: #333;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        position: relative;
+      }
+
+      .header h1::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(to right, #6ec6ca, #0f4c5c);
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+      }
+
+      .header p {
+        color: #666;
+        font-size: 1.1em;
+      }
+
+      .form-section {
+        margin-bottom: 30px;
+      }
+
+      .form-section h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .btn-primary {
+        background: linear-gradient(to right, #6ec6ca, #0f4c5c);
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-primary:active {
+        transform: translateY(0);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-right: 10px;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+
+      .contacts-list {
+        max-height: 400px;
+        overflow-y: auto;
+        margin-top: 20px;
+      }
+
+      .contact-item {
+        background: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        border-left: 4px solid #0f4c5c;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+      }
+
+      .contact-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+      }
+
+      .contact-info h3 {
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .contact-info p {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status-nao-iniciado {
+        background: #ffeaa7;
+        color: #d63031;
+      }
+
+      .status-andamento {
+        background: #74b9ff;
+        color: white;
+      }
+
+      .status-concluido {
+        background: #00b894;
+        color: white;
+      }
+
+      .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        font-weight: 500;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .tabs {
+        display: flex;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .tab {
+        padding: 15px 25px;
+        cursor: pointer;
+        background: none;
+        border: none;
+        font-size: 16px;
+        color: #666;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .tab.active {
+        color: #0f4c5c;
+        font-weight: 600;
+      }
+
+      .tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(to right, #6ec6ca, #0f4c5c);
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .loading.show {
+        display: block;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #0f4c5c;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .search-box {
+        position: relative;
+        margin-bottom: 20px;
+      }
+
+      .search-box input {
+        padding-left: 45px;
+      }
+
+      .search-box::before {
+        content: '🔍';
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+        }
+
+        .header h1 {
+          font-size: 2em;
+        }
+
+        .tabs {
+          flex-direction: column;
+        }
+
+        .tab {
+          text-align: center;
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        .contact-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Cadastro de Contatos</h1>
+        <p>Gerenciamento de Contatos para Treinamento</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('cadastro')">
+          📝 Cadastrar
+        </button>
+        <button class="tab" onclick="showTab('listar')">
+          👥 Listar Contatos
+        </button>
+      </div>
+
+      <div id="alerts"></div>
+
+      <!-- Aba Cadastro -->
+      <div id="cadastro" class="tab-content active">
+        <div class="form-section">
+          <h2>📝 Cadastrar Novo Contato</h2>
+          <form id="cadastroForm">
+            <div class="form-group">
+              <label for="nome">Nome *</label>
+              <input
+                type="text"
+                id="nome"
+                name="nome"
+                required
+                placeholder="Digite o nome do contato"
+              />
+            </div>
+            <div class="form-group">
+              <label for="telefone">Telefone *</label>
+              <input
+                type="tel"
+                id="telefone"
+                name="telefone"
+                required
+                placeholder="Ex: +55 (11) 99999-9999"
+              />
+            </div>
+            <button type="submit" class="btn-primary">Cadastrar Contato</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Aba Listar -->
+      <div id="listar" class="tab-content">
+        <div class="form-section">
+          <h2>👥 Contatos Cadastrados</h2>
+          <div class="search-box">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Pesquisar contatos..."
+              onkeyup="filtrarContatos()"
+            />
+          </div>
+          <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Carregando contatos...</p>
+          </div>
+          <div id="contatosLista" class="contacts-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Configuração da API
+      const API_URL = '/api/contatos';
+      let contatos = [];
+
+      // Funções de navegação
+      function showTab(tabName) {
+        const tabs = document.querySelectorAll('.tab');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach((tab) => tab.classList.remove('active'));
+        contents.forEach((content) => content.classList.remove('active'));
+
+        document
+          .querySelector(`.tab[onclick="showTab('${tabName}')"]`)
+          .classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+
+        if (tabName === 'listar') {
+          carregarContatos();
+        }
+      }
+
+      // Formatação de telefone
+      function formatarTelefone(telefone) {
+        const cleaned = telefone.replace(/\D/g, '');
+
+        // Celular com DDI: exemplo 5511999998888 (13 dígitos)
+        if (cleaned.length === 13) {
+          return cleaned.replace(
+            /(\d{2})(\d{2})(\d{5})(\d{4})/,
+            '+$1 ($2) $3-$4'
+          );
+        }
+        // Celular sem DDI: exemplo 11999998888 (11 dígitos)
+        if (cleaned.length === 11) {
+          return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        }
+        // Telefone fixo (10 dígitos)
+        if (cleaned.length === 10) {
+          return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+        }
+        // Caso não seja um padrão conhecido, retorna o que recebeu
+        return telefone;
+      }
+
+      // Limpar número de telefone (deixar só números)
+      function limparTelefone(telefone) {
+        return telefone.replace(/\D/g, '');
+      }
+
+      // Validar telefone (aceita números entre 10 e 15 dígitos)
+      function validarTelefone(telefone) {
+        const cleaned = limparTelefone(telefone);
+        return cleaned.length >= 10 && cleaned.length <= 15;
+      }
+
+      // Mostrar alerta na tela
+      function mostrarAlerta(mensagem, tipo = 'success') {
+        const alertsDiv = document.getElementById('alerts');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${tipo}`;
+        alertDiv.textContent = mensagem;
+
+        alertsDiv.appendChild(alertDiv);
+
+        setTimeout(() => {
+          alertDiv.remove();
+        }, 5000);
+      }
+
+      // Cadastrar contato
+      document
+        .getElementById('cadastroForm')
+        .addEventListener('submit', async function (e) {
+          e.preventDefault();
+
+          const nome = document.getElementById('nome').value.trim();
+          const telefoneFormatado = document
+            .getElementById('telefone')
+            .value.trim();
+          const telefone = limparTelefone(telefoneFormatado);
+
+          if (!nome || !telefone) {
+            mostrarAlerta(
+              'Por favor, preencha todos os campos obrigatórios.',
+              'error'
+            );
+            return;
+          }
+
+          if (!validarTelefone(telefone)) {
+            mostrarAlerta('Por favor, insira um telefone válido.', 'error');
+            return;
+          }
+
+          try {
+            // Cadastrar contato
+            const response = await fetch(API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ nome: nome, telefone: telefone }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              document.getElementById('cadastroForm').reset();
+              mostrarAlerta(`Contato "${nome}" cadastrado com sucesso!`);
+            
+
+              // Atualizar lista se estiver na aba listar
+              if (
+                document.getElementById('listar').classList.contains('active')
+              ) {
+                carregarContatos();
+              }
+            } else {
+              mostrarAlerta(data.error || 'Erro ao cadastrar contato', 'error');
+            }
+          } catch (error) {
+            console.error('Erro ao cadastrar contato:', error);
+            mostrarAlerta('Erro de conexão. Tente novamente.', 'error');
+          }
+        });
+
+      // Carregar contatos
+      async function carregarContatos() {
+        const loading = document.getElementById('loading');
+        const lista = document.getElementById('contatosLista');
+
+        loading.classList.add('show');
+        lista.innerHTML = '';
+
+        try {
+          const response = await fetch(API_URL);
+          if (response.ok) {
+            contatos = await response.json();
+            setTimeout(() => {
+              loading.classList.remove('show');
+              renderizarContatos(contatos);
+            }, 500);
+          } else {
+            throw new Error('Erro ao carregar contatos');
+          }
+        } catch (error) {
+          console.error('Erro ao carregar contatos:', error);
+          loading.classList.remove('show');
+          lista.innerHTML =
+            '<p style="text-align: center; color: #e74c3c; padding: 40px;">Erro ao carregar contatos. Tente novamente.</p>';
+        }
+      }
+
+      // Renderizar contatos na tela
+      function renderizarContatos(contatosParaRenderizar) {
+        const lista = document.getElementById('contatosLista');
+
+        if (contatosParaRenderizar.length === 0) {
+          lista.innerHTML =
+            '<p style="text-align: center; color: #666; padding: 40px;">Nenhum contato encontrado.</p>';
+          return;
+        }
+
+        lista.innerHTML = contatosParaRenderizar
+          .map((contato) => {
+            // Definir um status padrão caso não exista
+            const status = contato.statusTreinamento
+              ? contato.statusTreinamento
+              : 'não iniciado';
+            const statusClass = status.replace(/ /g, '-').toLowerCase();
+
+            return `
+            <div class="contact-item">
+                <div class="contact-info">
+                    <h3>${contato.nome}</h3>
+                    <p>📞 ${formatarTelefone(contato.telefone)}</p>
+                    ${contato.email ? `<p>📧 ${contato.email}</p>` : ''}
+                </div>
+                <span class="status-badge status-${statusClass}">
+                    ${status}
+                </span>
+            </div>
+        `;
+          })
+          .join('');
+      }
+
+      // Filtrar contatos
+      function filtrarContatos() {
+        const searchTerm = document
+          .getElementById('searchInput')
+          .value.toLowerCase();
+        const contatosFiltrados = contatos.filter(
+          (contato) =>
+            contato.nome.toLowerCase().includes(searchTerm) ||
+            contato.telefone.includes(searchTerm) ||
+            contato.statusTreinamento.toLowerCase().includes(searchTerm)
+        );
+
+        renderizarContatos(contatosFiltrados);
+      }
+
+      // Formatação automática do telefone no input com DDI
+      document
+        .getElementById('telefone')
+        .addEventListener('input', function (e) {
+          let value = e.target.value.replace(/\D/g, '');
+
+          // Limitar a 15 dígitos (ex: +DDI(2) + DDD(2) + número(9-11))
+          if (value.length > 15) {
+            value = value.slice(0, 15);
+          }
+
+          // Formatação progressiva do telefone com DDI
+          if (value.length <= 2) {
+            // +55
+            value = `+${value}`;
+          } else if (value.length <= 4) {
+            // +55 (11
+            value = `+${value.slice(0, 2)} (${value.slice(2)}`;
+          } else if (value.length <= 9) {
+            // +55 (11) 91234
+            value = `+${value.slice(0, 2)} (${value.slice(2, 4)}) ${value.slice(
+              4
+            )}`;
+          } else {
+            // +55 (11) 91234-5678
+            value = `+${value.slice(0, 2)} (${value.slice(2, 4)}) ${value.slice(
+              4,
+              9
+            )}-${value.slice(9, 13)}`;
+          }
+
+          e.target.value = value;
+        });
+
+      // Inicializa carregando os contatos
+      window.addEventListener('load', function () {
+        carregarContatos();
+      });
+    </script>
+  </body>
+</html>
