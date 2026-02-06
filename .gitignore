@@ -81,6 +81,10 @@ backup-*/
 tmp/
 temp/
 
+# Core dumps
+core
+**/core
+
 # Cache e arquivos temporários
 .cache/
 cache/
