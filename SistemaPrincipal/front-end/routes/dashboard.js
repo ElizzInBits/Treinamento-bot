@@ -22,7 +22,7 @@ router.get('/stats', async (req, res) => {
     const totalEmpresas = await Empresa.count();
     const totalContatos = await Usuario.count();
     const totalTreinamentos = await Treinamento.count();
-    const contatosComTreinamento = await Usuario.count({ where: { treinamentoId: { [Op.not]: null } } });
+    const contatosComTreinamento = await Usuario.count({ where: { treinamento_id: { [Op.not]: null } } });
     
     // Contar empresas que têm pelo menos um usuário
     const empresasComContatos = await Empresa.findAll({
@@ -34,7 +34,7 @@ router.get('/stats', async (req, res) => {
     });
     const empresasAtivas = empresasComContatos.length;
     
-    const certificadosEmitidos = await Usuario.count({ where: { statusTreinamento: 'concluído' } });
+    const certificadosEmitidos = await Usuario.count({ where: { status_treinamento: 'concluído' } });
 
     const taxaTreinamento = totalContatos > 0 ? ((contatosComTreinamento / totalContatos) * 100).toFixed(1) : 0;
     const mediaContatosPorEmpresa = totalEmpresas > 0 ? (totalContatos / totalEmpresas).toFixed(1) : 0;
@@ -65,11 +65,11 @@ router.get('/empresas-contatos', async (req, res) => {
     const dados = [];
     
     for (const empresa of empresas) {
-      const totalContatos = await Usuario.count({ where: { empresaId: empresa.id } });
+      const totalContatos = await Usuario.count({ where: { empresa_id: empresa.id } });
       const contatosComTreinamento = await Usuario.count({ 
         where: { 
-          empresaId: empresa.id,
-          treinamentoId: { [Op.not]: null }
+          empresa_id: empresa.id,
+          treinamento_id: { [Op.not]: null }
         }
       });
       
@@ -94,8 +94,8 @@ router.get('/empresas-contatos', async (req, res) => {
 // Dados para gráfico de status de treinamento
 router.get('/status-treinamento', async (req, res) => {
   try {
-    const comTreinamento = await Usuario.count({ where: { treinamentoId: { [Op.not]: null } } });
-    const semTreinamento = await Usuario.count({ where: { treinamentoId: null } });
+    const comTreinamento = await Usuario.count({ where: { treinamento_id: { [Op.not]: null } } });
+    const semTreinamento = await Usuario.count({ where: { treinamento_id: null } });
     
     const dados = [
       { status: 'Com Treinamento', total: comTreinamento },
@@ -162,7 +162,7 @@ router.get('/evolucao-mensal', async (req, res) => {
 router.get('/contatos-em-treinamento', async (req, res) => {
   try {
     const total = await Usuario.count({ 
-      where: { treinamentoId: { [Op.not]: null } } 
+      where: { treinamento_id: { [Op.not]: null } } 
     });
     
     res.json({ total });
@@ -179,11 +179,11 @@ router.get('/top-empresas', async (req, res) => {
     const dados = [];
     
     for (const empresa of empresas) {
-      const totalContatos = await Usuario.count({ where: { empresaId: empresa.id } });
+      const totalContatos = await Usuario.count({ where: { empresa_id: empresa.id } });
       const contatosComTreinamento = await Usuario.count({ 
         where: { 
-          empresaId: empresa.id,
-          treinamentoId: { [Op.not]: null }
+          empresa_id: empresa.id,
+          treinamento_id: { [Op.not]: null }
         }
       });
       

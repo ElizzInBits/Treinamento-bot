@@ -43,21 +43,21 @@ class UserService {
         return user;
     }
 
-    async getTrainingStats(empresaId = null) {
-        const cacheKey = empresaId ? `stats:company:${empresaId}` : 'stats:global';
+    async getTrainingStats(empresa_id = null) {
+        const cacheKey = empresa_id ? `stats:company:${empresa_id}` : 'stats:global';
         
         const cached = await cacheManager.get(cacheKey);
         if (cached) return cached;
 
-        const whereClause = empresaId ? { empresaId } : {};
+        const whereClause = empresa_id ? { empresaId } : {};
         
         const stats = await Usuario.findAll({
             where: whereClause,
             attributes: [
-                'statusTreinamento',
+                'status_treinamento',
                 [Usuario.sequelize.fn('COUNT', '*'), 'count']
             ],
-            group: ['statusTreinamento'],
+            group: ['status_treinamento'],
             raw: true
         });
 

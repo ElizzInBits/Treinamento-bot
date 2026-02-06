@@ -353,3 +353,28 @@ input:-webkit-autofill {
     margin-bottom: 10px;
   }
 }
+
+
+/* Botão Verificar Telefone */
+.btn-verificar {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 8px;
+  white-space: nowrap;
+  transition: all 0.3s;
+}
+
+.btn-verificar:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.status-verificado {
+  color: #10b981;
+  font-size: 13px;

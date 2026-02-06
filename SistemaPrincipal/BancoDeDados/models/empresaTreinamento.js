@@ -23,9 +23,13 @@ module.exports = (sequelize) => {
         key: 'id',
       },
     },
-    data_atribuicao: {
+    created_at: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+      allowNull: true,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   }, {
     timestamps: false,

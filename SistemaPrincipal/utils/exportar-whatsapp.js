@@ -39,14 +39,14 @@ class ExportadorWhatsApp {
             
             let interacoes = await Interacao.findAll({
                 where: { [Op.or]: condicoesOr },
-                order: [['createdAt', 'ASC']],
+                order: [['created_at', 'ASC']],
                 limit: limite
             });
             
             // Se não encontrou, buscar qualquer interação para debug
             if (interacoes.length === 0) {
                 const totalInteracoes = await Interacao.count();
-                const exemploInteracao = await Interacao.findOne({ order: [['createdAt', 'DESC']] });
+                const exemploInteracao = await Interacao.findOne({ order: [['created_at', 'DESC']] });
                 
                 const msgUsuario = usuario ? `Usuário ${usuario.nome} encontrado, mas` : 'Usuário não encontrado e';
                 

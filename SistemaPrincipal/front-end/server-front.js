@@ -208,11 +208,16 @@ function authenticateToken(req, res, next) {
     const token = authHeader && authHeader.split(' ')[1];
     
     if (!token) {
-        // Se for requisição do navegador, redirecionar para login
         if (req.headers.accept && req.headers.accept.includes('text/html')) {
             return res.redirect('/login-api');
         }
         return res.status(401).json({ error: 'Token de acesso requerido' });
+    }
+    
+    // Token interno do bot
+    if (token === 'internal-bot-token-2024') {
+        req.user = { id: 'bot', username: 'internal-bot' };
+        return next();
     }
     
     jwt.verify(token, SECRET_KEY, (err, user) => {
@@ -252,8 +257,8 @@ app.use('/api/contatos', (req, res, next) => {
 }, contatosRoutes);
 
 app.use('/api/empresas', (req, res, next) => {
-    if (req.path === '/select/options' || req.path === '/salubrita' || (req.method === 'POST' && req.path === '/')) {
-        next(); // Permitir acesso público às opções de empresas, Salubritá e cadastro
+    if (req.path === '/select/options' || req.path === '/salubrita' || req.path === '/supermix' || (req.method === 'POST' && req.path === '/')) {
+        next(); // Permitir acesso público às opções de empresas, Salubritá, SUPERMIX e cadastro
     } else {
         authenticateToken(req, res, next);
     }
@@ -312,6 +317,46 @@ try {
     app.use('/api/fluxos', authenticateToken, fluxosRoutes);
 } catch (error) {
     console.error('❌ Erro ao carregar rota de fluxos:', error.message);
+}
+
+// Rotas de unidades (protegidas)
+try {
+    const unidadesRoutes = require('./routes/unidades.js');
+    app.use('/api/unidades', authenticateToken, unidadesRoutes);
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de unidades:', error.message);
+}
+
+// Rotas de cargos (protegidas)
+try {
+    const cargosRoutes = require('./routes/cargos.js');
+    app.use('/api/cargos', authenticateToken, cargosRoutes);
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de cargos:', error.message);
+}
+
+// Rotas de setores (protegidas)
+try {
+    const setoresRoutes = require('./routes/setores.js');
+    app.use('/api/setores', authenticateToken, setoresRoutes);
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de setores:', error.message);
+}
+
+// Rotas de quiz gamificado (protegidas)
+try {
+    const quizRoutes = require('./routes/quiz.js');
+    app.use('/api/quiz', authenticateToken, quizRoutes);
+    
+    // Rotas de variantes de treinamentos
+    const variantesRoutes = require('./routes/variantes');
+    app.use('/api/variantes', authenticateToken, variantesRoutes);
+    
+    // Rotas de estrutura organizacional
+    const estruturaRoutes = require('./routes/estrutura');
+    app.use('/api/estrutura', authenticateToken, estruturaRoutes);
+} catch (error) {
+    console.error('❌ Erro ao carregar rota de quiz:', error.message);
 }
 
 
@@ -475,6 +520,18 @@ app.get('/assinar-certificado/:token', (req, res) => {
 app.get('/logs', (req, res) => {
     const logsPath = path.join(__dirname, '..', 'public', 'logs-dashboard-enhanced.html');
     fs.existsSync(logsPath) ? res.sendFile(logsPath) : res.json({ error: 'Dashboard de logs não encontrado' });
+});
+
+// Rota para visualizar unidades e cargos
+app.get('/unidades-cargos', (req, res) => {
+    const unidadesPath = path.join(publicPath, 'unidades-cargos.html');
+    fs.existsSync(unidadesPath) ? res.sendFile(unidadesPath) : res.json({ error: 'Página de unidades não encontrada' });
+});
+
+// Rota para estrutura organizacional
+app.get('/estrutura-organizacional', (req, res) => {
+    const estruturaPath = path.join(publicPath, 'estrutura-organizacional.html');
+    fs.existsSync(estruturaPath) ? res.sendFile(estruturaPath) : res.json({ error: 'Página de estrutura organizacional não encontrada' });
 });
 
 // Rota para redirecionamento de links curtos

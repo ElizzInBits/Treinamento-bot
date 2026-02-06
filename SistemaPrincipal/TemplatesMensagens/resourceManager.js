@@ -67,26 +67,26 @@ class ResourceManager {
         return imageId ? `https://drive.google.com/uc?export=download&id=${imageId}` : null;
     }
 
-    addTraining(treinamentoId, config) {
-        if (!this.resources.templates[treinamentoId]) {
-            this.resources.templates[treinamentoId] = {};
+    addTraining(treinamento_id, config) {
+        if (!this.resources.templates[treinamento_id]) {
+            this.resources.templates[treinamento_id] = {};
         }
-        if (!this.resources.images[treinamentoId]) {
-            this.resources.images[treinamentoId] = {};
+        if (!this.resources.images[treinamento_id]) {
+            this.resources.images[treinamento_id] = {};
         }
 
         // Adicionar templates
         if (config.templates) {
-            Object.assign(this.resources.templates[treinamentoId], config.templates);
+            Object.assign(this.resources.templates[treinamento_id], config.templates);
         }
 
         // Adicionar imagens
         if (config.images) {
-            Object.assign(this.resources.images[treinamentoId], config.images);
+            Object.assign(this.resources.images[treinamento_id], config.images);
         }
 
         this.saveResources();
-        console.log(`✅ Treinamento ${treinamentoId} adicionado`);
+        console.log(`✅ Treinamento ${treinamento_id} adicionado`);
     }
 
     reloadResources() {

@@ -711,12 +711,12 @@ async function enviarCertificadosUsuario(telefone, sendMessageFunc) {
     const { Treinamento } = require('../BancoDeDados/models');
     
     for (const cert of certificados) {
-      const [treinamentoId] = cert.tokenAssinatura.split('_');
+      const [treinamento_id] = cert.tokenAssinatura.split('_');
       const dataAssinatura = new Date(cert.assinadoEm).toLocaleDateString('pt-BR');
       
       // Buscar nome do treinamento
-      const treinamento = await Treinamento.findByPk(parseInt(treinamentoId));
-      const nomeTreinamento = treinamento ? treinamento.nome : `Treinamento ${treinamentoId}`;
+      const treinamento = await Treinamento.findByPk(parseInt(treinamento_id));
+      const nomeTreinamento = treinamento ? treinamento.nome : `Treinamento ${treinamento_id}`;
       
       // Encurtar link
       const linkCompleto = `http://72.60.48.249:3000/assinar-certificado/${cert.tokenAssinatura}`;
@@ -745,13 +745,13 @@ async function enviarCertificadosUsuario(telefone, sendMessageFunc) {
 }
 
 // Função centralizada para gerar certificados com tratamento de erro
-async function gerarCertificadoComAssinatura(usuarioId, treinamentoNomeArquivo, treinamentoId, sendMessageFunc, destinatario) {
+async function gerarCertificadoComAssinatura(usuarioId, treinamentoNomeArquivo, treinamento_id, sendMessageFunc, destinatario) {
   try {
     const { gerarCertificadoBanco } = require('./Certificados/certificados2');
     const TreinamentoUtils = require('./Treinamentos/treinamento-utils');
     
     // Gerar certificado
-    const caminhoArquivo = await gerarCertificadoBanco(usuarioId, null, treinamentoId, false);
+    const caminhoArquivo = await gerarCertificadoBanco(usuarioId, null, treinamento_id, false);
     
     if (!caminhoArquivo) {
       await sendMessageFunc(destinatario, 'send-message', {
@@ -772,9 +772,9 @@ async function gerarCertificadoComAssinatura(usuarioId, treinamentoNomeArquivo, 
     
     if (certificadoExistente) {
       const tokenParts = certificadoExistente.tokenAssinatura.split('_');
-      const treinamentoIdToken = parseInt(tokenParts[0]);
+      const treinamento_idToken = parseInt(tokenParts[0]);
       
-      if (treinamentoIdToken === treinamentoId) {
+      if (treinamento_idToken === treinamento_id) {
         const linkCertificado = `http://72.60.48.249:3000/assinar-certificado/${certificadoExistente.tokenAssinatura}`;
         const AssinaturaCertificadoService = require('./Certificados/assinaturaCertificado');
         const linkEncurtado = await AssinaturaCertificadoService.encurtarUrl(linkCertificado);

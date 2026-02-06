@@ -1,0 +1,191 @@
+/* ESTRUTURA ORGANIZACIONAL */
+.estrutura-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 20px 20px 0 20px;
+  border-bottom: 2px solid #E2E8F0;
+}
+
+.estrutura-tab {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  color: #64748B;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.estrutura-tab.active {
+  color: #0F4C5C;
+  font-weight: 600;
+}
+
+.estrutura-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #F1AE33;
+}
+
+.estrutura-tab-content {
+  display: none;
+  padding: 20px;
+}
+
+.estrutura-tab-content.active {
+  display: block;
+}
+
+.estrutura-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.estrutura-header h3 {
+  font-size: 1.5rem;
+  color: #0F4C5C;
+}
+
+.estrutura-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 12px;
+}
+
+.estrutura-table thead {
+  background: #0F4C5C;
+  color: white;
+}
+
+.estrutura-table th,
+.estrutura-table td {
+  padding: 15px;
+  text-align: left;
+}
+
+.estrutura-table tbody tr {
+  border-bottom: 1px solid #E2E8F0;
+  transition: background 0.2s;
+}
+
+.estrutura-table tbody tr:hover {
+  background: #F8FAFC;
+}
+
+.estrutura-table .empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #94A3B8;
+}
+
+.unidades-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.unidade-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 12px;
+}
+
+.unidade-card h4 {
+  color: #0F4C5C;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.unidade-info {
+  color: #64748B;
+  margin-bottom: 15px;
+}
+
+.setores-vinculados {
+  margin: 15px 0;
+}
+
+.setores-vinculados strong {
+  display: block;
+  margin-bottom: 10px;
+  color: #0F4C5C;
+}
+
+.setor-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.setor-tag {
+  background: #E0F2F1;
+  color: #0F4C5C;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setor-tag .remove {
+  color: #EF4444;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.setor-tag .remove:hover {
+  color: #DC2626;
+}
+
+.unidade-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-small {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #0F4C5C;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0D3D4A;
+}
+
+.btn-edit {
+  background: #F1AE33;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #D99A2A;
+}
+
+.btn-danger {
+  background: #EF4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #DC2626;
+}

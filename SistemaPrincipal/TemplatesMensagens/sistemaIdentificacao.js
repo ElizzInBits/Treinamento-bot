@@ -48,10 +48,12 @@ async function processarMensagemInicial(telefone, mensagem, sendMessage, buscarC
             return;
         }
         
-        console.log(`✅ [IDENTIFICAÇÃO] Usuário cadastrado: ${contato.nome} (ID: ${contato.id}, Empresa: ${contato.empresaId})`);
+        const empresaId = contato.empresa_id || empresaId;
+        console.log(`✅ [IDENTIFICAÇÃO] Usuário cadastrado: ${contato.nome} (ID: ${contato.id}, Empresa: ${empresaId})`);
+        console.log(`🔍 [DEBUG] empresa_id=${contato.empresa_id}, empresaId=${empresaId}`);
         
         // Buscar última interação (excluindo mensagens do usuário)
-        const ultimaInteracao = await Interacao.findOne({
+        const ultima_interacao = await Interacao.findOne({
             where: { 
                 telefone: telefone,
                 tipo: { [Op.ne]: 'mensagem_usuario' }
@@ -60,9 +62,9 @@ async function processarMensagemInicial(telefone, mensagem, sendMessage, buscarC
         });
         
         // PRIMEIRA INTERAÇÃO OU SEM HISTÓRICO
-        if (!ultimaInteracao) {
+        if (!ultima_interacao) {
             console.log(`🆕 [IDENTIFICAÇÃO] Primeira interação - mostrando menu de treinamentos`);
-            const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(contato.empresaId, contato.id);
+            const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(empresaId, contato.id);
             if (treinamentosPendentes && treinamentosPendentes.length > 0) {
                 await treinamentoApresentacao.direcionarParaTreinamentos(telefone, sendMessage, treinamentosPendentes, contato);
             } else {
@@ -74,13 +76,13 @@ async function processarMensagemInicial(telefone, mensagem, sendMessage, buscarC
         }
         
         // PROCESSAR BASEADO NA ÚLTIMA INTERAÇÃO
-        const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+        const dados = JSON.parse(ultima_interacao.mensagem || '{}');
         const etapa = dados.etapa;
         
         // USUÁRIO ESTAVA AGUARDANDO CADASTRO E VOLTOU
         if (etapa === 'aguardando_cadastro' || etapa === 'opcao_inicial') {
             console.log(`✅ [IDENTIFICAÇÃO] Usuário voltou após cadastro - mostrando menu`);
-            const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(contato.empresaId, contato.id);
+            const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(empresaId, contato.id);
             if (treinamentosPendentes && treinamentosPendentes.length > 0) {
                 await treinamentoApresentacao.direcionarParaTreinamentos(telefone, sendMessage, treinamentosPendentes, contato);
             } else {
@@ -96,7 +98,7 @@ async function processarMensagemInicial(telefone, mensagem, sendMessage, buscarC
         // CONVERSA FINALIZADA - REINICIAR
         if (etapa === 'finalizado') {
             console.log(`🔄 [IDENTIFICAÇÃO] Conversa finalizada - mostrando menu`);
-            const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(contato.empresaId, contato.id);
+            const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(empresaId, contato.id);
             if (treinamentosPendentes && treinamentosPendentes.length > 0) {
                 await treinamentoApresentacao.direcionarParaTreinamentos(telefone, sendMessage, treinamentosPendentes, contato);
             } else {
@@ -121,10 +123,26 @@ async function processarMensagemInicial(telefone, mensagem, sendMessage, buscarC
             return;
         }
         
+        // TREINAMENTO GAME TESTE
+        if (etapa && etapa.includes('game_teste')) {
+            console.log(`🎮 [IDENTIFICAÇÃO] Roteando para treinamento Game Teste`);
+            const gameTeste = require('./Treinamentos/GameTeste/gameTeste');
+            await gameTeste.processarTreinamentoGameTeste(
+                telefone,
+                mensagem,
+                null,
+                contato,
+                sendMessage,
+                buscarContato
+            );
+            return;
+        }
+        
         // APRESENTAÇÃO OU MENU DE TREINAMENTOS
         const etapasApresentacao = [
             'apresentacao',
             'treinamentos_pendentes',
+            'escolher_treinamento',
             'mostrar_recursos',
             'opcao_inicial',
             'aguardando_cadastro',
@@ -157,7 +175,7 @@ async function processarMensagemInicial(telefone, mensagem, sendMessage, buscarC
         
         // FLUXO PADRÃO - MOSTRAR MENU
         console.log(`🔄 [IDENTIFICAÇÃO] Etapa desconhecida (${etapa}) - mostrando menu`);
-        const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(contato.empresaId, contato.id);
+        const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(empresaId, contato.id);
         if (treinamentosPendentes && treinamentosPendentes.length > 0) {
             await treinamentoApresentacao.direcionarParaTreinamentos(telefone, sendMessage, treinamentosPendentes, contato);
         } else {

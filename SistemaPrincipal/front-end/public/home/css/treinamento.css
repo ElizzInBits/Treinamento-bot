@@ -719,3 +719,116 @@
 .btn-excluir-treinamento button:hover {
   transform: scale(1.03);
 }
+
+
+/* ESTATÍSTICAS DE STATUS DO TREINAMENTO */
+.treinamento-stats-summary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+  border-radius: 12px;
+}
+
+.stat-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 2px 8px;
+  transition: transform 0.2s ease;
+}
+
+.stat-badge:hover {
+  transform: translateY(-2px);
+}
+
+.stat-badge.success {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+}
+
+.stat-badge.warning {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: white;
+}
+
+.stat-badge.info {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+}
+
+.stat-badge.primary {
+  background: linear-gradient(135deg, #53A5A6 0%, #4A8F90 100%);
+  color: white;
+}
+
+.stat-badge i {
+  font-size: 1.1rem;
+}
+
+/* STATUS NO CARD DE CONTATO */
+.contact-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.contact-status.status-success {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.contact-status.status-warning {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.contact-status.status-info {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.contact-status i {
+  font-size: 0.9rem;
+}
+
+/* CHECKBOX LABEL */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #53A5A6;
+}
+
+.checkbox-label span {
+  font-weight: 500;
+  color: #475569;
+}
+
+#configQuizFields {
+  margin-top: 20px;
+  padding: 20px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  border: 2px dashed #53A5A6;
+}

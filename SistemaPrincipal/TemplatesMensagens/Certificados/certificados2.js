@@ -5,7 +5,7 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const { Usuario, Empresa, Treinamento } = require('../../BancoDeDados/models');
 
-async function gerarCertificadoBanco(contatoId, nometreinamento = null, treinamentoId = null, enviarEmailAutomatico = true) {
+async function gerarCertificadoBanco(contatoId, nometreinamento = null, treinamento_id = null, enviarEmailAutomatico = true) {
   try {
     // Buscar contato e empresa
     const contato = await Usuario.findByPk(contatoId);
@@ -24,8 +24,8 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null, treiname
     let treinamento = null;
     
     // 1. Se foi passado ID específico, usar ele
-    if (treinamentoId) {
-      treinamento = await Treinamento.findByPk(treinamentoId);
+    if (treinamento_id) {
+      treinamento = await Treinamento.findByPk(treinamento_id);
     }
     
     // 2. Se não achou por ID, tentar por nome
@@ -187,8 +187,8 @@ async function gerarCertificadoBanco(contatoId, nometreinamento = null, treiname
     // TIPO
     page.drawText('Tipo de', { x: 310, y: 386, size: tamanho, font: helvetica, color: cor });
     page.drawText('Treinamento:', { x: 310, y: 371, size: tamanho, font: helvetica, color: cor });
-    const tipoTreinamento = normalizarTexto(treinamento.tipo || 'TEORICO E PRATICO');
-    page.drawText(tipoTreinamento, { x: 400, y: 380, size: tamanho, font: helvetica, color: cor });
+    const tipo_treinamento = normalizarTexto(treinamento.tipo || 'TEORICO E PRATICO');
+    page.drawText(tipo_treinamento, { x: 400, y: 380, size: tamanho, font: helvetica, color: cor });
 
     // Carga Horária e Período
     page.drawText('Carga Horária', { x: 60, y: 336, size: tamanho, font: helvetica, color: cor });
@@ -345,10 +345,10 @@ async function enviarEmail(destinatario, arquivoPath, treinamento = null) {
 }
 
 // Função para gerar certificado de visitante (sem cadastro no sistema)
-async function gerarCertificadoVisitante(nome, email, cpf, treinamentoId = 15) {
+async function gerarCertificadoVisitante(nome, email, cpf, treinamento_id = 15) {
   try {
     // Buscar treinamento
-    const treinamento = await Treinamento.findByPk(treinamentoId);
+    const treinamento = await Treinamento.findByPk(treinamento_id);
     
     if (!treinamento) {
       throw new Error(`❌ Treinamento não encontrado.`);
@@ -417,8 +417,8 @@ async function gerarCertificadoVisitante(nome, email, cpf, treinamentoId = 15) {
     // TIPO
     page.drawText('Tipo de', { x: 310, y: 386, size: tamanho, font: helvetica, color: cor });
     page.drawText('Treinamento:', { x: 310, y: 371, size: tamanho, font: helvetica, color: cor });
-    const tipoTreinamento = normalizarTexto(treinamento.tipo || 'TEORICO E PRATICO');
-    page.drawText(tipoTreinamento, { x: 400, y: 380, size: tamanho, font: helvetica, color: cor });
+    const tipo_treinamento = normalizarTexto(treinamento.tipo || 'TEORICO E PRATICO');
+    page.drawText(tipo_treinamento, { x: 400, y: 380, size: tamanho, font: helvetica, color: cor });
 
     // Carga Horária e Período
     page.drawText('Carga Horária', { x: 60, y: 336, size: tamanho, font: helvetica, color: cor });

@@ -40,7 +40,7 @@ class CacheContatos {
                         [require('sequelize').Op.in]: variacoes
                     }
                 },
-                attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
+                attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresa_id', 'status_treinamento', 'treinamento_id'],
                 logging: false,
                 raw: false
             });
@@ -68,9 +68,9 @@ class CacheContatos {
         try {
             const contatosAtivos = await Usuario.findAll({
                 where: {
-                    statusTreinamento: ['em andamento', 'não iniciado']
+                    status_treinamento: ['em andamento', 'não iniciado']
                 },
-                attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresaId', 'statusTreinamento', 'treinamentoId'],
+                attributes: ['id', 'nome', 'nomeCompleto', 'email', 'telefone', 'empresa_id', 'status_treinamento', 'treinamento_id'],
                 limit: 100,
                 logging: false
             });

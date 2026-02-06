@@ -97,17 +97,17 @@ class TreinamentoUtils {
     static async criarTokenCertificadoTreinamento(usuarioId, nomeArquivoTreinamento, certificadoPath) {
         try {
             const AssinaturaCertificadoService = require('../Certificados/assinaturaCertificado');
-            const treinamentoId = this.obterIdTreinamento(nomeArquivoTreinamento);
+            const treinamento_id = this.obterIdTreinamento(nomeArquivoTreinamento);
             
-            if (!treinamentoId) {
+            if (!treinamento_id) {
                 throw new Error(`ID do treinamento não encontrado para: ${nomeArquivoTreinamento}`);
             }
             
-            console.log(`🎯 Criando token para treinamento ID: ${treinamentoId}`);
+            console.log(`🎯 Criando token para treinamento ID: ${treinamento_id}`);
             
             return await AssinaturaCertificadoService.criarTokenCertificado(
                 usuarioId,
-                treinamentoId,
+                treinamento_id,
                 certificadoPath
             );
             

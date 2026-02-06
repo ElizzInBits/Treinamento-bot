@@ -102,7 +102,9 @@ async function criarTreinamento(req, res) {
         cargoResponsavel = '',
         registroResponsavel = '',
         areaResponsavel,
-        observacoes = ''
+        observacoes = '',
+        tipoGamificado = false,
+        configQuiz = null
       } = req.body;
 
       // Arquivos enviados
@@ -139,7 +141,9 @@ async function criarTreinamento(req, res) {
         cargo_responsavel: cargoResponsavel,
         registro_responsavel: registroResponsavel || 'N/A',
         area_responsavel: areaResponsavel,
-        midias_treinamento: JSON.stringify(midias)
+        midias_treinamento: JSON.stringify(midias),
+        tipo_gamificado: tipoGamificado === 'true' || tipoGamificado === true,
+        config_quiz: configQuiz ? (typeof configQuiz === 'string' ? configQuiz : JSON.stringify(configQuiz)) : null
       });
 
       console.log('✅ Treinamento criado com sucesso:', novo.nome);

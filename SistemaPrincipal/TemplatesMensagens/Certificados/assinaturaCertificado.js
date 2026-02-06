@@ -16,10 +16,10 @@ const LinkCurto = sequelize.define('LinkCurto', {
 class AssinaturaCertificadoService {
   
   // Gerar token único para assinatura com ID do usuário e treinamento
-  static gerarToken(usuarioId, treinamentoId) {
+  static gerarToken(usuarioId, treinamento_id) {
     const timestamp = Date.now().toString(36);
     const random = crypto.randomBytes(16).toString('hex');
-    return `${treinamentoId}_${usuarioId}_${timestamp}_${random}`;
+    return `${treinamento_id}_${usuarioId}_${timestamp}_${random}`;
   }
 
   // Gerar link curto
@@ -68,7 +68,7 @@ class AssinaturaCertificadoService {
   }
 
   // Criar token de certificado e salvar no usuário
-  static async criarTokenCertificado(usuarioId, treinamentoId, certificadoPath) {
+  static async criarTokenCertificado(usuarioId, treinamento_id, certificadoPath) {
     const { Usuario, AssinaturaCertificado } = require('../../BancoDeDados/models');
     
     // Verificar se já existe certificado assinado para este treinamento
@@ -81,16 +81,16 @@ class AssinaturaCertificadoService {
     });
     
     if (certificadoAssinado) {
-      // Extrair treinamentoId do token
+      // Extrair treinamento_id do token
       const tokenParts = certificadoAssinado.tokenAssinatura.split('_');
-      const treinamentoIdToken = parseInt(tokenParts[0]);
+      const treinamento_idToken = parseInt(tokenParts[0]);
       
-      if (treinamentoIdToken === treinamentoId) {
+      if (treinamento_idToken === treinamento_id) {
         throw new Error(`Você já possui um certificado assinado para este treinamento. Não é possível assinar novamente.`);
       }
     }
     
-    const token = this.gerarToken(usuarioId, treinamentoId);
+    const token = this.gerarToken(usuarioId, treinamento_id);
 
     // Buscar usuário
     const usuario = await Usuario.findByPk(usuarioId);
@@ -104,14 +104,14 @@ class AssinaturaCertificadoService {
         usuarioId: usuarioId,
         status: 'pendente'
       },
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
     
     if (tokenPendente) {
       const tokenParts = tokenPendente.tokenAssinatura.split('_');
-      const treinamentoIdToken = parseInt(tokenParts[0]);
+      const treinamento_idToken = parseInt(tokenParts[0]);
       
-      if (treinamentoIdToken === treinamentoId) {
+      if (treinamento_idToken === treinamento_id) {
         const urlCompleta = `http://72.60.48.249:3000/assinar-certificado/${tokenPendente.tokenAssinatura}`;
         return {
           token: tokenPendente.tokenAssinatura,
@@ -170,8 +170,8 @@ class AssinaturaCertificadoService {
       return { valido: false, erro: 'Token expirado' };
     }
     
-    // Extrair treinamentoId do token
-    const [treinamentoId, usuarioId] = token.split('_');
+    // Extrair treinamento_id do token
+    const [treinamento_id, usuarioId] = token.split('_');
     
     const usuario = await Usuario.findByPk(assinatura.usuarioId);
     if (!usuario) {
@@ -181,7 +181,7 @@ class AssinaturaCertificadoService {
     return { 
       valido: true, 
       usuario,
-      treinamentoId: parseInt(treinamentoId),
+      treinamento_id: parseInt(treinamento_id),
       assinatura
     };
   }
@@ -196,7 +196,7 @@ class AssinaturaCertificadoService {
       throw new Error(validacao.erro);
     }
 
-    const { usuario, assinatura, treinamentoId } = validacao;
+    const { usuario, assinatura, treinamento_id } = validacao;
 
     // Buscar certificado do banco de dados
     const certificadoPath = assinatura.certificadoPath;
@@ -206,7 +206,7 @@ class AssinaturaCertificadoService {
       certificadoPath,
       assinaturaBase64,
       usuario.id,
-      treinamentoId
+      treinamento_id
     );
     
     // Atualizar registro de assinatura
@@ -250,7 +250,7 @@ class AssinaturaCertificadoService {
   }
 
   // Adicionar assinatura ao PDF existente
-  static async adicionarAssinaturaPDF(certificadoPath, assinaturaBase64, usuarioId, treinamentoId) {
+  static async adicionarAssinaturaPDF(certificadoPath, assinaturaBase64, usuarioId, treinamento_id) {
     try {
       if (!certificadoPath) {
         throw new Error('Caminho do certificado não fornecido');
@@ -265,7 +265,7 @@ class AssinaturaCertificadoService {
         const novoCertificadoPath = await gerarCertificadoBanco(
           usuarioId,
           null,
-          treinamentoId,
+          treinamento_id,
           false
         );
         
@@ -398,16 +398,16 @@ class AssinaturaCertificadoService {
       const { Usuario } = require('../../BancoDeDados/models');
       const { gerarCertificadoBanco } = require('./certificados2');
       
-      // Extrair treinamentoId do token
-      const [treinamentoId, usuarioId] = assinatura.tokenAssinatura.split('_');
+      // Extrair treinamento_id do token
+      const [treinamento_id, usuarioId] = assinatura.tokenAssinatura.split('_');
       
-      console.log(`🔄 Regenerando certificado para usuário ${usuarioId}, treinamento ${treinamentoId}`);
+      console.log(`🔄 Regenerando certificado para usuário ${usuarioId}, treinamento ${treinamento_id}`);
       
       // Gerar novo certificado (sem enviar email, pois será enviado após assinatura)
       const novoCertificadoPath = await gerarCertificadoBanco(
         parseInt(usuarioId),
         null,
-        parseInt(treinamentoId),
+        parseInt(treinamento_id),
         false  // Não enviar email automaticamente
       );
       
@@ -433,7 +433,7 @@ class AssinaturaCertificadoService {
         const { Treinamento } = require('../../BancoDeDados/models');
         const { enviarEmail } = require('./certificados2');
         
-        const treinamento = await Treinamento.findByPk(parseInt(treinamentoId));
+        const treinamento = await Treinamento.findByPk(parseInt(treinamento_id));
         
         if (usuario && usuario.email) {
           await enviarEmail(
@@ -476,8 +476,8 @@ class AssinaturaCertificadoService {
         return { erro: 'Usuário não encontrado' };
       }
       
-      // Extrair treinamentoId do token
-      const [treinamentoId] = token.split('_');
+      // Extrair treinamento_id do token
+      const [treinamento_id] = token.split('_');
       
       return {
         sucesso: true,
@@ -486,7 +486,7 @@ class AssinaturaCertificadoService {
           email: usuario.email
         },
         certificado: {
-          treinamentoId: parseInt(treinamentoId),
+          treinamento_id: parseInt(treinamento_id),
           status: assinatura.status
         }
       };

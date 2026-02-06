@@ -27,35 +27,41 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('masculino', 'feminino', 'outro'),
       allowNull: true,
     },
-    statusTreinamento: {
+    status_treinamento: {
       type: DataTypes.STRING,
       defaultValue: 'não iniciado',
     },
-    treinamentoId: {
+    treinamento_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    empresaId: {
+    empresa_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      field: 'empresa_id',
       references: {
         model: 'empresas',
         key: 'id',
       },
     },
-    ultimaInteracao: {
+    ultima_interacao: {
       type: DataTypes.DATE,
       allowNull: true,
     },
-    cargo: {
-      type: DataTypes.STRING(100),
+    cargo_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
-      comment: 'Cargo do funcionário'
+      comment: 'ID do cargo'
     },
-    setor: {
-      type: DataTypes.STRING(100),
+    setor_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
-      comment: 'Setor do funcionário'
+      comment: 'ID do setor'
+    },
+    unidade_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'ID da unidade'
     },
     ativo: {
       type: DataTypes.TINYINT,
@@ -68,8 +74,8 @@ module.exports = (sequelize) => {
     freezeTableName: true,
     indexes: [
       { fields: ['telefone'] },
-      { fields: ['empresaId'] },
-      { fields: ['statusTreinamento'] }
+      { fields: ['empresa_id'] },
+      { fields: ['status_treinamento'] }
     ],
     hooks: {
       beforeDestroy: async (usuario, options) => {
@@ -83,12 +89,12 @@ module.exports = (sequelize) => {
 
   Usuario.associate = (models) => {
     Usuario.belongsTo(models.Empresa, {
-      foreignKey: 'empresaId',
+      foreignKey: 'empresa_id',
       as: 'empresa' 
     });
     
     Usuario.belongsTo(models.Treinamento, {
-      foreignKey: 'treinamentoId',
+      foreignKey: 'treinamento_id',
       as: 'treinamento'
     });
   };

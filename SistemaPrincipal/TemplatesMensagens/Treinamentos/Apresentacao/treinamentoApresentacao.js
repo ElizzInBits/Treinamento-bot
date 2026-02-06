@@ -18,31 +18,31 @@ async function processarRespostaApresentacao(sender, text, selectedId, contato, 
         return await mostrarComoFunciona(sender, contato.nome, sendMessage);
     }
     
-    const ultimaInteracao = await obterUltimaInteracao(sender);
+    const ultima_interacao = await obterUltimaInteracao(sender);
     
     // Se conversa foi finalizada, reiniciar
-    if (ultimaInteracao && JSON.parse(ultimaInteracao.mensagem || '{}').etapa === 'finalizado') {
+    if (ultima_interacao && JSON.parse(ultima_interacao.mensagem || '{}').etapa === 'finalizado') {
         console.log('🎆 REINICIANDO FLUXO - Conversa finalizada');
         return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
     
     // Se não há interação anterior, iniciar fluxo
-    if (!ultimaInteracao) {
+    if (!ultima_interacao) {
         console.log('🎆 PRIMEIRA INTERAÇÃO - Iniciando fluxo');
         return await iniciarFluxoBoasVindas(sender, sendMessage);
     }
     
     // Se há interação anterior, processar baseado no estado
-    if (ultimaInteracao) {
-        return await processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage, buscarContato);
+    if (ultima_interacao) {
+        return await processarEstadoAtual(sender, text, selectedId, contato, ultima_interacao, sendMessage, buscarContato);
     }
     
     // Se não há interação anterior, iniciar fluxo
     return await iniciarFluxoBoasVindas(sender, sendMessage);
 }
 
-async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInteracao, sendMessage, buscarContato = null) {
-    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+async function processarEstadoAtual(sender, text, selectedId, contato, ultima_interacao, sendMessage, buscarContato = null) {
+    const dados = JSON.parse(ultima_interacao.mensagem || '{}');
     const etapa = dados.etapa;
     
     console.log(`🎯 Etapa atual: ${etapa}`);
@@ -81,9 +81,13 @@ async function processarEstadoAtual(sender, text, selectedId, contato, ultimaInt
             return await processarContatoComercial(sender, text, sendMessage);
         case 'treinamentos_pendentes':
             return await processarTreinamentosPendentes(sender, text, sendMessage);
+        case 'escolher_treinamento':
+            return await processarEscolhaTreinamento(sender, text, sendMessage);
         case 'finalizando':
             console.log('🔄 Conversa finalizada - reiniciando fluxo');
             return await iniciarFluxoBoasVindas(sender, sendMessage);
+        case 'escolher_treinamento':
+            return await processarEscolhaTreinamento(sender, text, sendMessage);
         default:
             console.log(`⚠️ Etapa desconhecida: ${etapa} - Continuando fluxo`);
             return true;
@@ -773,8 +777,8 @@ async function perguntarDadosCertificado(sender, sendMessage) {
 }
 
 async function processarConfirmacaoDados(sender, text, sendMessage) {
-    const ultimaInteracao = await obterUltimaInteracao(sender);
-    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const ultima_interacao = await obterUltimaInteracao(sender);
+    const dados = JSON.parse(ultima_interacao.mensagem || '{}');
     const opcao = text.trim();
     
     // Se tem dados salvos (do sistema) e usuário confirmou
@@ -876,8 +880,8 @@ async function gerarEEnviarCertificado(nome, email, sender, sendMessage) {
     if (!contato) {
         // MODO VISITANTE - Gerar certificado com dados informados
         // Buscar CPF da última interação
-        const ultimaInteracao = await obterUltimaInteracao(sender);
-        const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+        const ultima_interacao = await obterUltimaInteracao(sender);
+        const dados = JSON.parse(ultima_interacao.mensagem || '{}');
         const cpf = dados.cpf || 'Não informado';
         
         await gerarCertificadoVisitante(nome, email, cpf, sender, sendMessage);
@@ -933,11 +937,11 @@ async function mostrarOutrasAplicacoes(sender, sendMessage) {
     
     setTimeout(async () => {
         // Verificar se o usuário veio da tela de treinamentos pendentes
-        const ultimaInteracao = await obterUltimaInteracao(sender);
+        const ultima_interacao = await obterUltimaInteracao(sender);
         let temTreinamentosPendentes = false;
         
-        if (ultimaInteracao) {
-            const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+        if (ultima_interacao) {
+            const dados = JSON.parse(ultima_interacao.mensagem || '{}');
             if (dados.vem_de_treinamentos_pendentes && dados.treinamentos_pendentes) {
                 temTreinamentosPendentes = true;
             }
@@ -962,8 +966,8 @@ async function mostrarOutrasAplicacoes(sender, sendMessage) {
 
 async function processarOutrasAplicacoes(sender, text, sendMessage) {
     const opcao = text.trim().toLowerCase();
-    const ultimaInteracao = await obterUltimaInteracao(sender);
-    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const ultima_interacao = await obterUltimaInteracao(sender);
+    const dados = JSON.parse(ultima_interacao.mensagem || '{}');
     
     console.log(`📊 Processando outras aplicações: "${text}" -> "${opcao}"`);
     
@@ -1063,41 +1067,41 @@ async function verificarTreinamentosPendentes(sender, sendMessage, querContato =
     }
 }
 
-async function verificarTreinamentosEmpresa(empresaId, contatoId = null) {
+async function verificarTreinamentosEmpresa(empresa_id, contatoId = null) {
     try {
         const { sequelize } = require('../../../BancoDeDados/models');
         
-        console.log(`🔍 Consultando treinamentos para empresa ${empresaId}, contato ${contatoId}`);
+        console.log(`🔍 Consultando treinamentos para empresa ${empresa_id}, contato ${contatoId}`);
         
         // Query otimizada para buscar treinamentos da empresa que o contato ainda não completou
         const query = `
             SELECT 
                 t.id,
                 t.nome,
-                et.data_atribuicao,
+                et.created_at as data_atribuicao,
                 CASE 
-                    WHEN DATEDIFF(DATE_ADD(et.data_atribuicao, INTERVAL 30 DAY), CURDATE()) < 0 THEN 'vencido'
-                    WHEN DATEDIFF(DATE_ADD(et.data_atribuicao, INTERVAL 30 DAY), CURDATE()) <= 7 THEN 'urgente'
+                    WHEN DATEDIFF(DATE_ADD(et.created_at, INTERVAL 30 DAY), CURDATE()) < 0 THEN 'vencido'
+                    WHEN DATEDIFF(DATE_ADD(et.created_at, INTERVAL 30 DAY), CURDATE()) <= 7 THEN 'urgente'
                     ELSE 'normal'
                 END as status_prazo,
-                DATE_ADD(et.data_atribuicao, INTERVAL 30 DAY) as prazo
+                DATE_ADD(et.created_at, INTERVAL 30 DAY) as prazo
             FROM treinamentos t
             INNER JOIN empresas_treinamentos et ON t.id = et.treinamento_id
             LEFT JOIN assinaturas_certificados ac ON ac.usuario_id = :contatoId 
                 AND ac.token_assinatura LIKE CONCAT(t.id, '_%')
                 AND ac.status = 'assinado'
-            WHERE et.empresa_id = :empresaId
+            WHERE et.empresa_id = :empresa_id
                 AND ac.id IS NULL
             ORDER BY 
                 CASE 
-                    WHEN DATEDIFF(DATE_ADD(et.data_atribuicao, INTERVAL 30 DAY), CURDATE()) < 0 THEN 1
-                    WHEN DATEDIFF(DATE_ADD(et.data_atribuicao, INTERVAL 30 DAY), CURDATE()) <= 7 THEN 2
+                    WHEN DATEDIFF(DATE_ADD(et.created_at, INTERVAL 30 DAY), CURDATE()) < 0 THEN 1
+                    WHEN DATEDIFF(DATE_ADD(et.created_at, INTERVAL 30 DAY), CURDATE()) <= 7 THEN 2
                     ELSE 3
                 END,
-                et.data_atribuicao ASC
+                et.created_at ASC
         `;
         
-        const replacements = { empresaId, contatoId };
+        const replacements = { empresa_id, contatoId };
         
         const resultados = await sequelize.query(query, {
             replacements,
@@ -1105,7 +1109,7 @@ async function verificarTreinamentosEmpresa(empresaId, contatoId = null) {
         });
         
         if (resultados.length === 0) {
-            console.log(`❌ Nenhum treinamento pendente encontrado para empresa ${empresaId}`);
+            console.log(`❌ Nenhum treinamento pendente encontrado para empresa ${empresa_id}`);
             return [];
         }
         
@@ -1124,12 +1128,12 @@ async function verificarTreinamentosEmpresa(empresaId, contatoId = null) {
                 id: resultado.id,
                 nome: resultado.nome,
                 tipo: tipo,
-                prazo: resultado.prazo.toISOString().split('T')[0], // formato YYYY-MM-DD
+                prazo: resultado.prazo ? resultado.prazo.toISOString().split('T')[0] : null,
                 status_prazo: resultado.status_prazo
             };
         });
         
-        console.log(`✅ Empresa ${empresaId} tem ${treinamentos.length} treinamentos pendentes`);
+        console.log(`✅ Empresa ${empresa_id} tem ${treinamentos.length} treinamentos pendentes`);
         console.log(`📊 Detalhes:`, treinamentos.map(t => `${t.nome} (${t.status_prazo})`));
         
         return treinamentos;
@@ -1149,21 +1153,20 @@ async function direcionarParaTreinamentos(sender, sendMessage, treinamentos, con
     treinamentos.forEach((treinamento, index) => {
         const prazoFormatado = treinamento.prazo ? ` (prazo: ${treinamento.prazo})` : '';
         
-        // Determinar ícone baseado no status do prazo
-        let icone = '⚠️'; // Padrão
+        let icone = '⚠️';
         
         switch (treinamento.status_prazo) {
             case 'vencido':
-                icone = '🔴'; // Vencido
+                icone = '🔴';
                 break;
             case 'urgente':
-                icone = '🟡'; // Urgente (até 7 dias)
+                icone = '🟡';
                 break;
             case 'normal':
                 if (treinamento.tipo === 'reciclagem') {
-                    icone = '🔄'; // Reciclagem
+                    icone = '🔄';
                 } else {
-                    icone = '⚠️'; // Normal
+                    icone = '⚠️';
                 }
                 break;
         }
@@ -1179,7 +1182,7 @@ async function direcionarParaTreinamentos(sender, sendMessage, treinamentos, con
         etapa: 'treinamentos_pendentes',
         treinamentos: treinamentos,
         contato_id: contato.id,
-        empresa_id: contato.empresaId
+        empresa_id: contato.empresa_id || contato.empresaId
     }));
 }
 
@@ -1234,75 +1237,77 @@ async function processarContatoComercial(sender, text, sendMessage) {
 // Processar resposta dos treinamentos pendentes
 async function processarTreinamentosPendentes(sender, text, sendMessage) {
     const opcao = text.trim();
-    const ultimaInteracao = await obterUltimaInteracao(sender);
-    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const ultima_interacao = await obterUltimaInteracao(sender);
+    const dados = JSON.parse(ultima_interacao.mensagem || '{}');
+    const treinamentos = dados.treinamentos || [];
     
     console.log(`🎓 Processando treinamentos pendentes: "${text}"`);
     
+    // Verificar se é seleção de treinamento específico (7, 8, 9...)
+    const numeroOpcao = parseInt(opcao);
+    if (numeroOpcao >= 7 && numeroOpcao < 7 + treinamentos.length) {
+        const treinamentoSelecionado = treinamentos[numeroOpcao - 7];
+        await iniciarTreinamentoEspecifico(sender, treinamentoSelecionado, sendMessage);
+        return true;
+    }
+    
     if (opcao === '1' || (opcao.toLowerCase().includes('fazer') && opcao.toLowerCase().includes('treinamento'))) {
-        // Iniciar treinamentos
-        console.log('🎓 Direcionando para treinamentos da empresa');
-        
-        // Buscar o primeiro treinamento pendente
-        const treinamentos = dados.treinamentos || [];
-        
-        if (treinamentos.length > 0) {
-            const primeiroTreinamento = treinamentos[0];
-            console.log(`🎓 Iniciando treinamento: ${primeiroTreinamento.nome} (ID: ${primeiroTreinamento.id})`);
+        // Se há múltiplos treinamentos, enviar lista interativa
+        if (treinamentos.length > 1) {
+            const listMsg = {
+                title: '',
+                description: '📚 Selecione o treinamento que deseja iniciar:',
+                buttonText: '📝 Escolher Treinamento',
+                listType: 'SINGLE_SELECT',
+                sections: [{
+                    title: 'Treinamentos Disponíveis',
+                    rows: treinamentos.map((t, i) => {
+                        let icone = '⚠️';
+                        if (t.status_prazo === 'vencido') icone = '🔴';
+                        else if (t.status_prazo === 'urgente') icone = '🟡';
+                        return {
+                            id: `treino_${t.id}`,
+                            title: `${icone} ${t.nome}`.substring(0, 24),
+                            description: t.prazo ? `Prazo: ${t.prazo}` : 'Sem prazo'
+                        };
+                    })
+                }]
+            };
             
-            // Verificar se é o treinamento EPC/EPI (ID 16)
-            if (primeiroTreinamento.id === 16) {
-                const epcEpi = require('../EPC_EPI/epc_epi');
-                
-                // Buscar dados do contato
-                let contato = null;
-                const formatosTelefone = [
-                    sender,
-                    sender.substring(2),
-                    `${sender.substring(0, 4)}9${sender.substring(4)}`,
-                    sender.length === 13 ? sender.substring(0, 4) + sender.substring(5) : sender,
-                ];
-                
-                const { Usuario } = require('../../../BancoDeDados/models');
-                for (const formato of formatosTelefone) {
-                    contato = await Usuario.findOne({ where: { telefone: formato } });
-                    if (contato) break;
-                }
-                
-                if (contato) {
-                    console.log(`🎓 Iniciando treinamento EPC/EPI para ${contato.nome}`);
-                    // Adicionar número do telefone ao contato
-                    contato.numero = sender.replace('@c.us', '');
-                    
-                    return await epcEpi.processarTreinamentoEpcEpi(sender, 'iniciar_treinamento', null, contato, sendMessage, null);
-                }
-            }
-            
-            // Para outros treinamentos (futuros)
-            await sendMessage(sender, 'send-message', {
-                message: `🎓 Iniciando treinamento: ${primeiroTreinamento.nome}\n\n⚠️ Este treinamento ainda está em desenvolvimento.\n\nEm breve estará disponível!`
-            });
-        } else {
-            await sendMessage(sender, 'send-message', {
-                message: '🎓 Nenhum treinamento pendente encontrado no momento.'
-            });
+            await sendMessage(sender, 'send-list-message', listMsg);
+            await salvarInteracao(sender, 'escolher_treinamento', JSON.stringify({ 
+                etapa: 'escolher_treinamento',
+                treinamentos: treinamentos,
+                contato_id: dados.contato_id,
+                empresa_id: dados.empresa_id
+            }));
+            return true;
         }
         
+        // Se há apenas 1 treinamento, iniciar direto
+        if (treinamentos.length === 1) {
+            await iniciarTreinamentoEspecifico(sender, treinamentos[0], sendMessage);
+            return true;
+        }
+        
+        await sendMessage(sender, 'send-message', {
+            message: '🎓 Nenhum treinamento pendente encontrado no momento.'
+        });
         await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
         
     } else if (opcao === '2' || (opcao.toLowerCase().includes('ferramenta') && opcao.toLowerCase().includes('funciona'))) {
         // Ver apresentação da ferramenta
         console.log('📱 Usuário quer ver apresentação mesmo com treinamentos pendentes');
         
-        const ultimaInteracao = await obterUltimaInteracao(sender);
-        const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+        const ultima_interacao = await obterUltimaInteracao(sender);
+        const dados = JSON.parse(ultima_interacao.mensagem || '{}');
         
         // Salvar dados do contato na interação para uso posterior
         await salvarInteracao(sender, 'mostrar_recursos', JSON.stringify({ 
             etapa: 'mostrar_recursos',
             contato_id: dados.contato_id,
             nome: dados.nome || 'Usuário',
-            empresa_id: dados.empresa_id,
+            empresa_id: dados.empresaId,
             vem_de_treinamentos_pendentes: true,
             treinamentos_pendentes: dados.treinamentos // Manter referência aos treinamentos
         }));
@@ -1339,6 +1344,152 @@ async function processarTreinamentosPendentes(sender, text, sendMessage) {
     }
     
     return true;
+}
+
+// Processar escolha de treinamento específico
+async function processarEscolhaTreinamento_OLD(sender, text, sendMessage) {
+    const ultima_interacao = await obterUltimaInteracao(sender);
+    const dados = JSON.parse(ultima_interacao.mensagem || '{}');
+    const treinamentos = dados.treinamentos || [];
+    const opcao = parseInt(text.trim());
+    
+    if (isNaN(opcao) || opcao < 1 || opcao > treinamentos.length) {
+        await sendMessage(sender, 'send-message', {
+            message: `❌ Opção inválida. Digite um número de 1 a ${treinamentos.length}`
+        });
+        return true;
+    }
+    
+    const treinamentoSelecionado = treinamentos[opcao - 1];
+    await iniciarTreinamentoEspecifico(sender, treinamentoSelecionado, sendMessage);
+    return true;
+}
+
+// Iniciar treinamento específico
+async function iniciarTreinamentoEspecifico(sender, treinamento, sendMessage) {
+    console.log(`🎓 Iniciando treinamento: ${treinamento.nome} (ID: ${treinamento.id})`);
+    
+    // Buscar dados do contato
+    const formatosTelefone = [
+        sender,
+        sender.substring(2),
+        `${sender.substring(0, 4)}9${sender.substring(4)}`,
+        sender.length === 13 ? sender.substring(0, 4) + sender.substring(5) : sender,
+    ];
+    
+    let contato = null;
+    for (const formato of formatosTelefone) {
+        contato = await Usuario.findOne({ where: { telefone: formato } });
+        if (contato) break;
+    }
+    
+    if (!contato) {
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Erro ao identificar usuário. Tente novamente.'
+        });
+        return;
+    }
+    
+    contato.numero = sender.replace('@c.us', '');
+    
+    // Roteamento por ID do treinamento
+    if (treinamento.id === 16) {
+        const epcEpi = require('../EPC_EPI/epc_epi');
+        return await epcEpi.processarTreinamentoEpcEpi(sender, 'iniciar_treinamento', null, contato, sendMessage, null);
+    } else if (treinamento.id === 24) {
+        const gameTeste = require('../GameTeste/gameTeste');
+        return await gameTeste.processarTreinamentoGameTeste(sender, 'iniciar_treinamento', null, contato, sendMessage, null);
+    } else {
+        await sendMessage(sender, 'send-message', {
+            message: `🎓 Iniciando treinamento: ${treinamento.nome}\n\n⚠️ Este treinamento ainda está em desenvolvimento.\n\nEm breve estará disponível!`
+        });
+        await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+    }
+}
+
+// Processar escolha de treinamento específico
+async function processarEscolhaTreinamento(sender, text, sendMessage) {
+    const ultima_interacao = await obterUltimaInteracao(sender);
+    const dados = JSON.parse(ultima_interacao.mensagem || '{}');
+    const treinamentos = dados.treinamentos || [];
+    
+    console.log(`🎯 Processando escolha: "${text}"`);
+    console.log(`📚 Treinamentos disponíveis:`, treinamentos.map(t => `${t.id}: ${t.nome}`));
+    
+    // Verificar se é resposta da lista interativa (treino_ID)
+    if (text.startsWith('treino_')) {
+        const treinamentoId = parseInt(text.replace('treino_', ''));
+        const treinamentoSelecionado = treinamentos.find(t => t.id === treinamentoId);
+        
+        if (treinamentoSelecionado) {
+            await iniciarTreinamentoEspecifico(sender, treinamentoSelecionado, sendMessage);
+            return true;
+        }
+    }
+    
+    // Processar texto da lista (quando WhatsApp envia o texto visível)
+    // Buscar treinamento pelo nome no texto
+    for (const treinamento of treinamentos) {
+        if (text.includes(treinamento.nome)) {
+            console.log(`✅ Treinamento encontrado pelo nome: ${treinamento.nome}`);
+            await iniciarTreinamentoEspecifico(sender, treinamento, sendMessage);
+            return true;
+        }
+    }
+    
+    // Processar número digitado
+    const opcao = parseInt(text.trim());
+    
+    if (!isNaN(opcao) && opcao >= 1 && opcao <= treinamentos.length) {
+        const treinamentoSelecionado = treinamentos[opcao - 1];
+        await iniciarTreinamentoEspecifico(sender, treinamentoSelecionado, sendMessage);
+        return true;
+    }
+    
+    await sendMessage(sender, 'send-message', {
+        message: `❌ Opção inválida. Digite um número de 1 a ${treinamentos.length}`
+    });
+    return true;
+}
+
+// Iniciar treinamento específico
+async function iniciarTreinamentoEspecifico(sender, treinamento, sendMessage) {
+    console.log(`🎓 Iniciando treinamento: ${treinamento.nome} (ID: ${treinamento.id})`);
+    
+    const formatosTelefone = [
+        sender,
+        sender.substring(2),
+        `${sender.substring(0, 4)}9${sender.substring(4)}`,
+        sender.length === 13 ? sender.substring(0, 4) + sender.substring(5) : sender,
+    ];
+    
+    let contato = null;
+    for (const formato of formatosTelefone) {
+        contato = await Usuario.findOne({ where: { telefone: formato } });
+        if (contato) break;
+    }
+    
+    if (!contato) {
+        await sendMessage(sender, 'send-message', {
+            message: '❌ Erro ao identificar usuário. Tente novamente.'
+        });
+        return;
+    }
+    
+    contato.numero = sender.replace('@c.us', '');
+    
+    if (treinamento.id === 16) {
+        const epcEpi = require('../EPC_EPI/epc_epi');
+        return await epcEpi.processarTreinamentoEpcEpi(sender, 'iniciar_treinamento', null, contato, sendMessage, null);
+    } else if (treinamento.id === 24) {
+        const gameTeste = require('../GameTeste/gameTeste');
+        return await gameTeste.processarTreinamentoGameTeste(sender, 'iniciar_treinamento', null, contato, sendMessage, null);
+    } else {
+        await sendMessage(sender, 'send-message', {
+            message: `🎓 Iniciando treinamento: ${treinamento.nome}\n\n⚠️ Este treinamento ainda está em desenvolvimento.\n\nEm breve estará disponível!`
+        });
+        await salvarInteracao(sender, 'contato_comercial', JSON.stringify({ etapa: 'finalizado' }));
+    }
 }
 
 // ==================== CONTROLE DE PROGRESSO ====================
@@ -1431,8 +1582,8 @@ async function verificarProgressoCompleto(telefone) {
 }
 
 async function processarPerguntaConteudoRestante(sender, text, sendMessage) {
-    const ultimaInteracao = await obterUltimaInteracao(sender);
-    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+    const ultima_interacao = await obterUltimaInteracao(sender);
+    const dados = JSON.parse(ultima_interacao.mensagem || '{}');
     const opcao = text.trim();
     
     if (opcao === '1' || opcao.toLowerCase().includes('sim')) {

@@ -1,0 +1,66 @@
+{
+  "treinamento_id": 24,
+  "nome": "Game Teste - Quiz Diário",
+  "questoes": [
+    {
+      "id": 1,
+      "pergunta": "Qual é a principal vantagem de fazer treinamentos gamificados?",
+      "opcoes": [
+        "Maior engajamento e retenção de conhecimento",
+        "Menor custo de implementação",
+        "Não precisa de certificado",
+        "Pode ser feito sem internet"
+      ],
+      "resposta_correta": 0,
+      "explicacao": "Treinamentos gamificados aumentam o engajamento dos participantes e melhoram a retenção do conhecimento através de mecânicas de jogo como pontos, rankings e desafios."
+    },
+    {
+      "id": 2,
+      "pergunta": "O que significa 'ranking' em um sistema gamificado?",
+      "opcoes": [
+        "Lista de participantes ordenada por desempenho",
+        "Número de tentativas permitidas",
+        "Tempo máximo para responder",
+        "Quantidade de perguntas"
+      ],
+      "resposta_correta": 0,
+      "explicacao": "Ranking é a classificação dos participantes baseada em seus pontos, acertos ou outros critérios de desempenho, criando competição saudável."
+    },
+    {
+      "id": 3,
+      "pergunta": "Qual o benefício de responder rapidamente no quiz?",
+      "opcoes": [
+        "Ganha bônus de pontos por velocidade",
+        "Pode pular perguntas",
+        "Recebe certificado mais rápido",
+        "Não há benefício"
+      ],
+      "resposta_correta": 0,
+      "explicacao": "Responder rapidamente pode garantir bônus de pontos, incentivando agilidade e conhecimento consolidado sobre o tema."
+    },
+    {
+      "id": 4,
+      "pergunta": "O que são 'dias consecutivos' no sistema de quiz?",
+      "opcoes": [
+        "Sequência de dias participando do quiz",
+        "Dias de validade do certificado",
+        "Prazo para completar o treinamento",
+        "Tempo de cada pergunta"
+      ],
+      "resposta_correta": 0,
+      "explicacao": "Dias consecutivos contam quantos dias seguidos você participa do quiz, incentivando a constância e criando hábito de estudo."
+    },
+    {
+      "id": 5,
+      "pergunta": "Qual a melhor estratégia para subir no ranking?",
+      "opcoes": [
+        "Participar todos os dias e acertar o máximo possível",
+        "Fazer apenas uma vez por semana",
+        "Responder aleatoriamente",
+        "Pular dias para acumular perguntas"
+      ],
+      "resposta_correta": 0,
+      "explicacao": "A consistência diária e a precisão nas respostas são fundamentais para acumular pontos e manter uma boa posição no ranking."
+    }
+  ]
+}

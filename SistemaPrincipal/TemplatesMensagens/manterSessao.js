@@ -35,7 +35,7 @@ class MantenedorSessao {
     }
 
     // Salvar dados da sessão
-    salvarSessao(dadosSessao) {
+    salvarSessao(dados_sessao) {
         try {
             // Criar diretório se não existir
             if (!fs.existsSync(this.tokensPath)) {
@@ -45,7 +45,7 @@ class MantenedorSessao {
             const sessionData = {
                 ...dadosSessao,
                 ultimoHeartbeat: Date.now(),
-                criadoEm: dadosSessao.criadoEm || Date.now()
+                criadoEm: dados_sessao.criadoEm || Date.now()
             };
 
             fs.writeFileSync(this.sessionFile, JSON.stringify(sessionData, null, 2));

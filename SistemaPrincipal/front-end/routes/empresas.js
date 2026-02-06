@@ -59,6 +59,29 @@ router.get('/salubrita', async (req, res) => {
   }
 });
 
+// Rota específica para SUPERMIX (ANTES de /:id)
+router.get('/supermix', async (req, res) => {
+  try {
+    const supermix = await Empresa.findOne({
+      where: {
+        [Op.or]: [
+          { id: 16 },
+          { razaoSocial: { [Op.like]: '%SUPERMIX%' } }
+        ]
+      }
+    });
+    
+    if (!supermix) {
+      return res.status(404).json({ error: 'Empresa SUPERMIX não encontrada' });
+    }
+    
+    res.json(supermix);
+  } catch (error) {
+    console.error('Erro ao buscar SUPERMIX:', error);
+    res.status(500).json({ error: 'Erro ao buscar empresa' });
+  }
+});
+
 // Opções para select no front-end (DEVE VIR ANTES DE /:id)
 router.get('/select/options', async (req, res) => {
   try {
@@ -167,7 +190,7 @@ router.post('/', async (req, res) => {
     // Criar senha da empresa
     try {
       const novaSenha = await EmpresaSenha.create({
-        empresaId: novaEmpresa.id,
+        empresa_id: novaEmpresa.id,
         nomeEmpresa: novaEmpresa.razaoSocial,
         senha: senha
       });
@@ -293,7 +316,7 @@ router.delete('/:id', async (req, res) => {
     
     // Excluir usuários da empresa
     await Usuario.destroy({
-      where: { empresaId: req.params.id },
+      where: { empresa_id: req.params.id },
       transaction
     });
     

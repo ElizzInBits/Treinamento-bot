@@ -7,7 +7,7 @@ module.exports = (sequelize) => {
       primaryKey: true,
       autoIncrement: true,
     },
-    empresaId: {
+    empresa_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       field: 'empresa_id',
@@ -24,13 +24,13 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
-      field: 'criado_em',
+      field: 'created_at',
     },
     atualizadoEm: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
-      field: 'atualizado_em',
+      field: 'updated_at',
     }
   }, {
     timestamps: false,
@@ -39,7 +39,7 @@ module.exports = (sequelize) => {
 
   EmpresaSenha.associate = (models) => {
     EmpresaSenha.belongsTo(models.Empresa, { 
-      foreignKey: 'empresaId', 
+      foreignKey: 'empresa_id', 
       as: 'empresa' 
     });
   };

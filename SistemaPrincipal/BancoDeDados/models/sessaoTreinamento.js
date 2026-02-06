@@ -9,15 +9,15 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    tipoTreinamento: {
+    tipo_treinamento: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    etapaAtual: {
+    etapa_atual: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    dadosSessao: {
+    dados_sessao: {
       type: DataTypes.TEXT,
       allowNull: true
     },
@@ -25,13 +25,16 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: true
     },
-    ultimaAtualizacao: {
+    ultima_atualizacao: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW
     }
   }, {
     tableName: 'sessoes_treinamentos',
-    timestamps: true
+    timestamps: true,
+    underscored: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
   return SessaoTreinamento;

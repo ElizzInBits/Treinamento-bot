@@ -117,7 +117,7 @@ router.put('/atualizar', async (req, res) => {
         if (io) {
             io.emit('usuarioAtualizado', {
                 usuario: usuario,
-                empresaId: usuario.empresaId
+                empresa_id: usuario.empresaId
             });
         }
         

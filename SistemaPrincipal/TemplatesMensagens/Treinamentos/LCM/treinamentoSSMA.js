@@ -197,7 +197,7 @@ async function obterUltimaInteracao(sender) {
     try {
         return await Interacao.findOne({
             where: { telefone: sender },
-            order: [['createdAt', 'DESC']]
+            order: [['created_at', 'DESC']]
         });
     } catch (error) {
         console.error('Erro ao obter última interação:', error);
@@ -257,13 +257,13 @@ async function executarTreinamento(sender, contato, sendMessage) {
  * Processa resposta do usuário durante o treinamento
  */
 async function processarResposta(sender, message, sendMessage) {
-    const ultimaInteracao = await obterUltimaInteracao(sender);
-    if (!ultimaInteracao) return false;
+    const ultima_interacao = await obterUltimaInteracao(sender);
+    if (!ultima_interacao) return false;
 
     const mensagem = message.toLowerCase().trim();
 
     // Aguardando confirmação para iniciar
-    if (ultimaInteracao.tipo === 'aguardando_confirmacao') {
+    if (ultima_interacao.tipo === 'aguardando_confirmacao') {
         if (RESPOSTAS_POSITIVAS.some(resp => mensagem.includes(resp)) || mensagem.includes('iniciar_ssma')) {
             await iniciarModulo1(sender, sendMessage);
             return true;
@@ -277,13 +277,13 @@ async function processarResposta(sender, message, sendMessage) {
     }
 
     // Processando quiz módulo 1
-    if (ultimaInteracao.tipo.startsWith('quiz_modulo1_')) {
-        return await processarQuizModulo1(sender, mensagem, ultimaInteracao, sendMessage);
+    if (ultima_interacao.tipo.startsWith('quiz_modulo1_')) {
+        return await processarQuizModulo1(sender, mensagem, ultima_interacao, sendMessage);
     }
 
     // Processando quiz módulo 2
-    if (ultimaInteracao.tipo.startsWith('quiz_modulo2_')) {
-        return await processarQuizModulo2(sender, mensagem, ultimaInteracao, sendMessage);
+    if (ultima_interacao.tipo.startsWith('quiz_modulo2_')) {
+        return await processarQuizModulo2(sender, mensagem, ultima_interacao, sendMessage);
     }
 
     return false;
@@ -474,10 +474,10 @@ async function enviarPergunta(sender, indicePergunta, config, tipoQuiz, sendMess
     
     // Se não é primeira pergunta, buscar acertos da interação anterior
     if (indicePergunta > 0) {
-        const ultimaInteracao = await obterUltimaInteracao(sender);
-        if (ultimaInteracao) {
+        const ultima_interacao = await obterUltimaInteracao(sender);
+        if (ultima_interacao) {
             try {
-                const dadosAnteriores = JSON.parse(ultimaInteracao.mensagem || '{}');
+                const dadosAnteriores = JSON.parse(ultima_interacao.mensagem || '{}');
                 if (typeof dadosAnteriores.acertos === 'number') {
                     dadosInteracao.acertos = dadosAnteriores.acertos;
                 }
@@ -495,8 +495,8 @@ async function enviarPergunta(sender, indicePergunta, config, tipoQuiz, sendMess
 /**
  * Processa resposta do quiz módulo 1
  */
-async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessage) {
-    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+async function processarQuizModulo1(sender, resposta, ultima_interacao, sendMessage) {
+    const dados = JSON.parse(ultima_interacao.mensagem || '{}');
     const perguntaAtual = dados.perguntaAtual || 0;
     
     // Buscar acertos acumulados com fallback robusto
@@ -506,7 +506,7 @@ async function processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessa
     if (typeof dados.acertos !== 'number') {
         const interacoesRecentes = await Interacao.findAll({
             where: { telefone: sender, tipo: { [Op.like]: 'quiz_modulo1_pergunta_%' } },
-            order: [['createdAt', 'DESC']],
+            order: [['created_at', 'DESC']],
             limit: 10
         });
         const ultimaComAcerto = interacoesRecentes.find(i => {
@@ -669,8 +669,8 @@ function extrairResposta(resposta) {
 /**
  * Processa resposta do quiz módulo 2
  */
-async function processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessage) {
-    const dados = JSON.parse(ultimaInteracao.mensagem || '{}');
+async function processarQuizModulo2(sender, resposta, ultima_interacao, sendMessage) {
+    const dados = JSON.parse(ultima_interacao.mensagem || '{}');
     const perguntaAtual = dados.perguntaAtual || 0;
     
     // Buscar acertos acumulados com fallback robusto
@@ -680,7 +680,7 @@ async function processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessa
     if (typeof dados.acertos !== 'number') {
         const interacoesRecentes = await Interacao.findAll({
             where: { telefone: sender, tipo: { [Op.like]: 'quiz_modulo2_pergunta_%' } },
-            order: [['createdAt', 'DESC']],
+            order: [['created_at', 'DESC']],
             limit: 10
         });
         const ultimaComAcerto = interacoesRecentes.find(i => {
@@ -811,13 +811,13 @@ async function finalizarTreinamento(sender, acertosModulo2, sendMessage) {
 async function detectarTreinamentoInterrompido(sender, contato, sendMessage) {
     if (contato.statusTreinamento !== 'em andamento') return false;
     
-    const ultimaInteracao = await obterUltimaInteracao(sender);
+    const ultima_interacao = await obterUltimaInteracao(sender);
     
     // Se não tem interação ou é muito antiga (mais de 1 hora), considerar interrompido
     const agora = new Date();
     const umaHoraAtras = new Date(agora.getTime() - 60 * 60 * 1000);
     
-    if (!ultimaInteracao || ultimaInteracao.createdAt < umaHoraAtras) {
+    if (!ultima_interacao || ultima_interacao.createdAt < umaHoraAtras) {
         await sendMessage(sender, 'send-message', {
             message: resourceManager.getTemplate('global', 'treinamento_interrompido')
         });
@@ -891,12 +891,12 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         // Verificar progresso atual do usuário
         if (contato.statusTreinamento === 'em_andamento') {
             // Se tem interação de quiz pendente, continuar quiz
-            if (ultimaInteracao?.tipo?.startsWith('quiz_modulo1_')) {
+            if (ultima_interacao?.tipo?.startsWith('quiz_modulo1_')) {
                 await sendMessage(sender, 'send-message', {
                     message: '📝 Continuando quiz do Módulo 1...'
                 });
                 return true;
-            } else if (ultimaInteracao?.tipo?.startsWith('quiz_modulo2_')) {
+            } else if (ultima_interacao?.tipo?.startsWith('quiz_modulo2_')) {
                 await sendMessage(sender, 'send-message', {
                     message: '📝 Continuando quiz do Módulo 2...'
                 });
@@ -927,11 +927,11 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
         }
     }
     
-    const ultimaInteracao = await obterUltimaInteracao(sender);
-    console.log(`🔍 Última interação: ${ultimaInteracao?.tipo}`);
+    const ultima_interacao = await obterUltimaInteracao(sender);
+    console.log(`🔍 Última interação: ${ultima_interacao?.tipo}`);
     
     // Processar opções de recuperação
-    if (ultimaInteracao?.tipo === 'recuperacao_treinamento') {
+    if (ultima_interacao?.tipo === 'recuperacao_treinamento') {
         if (selectedId === 'continuar_de_onde_parou') {
             await sendMessage(sender, 'send-message', {
                 message: '🔍 Tentando recuperar seu progresso...'
@@ -940,7 +940,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
             // Buscar última interação relevante antes da interrupção
             const interacoesAnteriores = await Interacao.findAll({
                 where: { telefone: sender },
-                order: [['createdAt', 'DESC']],
+                order: [['created_at', 'DESC']],
                 limit: 20
             });
             
@@ -976,7 +976,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
     
     // Processar opções do menu - CORRIGIDO
-    if (ultimaInteracao?.tipo === 'menu_opcoes' || ultimaInteracao?.tipo === 'recuperacao_treinamento' || 
+    if (ultima_interacao?.tipo === 'menu_opcoes' || ultima_interacao?.tipo === 'recuperacao_treinamento' || 
         text.toLowerCase().includes('reiniciar treinamento completo') || 
         text.toLowerCase().includes('reiniciar módulo')) {
         
@@ -1017,7 +1017,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
                         telefone: sender,
                         tipo: { [Op.like]: '%quiz%' }
                     },
-                    order: [['createdAt', 'DESC']],
+                    order: [['created_at', 'DESC']],
                     limit: 5
                 });
                 
@@ -1067,7 +1067,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
     
     // Aguardando confirmação para iniciar
-    if (selectedId === 'iniciar_ssma' || (ultimaInteracao?.tipo === 'aguardando_confirmacao' && verificarRespostaSSMA(text, 'positiva'))) {
+    if (selectedId === 'iniciar_ssma' || (ultima_interacao?.tipo === 'aguardando_confirmacao' && verificarRespostaSSMA(text, 'positiva'))) {
         console.log('✅ Iniciando módulo 1');
         await iniciarModulo1(sender, sendMessage);
         return true;
@@ -1075,8 +1075,8 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     
     // Aguardando confirmação para iniciar quiz módulo 1
     if (selectedId === 'iniciar_quiz_modulo1' || 
-        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && verificarRespostaSSMA(text, 'positiva')) ||
-        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && text.toLowerCase().includes('sim - iniciar quiz agora'))) {
+        (ultima_interacao?.tipo === 'aguardando_inicio_quiz_modulo1' && verificarRespostaSSMA(text, 'positiva')) ||
+        (ultima_interacao?.tipo === 'aguardando_inicio_quiz_modulo1' && text.toLowerCase().includes('sim - iniciar quiz agora'))) {
         console.log('✅ Iniciando quiz módulo 1');
         await salvarInteracao(sender, 'quiz_modulo1_pergunta_0', JSON.stringify({ acertos: 0, perguntaAtual: 0 }));
         await enviarPergunta(sender, 0, QUIZ_MODULO1_CONFIG, 'quiz_modulo1', sendMessage);
@@ -1084,8 +1084,8 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
     
     if (selectedId === 'nao_iniciar_quiz_modulo1' || 
-        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && verificarRespostaSSMA(text, 'negativa')) ||
-        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo1' && text.toLowerCase().includes('não - depois faço'))) {
+        (ultima_interacao?.tipo === 'aguardando_inicio_quiz_modulo1' && verificarRespostaSSMA(text, 'negativa')) ||
+        (ultima_interacao?.tipo === 'aguardando_inicio_quiz_modulo1' && text.toLowerCase().includes('não - depois faço'))) {
         await sendMessage(sender, 'send-message', {
             message: '⏰ Sem problemas! Quando estiver pronto para o quiz, me avise.',
         });
@@ -1094,8 +1094,8 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     
     // Aguardando confirmação para iniciar quiz módulo 2
     if (selectedId === 'iniciar_quiz_modulo2' || 
-        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo2' && verificarRespostaSSMA(text, 'positiva')) ||
-        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo2' && text.toLowerCase().includes('sim - iniciar quiz agora'))) {
+        (ultima_interacao?.tipo === 'aguardando_inicio_quiz_modulo2' && verificarRespostaSSMA(text, 'positiva')) ||
+        (ultima_interacao?.tipo === 'aguardando_inicio_quiz_modulo2' && text.toLowerCase().includes('sim - iniciar quiz agora'))) {
         console.log('✅ Iniciando quiz módulo 2');
         await salvarInteracao(sender, 'quiz_modulo2_pergunta_0', JSON.stringify({ acertos: 0, perguntaAtual: 0 }));
         await enviarPergunta(sender, 0, QUIZ_MODULO2_CONFIG, 'quiz_modulo2', sendMessage);
@@ -1103,7 +1103,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
     
     // Tratar respostas inesperadas durante quiz
-    if (ultimaInteracao?.tipo?.startsWith('quiz_modulo1_pergunta_') || ultimaInteracao?.tipo?.startsWith('quiz_modulo2_pergunta_')) {
+    if (ultima_interacao?.tipo?.startsWith('quiz_modulo1_pergunta_') || ultima_interacao?.tipo?.startsWith('quiz_modulo2_pergunta_')) {
         // Se não é selectedId válido e não contém a, b, c, d, orientar usuário
         if (!selectedId && !text.toLowerCase().match(/[abcd]/)) {
             await sendMessage(sender, 'send-message', {
@@ -1114,8 +1114,8 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
     
     if (selectedId === 'nao_iniciar_quiz_modulo2' || 
-        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo2' && verificarRespostaSSMA(text, 'negativa')) ||
-        (ultimaInteracao?.tipo === 'aguardando_inicio_quiz_modulo2' && text.toLowerCase().includes('não - depois faço'))) {
+        (ultima_interacao?.tipo === 'aguardando_inicio_quiz_modulo2' && verificarRespostaSSMA(text, 'negativa')) ||
+        (ultima_interacao?.tipo === 'aguardando_inicio_quiz_modulo2' && text.toLowerCase().includes('não - depois faço'))) {
         await sendMessage(sender, 'send-message', {
             message: '⏰ Sem problemas! Quando estiver pronto para o quiz, me avise.',
         });
@@ -1134,14 +1134,14 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
             
             // Processar baseado no tipo de quiz
             if (tipoQuiz === 'quiz_modulo1') {
-                return await processarQuizModulo1(sender, resposta, ultimaInteracao, sendMessage);
+                return await processarQuizModulo1(sender, resposta, ultima_interacao, sendMessage);
             } else if (tipoQuiz === 'quiz_modulo2') {
-                return await processarQuizModulo2(sender, resposta, ultimaInteracao, sendMessage);
+                return await processarQuizModulo2(sender, resposta, ultima_interacao, sendMessage);
             }
         }
     }
     
-    if (selectedId === 'nao_iniciar_ssma' || (ultimaInteracao?.tipo === 'aguardando_confirmacao' && verificarRespostaSSMA(text, 'negativa'))) {
+    if (selectedId === 'nao_iniciar_ssma' || (ultima_interacao?.tipo === 'aguardando_confirmacao' && verificarRespostaSSMA(text, 'negativa'))) {
         await sendMessage(sender, 'send-message', {
             message: '⏰ Sem problemas! Quando estiver pronto, digite *SSMA* para retomar o treinamento.',
         });
@@ -1149,15 +1149,15 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
     
     // Processando quiz módulo 1
-    if (ultimaInteracao?.tipo?.startsWith('quiz_modulo1_')) {
+    if (ultima_interacao?.tipo?.startsWith('quiz_modulo1_')) {
         console.log('🔍 Processando quiz módulo 1');
-        return await processarQuizModulo1(sender, text, ultimaInteracao, sendMessage);
+        return await processarQuizModulo1(sender, text, ultima_interacao, sendMessage);
     }
     
     // Processando quiz módulo 2
-    if (ultimaInteracao?.tipo?.startsWith('quiz_modulo2_')) {
+    if (ultima_interacao?.tipo?.startsWith('quiz_modulo2_')) {
         console.log('🔍 Processando quiz módulo 2');
-        return await processarQuizModulo2(sender, text, ultimaInteracao, sendMessage);
+        return await processarQuizModulo2(sender, text, ultima_interacao, sendMessage);
     }
     
 
@@ -1170,7 +1170,7 @@ async function processarRespostaSSMA(sender, text, selectedId, contato, sendMess
     }
     
     // Verificar se treinamento já foi concluído para evitar reprocessamento
-    if (ultimaInteracao?.tipo === 'treinamento_concluido_final') {
+    if (ultima_interacao?.tipo === 'treinamento_concluido_final') {
         console.log('⚠️ Treinamento já concluído - ignorando mensagem');
         return true;
     }
@@ -1186,7 +1186,7 @@ async function gerarCertificadoSSMA(sender, contato, sendMessage) {
     try {
         // Atualizar status do contato
         await contato.update({
-            statusTreinamento: 'concluído'
+            status_treinamento: 'concluído'
         });
         
         // Salvar interação final para parar processamento

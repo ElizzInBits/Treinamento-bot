@@ -35,7 +35,7 @@ router.get('/status', async (req, res) => {
     
     const antigas = await SessaoTreinamento.count({
       where: {
-        ultimaAtualizacao: { [require('sequelize').Op.lt]: seteDiasAtras }
+        ultima_atualizacao: { [require('sequelize').Op.lt]: seteDiasAtras }
       }
     });
     

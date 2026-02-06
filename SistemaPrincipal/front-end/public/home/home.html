@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/dashboard.css" />
   <link rel="stylesheet" href="css/empresas.css">
   <link rel="stylesheet" href="css/treinamento.css" />
-
+  <link rel="stylesheet" href="css/estrutura.css" />
   <link rel="stylesheet" href="css/outros.css">
 
   <link rel="stylesheet" href="css/responsividade.css">
@@ -346,6 +346,63 @@
                 </div>
               </div>
 
+              <!-- GAMIFICAÇÃO (QUIZ) -->
+              <div class="form-section">
+                <h4 class="section-title">
+                  <i class="fa-solid fa-gamepad"></i>
+                  GAMIFICAÇÃO (QUIZ)
+                </h4>
+                <div class="form-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="tipoGamificado" name="tipoGamificado">
+                    <span>Ativar Quiz Gamificado para este treinamento</span>
+                  </label>
+                  <small style="color: #666; display: block; margin-top: 5px;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Quando ativado, o bot enviará perguntas diárias e manterá ranking de pontuação
+                  </small>
+                </div>
+                <div id="configQuizFields" style="display: none;">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="pontosPorAcerto">Pontos por Acerto</label>
+                      <div class="input-wrapper">
+                        <div class="input-icon">
+                          <i class="fa-solid fa-star"></i>
+                        </div>
+                        <input type="number" id="pontosPorAcerto" name="pontosPorAcerto" value="10" min="1" max="100">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="questoesPorDia">Questões por Dia</label>
+                      <div class="input-wrapper">
+                        <div class="input-icon">
+                          <i class="fa-solid fa-list-ol"></i>
+                        </div>
+                        <input type="number" id="questoesPorDia" name="questoesPorDia" value="5" min="1" max="20">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="maxTempoSegundos">Tempo Limite (segundos)</label>
+                      <div class="input-wrapper">
+                        <div class="input-icon">
+                          <i class="fa-solid fa-stopwatch"></i>
+                        </div>
+                        <input type="number" id="maxTempoSegundos" name="maxTempoSegundos" value="60" min="10" max="300">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="checkbox-label" style="margin-top: 30px;">
+                        <input type="checkbox" id="bonusTempo" name="bonusTempo" checked>
+                        <span>Bônus por Tempo de Resposta</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- MÍDIAS DO TREINAMENTO -->
               <div class="form-section">
                 <h4 class="section-title">
@@ -503,7 +560,8 @@
         </div>
       </section>
 
-      <!-- MODAL DE DETALHES DA EMPRESA (BOTÃO DETALHES) -->
+      <!-- ABA ESTRUTURA ORGANIZACIONAL -->
+
       <div id="modalDetalhesEmpresa" class="modal-overlay">
         <div class="modal-container">
           <div class="modal-header">
@@ -710,8 +768,21 @@
       <script src="js/config.js"></script>
       <script src="js/toggle-ativo.js"></script>
       <script src="js/home.js"></script>
+      <script src="js/variantes.js"></script>
 
       <script>
+        // Toggle campos de configuração do quiz
+        document.addEventListener('DOMContentLoaded', function() {
+          const checkboxGamificado = document.getElementById('tipoGamificado');
+          const configFields = document.getElementById('configQuizFields');
+          
+          if (checkboxGamificado && configFields) {
+            checkboxGamificado.addEventListener('change', function() {
+              configFields.style.display = this.checked ? 'block' : 'none';
+            });
+          }
+        });
+
         /*
         // Atualizar relógio no header
         function atualizarRelogio() {
@@ -825,6 +896,68 @@
           document.body.appendChild(modal);
         }
       </script>
+
+      <!-- MODAL VARIANTES -->
+      <div id="modalVariantes" class="modal-overlay" style="display: none;">
+        <div class="modal-container" style="max-width: 900px;">
+          <div class="modal-header">
+            <h3>Variantes Personalizadas - <span id="nomeTreinamentoVariante"></span></h3>
+            <button class="modal-close" onclick="fecharModalVariantes()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-content">
+            <button class="btn-animado" onclick="abrirNovaVariante()" style="margin-bottom: 20px;">
+              <i class="fa-solid fa-plus"></i> Nova Variante
+            </button>
+            <div id="listaVariantes"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL NOVA/EDITAR VARIANTE -->
+      <div id="modalFormVariante" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 id="tituloFormVariante">Nova Variante</h3>
+            <button class="modal-close" onclick="fecharModalFormVariante()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-content">
+            <form id="formVariante" onsubmit="salvarVariante(event)">
+              <input type="hidden" id="varianteId">
+              <input type="hidden" id="varianteTreinamentoBaseId">
+              
+              <div class="form-group">
+                <label>Empresa *</label>
+                <select id="varianteEmpresaId" required></select>
+              </div>
+              
+              <div class="form-group">
+                <label>Nome da Variante *</label>
+                <input type="text" id="varianteNome" required placeholder="Ex: NR10 - Versão Fábrica A">
+              </div>
+              
+              <div class="form-group">
+                <label>Descrição</label>
+                <textarea id="varianteDescricao" rows="3" placeholder="Descreva as customizações desta variante"></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label>Conteúdo Customizado (JSON)</label>
+                <textarea id="varianteConteudo" rows="6" placeholder='{"questoes_extras": [], "material_adicional": []}'></textarea>
+                <small>Formato JSON para customizações específicas</small>
+              </div>
+              
+              <div class="form-actions">
+                <button type="submit"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+                <button type="button" onclick="fecharModalFormVariante()">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
 
 </body>
 

@@ -132,18 +132,18 @@ class FlowEngine {
     async salvarSessao(telefone, session) {
         await SessaoTreinamento.create({
             telefone: telefone,
-            tipoTreinamento: this.flow.id,
-            etapaAtual: session.etapa,
-            dadosSessao: JSON.stringify(session),
+            tipo_treinamento: this.flow.id,
+            etapa_atual: session.etapa,
+            dados_sessao: JSON.stringify(session),
             ativo: true,
-            ultimaAtualizacao: new Date()
+            ultima_atualizacao: new Date()
         });
     }
 
     async recuperarSessao(telefone) {
         const sessao = await SessaoTreinamento.findOne({
-            where: { telefone: telefone, tipoTreinamento: this.flow.id, ativo: true },
-            order: [['ultimaAtualizacao', 'DESC']]
+            where: { telefone: telefone, tipo_treinamento: this.flow.id, ativo: true },
+            order: [['ultima_atualizacao', 'DESC']]
         });
         return sessao ? JSON.parse(sessao.dadosSessao) : null;
     }
@@ -151,7 +151,7 @@ class FlowEngine {
     async removerSessao(telefone) {
         await SessaoTreinamento.update(
             { ativo: false },
-            { where: { telefone: telefone, tipoTreinamento: this.flow.id } }
+            { where: { telefone: telefone, tipo_treinamento: this.flow.id } }
         );
     }
 }

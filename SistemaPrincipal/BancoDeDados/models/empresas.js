@@ -45,7 +45,7 @@ module.exports = (sequelize) => {
     criadoEm: {
       type: DataTypes.DATE,
       allowNull: true,
-      field: 'criado_em',
+      field: 'created_at',
     },
     horarioFuncionamento: {
       type: DataTypes.STRING(100),
@@ -59,14 +59,14 @@ module.exports = (sequelize) => {
   });
 
   Empresa.associate = (models) => {
-    Empresa.hasMany(models.Usuario, { foreignKey: 'empresaId', as: 'usuarios' });
+    Empresa.hasMany(models.Usuario, { foreignKey: 'empresa_id', as: 'usuarios' });
     Empresa.belongsToMany(models.Treinamento, {
       through: models.EmpresaTreinamento,
       foreignKey: 'empresa_id',
       otherKey: 'treinamento_id',
       as: 'treinamentos'
     });
-    Empresa.hasOne(models.EmpresaSenha, { foreignKey: 'empresaId', as: 'senha' });
+    Empresa.hasOne(models.EmpresaSenha, { foreignKey: 'empresa_id', as: 'senha' });
   };
 
   return Empresa;

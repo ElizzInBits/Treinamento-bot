@@ -2,7 +2,7 @@ let contatos = [];
 let treinamentos = [];
 let empresas = [];
 let contatoIdCounter = 1;
-let treinamentoIdCounter = 1;
+let treinamento_idCounter = 1;
 let empresaIdCounter = 1;
 let empresaSelecionada = null;
 let contatosEmpresaSelecionada = [];
@@ -117,8 +117,8 @@ if (socket) {
     contatos.push({
       ...usuario,
       id: parseInt(usuario.id, 10),
-      empresaId: parseInt(usuario.empresaId, 10),
-      treinamentoId: usuario.treinamentoId ? parseInt(usuario.treinamentoId, 10) : null
+      empresa_id: parseInt(usuario.empresaId, 10),
+      treinamento_id: usuario.treinamentoId ? parseInt(usuario.treinamentoId, 10) : null
     });
 
     // Atualizar estatísticas
@@ -153,8 +153,8 @@ if (socket) {
     contatos.push({
       ...data.contato,
       id: parseInt(data.contato.id, 10),
-      empresaId: parseInt(data.contato.empresaId, 10),
-      treinamentoId: data.contato.treinamentoId ? parseInt(data.contato.treinamentoId, 10) : null
+      empresa_id: parseInt(data.contato.empresaId, 10),
+      treinamento_id: data.contato.treinamentoId ? parseInt(data.contato.treinamentoId, 10) : null
     });
 
     // Atualizar estatísticas
@@ -239,8 +239,8 @@ if (socket) {
         ...contatos[index],
         ...usuario,
         id: parseInt(usuario.id, 10),
-        empresaId: parseInt(usuario.empresaId, 10),
-        treinamentoId: usuario.treinamentoId ? parseInt(usuario.treinamentoId, 10) : null
+        empresa_id: parseInt(usuario.empresaId, 10),
+        treinamento_id: usuario.treinamentoId ? parseInt(usuario.treinamentoId, 10) : null
       };
     }
 
@@ -274,8 +274,8 @@ if (socket) {
         ...contatos[index],
         ...data.contato,
         id: parseInt(data.contato.id, 10),
-        empresaId: parseInt(data.contato.empresaId, 10),
-        treinamentoId: data.contato.treinamentoId ? parseInt(data.contato.treinamentoId, 10) : null
+        empresa_id: parseInt(data.contato.empresaId, 10),
+        treinamento_id: data.contato.treinamentoId ? parseInt(data.contato.treinamentoId, 10) : null
       };
     }
 
@@ -311,8 +311,8 @@ if (socket) {
         ...contatos[index],
         ...usuario,
         id: parseInt(usuario.id, 10),
-        empresaId: parseInt(usuario.empresaId, 10),
-        treinamentoId: usuario.treinamentoId ? parseInt(usuario.treinamentoId, 10) : null
+        empresa_id: parseInt(usuario.empresaId, 10),
+        treinamento_id: usuario.treinamentoId ? parseInt(usuario.treinamentoId, 10) : null
       };
     }
 
@@ -618,8 +618,17 @@ function showTab(tabName) {
   tabs.forEach(tab => tab.classList.remove('active'));
   contents.forEach(content => content.classList.remove('active'));
 
-  document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-  document.getElementById(tabName).classList.add('active');
+  const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+  const tabContent = document.getElementById(tabName);
+  
+  if (!tabButton || !tabContent) {
+    console.warn(`Tab "${tabName}" não encontrada, redirecionando para mapeamento`);
+    showTab('mapeamento');
+    return;
+  }
+  
+  tabButton.classList.add('active');
+  tabContent.classList.add('active');
 
   localStorage.setItem('activeTab', tabName);
 
@@ -679,15 +688,26 @@ async function criarGraficoStatus() {
   }
 
   // Destruir gráfico existente antes de criar novo
-  const existingChart = Chart.getChart(ctx);
-  if (existingChart) {
-    existingChart.destroy();
+  try {
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+  } catch (e) {
+    console.warn('Erro ao destruir gráfico:', e);
   }
 
-  if (graficoStatusInstance) {
-    graficoStatusInstance.destroy();
-    graficoStatusInstance = null;
+  try {
+    if (graficoStatusInstance) {
+      graficoStatusInstance.destroy();
+      graficoStatusInstance = null;
+    }
+  } catch (e) {
+    console.warn('Erro ao destruir instância:', e);
   }
+
+  // Aguardar limpeza
+  await new Promise(resolve => setTimeout(resolve, 50));
 
   try {
     const response = await authenticatedFetch('/api/dashboard/status-treinamento');
@@ -1013,7 +1033,7 @@ function visualizarContatosEmpresa(empresaId) {
   document.getElementById('searchInputModal').value = '';
   renderizarContatosEmpresa();
 
-  /*fetch(`/api/empresas/${empresaId}/contatos`)
+  /*fetch(`/api/empresas/${empresa_id}/contatos`)
     .then(res => {
       if (!res.ok) throw new Error('Erro ao carregar contatos');
       return res.json();
@@ -1031,7 +1051,7 @@ function visualizarContatosEmpresa(empresaId) {
           <div class="empty-state-icon">⚠️</div>
           <h3>Erro ao carregar contatos</h3>
           <p>Não foi possível carregar os contatos da empresa.</p>
-          <button class="btn-primary" onclick="visualizarContatosEmpresa(${empresaId})">
+          <button class="btn-primary" onclick="visualizarContatosEmpresa(${empresa_id})">
             🔄 Tentar Novamente
           </button>
         </div>
@@ -1133,7 +1153,7 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
   const contatoId = document.getElementById('editarContatoId').value;
   const nome = document.getElementById('editarNome').value.trim();
   const telefone = document.getElementById('editarTelefone').value.trim();
-  const treinamentoId = document.getElementById('editarTreinamento').value;
+  const treinamento_id = document.getElementById('editarTreinamento').value;
 
   if (!nome || !telefone) {
     mostrarAlerta('Por favor, preencha todos os campos obrigatórios.', 'error');
@@ -1153,7 +1173,7 @@ document.getElementById('editarContatoForm').addEventListener('submit', function
   const dadosAtualizados = {
     nome,
     telefone,
-    treinamentoId: treinamentoId ? parseInt(treinamentoId) : null
+    treinamento_id: treinamento_id ? parseInt(treinamento_id) : null
   };
 
   authenticatedFetch(`/api/contatos/${contatoId}`, {
@@ -1548,7 +1568,7 @@ function abrirModalTreinamentosEmpresa(empresaId) {
 }
 
 // FUNÇÃO PARA ATRIBUIR UM TREINAMENTO DA EMPRESA
-function atribuirTreinamento(empresaId, treinamentoId) {
+function atribuirTreinamento(empresa_id, treinamento_id) {
   // Feedback visual imediato
   const button = event.target;
   const originalText = button.innerHTML;
@@ -1556,7 +1576,7 @@ function atribuirTreinamento(empresaId, treinamentoId) {
   button.disabled = true;
   button.style.opacity = '0.7';
 
-  authenticatedFetch(`/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
+  authenticatedFetch(`/api/empresas/${empresa_id}/treinamentos/${treinamento_id}`, {
     method: 'POST'
   })
     .then(res => {
@@ -1570,7 +1590,7 @@ function atribuirTreinamento(empresaId, treinamentoId) {
 
       setTimeout(() => {
         mostrarAlerta('🎉 Treinamento atribuído com sucesso!', 'success');
-        abrirModalTreinamentosEmpresa(empresaId);
+        abrirModalTreinamentosEmpresa(empresa_id);
       }, 800);
     })
     .catch(() => {
@@ -1583,7 +1603,7 @@ function atribuirTreinamento(empresaId, treinamentoId) {
 }
 
 // FUNÇÃO PARA REMOVER UM TREINAMENTO DA EMPRESA
-function removerTreinamentoEmpresa(empresaId, treinamentoId) {
+function removerTreinamentoEmpresa(empresa_id, treinamento_id) {
   if (!confirm('⚠️ Tem certeza que deseja remover este treinamento da empresa?\n\nEsta ação não pode ser desfeita.')) return;
 
   // Feedback visual imediato
@@ -1593,7 +1613,7 @@ function removerTreinamentoEmpresa(empresaId, treinamentoId) {
   button.disabled = true;
   button.style.opacity = '0.7';
 
-  authenticatedFetch(`/api/empresas/${empresaId}/treinamentos/${treinamentoId}`, {
+  authenticatedFetch(`/api/empresas/${empresa_id}/treinamentos/${treinamento_id}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -1626,7 +1646,7 @@ function fecharModalTreinamentosEmpresa() {
 
 // FUNÇÃO PARA ABRIR O MODAL DE DETALHES DA EMPRESA (BOTÃO DETALHES)
 function abrirDetalhesEmpresa(empresaId) {
-  const empresa = empresas.find(e => e.id === empresaId);
+  const empresa = empresas.find(e => e.id === empresa_id);
   if (!empresa) return;
 
   document.getElementById('modalTituloDetalhesEmpresa').textContent = `Detalhes - ${empresa.razaoSocial || 'Empresa'}`;
@@ -1642,7 +1662,7 @@ function abrirDetalhesEmpresa(empresaId) {
   document.getElementById('modalDetalhesEmpresa').style.display = 'flex';
 
   // Carregar dados completos da empresa
-  authenticatedFetch(`/api/empresas/${empresaId}/completo`)
+  authenticatedFetch(`/api/empresas/${empresa_id}/completo`)
     .then(r => r.json())
     .then(empresaCompleta => {
       const treinamentosEmpresa = empresaCompleta.treinamentos || [];
@@ -1758,7 +1778,7 @@ function abrirDetalhesEmpresa(empresaId) {
                 </div>
               </div>
               <div class="form-actions">
-                <button type="button" onclick="salvarEmpresa(${empresaId})">
+                <button type="button" onclick="salvarEmpresa(${empresa_id})">
                   <i class="fa-solid fa-floppy-disk"></i>
                   Salvar
                 </button>
@@ -1782,7 +1802,7 @@ function abrirDetalhesEmpresa(empresaId) {
             </div>
           </div>
           <div class="btn-excluir-empresa">
-            <button onclick="excluirEmpresa(${empresaId})">
+            <button onclick="excluirEmpresa(${empresa_id})">
               🗑️ Excluir Empresa
             </button>
             <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.5rem;">
@@ -1799,7 +1819,7 @@ function abrirDetalhesEmpresa(empresaId) {
           <div class="empty-state-icon">⚠️</div>
           <h3>Erro ao carregar dados</h3>
           <p>Não foi possível carregar os detalhes da empresa. Tente novamente.</p>
-          <button class="btn-primary" onclick="abrirDetalhesEmpresa(${empresaId})">
+          <button class="btn-primary" onclick="abrirDetalhesEmpresa(${empresa_id})">
             🔄 Tentar Novamente
           </button>
         </div>
@@ -1851,7 +1871,7 @@ function salvarEmpresa(empresaId) {
   botaoSalvar.innerHTML = '⏳ Salvando...';
   botaoSalvar.disabled = true;
 
-  authenticatedFetch(`/api/empresas/${empresaId}`, {
+  authenticatedFetch(`/api/empresas/${empresa_id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados)
@@ -1870,9 +1890,9 @@ function salvarEmpresa(empresaId) {
       console.log('✅ Resposta da API:', empresaAtualizada);
 
       // Atualizar dados locais imediatamente
-      const index = empresas.findIndex(e => e.id === empresaId);
+      const index = empresas.findIndex(e => e.id === empresa_id);
       if (index !== -1) {
-        empresas[index] = { ...empresas[index], ...dados, id: empresaId };
+        empresas[index] = { ...empresas[index], ...dados, id: empresa_id };
         console.log('📝 Dados locais atualizados:', empresas[index]);
       }
 
@@ -1906,7 +1926,7 @@ function salvarEmpresa(empresaId) {
 
 // FUNÇÃO DE EXCLUIR EMPRESA
 function excluirEmpresa(empresaId) {
-  const empresa = empresas.find(e => e.id === empresaId);
+  const empresa = empresas.find(e => e.id === empresa_id);
   if (!empresa) return;
 
   const nomeEmpresa = empresa.razao_social || empresa.razaoSocial || 'esta empresa';
@@ -1915,7 +1935,7 @@ function excluirEmpresa(empresaId) {
     return;
   }
 
-  authenticatedFetch(`/api/empresas/${empresaId}`, {
+  authenticatedFetch(`/api/empresas/${empresa_id}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -2026,6 +2046,20 @@ document.getElementById('treinamentoForm').addEventListener('submit', function (
   formData.append('cargoResponsavel', cargoResponsavel);
   formData.append('areaResponsavel', areaResponsavel);
   formData.append('registroResponsavel', registroResponsavel);
+
+  // Dados de gamificação
+  const tipoGamificado = document.getElementById('tipoGamificado').checked;
+  formData.append('tipoGamificado', tipoGamificado);
+  
+  if (tipoGamificado) {
+    const configQuiz = {
+      pontos_por_acerto: parseInt(document.getElementById('pontosPorAcerto').value) || 10,
+      questoes_por_dia: parseInt(document.getElementById('questoesPorDia').value) || 5,
+      max_tempo_segundos: parseInt(document.getElementById('maxTempoSegundos').value) || 60,
+      bonus_tempo: document.getElementById('bonusTempo').checked
+    };
+    formData.append('configQuiz', JSON.stringify(configQuiz));
+  }
 
   // Debug: verificar quantos arquivos foram selecionados
   console.log('📁 Total de arquivos selecionados:', arquivos.length);
@@ -2181,6 +2215,10 @@ function renderizarTreinamentos() {
             <i class="fa-solid fa-user"></i>
             Contatos
           </button>
+          <button onclick="gerenciarVariantes(${treinamento.id})" class="btn-variantes">
+            <i class="fa-solid fa-layer-group"></i>
+            Variantes
+          </button>
           <button onclick="abrirDetalhesTreinamento(${treinamento.id})">
             <i class="fa-solid fa-pen-to-square"></i>
             Editar
@@ -2196,9 +2234,9 @@ function renderizarTreinamentos() {
 }
 
 // FUNÇÃO PARA VISUALIZAR OS CONTATOS DO TREINAMENTO (BOTÃO CONTATOS)
-function visualizarContatosTreinamento(treinamentoId) {
-  const treinamento = treinamentos.find(t => t.id === treinamentoId);
-  const contatosComTreinamento = contatos.filter(c => c.treinamentoId === treinamentoId);
+function visualizarContatosTreinamento(treinamento_id) {
+  const treinamento = treinamentos.find(t => t.id === treinamento_id);
+  const contatosComTreinamento = contatos.filter(c => c.treinamentoId === treinamento_id);
 
   document.getElementById('modalTitulo').textContent = `Contatos - ${treinamento.nome}`;
 
@@ -2211,10 +2249,42 @@ function visualizarContatosTreinamento(treinamentoId) {
     `;
   }
   else {
+    // Agrupar por status
+    const porStatus = {
+      concluido: contatosComTreinamento.filter(c => c.statusTreinamento === 'concluido'),
+      em_andamento: contatosComTreinamento.filter(c => c.statusTreinamento === 'em_andamento' || c.statusTreinamento === 'ativo'),
+      iniciado: contatosComTreinamento.filter(c => !c.statusTreinamento || c.statusTreinamento === 'iniciado')
+    };
+
     document.getElementById('modalConteudo').innerHTML = `
+      <div class="treinamento-stats-summary">
+        <div class="stat-badge success">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>${porStatus.concluido.length} Concluídos</span>
+        </div>
+        <div class="stat-badge warning">
+          <i class="fa-solid fa-spinner"></i>
+          <span>${porStatus.em_andamento.length} Em Andamento</span>
+        </div>
+        <div class="stat-badge info">
+          <i class="fa-solid fa-play"></i>
+          <span>${porStatus.iniciado.length} Iniciados</span>
+        </div>
+        <div class="stat-badge primary">
+          <i class="fa-solid fa-users"></i>
+          <span>${contatosComTreinamento.length} Total</span>
+        </div>
+      </div>
       <div class="contacts-list">
         ${contatosComTreinamento.map(contato => {
       const empresa = empresas.find(e => e.id === contato.empresaId);
+      const statusClass = contato.statusTreinamento === 'concluido' ? 'success' : 
+                          contato.statusTreinamento === 'em_andamento' || contato.statusTreinamento === 'ativo' ? 'warning' : 'info';
+      const statusIcon = contato.statusTreinamento === 'concluido' ? 'fa-circle-check' : 
+                         contato.statusTreinamento === 'em_andamento' || contato.statusTreinamento === 'ativo' ? 'fa-spinner' : 'fa-play';
+      const statusTexto = contato.statusTreinamento === 'concluido' ? 'Concluído' : 
+                          contato.statusTreinamento === 'em_andamento' || contato.statusTreinamento === 'ativo' ? 'Em Andamento' : 'Iniciado';
+      
       return `
             <div class="contact-item">
               <div class="contact-avatar">${contato.nome.charAt(0).toUpperCase()}</div>
@@ -2227,6 +2297,10 @@ function visualizarContatosTreinamento(treinamentoId) {
                 <div class="contact-company">
                   <i class="fa-solid fa-building"></i>
                   ${empresa ? empresa.razaoSocial : 'Empresa não encontrada'}
+                </div>
+                <div class="contact-status status-${statusClass}">
+                  <i class="fa-solid ${statusIcon}"></i>
+                  ${statusTexto}
                 </div>
               </div>
               <div class="contact-actions">
@@ -2246,8 +2320,8 @@ function visualizarContatosTreinamento(treinamentoId) {
 }
 
 // ABRIR MODAL DE DETALHES TREINAMENTO (BOTÃO EDITAR)
-function abrirDetalhesTreinamento(treinamentoId) {
-  const treinamento = treinamentos.find(t => t.id === treinamentoId);
+function abrirDetalhesTreinamento(treinamento_id) {
+  const treinamento = treinamentos.find(t => t.id === treinamento_id);
   if (!treinamento) return;
   document.body.classList.add('modal-open');
   document.getElementById('tituloModalTreinamento').textContent = `Treinamento: ${treinamento.nome}`;
@@ -2443,7 +2517,7 @@ function abrirDetalhesTreinamento(treinamentoId) {
                   </div>
                   <div class="midia-info">
                     <span class="midia-nome">${midia}</span>
-                    <button type="button" onclick="removerMidia('${midia}', ${treinamentoId})">✕</button>
+                    <button type="button" onclick="removerMidia('${midia}', ${treinamento_id})">✕</button>
                   </div>
                 </div>
               `).join('')}
@@ -2548,7 +2622,7 @@ function abrirDetalhesTreinamento(treinamentoId) {
       formData.append('midias', novasMidias[i]);
     }
 
-    authenticatedFetch(`/api/treinamentos/${treinamentoId}`, {
+    authenticatedFetch(`/api/treinamentos/${treinamento_id}`, {
       method: 'PUT',
       body: formData
     })
@@ -2738,8 +2812,8 @@ function carregarContatos() {
       contatos = contatosArray.map(c => ({
         ...c,
         id: parseInt(c.id, 10),
-        empresaId: parseInt(c.empresaId, 10),
-        treinamentoId: c.treinamentoId ? parseInt(c.treinamentoId, 10) : null
+        empresaId: parseInt(c.empresaId || c.empresa_id, 10),
+        treinamento_id: c.treinamentoId ? parseInt(c.treinamentoId, 10) : null
       }));
 
       // Debug: mostrar associações
@@ -3094,9 +3168,9 @@ document.getElementById('contatoForm')?.addEventListener('submit', function (e) 
   const email = document.getElementById('emailContato').value.trim();
   const cpf = document.getElementById('cpfContato').value.trim();
   const empresaId = document.getElementById('empresa').value;
-  const treinamentoId = document.getElementById('treinamento').value;
+  const treinamento_id = document.getElementById('treinamento').value;
 
-  if (!nome || !telefone || !empresaId) {
+  if (!nome || !telefone || !empresa_id) {
     mostrarAlerta('Por favor, preencha todos os campos obrigatórios.', 'error');
     return;
   }
@@ -3127,9 +3201,9 @@ document.getElementById('contatoForm')?.addEventListener('submit', function (e) 
     telefone,
     email: email || null,
     cpf: cpf || null,
-    empresaId: empresaId ? parseInt(empresaId) : 3,
-    treinamentoId: treinamentoId ? parseInt(treinamentoId) : null,
-    statusTreinamento: treinamentoId ? 'ativo' : 'sem_treinamento'
+    empresa_id: empresa_id ? parseInt(empresaId) : 3,
+    treinamento_id: treinamento_id ? parseInt(treinamento_id) : null,
+    status_treinamento: treinamento_id ? 'ativo' : 'sem_treinamento'
   };
 
   authenticatedFetch('/api/usuarios', {
@@ -3463,7 +3537,7 @@ function filtrarPorStatus(status) {
 }
 
 function filtrarPorEmpresa(empresaId) {
-  if (!empresaId) {
+  if (!empresa_id) {
     renderizarEmpresas();
     return;
   }
@@ -3681,7 +3755,7 @@ function importarBackup(file) {
 
 
 // Função para remover mídia
-function removerMidia(nomeArquivo, treinamentoId) {
+function removerMidia(nomeArquivo, treinamento_id) {
 
   // Remover visualmente de forma instantânea
   const midiaItems = document.querySelectorAll('.midia-item');
@@ -3695,7 +3769,7 @@ function removerMidia(nomeArquivo, treinamentoId) {
     }
   });
 
-  authenticatedFetch(`/api/treinamentos/${treinamentoId}/midia/${nomeArquivo}`, {
+  authenticatedFetch(`/api/treinamentos/${treinamento_id}/midia/${nomeArquivo}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -3705,7 +3779,7 @@ function removerMidia(nomeArquivo, treinamentoId) {
     .catch(() => {
       mostrarAlerta('Erro ao remover mídia.', 'error');
       // Reabrir o modal em caso de erro para restaurar o estado
-      abrirDetalhesTreinamento(treinamentoId);
+      abrirDetalhesTreinamento(treinamento_id);
     });
 }
 
@@ -3990,16 +4064,27 @@ async function criarGraficoEmpresas() {
   const ctx = document.getElementById('graficoEmpresas');
   if (!ctx) return;
 
-  // Destruir gráfico existente antes de criar novo
-  const existingChart = Chart.getChart(ctx);
-  if (existingChart) {
-    existingChart.destroy();
+  // Destruir TODAS as instâncias do gráfico
+  try {
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+  } catch (e) {
+    console.warn('Erro ao destruir gráfico existente:', e);
   }
 
-  if (graficoEmpresasInstance) {
-    graficoEmpresasInstance.destroy();
-    graficoEmpresasInstance = null;
+  try {
+    if (graficoEmpresasInstance) {
+      graficoEmpresasInstance.destroy();
+      graficoEmpresasInstance = null;
+    }
+  } catch (e) {
+    console.warn('Erro ao destruir instância:', e);
   }
+
+  // Aguardar um momento para garantir limpeza
+  await new Promise(resolve => setTimeout(resolve, 50));
 
   try {
     const response = await authenticatedFetch('/api/dashboard/empresas-contatos');
@@ -4096,15 +4181,26 @@ async function criarGraficoModalidades() {
   }
 
   // Destruir gráfico existente antes de criar novo
-  const existingChart = Chart.getChart(ctx);
-  if (existingChart) {
-    existingChart.destroy();
+  try {
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+  } catch (e) {
+    console.warn('Erro ao destruir gráfico:', e);
   }
 
-  if (graficoModalidadesInstance) {
-    graficoModalidadesInstance.destroy();
-    graficoModalidadesInstance = null;
+  try {
+    if (graficoModalidadesInstance) {
+      graficoModalidadesInstance.destroy();
+      graficoModalidadesInstance = null;
+    }
+  } catch (e) {
+    console.warn('Erro ao destruir instância:', e);
   }
+
+  // Aguardar limpeza
+  await new Promise(resolve => setTimeout(resolve, 50));
 
   try {
     // Usar dados reais dos treinamentos locais
@@ -4198,15 +4294,26 @@ async function criarGraficoEvolucao() {
   if (!ctx) return;
 
   // Destruir gráfico existente antes de criar novo
-  const existingChart = Chart.getChart(ctx);
-  if (existingChart) {
-    existingChart.destroy();
+  try {
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+  } catch (e) {
+    console.warn('Erro ao destruir gráfico:', e);
   }
 
-  if (graficoEvolucaoInstance) {
-    graficoEvolucaoInstance.destroy();
-    graficoEvolucaoInstance = null;
+  try {
+    if (graficoEvolucaoInstance) {
+      graficoEvolucaoInstance.destroy();
+      graficoEvolucaoInstance = null;
+    }
+  } catch (e) {
+    console.warn('Erro ao destruir instância:', e);
   }
+
+  // Aguardar limpeza
+  await new Promise(resolve => setTimeout(resolve, 50));
 
   try {
     // Gerar dados realistas baseados no estado atual do sistema
@@ -4307,7 +4414,17 @@ function formatarMes(mesAno) {
 }
 
 // Atualizar todos os gráficos com dados da API
+let atualizandoGraficos = false;
+
 async function atualizarGraficos() {
+  // Evitar múltiplas atualizações simultâneas
+  if (atualizandoGraficos) {
+    console.log('⏳ Atualização de gráficos já em andamento, aguardando...');
+    return;
+  }
+
+  atualizandoGraficos = true;
+
   try {
     // Destruir todos os gráficos existentes primeiro
     destruirTodosGraficos();
@@ -4316,7 +4433,7 @@ async function atualizarGraficos() {
     mostrarCarregandoGraficos(true);
 
     // Aguardar um pouco para garantir que tudo foi limpo
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Atualizar todos os gráficos em paralelo
     await Promise.all([
@@ -4332,6 +4449,8 @@ async function atualizarGraficos() {
   } catch (error) {
     console.error('Erro ao atualizar gráficos:', error);
     mostrarCarregandoGraficos(false);
+  } finally {
+    atualizandoGraficos = false;
   }
 }
 

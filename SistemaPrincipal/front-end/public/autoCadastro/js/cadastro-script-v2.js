@@ -4,9 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const cpfInput = document.getElementById('cpf');
   const cpfError = document.getElementById('cpfError');
   const empresaSelect = document.getElementById('empresaId');
+  const unidadeSelect = document.getElementById('unidade');
+  const setorSelect = document.getElementById('setor');
+  const cargoSelect = document.getElementById('cargo');
   const nomeInput = document.getElementById('nomeCompleto');
 
-  // 🔤 Converter nome para maiúsculo automaticamente
+  //  Converter nome para maiúsculo automaticamente
   nomeInput.addEventListener('input', function(e) {
     const cursorPosition = e.target.selectionStart;
     const upperValue = e.target.value.toUpperCase();
@@ -14,16 +17,142 @@ document.addEventListener('DOMContentLoaded', () => {
     e.target.setSelectionRange(cursorPosition, cursorPosition);
   });
 
-  // 🏢 Carregar empresas
+  //  Carregar unidades quando empresa for selecionada
+  empresaSelect.addEventListener('change', async function() {
+    const empresaId = this.value;
+    if (!empresaId) {
+      unidadeSelect.innerHTML = '<option value="">Selecione a empresa primeiro...</option>';
+      unidadeSelect.disabled = true;
+      setorSelect.innerHTML = '<option value="">Selecione a unidade primeiro...</option>';
+      setorSelect.disabled = true;
+      cargoSelect.innerHTML = '<option value="">Selecione o setor primeiro...</option>';
+      cargoSelect.disabled = true;
+      return;
+    }
+    await carregarUnidades(empresaId);
+  });
+
+  //  Carregar setores quando unidade for selecionada
+  unidadeSelect.addEventListener('change', async function() {
+    const unidadeId = this.value;
+    if (!unidadeId) {
+      setorSelect.innerHTML = '<option value="">Selecione a unidade primeiro...</option>';
+      setorSelect.disabled = true;
+      cargoSelect.innerHTML = '<option value="">Selecione o setor primeiro...</option>';
+      cargoSelect.disabled = true;
+      return;
+    }
+    await carregarSetoresUnidade(unidadeId);
+  });
+
+  //  Carregar cargos quando setor for selecionado
+  setorSelect.addEventListener('change', async function() {
+    const setorId = this.value;
+    
+    cargoSelect.innerHTML = '<option value="">Carregando cargos...</option>';
+    cargoSelect.disabled = true;
+    
+    if (!setorId) {
+      cargoSelect.innerHTML = '<option value="">Selecione o setor primeiro...</option>';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`http://72.60.48.249:3001/api/public/cargos/${setorId}`);
+      const cargos = await response.json();
+      
+      cargoSelect.innerHTML = '<option value="">Selecione um cargo...</option>';
+      
+      if (cargos && cargos.length > 0) {
+        cargos.forEach(cargo => {
+          const option = document.createElement('option');
+          option.value = cargo.id;
+          option.textContent = cargo.nome;
+          cargoSelect.appendChild(option);
+        });
+        cargoSelect.disabled = false;
+      } else {
+        cargoSelect.innerHTML = '<option value="">Nenhum cargo cadastrado</option>';
+      }
+    } catch (error) {
+      console.error('Erro ao carregar cargos:', error);
+      cargoSelect.innerHTML = '<option value="">Erro ao carregar cargos</option>';
+    }
+  });
+
+  //  Carregar unidades de uma empresa
+  async function carregarUnidades(empresaId) {
+    unidadeSelect.innerHTML = '<option value="">Carregando unidades...</option>';
+    unidadeSelect.disabled = true;
+    setorSelect.innerHTML = '<option value="">Selecione a unidade primeiro...</option>';
+    setorSelect.disabled = true;
+    cargoSelect.innerHTML = '<option value="">Selecione o setor primeiro...</option>';
+    cargoSelect.disabled = true;
+    
+    try {
+      const response = await fetch(`http://72.60.48.249:3001/api/public/unidades/${empresaId}`);
+      const unidades = await response.json();
+      
+      unidadeSelect.innerHTML = '<option value="">Selecione uma unidade...</option>';
+      
+      if (unidades && unidades.length > 0) {
+        unidades.forEach(unidade => {
+          const option = document.createElement('option');
+          option.value = unidade.id;
+          option.textContent = unidade.nome;
+          unidadeSelect.appendChild(option);
+        });
+        unidadeSelect.disabled = false;
+      } else {
+        unidadeSelect.innerHTML = '<option value="">Nenhuma unidade cadastrada</option>';
+      }
+    } catch (error) {
+      console.error('Erro ao carregar unidades:', error);
+      unidadeSelect.innerHTML = '<option value="">Erro ao carregar unidades</option>';
+    }
+  }
+
+  //  Carregar setores de uma unidade
+  async function carregarSetoresUnidade(unidadeId) {
+    setorSelect.innerHTML = '<option value="">Carregando setores...</option>';
+    setorSelect.disabled = true;
+    cargoSelect.innerHTML = '<option value="">Selecione o setor primeiro...</option>';
+    cargoSelect.disabled = true;
+    
+    try {
+      const response = await fetch(`http://72.60.48.249:3001/api/public/setores/unidade/${unidadeId}`);
+      const setores = await response.json();
+      
+      console.log('Setores:', setores);
+      
+      setorSelect.innerHTML = '<option value="">Selecione um setor...</option>';
+      
+      if (setores && setores.length > 0) {
+        setores.forEach(setor => {
+          const option = document.createElement('option');
+          option.value = setor.id;
+          option.textContent = setor.nome;
+          setorSelect.appendChild(option);
+        });
+        setorSelect.disabled = false;
+      } else {
+        setorSelect.innerHTML = '<option value="">Nenhum setor cadastrado para esta empresa</option>';
+        console.warn('Nenhum setor encontrado para unidade ID:', unidadeId);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar setores:', error);
+      setorSelect.innerHTML = '<option value="">Erro ao carregar setores</option>';
+    }
+  }
+
+  //  Carregar empresas
   async function carregarEmpresas() {
     try {
-      // Verificar se há parâmetro ?empresa=salubrita na URL
+      // Verificar se há parâmetro ?empresa= na URL
       const urlParams = new URLSearchParams(window.location.search);
       const empresaParam = urlParams.get('empresa');
       
       if (empresaParam === 'salubrita') {
-        // Modo Salubritá: carregar apenas essa empresa e bloquear
-        console.log('🔒 Modo Salubritá ativado');
         empresaSelect.innerHTML = '<option value="">Carregando...</option>';
         empresaSelect.disabled = true;
         
@@ -35,10 +164,30 @@ document.addEventListener('DOMContentLoaded', () => {
           empresaSelect.disabled = true;
           empresaSelect.style.background = '#e5e7eb';
           empresaSelect.style.cursor = 'not-allowed';
-          console.log('✅ Empresa Salubritá bloqueada:', empresa);
+          await carregarUnidades(empresa.id);
         } else {
           empresaSelect.innerHTML = '<option value="">Erro ao carregar Salubritá</option>';
           alert('Erro: Empresa Salubritá não encontrada.');
+        }
+        return;
+      }
+      
+      if (empresaParam === 'supermix') {
+        empresaSelect.innerHTML = '<option value="">Carregando...</option>';
+        empresaSelect.disabled = true;
+        
+        const response = await fetch('/api/empresas/supermix');
+        const empresa = await response.json();
+        
+        if (empresa && empresa.id) {
+          empresaSelect.innerHTML = `<option value="${empresa.id}" selected>${empresa.razaoSocial}</option>`;
+          empresaSelect.disabled = true;
+          empresaSelect.style.background = '#e5e7eb';
+          empresaSelect.style.cursor = 'not-allowed';
+          await carregarUnidades(empresa.id);
+        } else {
+          empresaSelect.innerHTML = '<option value="">Erro ao carregar SUPERMIX</option>';
+          alert('Erro: Empresa SUPERMIX não encontrada.');
         }
         return;
       }
@@ -74,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Carregar empresas ao inicializar
   carregarEmpresas();
 
-  // 🔽 Função para formatar CPF
+  //  Função para formatar CPF
   function formatarCPF(value) {
     const numbers = value.replace(/\D/g, '');
     if (numbers.length <= 3) {
@@ -88,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 🔽 Função para validar CPF
+  //  Função para validar CPF
   function validarCPF(cpf) {
     const numbers = cpf.replace(/\D/g, '');
     if (numbers.length !== 11) return false;
@@ -112,13 +261,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return parseInt(numbers[10]) === digit2;
   }
 
-  // 🔽 Event listener para formatação e validação do CPF
+  //  Event listener para formatação e validação do CPF
   cpfInput.addEventListener('input', function(e) {
     const formatted = formatarCPF(e.target.value);
     e.target.value = formatted;
 
     const numbers = formatted.replace(/\D/g, '');
-    if (numbers.length === 11) {
+    if (numbers.length === 11) {  
       if (validarCPF(formatted)) {
         cpfError.style.display = 'none';
         cpfInput.style.borderColor = 'green';
@@ -142,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 🔽 Função para formatar telefone brasileiro
+  //  Função para formatar telefone brasileiro
   function formatarTelefoneBrasil(value) {
     const numbers = value.replace(/\D/g, '');
     if (numbers.length <= 2) {
@@ -156,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 🔽 Função para formatar telefone internacional
+  // Função para formatar telefone internacional
   function formatarTelefoneInternacional(value) {
     const numbers = value.replace(/\D/g, '');
     let formatted = '';
@@ -169,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return formatted;
   }
 
-  // 🔽 Event listener para formatação do telefone
+  //  Event listener para formatação do telefone
   telefoneInput.addEventListener('input', function(e) {
     const ddiSelecionado = ddiSelect.value;
     let formatted;
@@ -183,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.target.value = formatted;
   });
 
-  // 🔽 Event listener para mudança de DDI
+  //  Event listener para mudança de DDI
   ddiSelect.addEventListener('change', function() {
     telefoneInput.value = '';
     if (this.value === '+55') {
@@ -193,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 🔽 Submit do formulário
+  // Submit do formulário
   document.getElementById('autoCadastroForm').addEventListener('submit', function (e) {
     e.preventDefault();
 
@@ -203,11 +352,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const email = document.getElementById('email').value.trim();
     const ddi = document.getElementById('ddi').value;
     const telefone = document.getElementById('telefone').value.trim();
-    const cargo = document.getElementById('cargo').value.trim();
-    const setor = document.getElementById('setor').value.trim();
+    const cargo = document.getElementById('cargo').value;
+    const setor = document.getElementById('setor').value;
+    const unidade = document.getElementById('unidade').value;
     const empresaId = document.getElementById('empresaId').value;
 
-    if (!nomeCompleto || !cpf || !sexo || !email || !ddi || !telefone || !empresaId) {
+    if (!nomeCompleto || !cpf || !sexo || !email || !ddi || !telefone || !empresaId || !unidade || !setor || !cargo) {
       alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
@@ -224,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // ✅ Salvar telefone com DDI sem "+" e número só com dígitos
+    // Salvar telefone com DDI sem "+" e número só com dígitos
     const telefoneCompleto = `${ddi.replace('+', '')}${telefone.replace(/\D/g, '')}`;
 
     const novoUsuario = {
@@ -233,14 +383,11 @@ document.addEventListener('DOMContentLoaded', () => {
       sexo: sexo,
       email: email,
       telefone: telefoneCompleto,
-      cargo: cargo || null,
-      setor: setor || null,
-      empresaId: parseInt(empresaId)
+      cargo_id: parseInt(cargo),
+      setor_id: parseInt(setor),
+      unidade_id: parseInt(unidade),
+      empresa_id: parseInt(empresaId)
     };
-
-    console.log('📝 Dados sendo enviados:', novoUsuario);
-    console.log('🔍 DEBUG - Cargo:', cargo, '| Setor:', setor);
-    console.log('🔍 DEBUG - Cargo length:', cargo.length, '| Setor length:', setor.length);
 
     fetch('/api/contatos', {
       method: 'POST',
@@ -251,12 +398,9 @@ document.addEventListener('DOMContentLoaded', () => {
       body: JSON.stringify(novoUsuario)
     })
       .then(async (res) => {
-        console.log('📝 Status da resposta:', res.status);
-        console.log('📝 Headers da resposta:', res.headers);
-        
         if (!res.ok) {
           const errorText = await res.text();
-          console.error('❌ Erro do servidor:', errorText);
+          console.error('Erro do servidor:', errorText);
           
           let errorData;
           try {

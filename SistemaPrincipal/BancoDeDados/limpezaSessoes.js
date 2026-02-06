@@ -13,7 +13,7 @@ class LimpezaSessoes {
         where: {
           [Op.or]: [
             { ativo: false },
-            { ultimaAtualizacao: { [Op.lt]: seteDiasAtras } }
+            { ultima_atualizacao: { [Op.lt]: seteDiasAtras } }
           ]
         }
       });
@@ -45,7 +45,7 @@ class LimpezaSessoes {
       for (const item of telefones) {
         const sessoes = await SessaoTreinamento.findAll({
           where: { telefone: item.telefone },
-          order: [['ultimaAtualizacao', 'DESC']]
+          order: [['ultima_atualizacao', 'DESC']]
         });
 
         // Manter apenas a mais recente

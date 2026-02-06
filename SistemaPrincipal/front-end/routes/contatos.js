@@ -167,9 +167,10 @@ router.post('/', async (req, res) => {
         console.log('Body:', req.body);
         console.log('Body type:', typeof req.body);
         
-        const { nome, telefone, cpf, sexo, empresaId, email, cargo, setor } = req.body;
+        const { nome, telefone, cpf, sexo, empresa_id, email, cargo, setor, cargo_id, setor_id, unidade_id } = req.body;
 
         console.log('🔍 DEBUG API - Cargo recebido:', cargo, '| Setor recebido:', setor);
+        console.log('🔍 DEBUG API - Cargo ID:', cargo_id, '| Setor ID:', setor_id, '| Unidade ID:', unidade_id);
         console.log('🔍 DEBUG API - Sexo recebido:', sexo);
         console.log('🔍 DEBUG API - Body completo:', JSON.stringify(req.body, null, 2));
 
@@ -246,11 +247,12 @@ router.post('/', async (req, res) => {
             telefone: telefoneLimpo,
             cpf: cpfLimpo,
             sexo: sexo.trim(),
-            empresaId: empresaId ? parseInt(empresaId, 10) : 1,
+            empresa_id: empresa_id ? parseInt(empresa_id, 10) : 1,
             email: email.trim(),
-            cargo: cargo ? cargo.trim() : null,
-            setor: setor ? setor.trim() : null,
-            statusTreinamento: 'não iniciado'
+            cargo_id: cargo_id ? parseInt(cargo_id, 10) : null,
+            setor_id: setor_id ? parseInt(setor_id, 10) : null,
+            unidade_id: unidade_id ? parseInt(unidade_id, 10) : null,
+            status_treinamento: 'não iniciado'
         });
 
         // Emitir evento WebSocket para atualização em tempo real
@@ -258,7 +260,7 @@ router.post('/', async (req, res) => {
         if (io) {
             io.emit('novoUsuario', {
                 usuario: novoContato,
-                empresaId: novoContato.empresaId
+                empresa_id: novoContato.empresaId
             });
             io.emit('notificacao', {
                 tipo: 'usuario_cadastrado',
@@ -301,12 +303,12 @@ router.put('/:id', async (req, res) => {
       nome,
       telefone,
       email,
-      statusTreinamento,
+      status_treinamento,
       cpf,
-      empresaId,
+      empresa_id,
       cargo,
       setor,
-      treinamentoId
+      treinamento_id
     } = req.body;
 
     const contato = await Usuario.findByPk(req.params.id);
@@ -364,18 +366,18 @@ router.put('/:id', async (req, res) => {
     if (nome) camposParaAtualizar.nome = nome.trim();
     if (telefone) camposParaAtualizar.telefone = limparNumero(telefone);
     if (email !== undefined) camposParaAtualizar.email = email.trim();
-    if (statusTreinamento) camposParaAtualizar.statusTreinamento = statusTreinamento;
+    if (status_treinamento) camposParaAtualizar.statusTreinamento = status_treinamento;
     if (cpf !== undefined) camposParaAtualizar.cpf = cpf ? cpf.replace(/\D/g, '') : null;
     if (cargo !== undefined) camposParaAtualizar.cargo = cargo ? cargo.trim() : null;
     if (setor !== undefined) camposParaAtualizar.setor = setor ? setor.trim() : null;
 
-    if (empresaId !== undefined) {
-      camposParaAtualizar.empresaId = empresaId ? parseInt(empresaId, 10) : null;
+    if (empresa_id !== undefined) {
+      camposParaAtualizar.empresaId = empresa_id ? parseInt(empresa_id, 10) : null;
     }
 
-    if (treinamentoId !== undefined) {
-        camposParaAtualizar.treinamentoId = treinamentoId
-            ? parseInt(treinamentoId, 10)
+    if (treinamento_id !== undefined) {
+        camposParaAtualizar.treinamentoId = treinamento_id
+            ? parseInt(treinamento_id, 10)
             : null;
         }
 
@@ -421,8 +423,8 @@ router.post('/restart-lote', async (req, res) => {
 
                 // Resetar status
                 await contato.update({
-                    statusTreinamento: 'não iniciado',
-                    treinamentoId: null,
+                    status_treinamento: 'não iniciado',
+                    treinamento_id: null,
                     dataUltimaInteracao: null
                 });
 
@@ -497,8 +499,8 @@ router.post('/:id/restart-treinamento', async (req, res) => {
 
         // Resetar status do treinamento
         await contato.update({
-            statusTreinamento: 'não iniciado',
-            treinamentoId: null,
+            status_treinamento: 'não iniciado',
+            treinamento_id: null,
             dataUltimaInteracao: null
         });
         console.log('✅ Status do contato resetado');
@@ -573,7 +575,7 @@ router.get('/:id/exportar-conversa', async (req, res) => {
                     [Op.in]: variacoesTelefone
                 }
             },
-            order: [['createdAt', 'ASC']]
+            order: [['created_at', 'ASC']]
         });
 
         if (interacoes.length === 0) {
@@ -648,7 +650,7 @@ router.patch('/:id/transferir-empresa', async (req, res) => {
         }
 
         const empresaAntigaId = contato.empresaId;
-        await contato.update({ empresaId: novaEmpresaId });
+        await contato.update({ empresa_id: novaEmpresaId });
 
         const io = req.app.get('io');
         if (io) {
@@ -694,7 +696,7 @@ router.patch('/:id/toggle-ativo', async (req, res) => {
         if (io) {
             io.emit('usuarioAtualizado', {
                 usuario: contato,
-                empresaId: contato.empresaId
+                empresa_id: contato.empresaId
             });
         }
 
@@ -764,7 +766,7 @@ router.post('/verificar-telefone', async (req, res) => {
                     nome: c.nome,
                     telefone: c.telefone,
                     email: c.email,
-                    statusTreinamento: c.statusTreinamento
+                    status_treinamento: c.statusTreinamento
                 })),
                 variacoesTestadas: variacoes
             });

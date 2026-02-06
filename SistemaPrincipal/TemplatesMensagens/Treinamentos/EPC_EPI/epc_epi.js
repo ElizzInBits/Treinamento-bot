@@ -27,14 +27,14 @@ class EPCEPITraining {
         // Salvar no SessaoTreinamento (serve para persistência do treinamento)
         await SessaoTreinamento.create({
             telefone: message.from,
-            tipoTreinamento: 'epc_epi',
-            etapaAtual: 'epc_epi_introducao',
-            dadosSessao: JSON.stringify({
+            tipo_treinamento: 'epc_epi',
+            etapa_atual: 'epc_epi_introducao',
+            dados_sessao: JSON.stringify({
                 etapa: 'epc_epi_introducao',
                 contato_id: contato.id
             }),
             ativo: true,
-            ultimaAtualizacao: new Date()
+            ultima_atualizacao: new Date()
         });
 
         //Serve para atualizar a Interacao para indicar que estamos no treinamento EPC/EPI
@@ -214,13 +214,13 @@ class EPCEPITraining {
                 // Atualizar SessaoTreinamento
                 await SessaoTreinamento.create({
                     telefone: message.from,
-                    tipoTreinamento: 'epc_epi',
-                    etapaAtual: 'epc_epi_audio_confirmacao',
-                    dadosSessao: JSON.stringify({
+                    tipo_treinamento: 'epc_epi',
+                    etapa_atual: 'epc_epi_audio_confirmacao',
+                    dados_sessao: JSON.stringify({
                         etapa: 'epc_epi_audio_confirmacao'
                     }),
                     ativo: true,
-                    ultimaAtualizacao: new Date()
+                    ultima_atualizacao: new Date()
                 });
 
                 // CRÍTICO: Atualizar Interacao para manter o usuário no treinamento
@@ -1933,11 +1933,11 @@ class EPCEPITraining {
 
             await SessaoTreinamento.create({
                 telefone: telefone,
-                tipoTreinamento: 'epc_epi',
-                etapaAtual: session.etapa,
-                dadosSessao: JSON.stringify(session),
+                tipo_treinamento: 'epc_epi',
+                etapa_atual: session.etapa,
+                dados_sessao: JSON.stringify(session),
                 ativo: true,
-                ultimaAtualizacao: new Date()
+                ultima_atualizacao: new Date()
             });
 
             console.log(`💾 [EPC_EPI] Sessão salva no banco: ${session.etapa}`);
@@ -1953,11 +1953,11 @@ class EPCEPITraining {
             const sessaoSalva = await SessaoTreinamento.findOne({
                 where: {
                     telefone: telefone,
-                    tipoTreinamento: 'epc_epi',
+                    tipo_treinamento: 'epc_epi',
                     ativo: true
                 },
                 order: [
-                    ['ultimaAtualizacao', 'DESC']
+                    ['ultima_atualizacao', 'DESC']
                 ]
             });
 
@@ -1981,7 +1981,7 @@ class EPCEPITraining {
             await SessaoTreinamento.update({ ativo: false }, {
                 where: {
                     telefone: telefone,
-                    tipoTreinamento: 'epc_epi',
+                    tipo_treinamento: 'epc_epi',
                     ativo: true
                 }
             });

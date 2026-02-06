@@ -53,7 +53,7 @@ class PerformanceInit {
             const indexes = [
                 'CREATE INDEX idx_usuarios_telefone ON usuarios(telefone)',
                 'CREATE INDEX idx_sessoes_telefone ON sessoes_treinamentos(telefone)', 
-                'CREATE INDEX idx_sessoes_created_at ON sessoes_treinamentos(createdAt)'
+                'CREATE INDEX idx_sessoes_created_at ON sessoes_treinamentos(created_at)'
             ];
 
             for (const query of indexes) {

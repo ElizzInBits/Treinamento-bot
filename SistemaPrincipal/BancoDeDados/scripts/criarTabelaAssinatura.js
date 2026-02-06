@@ -14,8 +14,8 @@ async function criarTabelaAssinatura() {
         assinado_em DATETIME,
         expires_at DATETIME NOT NULL,
         status ENUM('pendente', 'assinado', 'expirado') DEFAULT 'pendente',
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_token (token_assinatura),
         INDEX idx_usuario (usuario_id),
         INDEX idx_status (status)
