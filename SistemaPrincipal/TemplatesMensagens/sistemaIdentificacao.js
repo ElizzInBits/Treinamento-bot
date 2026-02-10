@@ -48,9 +48,8 @@ async function processarMensagemInicial(telefone, mensagem, sendMessage, buscarC
             return;
         }
         
-        const empresaId = contato.empresa_id || empresaId;
+        const empresaId = contato.empresa_id;
         console.log(`✅ [IDENTIFICAÇÃO] Usuário cadastrado: ${contato.nome} (ID: ${contato.id}, Empresa: ${empresaId})`);
-        console.log(`🔍 [DEBUG] empresa_id=${contato.empresa_id}, empresaId=${empresaId}`);
         
         // Buscar última interação (excluindo mensagens do usuário)
         const ultima_interacao = await Interacao.findOne({

@@ -1067,11 +1067,11 @@ async function verificarTreinamentosPendentes(sender, sendMessage, querContato =
     }
 }
 
-async function verificarTreinamentosEmpresa(empresa_id, contatoId = null) {
+async function verificarTreinamentosEmpresa(empresaId, contatoId = null) {
     try {
         const { sequelize } = require('../../../BancoDeDados/models');
         
-        console.log(`🔍 Consultando treinamentos para empresa ${empresa_id}, contato ${contatoId}`);
+        console.log(`🔍 Consultando treinamentos para empresa ${empresaId}, contato ${contatoId}`);
         
         // Query otimizada para buscar treinamentos da empresa que o contato ainda não completou
         const query = `
@@ -1090,7 +1090,7 @@ async function verificarTreinamentosEmpresa(empresa_id, contatoId = null) {
             LEFT JOIN assinaturas_certificados ac ON ac.usuario_id = :contatoId 
                 AND ac.token_assinatura LIKE CONCAT(t.id, '_%')
                 AND ac.status = 'assinado'
-            WHERE et.empresa_id = :empresa_id
+            WHERE et.empresa_id = :empresaId
                 AND ac.id IS NULL
             ORDER BY 
                 CASE 
@@ -1101,7 +1101,7 @@ async function verificarTreinamentosEmpresa(empresa_id, contatoId = null) {
                 et.created_at ASC
         `;
         
-        const replacements = { empresa_id, contatoId };
+        const replacements = { empresaId, contatoId };
         
         const resultados = await sequelize.query(query, {
             replacements,
@@ -1109,7 +1109,7 @@ async function verificarTreinamentosEmpresa(empresa_id, contatoId = null) {
         });
         
         if (resultados.length === 0) {
-            console.log(`❌ Nenhum treinamento pendente encontrado para empresa ${empresa_id}`);
+            console.log(`❌ Nenhum treinamento pendente encontrado para empresa ${empresaId}`);
             return [];
         }
         
@@ -1133,7 +1133,7 @@ async function verificarTreinamentosEmpresa(empresa_id, contatoId = null) {
             };
         });
         
-        console.log(`✅ Empresa ${empresa_id} tem ${treinamentos.length} treinamentos pendentes`);
+        console.log(`✅ Empresa ${empresaId} tem ${treinamentos.length} treinamentos pendentes`);
         console.log(`📊 Detalhes:`, treinamentos.map(t => `${t.nome} (${t.status_prazo})`));
         
         return treinamentos;

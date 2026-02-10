@@ -63,6 +63,61 @@ const QUESTOES_QUIZ = [
         ],
         resposta_correta: 1,
         explicacao: "A consistência diária combinada com atenção às respostas maximiza pontos, dias consecutivos e aprendizado real, sendo a melhor estratégia."
+    },
+    {
+        pergunta: "O que acontece se você perder um dia de participação no quiz?",
+        opcoes: [
+            "Perde todos os pontos acumulados",
+            "A sequência de dias consecutivos é zerada",
+            "É banido do sistema por 7 dias",
+            "Nada acontece, continua normalmente"
+        ],
+        resposta_correta: 1,
+        explicacao: "Ao perder um dia, sua sequência de dias consecutivos volta a zero, mas seus pontos totais são mantidos. Por isso é importante participar diariamente!"
+    },
+    {
+        pergunta: "Qual é o benefício de manter uma longa sequência de dias consecutivos?",
+        opcoes: [
+            "Demonstra comprometimento e cria hábito de aprendizado",
+            "Dobra automaticamente seus pontos",
+            "Permite pular perguntas difíceis",
+            "Reduz o número de questões diárias"
+        ],
+        resposta_correta: 0,
+        explicacao: "Manter dias consecutivos demonstra disciplina, cria hábito de estudo e é um indicador importante no ranking, mostrando seu comprometimento."
+    },
+    {
+        pergunta: "Como o ranking é calculado?",
+        opcoes: [
+            "Apenas pelo total de pontos acumulados",
+            "Apenas pelos dias consecutivos",
+            "Por pontos totais, com destaque para dias consecutivos",
+            "Aleatoriamente a cada semana"
+        ],
+        resposta_correta: 2,
+        explicacao: "O ranking prioriza o total de pontos, mas dias consecutivos são um diferencial importante que demonstra consistência e dedicação ao aprendizado."
+    },
+    {
+        pergunta: "Qual é a melhor forma de usar o sistema de quiz?",
+        opcoes: [
+            "Fazer apenas quando lembrar",
+            "Participar diariamente no mesmo horário",
+            "Acumular vários dias e fazer tudo de uma vez",
+            "Pedir para outra pessoa responder por você"
+        ],
+        resposta_correta: 1,
+        explicacao: "Participar diariamente no mesmo horário cria uma rotina, facilita a formação do hábito e maximiza o aprendizado através da repetição espaçada."
+    },
+    {
+        pergunta: "O que você deve fazer se errar uma questão?",
+        opcoes: [
+            "Desistir do quiz",
+            "Ler a explicação e aprender com o erro",
+            "Reclamar que a questão estava difícil",
+            "Ignorar e seguir para a próxima"
+        ],
+        resposta_correta: 1,
+        explicacao: "Erros são oportunidades de aprendizado! Sempre leia a explicação para entender o conceito correto e melhorar seu desempenho futuro."
     }
 ];
 
@@ -77,12 +132,14 @@ class GameTesteTraining {
 
         // Buscar configuração do treinamento
         const treinamento = await Treinamento.findByPk(TREINAMENTO_ID);
-        const config_quiz = treinamento.config_quiz ? JSON.parse(treinamento.config_quiz) : {
-            pontos_por_acerto: 10,
-            questoes_por_dia: 5,
-            max_tempo_segundos: 60,
-            bonus_tempo: true
-        };
+        const config_quiz = treinamento.config_quiz 
+            ? (typeof treinamento.config_quiz === 'string' ? JSON.parse(treinamento.config_quiz) : treinamento.config_quiz)
+            : {
+                pontos_por_acerto: 10,
+                questoes_por_dia: 5,
+                max_tempo_segundos: 60,
+                bonus_tempo: true
+            };
 
         this.sessions.set(sessionKey, {
             etapa: 'introducao',
@@ -334,7 +391,12 @@ class GameTesteTraining {
 
             // Buscar ranking atualizado
             const rankingResponse = await axios.get(
-                `http://127.0.0.1:3000/api/quiz/ranking/${TREINAMENTO_ID}?limit=10`
+                `http://127.0.0.1:3000/api/quiz/ranking/${TREINAMENTO_ID}?limit=10`,
+                {
+                    headers: {
+                        'Authorization': 'Bearer internal-bot-token-2024'
+                    }
+                }
             );
 
             const ranking = rankingResponse.data;
@@ -398,7 +460,12 @@ class GameTesteTraining {
     async mostrarRankingCompleto(client, message, contato) {
         try {
             const response = await axios.get(
-                `http://127.0.0.1:3000/api/quiz/ranking/${TREINAMENTO_ID}?limit=10`
+                `http://127.0.0.1:3000/api/quiz/ranking/${TREINAMENTO_ID}?limit=10`,
+                {
+                    headers: {
+                        'Authorization': 'Bearer internal-bot-token-2024'
+                    }
+                }
             );
 
             const ranking = response.data;
@@ -436,7 +503,12 @@ class GameTesteTraining {
             if (!usuario) return;
 
             const response = await axios.get(
-                `http://127.0.0.1:3000/api/quiz/historico/${usuario.id}/${TREINAMENTO_ID}?dias=7`
+                `http://127.0.0.1:3000/api/quiz/historico/${usuario.id}/${TREINAMENTO_ID}?dias=7`,
+                {
+                    headers: {
+                        'Authorization': 'Bearer internal-bot-token-2024'
+                    }
+                }
             );
 
             const { historico, ranking } = response.data;

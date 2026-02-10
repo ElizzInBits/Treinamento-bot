@@ -257,8 +257,9 @@ app.use('/api/contatos', (req, res, next) => {
 }, contatosRoutes);
 
 app.use('/api/empresas', (req, res, next) => {
-    if (req.path === '/select/options' || req.path === '/salubrita' || req.path === '/supermix' || (req.method === 'POST' && req.path === '/')) {
-        next(); // Permitir acesso público às opções de empresas, Salubritá, SUPERMIX e cadastro
+    // Permitir acesso público a rotas específicas
+    if (req.path === '/select/options' || req.path.startsWith('/') && req.method === 'GET' || (req.method === 'POST' && req.path === '/')) {
+        next(); // Permitir acesso público
     } else {
         authenticateToken(req, res, next);
     }

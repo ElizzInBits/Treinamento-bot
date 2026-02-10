@@ -132,6 +132,19 @@ async function processarMensagem(message, client) {
     return;
   }
   
+  // Comando QUIZ para iniciar quiz diário
+  if (mensagemLower === 'quiz') {
+    logger.info('Comando QUIZ executado', { telefone });
+    const { processarTreinamentoGameTeste } = require('./Treinamentos/GameTeste/gameTeste');
+    const contato = await Usuario.findOne({ where: { telefone } });
+    if (contato) {
+      await processarTreinamentoGameTeste(message.from, 'iniciar_treinamento', null, contato, sendMessage);
+    } else {
+      await client.sendText(message.from, '⚠️ Você precisa estar cadastrado para fazer o quiz.\n\n📝 Faça seu cadastro: https://abrir.link/ZEeCt');
+    }
+    return;
+  }
+  
   // Comando 5 para falar com comercial
   if (mensagem.trim() === '5') {
     logger.info('Comando COMERCIAL (5) executado', { telefone });
@@ -526,6 +539,17 @@ async function inicializarBot() {
 // Inicializar o bot
 inicializarBot();
 
+// Inicializar agendador de quiz INDEPENDENTEMENTE do bot
+setTimeout(() => {
+  try {
+    console.log('🔧 [AGENDADOR] Inicializando agendador de quiz...');
+    const { iniciarAgendador } = require('./Treinamentos/GameTeste/agendadorQuiz');
+    iniciarAgendador(sendMessage);
+  } catch (error) {
+    console.error('❌ [AGENDADOR] Erro ao inicializar agendador:', error.message);
+  }
+}, 5000); // Aguardar 5 segundos após inicialização do bot
+
 // Handlers para evitar crashes
 process.on('uncaughtException', (error) => {
     console.error('❌ Erro não capturado:', error);
@@ -860,7 +884,7 @@ async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
     }
     
     // Buscar treinamentos pendentes
-    const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(usuario.empresaId, usuario.id);
+    const treinamentosPendentes = await treinamentoApresentacao.verificarTreinamentosEmpresa(usuario.empresa_id, usuario.id);
     
     if (!treinamentosPendentes || treinamentosPendentes.length === 0) {
       let mensagem = `🎉 Parabéns, ${encurtarNome(usuario.nome)}! Você não possui treinamentos pendentes no momento.\n\nℹ️ Não há treinamentos pendentes para você.`;
@@ -920,7 +944,7 @@ async function mostrarMenuTreinamentos(telefone, sendMessageFunc) {
         etapa: 'treinamentos_pendentes',
         treinamentos: treinamentosPendentes,
         contato_id: usuario.id,
-        empresa_id: usuario.empresaId,
+        empresa_id: usuario.empresa_id,
         nome: encurtarNome(usuario.nome)
       })
     });

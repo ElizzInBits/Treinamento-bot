@@ -152,11 +152,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       const empresaParam = urlParams.get('empresa');
       
-      if (empresaParam === 'salubrita') {
+      // Se houver parâmetro empresa, buscar por slug/apelido
+      if (empresaParam) {
         empresaSelect.innerHTML = '<option value="">Carregando...</option>';
         empresaSelect.disabled = true;
         
-        const response = await fetch('/api/empresas/salubrita');
+        const response = await fetch(`/api/empresas/${empresaParam}`);
         const empresa = await response.json();
         
         if (empresa && empresa.id) {
@@ -166,28 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
           empresaSelect.style.cursor = 'not-allowed';
           await carregarUnidades(empresa.id);
         } else {
-          empresaSelect.innerHTML = '<option value="">Erro ao carregar Salubritá</option>';
-          alert('Erro: Empresa Salubritá não encontrada.');
-        }
-        return;
-      }
-      
-      if (empresaParam === 'supermix') {
-        empresaSelect.innerHTML = '<option value="">Carregando...</option>';
-        empresaSelect.disabled = true;
-        
-        const response = await fetch('/api/empresas/supermix');
-        const empresa = await response.json();
-        
-        if (empresa && empresa.id) {
-          empresaSelect.innerHTML = `<option value="${empresa.id}" selected>${empresa.razaoSocial}</option>`;
-          empresaSelect.disabled = true;
-          empresaSelect.style.background = '#e5e7eb';
-          empresaSelect.style.cursor = 'not-allowed';
-          await carregarUnidades(empresa.id);
-        } else {
-          empresaSelect.innerHTML = '<option value="">Erro ao carregar SUPERMIX</option>';
-          alert('Erro: Empresa SUPERMIX não encontrada.');
+          empresaSelect.innerHTML = '<option value="">Erro ao carregar empresa</option>';
+          alert(`Erro: Empresa "${empresaParam}" não encontrada.`);
         }
         return;
       }

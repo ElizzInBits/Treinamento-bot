@@ -37,47 +37,38 @@ router.get('/contatos-por-empresa', async (req, res) => {
 
 
 // Rota específica para Salubritá (ANTES de /:id)
-router.get('/salubrita', async (req, res) => {
+// Rota genérica para buscar empresa por slug/apelido (ANTES de /:id)
+router.get('/:slug', async (req, res) => {
   try {
-    const salubrita = await Empresa.findOne({
+    const { slug } = req.params;
+    
+    // Se for 'select' retornar erro para não conflitar com /select/options
+    if (slug === 'select') {
+      return res.status(404).json({ error: 'Rota inválida' });
+    }
+    
+    // Tentar buscar por ID numérico primeiro
+    if (!isNaN(slug)) {
+      const empresa = await Empresa.findByPk(parseInt(slug));
+      if (empresa) {
+        return res.json(empresa);
+      }
+    }
+    
+    // Buscar por slug/apelido na razão social
+    const empresa = await Empresa.findOne({
       where: {
-        [Op.or]: [
-          { id: 3 },
-          { razaoSocial: { [Op.like]: '%Salubritá%' } }
-        ]
+        razaoSocial: { [Op.like]: `%${slug}%` }
       }
     });
     
-    if (!salubrita) {
-      return res.status(404).json({ error: 'Empresa Salubritá não encontrada' });
+    if (!empresa) {
+      return res.status(404).json({ error: `Empresa "${slug}" não encontrada` });
     }
     
-    res.json(salubrita);
+    res.json(empresa);
   } catch (error) {
-    console.error('Erro ao buscar Salubritá:', error);
-    res.status(500).json({ error: 'Erro ao buscar empresa' });
-  }
-});
-
-// Rota específica para SUPERMIX (ANTES de /:id)
-router.get('/supermix', async (req, res) => {
-  try {
-    const supermix = await Empresa.findOne({
-      where: {
-        [Op.or]: [
-          { id: 16 },
-          { razaoSocial: { [Op.like]: '%SUPERMIX%' } }
-        ]
-      }
-    });
-    
-    if (!supermix) {
-      return res.status(404).json({ error: 'Empresa SUPERMIX não encontrada' });
-    }
-    
-    res.json(supermix);
-  } catch (error) {
-    console.error('Erro ao buscar SUPERMIX:', error);
+    console.error('Erro ao buscar empresa:', error);
     res.status(500).json({ error: 'Erro ao buscar empresa' });
   }
 });

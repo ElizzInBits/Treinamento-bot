@@ -70,6 +70,15 @@ module.exports = (sequelize) => {
   registro_responsavel: {
     type: DataTypes.STRING(100),
     allowNull: true,
+  },
+  tipo_gamificado: {
+    type: DataTypes.TINYINT,
+    allowNull: true,
+    defaultValue: 0,
+  },
+  config_quiz: {
+    type: DataTypes.TEXT,
+    allowNull: true,
   }
   }, {
     tableName: 'treinamentos',

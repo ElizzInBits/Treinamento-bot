@@ -961,6 +961,10 @@ function renderizarEmpresas() {
             <i class="fa-solid fa-graduation-cap"></i>
             Treinamentos
           </button>
+          <button onclick="copiarLinkCadastro('${empresa.razaoSocial || empresa.razao_social}')">
+            <i class="fa-solid fa-link"></i>
+            Link Cadastro
+          </button>
         </div>
       </div>
     `;
@@ -1646,7 +1650,7 @@ function fecharModalTreinamentosEmpresa() {
 
 // FUNÇÃO PARA ABRIR O MODAL DE DETALHES DA EMPRESA (BOTÃO DETALHES)
 function abrirDetalhesEmpresa(empresaId) {
-  const empresa = empresas.find(e => e.id === empresa_id);
+  const empresa = empresas.find(e => e.id === empresaId);
   if (!empresa) return;
 
   document.getElementById('modalTituloDetalhesEmpresa').textContent = `Detalhes - ${empresa.razaoSocial || 'Empresa'}`;
@@ -1662,7 +1666,7 @@ function abrirDetalhesEmpresa(empresaId) {
   document.getElementById('modalDetalhesEmpresa').style.display = 'flex';
 
   // Carregar dados completos da empresa
-  authenticatedFetch(`/api/empresas/${empresa_id}/completo`)
+  authenticatedFetch(`/api/empresas/${empresaId}/completo`)
     .then(r => r.json())
     .then(empresaCompleta => {
       const treinamentosEmpresa = empresaCompleta.treinamentos || [];
@@ -1778,7 +1782,7 @@ function abrirDetalhesEmpresa(empresaId) {
                 </div>
               </div>
               <div class="form-actions">
-                <button type="button" onclick="salvarEmpresa(${empresa_id})">
+                <button type="button" onclick="salvarEmpresa(${empresaId})">
                   <i class="fa-solid fa-floppy-disk"></i>
                   Salvar
                 </button>
@@ -1802,7 +1806,7 @@ function abrirDetalhesEmpresa(empresaId) {
             </div>
           </div>
           <div class="btn-excluir-empresa">
-            <button onclick="excluirEmpresa(${empresa_id})">
+            <button onclick="excluirEmpresa(${empresaId})">
               🗑️ Excluir Empresa
             </button>
             <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.5rem;">
@@ -1819,7 +1823,7 @@ function abrirDetalhesEmpresa(empresaId) {
           <div class="empty-state-icon">⚠️</div>
           <h3>Erro ao carregar dados</h3>
           <p>Não foi possível carregar os detalhes da empresa. Tente novamente.</p>
-          <button class="btn-primary" onclick="abrirDetalhesEmpresa(${empresa_id})">
+          <button class="btn-primary" onclick="abrirDetalhesEmpresa(${empresaId})">
             🔄 Tentar Novamente
           </button>
         </div>
@@ -1871,7 +1875,7 @@ function salvarEmpresa(empresaId) {
   botaoSalvar.innerHTML = '⏳ Salvando...';
   botaoSalvar.disabled = true;
 
-  authenticatedFetch(`/api/empresas/${empresa_id}`, {
+  authenticatedFetch(`/api/empresas/${empresaId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados)
@@ -1890,9 +1894,9 @@ function salvarEmpresa(empresaId) {
       console.log('✅ Resposta da API:', empresaAtualizada);
 
       // Atualizar dados locais imediatamente
-      const index = empresas.findIndex(e => e.id === empresa_id);
+      const index = empresas.findIndex(e => e.id === empresaId);
       if (index !== -1) {
-        empresas[index] = { ...empresas[index], ...dados, id: empresa_id };
+        empresas[index] = { ...empresas[index], ...dados, id: empresaId };
         console.log('📝 Dados locais atualizados:', empresas[index]);
       }
 
@@ -1926,7 +1930,7 @@ function salvarEmpresa(empresaId) {
 
 // FUNÇÃO DE EXCLUIR EMPRESA
 function excluirEmpresa(empresaId) {
-  const empresa = empresas.find(e => e.id === empresa_id);
+  const empresa = empresas.find(e => e.id === empresaId);
   if (!empresa) return;
 
   const nomeEmpresa = empresa.razao_social || empresa.razaoSocial || 'esta empresa';
@@ -1935,7 +1939,7 @@ function excluirEmpresa(empresaId) {
     return;
   }
 
-  authenticatedFetch(`/api/empresas/${empresa_id}`, {
+  authenticatedFetch(`/api/empresas/${empresaId}`, {
     method: 'DELETE'
   })
     .then(res => {
@@ -4502,4 +4506,42 @@ function exportarConversa(contatoId) {
 
   mostrarAlerta(`📥 Exportando conversa de ${contato.nome}...`, 'success');
   window.open(`/api/contatos/${contatoId}/exportar-conversa`, '_blank');
+}
+
+// Função para copiar link de cadastro da empresa
+function copiarLinkCadastro(nomeEmpresa) {
+  const slug = nomeEmpresa
+    .split(' ')[0]
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+  
+  const link = `http://72.60.48.249:3000/autoCadastro/cadastro-index.html?empresa=${slug}`;
+  
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      mostrarAlerta('🔗 Link copiado para a área de transferência!', 'success');
+    }).catch(() => {
+      fallbackCopyLink(link);
+    });
+  } else {
+    fallbackCopyLink(link);
+  }
+}
+
+function fallbackCopyLink(link) {
+  const textarea = document.createElement('textarea');
+  textarea.value = link;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    document.execCommand('copy');
+    mostrarAlerta('🔗 Link copiado para a área de transferência!', 'success');
+  } catch (err) {
+    mostrarAlerta('Erro ao copiar link.', 'error');
+  }
+  document.body.removeChild(textarea);
 }
